@@ -1,4 +1,4 @@
-uniform vec3 light_source_position;
+uniform vec3 light_position;
 uniform vec3 camera_position;
 uniform vec3 shading;
 

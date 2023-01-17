@@ -490,9 +490,7 @@ class Camera(object):
         # Orient light
         rotation = frame.get_inverse_camera_rotation_matrix()
         offset = frame.get_center()
-        light_pos = np.dot(
-            rotation, self.light_source.get_location() + offset
-        )
+        light_pos = self.light_source.get_location()
         cam_pos = self.frame.get_implied_camera_location()  # TODO
 
         self.perspective_uniforms = {
@@ -501,7 +499,7 @@ class Camera(object):
             "camera_offset": tuple(offset),
             "camera_rotation": tuple(np.array(rotation).T.flatten()),
             "camera_position": tuple(cam_pos),
-            "light_source_position": tuple(light_pos),
+            "light_position": tuple(light_pos),
             "focal_distance": frame.get_focal_distance(),
         }
 
