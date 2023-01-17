@@ -6,11 +6,11 @@ import moderngl
 import numpy as np
 
 from manimlib.constants import GREY_A, GREY_C, GREY_E
-from manimlib.constants import BLACK, WHITE
+from manimlib.constants import BLACK
 from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import DEGREES
 from manimlib.constants import JOINT_TYPE_MAP
-from manimlib.constants import ORIGIN, OUT, UP
+from manimlib.constants import ORIGIN, OUT
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.bezier import bezier
@@ -18,7 +18,6 @@ from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
 from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
 from manimlib.utils.bezier import integer_interpolate
-from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.bezier import find_intersection
 from manimlib.utils.bezier import partial_quadratic_bezier_points
@@ -40,13 +39,12 @@ from manimlib.utils.space_ops import line_intersects_path
 from manimlib.utils.space_ops import midpoint
 from manimlib.utils.space_ops import normalize_along_axis
 from manimlib.utils.space_ops import z_to_vector
-from manimlib.utils.simple_functions import arr_clip
 from manimlib.shader_wrapper import ShaderWrapper
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence, Tuple
+    from typing import Callable, Iterable, Tuple
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Vect4Array
 
 DEFAULT_STROKE_COLOR = GREY_A
