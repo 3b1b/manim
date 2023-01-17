@@ -1,7 +1,7 @@
 vec3 get_unit_normal(vec3 p0, vec3 p1, vec3 p2){
     float tol = 1e-6;
     vec3 v1 = normalize(p1 - p0);
-    vec3 v2 = normalize(p2 - p1);
+    vec3 v2 = normalize(p2 - p0);
     vec3 cp = cross(v1, v2);
     float cp_norm = length(cp);
 
