@@ -10,7 +10,7 @@ uniform float joint_type;
 
 in vec3 verts[3];
 
-in float v_joint_angle[3];
+in vec4 v_joint_product[3];
 in float v_stroke_width[3];
 in vec4 v_color[3];
 in float v_vert_index[3];
@@ -38,8 +38,24 @@ const float ANGLE_THRESHOLD = 1e-3;
 #INSERT finalize_color.glsl
 
 
+vec3 get_joint_normal(vec4 joint_product){
+    vec3 result = joint_product.xyz;
+    float norm = length(result);
+    if(norm < 1e-8){
+        // If it's too short, use the middle joint angle
+        result = v_joint_product[1].xyz;
+        norm = length(result);
+    }
+    if(norm < 1e-8){
+        // If that's also to short, just return unit z vector
+        return vec3(0.0, 0.0, 1.0);
+    }
+    return result / norm;
+}
+
+
 void create_joint(
-    float angle,
+    float cos_angle,
     vec3 unit_tan,
     float buff,
     vec3 static_c0,
@@ -47,16 +63,20 @@ void create_joint(
     vec3 static_c1,
     out vec3 changing_c1
 ){
-    float shift;
-    // if(abs(angle) < ANGLE_THRESHOLD || abs(angle) > 0.99 * PI || int(joint_type) == NO_JOINT){
-    if(abs(angle) < ANGLE_THRESHOLD || int(joint_type) == NO_JOINT){
+    if(cos_angle > (1.0 - ANGLE_THRESHOLD) || int(joint_type) == NO_JOINT){
         // No joint
-        shift = 0;
-    }else if(int(joint_type) == MITER_JOINT){
-        shift = buff * (-1.0 - cos(angle)) / sin(angle);
+        changing_c0 = static_c0;
+        changing_c1 = static_c1;
+        return;
+    }
+
+    float shift;
+    float sin_angle = sqrt(1.0 - cos_angle * cos_angle);
+    if(int(joint_type) == MITER_JOINT){
+        shift = buff * (-1.0 - cos_angle) / sin_angle;
     }else{
         // For a Bevel joint
-        shift = buff * (1.0 - cos(angle)) / sin(angle);
+        shift = buff * (1.0 - cos_angle) / sin_angle;
     }
     changing_c0 = static_c0 - shift * unit_tan;
     changing_c1 = static_c1 + shift * unit_tan;
@@ -75,28 +95,35 @@ void get_corners(
     // Unit tangent vectors at p0 and p2
     vec3 v01,
     vec3 v12,
-    float stroke_width0,
-    float stroke_width2,
-    // Unit normal to the whole curve
-    vec3 normal,
     // Anti-alias width
     float aaw,
-    float angle_from_prev,
-    float angle_to_next,
     out vec3 corners[6]
 ){
 
-    float buff0 = 0.5 * stroke_width0 + aaw;
-    float buff2 = 0.5 * stroke_width2 + aaw;
+    float buff0 = 0.5 * v_stroke_width[0] + aaw;
+    float buff2 = 0.5 * v_stroke_width[2] + aaw;
 
-    // Add correction for sharp angles to prevent weird bevel effects (Needed?)
-    float thresh = 5 * PI / 6;
-    if(angle_from_prev > thresh) buff0 *= 2 * sin(angle_from_prev);
-    if(angle_to_next > thresh) buff2 *= 2 * sin(angle_to_next);
+    // Add correction for sharp angles to prevent weird bevel effects
+    if(v_joint_product[0].w < -0.5) buff0 *= -2 * v_joint_product[0].w;
+    if(v_joint_product[2].w < -0.5) buff2 *= -2 * v_joint_product[0].w;
+
+    // Unit normal and joint angles
+    vec3 normal0 = get_joint_normal(v_joint_product[0]);
+    vec3 normal2 = get_joint_normal(v_joint_product[2]);
+    // Chose the normal in the positive z direction
+    normal0 *= sign(normal0.z);
+    normal2 *= sign(normal2.z);
 
     // Perpendicular vectors to the left of the curve
-    vec3 p0_perp = buff0 * normalize(cross(normal, v01));
-    vec3 p2_perp = buff2 * normalize(cross(normal, v12));
+    vec3 p0_perp;
+    vec3 p2_perp;
+    if(bool(flat_stroke)){
+        p0_perp = buff0 * normalize(cross(normal0, v01));
+        p2_perp = buff2 * normalize(cross(normal2, v12));
+    }else{
+        p0_perp = buff0 * normal0;
+        p2_perp = buff2 * normal2;
+    }
     vec3 p1_perp = 0.5 * (p0_perp + p2_perp);
 
     // The order of corners should be for a triangle_strip.
@@ -106,19 +133,18 @@ void get_corners(
     vec3 c3 = p1 - p1_perp;
     vec3 c4 = p2 + p2_perp;
     vec3 c5 = p2 - p2_perp;
-    float orientation = dot(normal, cross(v01, v12));
     // Move the inner middle control point to make
     // room for the curve
-    if(orientation > 0.0)      c2 = 0.5 * (c0 + c4);  
+    float orientation = dot(normal0, cross(v01, v12));
+    if(orientation >= 0.0)     c2 = 0.5 * (c0 + c4);  
     else if(orientation < 0.0) c3 = 0.5 * (c1 + c5);
 
     // Account for previous and next control points
-    create_joint(angle_from_prev, v01, buff0, c1, c1, c0, c0);
-    create_joint(angle_to_next, -v12, buff2, c5, c5, c4, c4);
+    create_joint(v_joint_product[0].w, v01, buff0, c1, c1, c0, c0);
+    create_joint(v_joint_product[2].w, -v12, buff2, c5, c5, c4, c4);
 
     corners = vec3[6](c0, c1, c2, c3, c4, c5);
 }
-
 
 void main() {
     // We use the triangle strip primative, but
@@ -129,12 +155,6 @@ void main() {
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
 
-    // TODO, track true unit normal globally (probably as a uniform)
-    vec3 unit_normal = vec3(0.0, 0.0, 1.0);
-    if(bool(flat_stroke)){
-        unit_normal = camera_rotation * vec3(0.0, 0.0, 1.0);
-    }
-
     vec3 p0 = verts[0];
     vec3 p1 = verts[1];
     vec3 p2 = verts[2];
@@ -143,6 +163,7 @@ void main() {
 
     float angle = acos(clamp(dot(v01, v12), -1, 1));
     is_linear = float(abs(angle) < ANGLE_THRESHOLD);
+
 
     // If the curve is flat, put the middle control in the midpoint
     if (bool(is_linear)) p1 = 0.5 * (p0 + p2);
@@ -158,16 +179,7 @@ void main() {
     uv_anti_alias_width = uv_scale_factor * scaled_aaw;
 
     vec3 corners[6];
-    get_corners(
-        p0, p1, p2, v01, v12,
-        v_stroke_width[0],
-        v_stroke_width[2],
-        unit_normal,
-        scaled_aaw,
-        v_joint_angle[0],
-        v_joint_angle[2],
-        corners
-    );
+    get_corners(p0, p1, p2, v01, v12, scaled_aaw, corners);
 
     // Emit each corner
     for(int i = 0; i < 6; i++){
@@ -177,9 +189,9 @@ void main() {
         color = finalize_color(
             v_color[vert_index],
             corners[i],
-            unit_normal
+            vec3(0.0, 0.0, 1.0) // TODO
         );
-        gl_Position = get_gl_Position(corners[i]);
+        gl_Position = get_gl_Position(position_point_into_frame(corners[i]));
         EmitVertex();
     }
     EndPrimitive();

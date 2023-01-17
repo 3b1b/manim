@@ -31,6 +31,7 @@ from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.iterables import arrays_match
 from manimlib.utils.space_ops import angle_between_vectors
+from manimlib.utils.space_ops import cross
 from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
 from manimlib.utils.space_ops import get_norm
@@ -57,13 +58,13 @@ class VMobject(Mobject):
         ('point', np.float32, (3,)),
         ('stroke_rgba', np.float32, (4,)),
         ('stroke_width', np.float32, (1,)),
-        ('joint_angle', np.float32, (1,)),
+        ('joint_product', np.float32, (4,)),
         ('fill_rgba', np.float32, (4,)),
         ('orientation', np.float32, (1,)),
         ('vert_index', np.float32, (1,)),
     ])
     fill_data_names = ['point', 'fill_rgba', 'orientation', 'vert_index']
-    stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_angle']
+    stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_product']
 
     fill_render_primitive: int = moderngl.TRIANGLES
     stroke_render_primitive: int = moderngl.TRIANGLE_STRIP
@@ -86,7 +87,7 @@ class VMobject(Mobject):
         long_lines: bool = False,
         # Could also be "no_joint", "bevel", "miter"
         joint_type: str = "auto",
-        flat_stroke: bool = False,
+        flat_stroke: bool = True,
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
         anti_alias_width: float = 1.0,
@@ -107,7 +108,7 @@ class VMobject(Mobject):
 
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
-        self.needs_new_joint_angles = True
+        self.needs_new_joint_products = True
         self.outer_vert_indices = np.zeros(0, dtype='i4')
 
         super().__init__(**kwargs)
@@ -1042,25 +1043,30 @@ class VMobject(Mobject):
         self.needs_new_triangulation = False
         return tri_indices
 
-    def refresh_joint_angles(self):
+    def refresh_joint_products(self):
         for mob in self.get_family():
-            mob.needs_new_joint_angles = True
+            mob.needs_new_joint_products = True
         return self
 
-    def get_joint_angles(self, refresh: bool = False):
-        if not self.needs_new_joint_angles and not refresh:
-            return self.data["joint_angle"]
-        if "joint_angle" in self.locked_data_keys:
-            return self.data["joint_angle"]
+    def recompute_joint_products(self, refresh: bool = False):
+        """
+        The 'joint product' is a 4-vector holding the cross and dot
+        product between tangent vectors at a joint
+        """
+        if not self.needs_new_joint_products and not refresh:
+            return self.data["joint_product"]
 
-        self.needs_new_joint_angles = False
+        if "joint_product" in self.locked_data_keys:
+            return self.data["joint_product"]
+
+        self.needs_new_joint_products = False
 
         points = self.get_points()
 
         if(len(points) < 3):
-            return self.data["joint_angle"]
+            return self.data["joint_product"]
 
-        # Unit tangent vectors
+        # Find all the unit tangent vectors at each joint
         a0, h, a1 = points[0:-1:2], points[1::2], points[2::2]
         a0_to_h = normalize_along_axis(h - a0, 1)
         h_to_a1 = normalize_along_axis(a1 - h, 1)
@@ -1073,24 +1079,24 @@ class VMobject(Mobject):
         vect_from_vert[0:-1:2] = a0_to_h
         vect_from_vert[1::2] = h_to_a1
 
+        # Joint up closed loops, or mark unclosed paths as such
         ends = self.get_subpath_end_indices()
         starts = [0, *(e + 2 for e in ends[:-1])]
         for start, end in zip(starts, ends):
-            if start > len(a0_to_h):
-                continue
             if self.consider_points_equal(points[start], points[end]):
-                vect_to_vert[start] = h_to_a1[end // 2 - 1]
-                vect_from_vert[end] = a0_to_h[start // 2]
+                vect_to_vert[start] = vect_from_vert[end - 1]
+                vect_from_vert[end] = vect_to_vert[start + 1]
+            else:
+                vect_to_vert[start] = vect_from_vert[start]
+                vect_from_vert[end] = vect_to_vert[end]
 
-        # Compute angles, and read them into
-        # the joint_angles array
-        result = self.data["joint_angle"][:, 0]
-        result[:] = 0
-        dots = (vect_to_vert * vect_from_vert).sum(1)
-        np.arccos(dots, out=result, where=((dots <= 1) & (dots >= -1)))
-        # Assumes unit normal in the positive z direction
-        result *= np.sign(cross2d(vect_to_vert, vect_from_vert))
-        return result
+        # Compute dot and cross products
+        cross(
+            vect_to_vert, vect_from_vert,
+            out=self.data["joint_product"][:, :3]
+        )
+        self.data["joint_product"][:, 3] = (vect_to_vert * vect_from_vert).sum(1)
+        return self.data["joint_product"]
 
     def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
@@ -1098,7 +1104,7 @@ class VMobject(Mobject):
             func(self, *args, **kwargs)
             if refresh:
                 self.refresh_triangulation()
-                self.refresh_joint_angles()
+                self.refresh_joint_products()
         return wrapper
 
     @triggers_refreshed_triangulation
@@ -1152,7 +1158,7 @@ class VMobject(Mobject):
 
     def apply_points_function(self, *args, **kwargs):
         super().apply_points_function(*args, **kwargs)
-        self.refresh_joint_angles()
+        self.refresh_joint_products()
 
     # For shaders
     def init_shader_data(self):
@@ -1203,7 +1209,7 @@ class VMobject(Mobject):
                 fill_datas.append(submob.data[fill_names])
                 fill_indices.append(submob.get_triangulation())
             if submob.has_stroke():
-                submob.get_joint_angles()
+                submob.recompute_joint_products()
                 if submob.stroke_behind:
                     lst = back_stroke_data
                 else:
