@@ -112,9 +112,9 @@ void get_corners(
     // Unit normal and joint angles
     vec3 normal0 = get_joint_normal(v_joint_product[0]);
     vec3 normal2 = get_joint_normal(v_joint_product[2]);
-    // Chose the normal in the positive z direction
-    normal0 *= sign(normal0.z);
-    normal2 *= sign(normal2.z);
+
+    // Make sure normals point in the same direction
+    if(dot(normal0, normal2) < 0) normal2 *= -1;
 
     // Perpendicular vectors to the left of the curve
     vec3 p0_perp;
@@ -125,6 +125,9 @@ void get_corners(
     }else{
         p0_perp = buff0 * normal0;
         p2_perp = buff2 * normal2;
+        // vec3 to_cam = transpose(camera_rotation)[2];
+        // p0_perp = buff0 * to_cam;
+        // p2_perp = buff2 * to_cam;
     }
     vec3 p1_perp = 0.5 * (p0_perp + p2_perp);
 
@@ -175,9 +178,10 @@ void main() {
     // coincides with y = x^2, between some values x0 and x2. Or, in
     // the case of a linear curve (bezier degree 1), just put it on
     // the segment from (0, 0) to (1, 0)
-    mat3 xy_to_uv = get_xy_to_uv(p0.xy, p1.xy, p2.xy, is_linear, is_linear);
+    // mat3 xy_to_uv = get_xy_to_uv(p0.xy, p1.xy, p2.xy, is_linear, is_linear);
+    mat4 xyz_to_uv = get_xyz_to_uv(p0, p1, p2, is_linear, is_linear);
 
-    float uv_scale_factor = length(xy_to_uv[0].xy);
+    float uv_scale_factor = length(xyz_to_uv[0].xyz);
     float scaled_aaw = anti_alias_width * (frame_shape.y / pixel_shape.y);
     uv_anti_alias_width = uv_scale_factor * scaled_aaw;
 
@@ -187,7 +191,8 @@ void main() {
     // Emit each corner
     for(int i = 0; i < 6; i++){
         int vert_index = i / 2;
-        uv_coords = (xy_to_uv * vec3(corners[i].xy, 1)).xy;
+        // uv_coords = (xy_to_uv * vec3(corners[i].xy, 1)).xy;
+        uv_coords = (xyz_to_uv * vec4(corners[i], 1)).xy;
         uv_stroke_width = uv_scale_factor * v_stroke_width[vert_index];
         color = finalize_color(
             v_color[vert_index],
