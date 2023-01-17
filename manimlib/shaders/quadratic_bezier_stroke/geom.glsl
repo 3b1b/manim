@@ -137,13 +137,15 @@ void get_corners(
     vec3 c5 = p2 - p2_perp;
     // Move the inner middle control point to make
     // room for the curve
-    float orientation = dot(normal0, cross(v01, v12));
-    if(orientation >= 0.0)     c2 = 0.5 * (c0 + c4);  
+    float orientation = dot(normal0, v_joint_product[1].xyz);
+    if(orientation >= 0.0)     c2 = 0.5 * (c0 + c4);
     else if(orientation < 0.0) c3 = 0.5 * (c1 + c5);
 
     // Account for previous and next control points
-    create_joint(v_joint_product[0].w, v01, buff0, c1, c1, c0, c0);
-    create_joint(v_joint_product[2].w, -v12, buff2, c5, c5, c4, c4);
+    if(bool(flat_stroke)){
+        create_joint(v_joint_product[0].w, v01, buff0, c1, c1, c0, c0);
+        create_joint(v_joint_product[2].w, -v12, buff2, c5, c5, c4, c4);
+    }
 
     corners = vec3[6](c0, c1, c2, c3, c4, c5);
 }
