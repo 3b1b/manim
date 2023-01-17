@@ -48,7 +48,7 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence, Union, Tuple
+    from typing import Callable, Iterable, Union, Tuple
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array
 
@@ -76,12 +76,7 @@ class Mobject(object):
         self,
         color: ManimColor = WHITE,
         opacity: float = 1.0,
-        # Larger reflectiveness makes things brighter when facing the light
-        reflectiveness: float = 0.0,
-        # Larger shadow makes faces opposite the light darker
-        shadow: float = 0.0,
-        # Makes parts bright where light gets reflected toward the camera
-        gloss: float = 0.0,
+        shading: Tuple[float, float, float] = (0.0, 0.0, 0.0),
         # For shaders
         texture_paths: dict[str, str] | None = None,
         # If true, the mobject will not get rotated according to camera position
@@ -90,9 +85,7 @@ class Mobject(object):
     ):
         self.color = color
         self.opacity = opacity
-        self.reflectiveness = reflectiveness
-        self.shadow = shadow
-        self.gloss = gloss
+        self.shading = shading
         self.texture_paths = texture_paths
         self.is_fixed_in_frame = is_fixed_in_frame
         self.depth_test = depth_test
@@ -138,9 +131,7 @@ class Mobject(object):
     def init_uniforms(self):
         self.uniforms: dict[str, float | np.ndarray] = {
             "is_fixed_in_frame": float(self.is_fixed_in_frame),
-            "gloss": self.gloss,
-            "shadow": self.shadow,
-            "reflectiveness": self.reflectiveness,
+            "shading": np.array(self.shading, dtype=float),
         }
 
     def init_colors(self):
@@ -1333,28 +1324,46 @@ class Mobject(object):
     def fade(self, darkness: float = 0.5, recurse: bool = True):
         self.set_opacity(1.0 - darkness, recurse=recurse)
 
+    def get_shading(self) -> np.ndarray:
+        return self.uniforms["shading"]
+
+    def set_shading(
+        self,
+        reflectiveness: float | None = None,
+        gloss: float | None = None,
+        shadow: float | None = None,
+        recurse: bool = True
+    ):
+        """
+        Larger reflectiveness makes things brighter when facing the light
+        Larger shadow makes faces opposite the light darker
+        Makes parts bright where light gets reflected toward the camera
+        """
+        for mob in self.get_family(recurse):
+            for i, value in enumerate([reflectiveness, gloss, shadow]):
+                if value is not None:
+                    mob.uniforms["shading"][i] = value
+        return self
+
     def get_reflectiveness(self) -> float:
-        return self.uniforms["reflectiveness"]
-
-    def set_reflectiveness(self, reflectiveness: float, recurse: bool = True):
-        for mob in self.get_family(recurse):
-            mob.uniforms["reflectiveness"] = reflectiveness
-        return self
-
-    def get_shadow(self) -> float:
-        return self.uniforms["shadow"]
-
-    def set_shadow(self, shadow: float, recurse: bool = True):
-        for mob in self.get_family(recurse):
-            mob.uniforms["shadow"] = shadow
-        return self
+        return self.get_shading()[0]
 
     def get_gloss(self) -> float:
-        return self.uniforms["gloss"]
+        return self.get_shading()[1]
+
+    def get_shadow(self) -> float:
+        return self.get_shading()[2]
+
+    def set_reflectiveness(self, reflectiveness: float, recurse: bool = True):
+        self.set_shading(reflectiveness=reflectiveness, recurse=recurse)
+        return self
 
     def set_gloss(self, gloss: float, recurse: bool = True):
-        for mob in self.get_family(recurse):
-            mob.uniforms["gloss"] = gloss
+        self.set_shading(gloss=gloss, recurse=recurse)
+        return self
+
+    def set_shadow(self, shadow: float, recurse: bool = True):
+        self.set_shading(shadow=shadow, recurse=recurse)
         return self
 
     # Background rectangle

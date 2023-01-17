@@ -36,9 +36,7 @@ class Surface(Mobject):
     def __init__(
         self,
         color: ManimColor = GREY,
-        reflectiveness: float = 0.3,
-        gloss: float = 0.1,
-        shadow: float = 0.4,
+        shading: Tuple[float, float, float] = (0.3, 0.2, 0.4),
         depth_test: bool = True,
         u_range: Tuple[float, float] = (0.0, 1.0),
         v_range: Tuple[float, float] = (0.0, 1.0),
@@ -61,9 +59,7 @@ class Surface(Mobject):
         super().__init__(
             **kwargs,
             color=color,
-            reflectiveness=reflectiveness,
-            gloss=gloss,
-            shadow=shadow,
+            shading=shading,
             depth_test=depth_test,
         )
         self.compute_triangle_indices()
@@ -300,7 +296,7 @@ class TexturedSurface(Surface):
         self.resolution: Tuple[int, int] = uv_surface.resolution
         super().__init__(
             texture_paths=texture_paths,
-            gloss=uv_surface.gloss,
+            shading=tuple(uv_surface.shading),
             **kwargs
         )
 

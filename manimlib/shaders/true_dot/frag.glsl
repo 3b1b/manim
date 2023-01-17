@@ -11,6 +11,10 @@ in float scaled_aaw;
 
 out vec4 frag_color;
 
+// This include a delaration of
+// uniform vec3 shading
+// uniform vec3 camera_position
+// uniform vec3 light_position
 #INSERT finalize_color.glsl
 
 void main() {
@@ -21,17 +25,12 @@ void main() {
         discard;
     }
     frag_color = color;
-    if(gloss > 0 || shadow > 0){
+    if(shading != vec3(0.0)){
         vec3 normal = vec3(diff / radius, sqrt(1 - (dist * dist) / (radius * radius)));
         frag_color = finalize_color(
             frag_color,
             vec3(point.xy, 0.0),
-            normal,
-            light_source_position,
-            camera_position,
-            reflectiveness,
-            gloss,
-            shadow
+            normal
         );
     }
     if(glow_factor > 0){

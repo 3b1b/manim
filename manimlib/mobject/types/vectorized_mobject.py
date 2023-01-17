@@ -158,7 +158,7 @@ class VMobject(Mobject):
             opacity=self.stroke_opacity,
             background=self.stroke_behind,
         )
-        self.set_gloss(self.gloss)
+        self.set_shading(*self.shading)
         self.set_flat_stroke(self.flat_stroke)
         self.color = self.get_color()
         return self
@@ -229,9 +229,7 @@ class VMobject(Mobject):
         stroke_rgba: Vect4 | None = None,
         stroke_width: float | Iterable[float] | None = None,
         stroke_background: bool = True,
-        reflectiveness: float | None = None,
-        gloss: float | None = None,
-        shadow: float | None = None,
+        shading: Tuple[float, float, float] | None = None,
         recurse: bool = True
     ):
         for mob in self.get_family(recurse):
@@ -260,12 +258,8 @@ class VMobject(Mobject):
                     background=stroke_background,
                 )
 
-            if reflectiveness is not None:
-                mob.set_reflectiveness(reflectiveness, recurse=False)
-            if gloss is not None:
-                mob.set_gloss(gloss, recurse=False)
-            if shadow is not None:
-                mob.set_shadow(shadow, recurse=False)
+            if shading is not None:
+                mob.set_shading(*shading, recurse=False)
         return self
 
     def get_style(self):
@@ -275,9 +269,7 @@ class VMobject(Mobject):
             "stroke_rgba": data['stroke_rgba'].copy(),
             "stroke_width": data['stroke_width'].copy(),
             "stroke_background": self.stroke_behind,
-            "reflectiveness": self.get_reflectiveness(),
-            "gloss": self.get_gloss(),
-            "shadow": self.get_shadow(),
+            "shading": self.get_shading(),
         }
 
     def match_style(self, vmobject: VMobject, recurse: bool = True):
@@ -1160,7 +1152,7 @@ class VMobject(Mobject):
             self.make_approximately_smooth()
         return self
 
-    def apply_points_function(self, *args, **kwargs,):
+    def apply_points_function(self, *args, **kwargs):
         super().apply_points_function(*args, **kwargs)
         self.refresh_joint_angles()
 

@@ -33,14 +33,9 @@ void emit_vertex_wrapper(vec3 point, int index, vec3 unit_normal){
     color = finalize_color(
         v_color[index],
         point,
-        unit_normal,
-        light_source_position,
-        camera_position,
-        reflectiveness,
-        gloss,
-        shadow
+        unit_normal
     );
-    gl_Position = get_gl_Position(point);
+    gl_Position = get_gl_Position(position_point_into_frame(point));
     EmitVertex();
 }
 

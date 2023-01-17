@@ -137,9 +137,13 @@ class DotCloud(PMobject):
             self.set_radii(scale_factor * self.get_radii())
         return self
 
-    def make_3d(self, reflectiveness: float = 0.5, shadow: float = 0.2):
-        self.set_reflectiveness(reflectiveness)
-        self.set_shadow(shadow)
+    def make_3d(
+        self,
+        reflectiveness: float = 0.5,
+        gloss: float = 0.1,
+        shadow: float = 0.2
+    ):
+        self.set_shading(reflectiveness, gloss, shadow)
         self.apply_depth_test()
         return self
 

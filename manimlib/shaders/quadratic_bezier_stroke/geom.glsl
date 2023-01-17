@@ -177,14 +177,9 @@ void main() {
         color = finalize_color(
             v_color[vert_index],
             corners[i],
-            unit_normal,
-            light_source_position,
-            camera_position,
-            reflectiveness,
-            gloss,
-            shadow
+            unit_normal
         );
-        gl_Position = get_gl_Position(corners[i]);
+        gl_Position = get_gl_Position(position_point_into_frame(corners[i]));
         EmitVertex();
     }
     EndPrimitive();

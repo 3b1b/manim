@@ -1,8 +1,6 @@
 uniform vec3 light_source_position;
 uniform vec3 camera_position;
-uniform float reflectiveness;
-uniform float gloss;
-uniform float shadow;
+uniform vec3 shading;
 
 vec3 float_to_color(float value, float min_val, float max_val, vec3[9] colormap_data){
     float alpha = clamp((value - min_val) / (max_val - min_val), 0.0, 1.0);
@@ -15,23 +13,16 @@ vec3 float_to_color(float value, float min_val, float max_val, vec3[9] colormap_
 }
 
 
-vec4 add_light(
-    vec4 color,
-    vec3 point,
-    vec3 unit_normal,
-    vec3 light_coords,
-    vec3 cam_coords,
-    float reflectiveness,
-    float gloss,
-    float shadow
-){
-    if(reflectiveness == 0.0 && gloss == 0.0 && shadow == 0.0) return color;
+vec4 add_light(vec4 color, vec3 point, vec3 unit_normal){
+    if(shading == vec3(0.0)) return color;
+
+    float reflectiveness = shading.x;
+    float gloss = shading.y;
+    float shadow = shading.z;
 
     vec4 result = color;
-    // Assume everything has already been rotated such that camera is in the z-direction
-    // cam_coords = vec3(0, 0, focal_distance);
-    vec3 to_camera = normalize(cam_coords - point);
-    vec3 to_light = normalize(light_coords - point);
+    vec3 to_camera = normalize(camera_position - point);
+    vec3 to_light = normalize(light_position - point);
 
     // Note, this effectively treats surfaces as two-sided
     // if(dot(to_camera, unit_normal) < 0) unit_normal *= -1;
@@ -48,26 +39,18 @@ vec4 add_light(
     result.rgb = mix(result.rgb, vec3(1.0), bright_factor);
     if (light_to_normal < 0){
         // Darken
-        result.rgb = mix(result.rgb, vec3(0.0), -light_to_normal * shadow);
+        result.rgb = mix(
+            result.rgb,
+            vec3(0.0),
+            max(-light_to_normal, 0) * shadow
+        );
     }
     return result;
 }
 
-vec4 finalize_color(
-    vec4 color,
-    vec3 point,
-    vec3 unit_normal,
-    vec3 light_coords,
-    vec3 cam_coords,
-    float reflectiveness,
-    float gloss,
-    float shadow
-){
+vec4 finalize_color(vec4 color, vec3 point, vec3 unit_normal){
     ///// INSERT COLOR FUNCTION HERE /////
     // The line above may be replaced by arbitrary code snippets, as per
     // the method Mobject.set_color_by_code
-    return add_light(
-        color, point, unit_normal, light_coords, cam_coords,
-        reflectiveness, gloss, shadow
-    );
+    return add_light(color, point, unit_normal);
 }

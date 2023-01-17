@@ -10,11 +10,8 @@ out float v_orientation;
 out vec4 v_color;
 out float v_vert_index;
 
-// Analog of import for manim only
-#INSERT get_gl_Position.glsl
-
 void main(){
-    verts = position_point_into_frame(point);
+    verts = point;
     v_orientation = orientation;
     v_color = fill_rgba;
     v_vert_index = vert_index;

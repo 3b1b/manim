@@ -552,7 +552,7 @@ class Piano(VGroup):
 class Piano3D(VGroup):
     def __init__(
         self,
-        reflectiveness: float = 1.0,
+        shading: Tuple[float, float, float] = (1.0, 0.2, 0.2),
         stroke_width: float = 0.25,
         stroke_color: ManimColor = BLACK,
         key_depth: float = 0.1,
@@ -569,6 +569,7 @@ class Piano3D(VGroup):
             for key in piano_2d
         ))
         self.set_stroke(stroke_color, stroke_width)
+        self.set_shading(*shading)
         self.apply_depth_test()
 
         # Elevate black keys
