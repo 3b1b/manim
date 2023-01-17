@@ -29,8 +29,10 @@ const int AUTO_JOINT = 1;
 const int BEVEL_JOINT = 2;
 const int MITER_JOINT = 3;
 
-const float PI = 3.141592653;
-const float ANGLE_THRESHOLD = 1e-3;
+// When the cosine of the angle between
+// two vectors is larger than this, we
+// consider them aligned
+const float COS_THRESHOLD = 0.999;
 
 
 #INSERT get_gl_Position.glsl
@@ -63,7 +65,7 @@ void create_joint(
     vec3 static_c1,
     out vec3 changing_c1
 ){
-    if(cos_angle > (1.0 - ANGLE_THRESHOLD) || int(joint_type) == NO_JOINT){
+    if(cos_angle > COS_THRESHOLD || int(joint_type) == NO_JOINT){
         // No joint
         changing_c0 = static_c0;
         changing_c1 = static_c1;
@@ -161,9 +163,8 @@ void main() {
     vec3 v01 = normalize(p1 - p0);
     vec3 v12 = normalize(p2 - p1);
 
-    float angle = acos(clamp(dot(v01, v12), -1, 1));
-    is_linear = float(abs(angle) < ANGLE_THRESHOLD);
-
+    float cos_angle = v_joint_product[1].w;
+    is_linear = float(cos_angle > COS_THRESHOLD);
 
     // If the curve is flat, put the middle control in the midpoint
     if (bool(is_linear)) p1 = 0.5 * (p0 + p2);
