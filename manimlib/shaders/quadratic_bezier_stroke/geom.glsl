@@ -179,7 +179,7 @@ void main() {
             corners[i],
             unit_normal
         );
-        gl_Position = get_gl_Position(position_point_into_frame(corners[i]));
+        gl_Position = get_gl_Position(corners[i]);
         EmitVertex();
     }
     EndPrimitive();
