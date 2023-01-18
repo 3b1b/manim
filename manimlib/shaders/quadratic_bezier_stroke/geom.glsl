@@ -63,7 +63,7 @@ void create_joint(
     out vec3 changing_c1
 ){
     float cos_angle = joint_product.w;
-    if(cos_angle > COS_THRESHOLD || int(joint_type) == NO_JOINT){
+    if(abs(cos_angle) > COS_THRESHOLD || int(joint_type) == NO_JOINT){
         // No joint
         changing_c0 = static_c0;
         changing_c1 = static_c1;
@@ -105,7 +105,7 @@ void get_corners(
 
     // Add correction for sharp angles to prevent weird bevel effects
     if(v_joint_product[0].w < -0.5) buff0 *= 2 * (v_joint_product[0].w + 1.0);
-    if(v_joint_product[2].w < -0.5) buff2 *= 2 * (v_joint_product[0].w + 1.0);
+    if(v_joint_product[2].w < -0.5) buff2 *= 2 * (v_joint_product[2].w + 1.0);
 
     // Unit normal and joint angles
     vec3 normal0 = get_joint_unit_normal(v_joint_product[0]);
@@ -113,8 +113,9 @@ void get_corners(
     // Set global unit normal
     unit_normal = normal0;
 
-    // Make sure normals point in the same direction
-    if(dot(normal0, normal2) < 0) buff2 *= -1;
+    // Choose the "outward" normal direction
+    normal0 *= sign(normal0.z);
+    normal2 *= sign(normal2.z);
 
     vec3 p0_perp;
     vec3 p2_perp;
