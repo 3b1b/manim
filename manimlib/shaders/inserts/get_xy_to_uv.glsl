@@ -41,8 +41,7 @@ vec2 xs_on_clean_parabola(vec3 b0, vec3 b1, vec3 b2){
     float u0 = dot(b1 - b0, dd);
     float u2 = dot(b2 - b1, dd);
     vec3 cp = cross(b2 - b0, dd);
-    float sgn = sign(cp.z);
-    float denom = sgn * length(cp);
+    float denom = length(cp);
 
     return vec2(u0 / denom, u2 / denom);
 }
@@ -82,16 +81,16 @@ mat4 map_triangles(vec3 src0, vec3 src1, vec3 src2, vec3 dst0, vec3 dst1, vec3 d
     onto the triangle (dst0, dst1, dst2)
     */
     mat4 src_mat = mat4(
-        src0.x, src0.y, src0.z, 1.0,
-        src1.x, src1.y, src1.z, 1.0,
-        src2.x, src2.y, src2.z, 1.0,
-        1.0, 1.0, 1.0, 1.0
+        src0, 1.0,
+        src1, 1.0,
+        src2, 1.0,
+        vec4(1.0)
     );
     mat4 dst_mat = mat4(
-        dst0.x, dst0.y, dst0.z, 1.0,
-        dst1.x, dst1.y, dst1.z, 1.0,
-        dst2.x, dst2.y, dst2.z, 1.0,
-        1.0, 1.0, 1.0, 1.0
+        dst0, 1.0,
+        dst1, 1.0,
+        dst2, 1.0,
+        vec4(1.0)
     );
     return dst_mat * inverse(src_mat);
 }
@@ -162,7 +161,6 @@ mat4 get_xyz_to_uv(vec3 b0, vec3 b1, vec3 b2, float temp_is_linear, out float is
     vec3 dest0;
     vec3 dest1;
     vec3 dest2;
-    vec3 src1;
     is_linear = temp_is_linear;
     // Portions of the parabola y = x^2 where abs(x) exceeds
     // this value are treated as straight lines.
@@ -177,20 +175,17 @@ mat4 get_xyz_to_uv(vec3 b0, vec3 b1, vec3 b2, float temp_is_linear, out float is
             dest0 = vec3(x0, x0 * x0, 0.0);
             dest1 = vec3(0.5 * (x0 + x2), x0 * x2, 0.0);
             dest2 = vec3(x2, x2 * x2, 0.0);
-            src1 = b1;
         }
     }
     // Check if is_linear status changed above
     if (bool(is_linear)){
         dest0 = vec3(0.0, 0.0, 0.0);
-        dest1 = vec3(0.0, 1.0, 0.0);
         dest2 = vec3(1.0, 0.0, 0.0);
-        vec3 v = b2 - b0;
-        src1 = b0 + length(v) * normalize(cross(v, vec3(0, 0, 1)));
+        return map_point_pairs(b0, b2, dest0, dest2);
     }
 
     // return map_point_pairs(b0, b2, dest0, dest1);
-    return map_triangles(b0, src1, b2, dest0, dest1, dest2);
+    return map_triangles(b0, b1, b2, dest0, dest1, dest2);
 }
 
 
