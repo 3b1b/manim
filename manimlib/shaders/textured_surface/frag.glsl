@@ -20,7 +20,7 @@ void main() {
     if(num_textures == 2.0){
         vec4 dark_color = texture(DarkTexture, v_im_coords);
         float dp = dot(
-            normalize(light_source_position - v_point),
+            normalize(light_position - v_point),
             normalize(v_normal)
         );
         float alpha = smoothstep(-dark_shift, dark_shift, dp);
