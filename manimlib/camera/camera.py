@@ -84,9 +84,17 @@ class CameraFrame(Mobject):
         return self.get_orientation().as_matrix().T
 
     def get_perspective_transform(self):
-        self.perspective_transform[:3, :3] = self.get_inverse_camera_rotation_matrix()
-        self.perspective_transform[:3, 3] = -self.get_center()
-        return self.perspective_transform
+        """
+        Returns a 4x4 for the affine transformation mapping a point
+        into the camera's internal coordinate system
+        """
+        result = self.perspective_transform
+        result[:] = np.identity(4)
+        result[:3, 3] = -self.get_center()
+        rotation = np.identity(4)
+        rotation[:3, :3] = self.get_inverse_camera_rotation_matrix()
+        result[:] = np.dot(rotation, result)
+        return result
 
     def rotate(self, angle: float, axis: np.ndarray = OUT, **kwargs):
         rot = Rotation.from_rotvec(angle * normalize(axis))
@@ -215,6 +223,7 @@ class Camera(object):
         self.background_rgba: list[float] = list(color_to_rgba(
             background_color, background_opacity
         ))
+        self.perspective_uniforms = dict()
         self.init_frame(**frame_config)
         self.init_context(ctx)
         self.init_shaders()
@@ -499,14 +508,14 @@ class Camera(object):
         cam_pos = self.frame.get_implied_camera_location()
         frame_shape = frame.get_shape()
 
-        self.perspective_uniforms = {
-            "frame_shape": frame_shape,
-            "pixel_size": frame_shape[0] / self.get_pixel_shape()[0],
-            "perspective": tuple(perspective_transform.T.flatten()),
-            "camera_position": tuple(cam_pos),
-            "light_position": tuple(light_pos),
-            "focal_distance": frame.get_focal_distance(),
-        }
+        self.perspective_uniforms.update(
+            frame_shape=frame_shape,
+            pixel_size=frame_shape[0] / self.get_pixel_shape()[0],
+            perspective=tuple(perspective_transform.T.flatten()),
+            camera_position=tuple(cam_pos),
+            light_position=tuple(light_pos),
+            focal_distance=frame.get_focal_distance(),
+        )
 
     def init_textures(self) -> None:
         self.n_textures: int = 0
