@@ -39,6 +39,7 @@ class CameraFrame(Mobject):
         self.frame_shape = frame_shape
         self.center_point = center_point
         self.focal_dist_to_height = focal_dist_to_height
+        self.perspective_transform = np.identity(4)
         super().__init__(**kwargs)
 
     def init_uniforms(self) -> None:
@@ -81,6 +82,11 @@ class CameraFrame(Mobject):
 
     def get_inverse_camera_rotation_matrix(self):
         return self.get_orientation().as_matrix().T
+
+    def get_perspective_transform(self):
+        self.perspective_transform[:3, :3] = self.get_inverse_camera_rotation_matrix()
+        self.perspective_transform[:3, 3] = -self.get_center()
+        return self.perspective_transform
 
     def rotate(self, angle: float, axis: np.ndarray = OUT, **kwargs):
         rot = Rotation.from_rotvec(angle * normalize(axis))
@@ -488,16 +494,14 @@ class Camera(object):
     def refresh_perspective_uniforms(self) -> None:
         frame = self.frame
         # Orient light
-        rotation = frame.get_inverse_camera_rotation_matrix()
-        offset = frame.get_center()
+        perspective_transform = frame.get_perspective_transform()
         light_pos = self.light_source.get_location()
-        cam_pos = self.frame.get_implied_camera_location()  # TODO
+        cam_pos = self.frame.get_implied_camera_location()
 
         self.perspective_uniforms = {
             "frame_shape": frame.get_shape(),
             "pixel_shape": self.get_pixel_shape(),
-            "camera_offset": tuple(offset),
-            "camera_rotation": tuple(np.array(rotation).T.flatten()),
+            "perspective": tuple(perspective_transform.T.flatten()),
             "camera_position": tuple(cam_pos),
             "light_position": tuple(light_pos),
             "focal_distance": frame.get_focal_distance(),

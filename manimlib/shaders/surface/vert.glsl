@@ -14,7 +14,7 @@ out vec4 v_color;
 #INSERT finalize_color.glsl
 
 void main(){
-    gl_Position = get_gl_Position(position_point_into_frame(point));
+    gl_Position = get_gl_Position(point);
     vec3 normal = get_unit_normal(point, du_point, dv_point);
     v_color = finalize_color(rgba, point, normal);
 

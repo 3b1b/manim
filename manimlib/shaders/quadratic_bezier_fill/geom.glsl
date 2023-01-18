@@ -30,12 +30,8 @@ const float ANGLE_THRESHOLD = 1e-3;
 
 
 void emit_vertex_wrapper(vec3 point, int index, vec3 unit_normal){
-    color = finalize_color(
-        v_color[index],
-        point,
-        unit_normal
-    );
-    gl_Position = get_gl_Position(position_point_into_frame(point));
+    color = finalize_color(v_color[index], point, unit_normal);
+    gl_Position = get_gl_Position(point);
     EmitVertex();
 }
 

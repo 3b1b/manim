@@ -193,7 +193,7 @@ void main() {
         uv_coords = (xyz_to_uv * vec4(corners[i], 1)).xy;
         uv_stroke_width = uv_scale_factor * v_stroke_width[vert_index];
         color = finalize_color(v_color[vert_index], corners[i], unit_normal);
-        gl_Position = get_gl_Position(position_point_into_frame(corners[i]));
+        gl_Position = get_gl_Position(corners[i]);
         EmitVertex();
     }
     EndPrimitive();

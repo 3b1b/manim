@@ -15,5 +15,5 @@ out float v_opacity;
 void main(){
     v_im_coords = im_coords;
     v_opacity = opacity;
-    gl_Position = get_gl_Position(position_point_into_frame(point));
+    gl_Position = get_gl_Position(point);
 }
