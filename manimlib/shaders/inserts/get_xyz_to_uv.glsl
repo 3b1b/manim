@@ -11,10 +11,9 @@ vec2 xs_on_clean_parabola(vec3 b0, vec3 b1, vec3 b2){
 
     float u0 = dot(b1 - b0, dd);
     float u2 = dot(b2 - b1, dd);
-    vec3 cp = cross(b2 - b0, dd);
-    float denom = length(cp);
+    float cp = length(cross(b2 - b0, dd));
 
-    return vec2(u0 / denom, u2 / denom);
+    return vec2(u0 / cp, u2 / cp);
 }
 
 
