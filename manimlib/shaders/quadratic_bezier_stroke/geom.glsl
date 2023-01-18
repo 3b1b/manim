@@ -40,24 +40,20 @@ const float COS_THRESHOLD = 0.999;
 #INSERT finalize_color.glsl
 
 
-vec3 get_joint_normal(vec4 joint_product){
-    vec3 result = joint_product.xyz;
-    float norm = length(result);
-    if(norm < 1e-8){
-        // If it's too short, use the middle joint angle
+vec3 get_joint_unit_normal(vec4 joint_product){
+    vec3 result;
+    if(joint_product.w < COS_THRESHOLD){
+        result = joint_product.xyz;
+    }else{
         result = v_joint_product[1].xyz;
-        norm = length(result);
     }
-    if(norm < 1e-8){
-        // If that's also to short, just return unit z vector
-        return vec3(0.0, 0.0, 1.0);
-    }
-    return result / norm;
+    float norm = length(result);
+    return (norm > 1e-10) ? result / norm : vec3(0.0, 0.0, 1.0);
 }
 
 
 void create_joint(
-    float cos_angle,
+    vec4 joint_product,
     vec3 unit_tan,
     float buff,
     vec3 static_c0,
@@ -65,6 +61,7 @@ void create_joint(
     vec3 static_c1,
     out vec3 changing_c1
 ){
+    float cos_angle = joint_product.w;
     if(cos_angle > COS_THRESHOLD || int(joint_type) == NO_JOINT){
         // No joint
         changing_c0 = static_c0;
@@ -73,7 +70,7 @@ void create_joint(
     }
 
     float shift;
-    float sin_angle = sqrt(1.0 - cos_angle * cos_angle);
+    float sin_angle = length(joint_product.xyz) * sign(joint_product.z);
     if(int(joint_type) == MITER_JOINT){
         shift = buff * (-1.0 - cos_angle) / sin_angle;
     }else{
@@ -106,28 +103,25 @@ void get_corners(
     float buff2 = 0.5 * v_stroke_width[2] + aaw;
 
     // Add correction for sharp angles to prevent weird bevel effects
-    if(v_joint_product[0].w < -0.5) buff0 *= -2 * v_joint_product[0].w;
-    if(v_joint_product[2].w < -0.5) buff2 *= -2 * v_joint_product[0].w;
+    if(v_joint_product[0].w < -0.5) buff0 *= 2 * (v_joint_product[0].w + 1.0);
+    if(v_joint_product[2].w < -0.5) buff2 *= 2 * (v_joint_product[0].w + 1.0);
 
     // Unit normal and joint angles
-    vec3 normal0 = get_joint_normal(v_joint_product[0]);
-    vec3 normal2 = get_joint_normal(v_joint_product[2]);
+    vec3 normal0 = get_joint_unit_normal(v_joint_product[0]);
+    vec3 normal2 = get_joint_unit_normal(v_joint_product[2]);
 
     // Make sure normals point in the same direction
-    if(dot(normal0, normal2) < 0) normal2 *= -1;
+    if(dot(normal0, normal2) < 0) buff2 *= -1;
 
-    // Perpendicular vectors to the left of the curve
     vec3 p0_perp;
     vec3 p2_perp;
     if(bool(flat_stroke)){
+        // Perpendicular vectors to the left of the curve
         p0_perp = buff0 * normalize(cross(normal0, v01));
         p2_perp = buff2 * normalize(cross(normal2, v12));
     }else{
         p0_perp = buff0 * normal0;
         p2_perp = buff2 * normal2;
-        // vec3 to_cam = transpose(camera_rotation)[2];
-        // p0_perp = buff0 * to_cam;
-        // p2_perp = buff2 * to_cam;
     }
     vec3 p1_perp = 0.5 * (p0_perp + p2_perp);
 
@@ -146,8 +140,8 @@ void get_corners(
 
     // Account for previous and next control points
     if(bool(flat_stroke)){
-        create_joint(v_joint_product[0].w, v01, buff0, c1, c1, c0, c0);
-        create_joint(v_joint_product[2].w, -v12, buff2, c5, c5, c4, c4);
+        create_joint(v_joint_product[0], v01, buff0, c1, c1, c0, c0);
+        create_joint(v_joint_product[2], -v12, buff2, c5, c5, c4, c4);
     }
 
     corners = vec3[6](c0, c1, c2, c3, c4, c5);
