@@ -39,51 +39,36 @@ mat4 map_triangles(vec3 src0, vec3 src1, vec3 src2, vec3 dst0, vec3 dst1, vec3 d
 }
 
 
-mat4 map_point_pairs(vec3 src0, vec3 src1, vec3 dst0, vec3 dst1){
-    /*
-    Returns an orthogonal matrix which will map
-    src0 onto dst0 and src1 onto dst1.
-    */
-    mat4 shift1 = mat4(1.0);
-    shift1[3].xyz = -src0;
-    mat4 shift2 = mat4(1.0);
-    shift2[3].xzy = dst0;
+mat4 map_onto_x_axis(vec3 src0, vec3 src1){
+    mat4 shift = mat4(1.0);
+    shift[3].xyz = -src0;
 
     // Find rotation matrix between unit vectors in each direction    
-    vec3 src_v = src1 - src0;
-    vec3 dst_v = dst1 - dst0;
-    float src_len = length(src_v);
-    float dst_len = length(dst_v);
-    float scale = dst_len / src_len;
-    src_v /= src_len;
-    dst_v /= dst_len;
+    vec3 vect = normalize(src1 - src0);
+    // This is the same as cross(vect, vec3(1, 0, 0))
+    vec3 axis = vec3(0.0, vect.z, -vect.y);
 
-    vec3 cp = cross(src_v, dst_v);
-    float dp = dot(src_v, dst_v);
+    float s = length(axis); // Sine of the angle between them
+    float c = vect.x;       // Cosine of the angle between them
 
-    float s = length(cp); // Sine of the angle between them
-    float c = dp;         // Cosine of the angle between them
+    // No rotation needed
+    if(s < 1e-8) return shift;
 
-    if(s < 1e-8){
-        // No rotation needed
-        return shift2 * shift1;
-    }
-
-    vec3 axis = cp / s;   // Axis of rotation
+    axis = axis / s;   // Axis of rotation
     float oc = 1.0 - c;
     float ax = axis.x;
     float ay = axis.y;
     float az = axis.z;
 
     // Rotation matrix about axis, with a given angle corresponding to s and c.
-    mat4 rotate = scale * mat4(
+    mat4 rotate = mat4(
         oc * ax * ax + c,      oc * ax * ay + az * s, oc * az * ax - ay * s, 0.0,
         oc * ax * ay - az * s, oc * ay * ay + c,      oc * ay * az + ax * s, 0.0,
         oc * az * ax + ay * s, oc * ay * az - ax * s, oc * az * az + c,      0.0,
-        0.0, 0.0, 0.0, 1.0 / scale
+        0.0, 0.0, 0.0, 1.0
     );
 
-    return shift2 * rotate * shift1;
+    return rotate * shift;
 }
 
 
@@ -93,9 +78,6 @@ mat4 get_xyz_to_uv(vec3 b0, vec3 b1, vec3 b2, float temp_is_linear, out float is
     bezier controls points into a new coordinate system such that the bezier curve
     coincides with y = x^2, or in the case of a linear curve, it's mapped to the x-axis.
     */
-    vec3 dst0;
-    vec3 dst1;
-    vec3 dst2;
     is_linear = temp_is_linear;
     // Portions of the parabola y = x^2 where abs(x) exceeds
     // this value are treated as straight lines.
@@ -107,18 +89,15 @@ mat4 get_xyz_to_uv(vec3 b0, vec3 b1, vec3 b2, float temp_is_linear, out float is
         if((x0 > thresh && x2 > thresh) || (x0 < -thresh && x2 < -thresh)){
             is_linear = 1.0;
         }else{
-            dst0 = vec3(x0, x0 * x0, 0.0);
-            dst1 = vec3(0.5 * (x0 + x2), x0 * x2, 0.0);
-            dst2 = vec3(x2, x2 * x2, 0.0);
+            // This triangle on the xy plane should be isometric
+            // to (b0, b1, b2), and it should define a quadratic
+            // bezier segment aligned with y = x^2
+            vec3 dst0 = vec3(x0, x0 * x0, 0.0);
+            vec3 dst1 = vec3(0.5 * (x0 + x2), x0 * x2, 0.0);
+            vec3 dst2 = vec3(x2, x2 * x2, 0.0);
+            return map_triangles(b0, b1, b2, dst0, dst1, dst2);
         }
     }
-    // Check if is_linear status changed above
-    if (bool(is_linear)){
-        dst0 = vec3(0.0, 0.0, 0.0);
-        dst2 = vec3(1.0, 0.0, 0.0);
-        return map_point_pairs(b0, b2, dst0, dst2);
-    }
-
-    // return map_point_pairs(b0, b2, dst0, dst1);
-    return map_triangles(b0, b1, b2, dst0, dst1, dst2);
+    // Only lands here if is_linear is 1.0
+    return map_onto_x_axis(b0, b2);
 }
