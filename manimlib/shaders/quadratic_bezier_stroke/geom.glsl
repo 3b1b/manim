@@ -178,7 +178,6 @@ void main() {
     // coincides with y = x^2, between some values x0 and x2. Or, in
     // the case of a linear curve (bezier degree 1), just put it on
     // the segment from (0, 0) to (1, 0)
-    // mat3 xy_to_uv = get_xy_to_uv(p0.xy, p1.xy, p2.xy, is_linear, is_linear);
     mat4 xyz_to_uv = get_xyz_to_uv(p0, p1, p2, is_linear, is_linear);
 
     float uv_scale_factor = length(xyz_to_uv[0].xyz);

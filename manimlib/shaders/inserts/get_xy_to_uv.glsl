@@ -47,10 +47,10 @@ vec2 xs_on_clean_parabola(vec3 b0, vec3 b1, vec3 b2){
 }
 
 
-mat3 map_point_pairs(vec2 src0, vec2 src1, vec2 dest0, vec2 dest1){
+mat3 map_point_pairs(vec2 src0, vec2 src1, vec2 dst0, vec2 dst1){
     /*
     Returns an orthogonal matrix which will map
-    src0 onto dest0 and src1 onto dest1.
+    src0 onto dst0 and src1 onto dst1.
     */
     mat3 shift1 = mat3(
         1.0, 0.0, 0.0,
@@ -60,11 +60,11 @@ mat3 map_point_pairs(vec2 src0, vec2 src1, vec2 dest0, vec2 dest1){
     mat3 shift2 = mat3(
         1.0, 0.0, 0.0,
         0.0, 1.0, 0.0,
-        dest0.x, dest0.y, 1.0
+        dst0.x, dst0.y, 1.0
     );
 
     // Compute complex division dest_vect / src_vect to determine rotation
-    vec2 complex_rot = complex_div(dest1 - dest0, src1 - src0);
+    vec2 complex_rot = complex_div(dst1 - dst0, src1 - src0);
     mat3 rotate = mat3(
         complex_rot.x, complex_rot.y, 0.0,
         -complex_rot.y, complex_rot.x, 0.0,
@@ -96,27 +96,19 @@ mat4 map_triangles(vec3 src0, vec3 src1, vec3 src2, vec3 dst0, vec3 dst1, vec3 d
 }
 
 
-mat4 map_point_pairs(vec3 src0, vec3 src1, vec3 dest0, vec3 dest1){
+mat4 map_point_pairs(vec3 src0, vec3 src1, vec3 dst0, vec3 dst1){
     /*
     Returns an orthogonal matrix which will map
-    src0 onto dest0 and src1 onto dest1.
+    src0 onto dst0 and src1 onto dst1.
     */
-    mat4 shift1 = mat4(
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        -src0.x, -src0.y, -src0.z, 1.0
-    );
-    mat4 shift2 = mat4(
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        dest0.x, dest0.y, dest0.z, 1.0
-    );
+    mat4 shift1 = mat4(1.0);
+    shift1[3].xyz = -src0;
+    mat4 shift2 = mat4(1.0);
+    shift2[3].xzy = dst0;
 
     // Find rotation matrix between unit vectors in each direction    
     vec3 src_v = src1 - src0;
-    vec3 dst_v = dest1 - dest0;
+    vec3 dst_v = dst1 - dst0;
     float src_len = length(src_v);
     float dst_len = length(dst_v);
     float scale = dst_len / src_len;
@@ -158,9 +150,9 @@ mat4 get_xyz_to_uv(vec3 b0, vec3 b1, vec3 b2, float temp_is_linear, out float is
     bezier controls points into a new coordinate system such that the bezier curve
     coincides with y = x^2, or in the case of a linear curve, it's mapped to the x-axis.
     */
-    vec3 dest0;
-    vec3 dest1;
-    vec3 dest2;
+    vec3 dst0;
+    vec3 dst1;
+    vec3 dst2;
     is_linear = temp_is_linear;
     // Portions of the parabola y = x^2 where abs(x) exceeds
     // this value are treated as straight lines.
@@ -172,20 +164,20 @@ mat4 get_xyz_to_uv(vec3 b0, vec3 b1, vec3 b2, float temp_is_linear, out float is
         if((x0 > thresh && x2 > thresh) || (x0 < -thresh && x2 < -thresh)){
             is_linear = 1.0;
         }else{
-            dest0 = vec3(x0, x0 * x0, 0.0);
-            dest1 = vec3(0.5 * (x0 + x2), x0 * x2, 0.0);
-            dest2 = vec3(x2, x2 * x2, 0.0);
+            dst0 = vec3(x0, x0 * x0, 0.0);
+            dst1 = vec3(0.5 * (x0 + x2), x0 * x2, 0.0);
+            dst2 = vec3(x2, x2 * x2, 0.0);
         }
     }
     // Check if is_linear status changed above
     if (bool(is_linear)){
-        dest0 = vec3(0.0, 0.0, 0.0);
-        dest2 = vec3(1.0, 0.0, 0.0);
-        return map_point_pairs(b0, b2, dest0, dest2);
+        dst0 = vec3(0.0, 0.0, 0.0);
+        dst2 = vec3(1.0, 0.0, 0.0);
+        return map_point_pairs(b0, b2, dst0, dst2);
     }
 
-    // return map_point_pairs(b0, b2, dest0, dest1);
-    return map_triangles(b0, b1, b2, dest0, dest1, dest2);
+    // return map_point_pairs(b0, b2, dst0, dst1);
+    return map_triangles(b0, b1, b2, dst0, dst1, dst2);
 }
 
 
@@ -195,8 +187,8 @@ mat3 get_xy_to_uv(vec2 b0, vec2 b1, vec2 b2, float temp_is_linear, out float is_
     bezier controls points into a new coordinate system such that the bezier curve
     coincides with y = x^2, or in the case of a linear curve, it's mapped to the x-axis.
     */
-    vec2 dest0;
-    vec2 dest1;
+    vec2 dst0;
+    vec2 dst1;
     is_linear = temp_is_linear;
     // Portions of the parabola y = x^2 where abs(x) exceeds
     // this value are treated as straight lines.
@@ -208,15 +200,15 @@ mat3 get_xy_to_uv(vec2 b0, vec2 b1, vec2 b2, float temp_is_linear, out float is_
         if((x0 > thresh && x2 > thresh) || (x0 < -thresh && x2 < -thresh)){
             is_linear = 1.0;
         }else{
-            dest0 = vec2(x0, x0 * x0);
-            dest1 = vec2(x2, x2 * x2);
+            dst0 = vec2(x0, x0 * x0);
+            dst1 = vec2(x2, x2 * x2);
         }
     }
     // Check if is_linear status changed above
     if (bool(is_linear)){
-        dest0 = vec2(0, 0);
-        dest1 = vec2(1, 0);
+        dst0 = vec2(0, 0);
+        dst1 = vec2(1, 0);
     }
 
-    return map_point_pairs(b0, b2, dest0, dest1);
+    return map_point_pairs(b0, b2, dst0, dst1);
 }
