@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import wraps
-from fontTools.cu2qu.cu2qu import curve_to_quadratic
 
 import moderngl
 import numpy as np
@@ -447,22 +446,19 @@ class VMobject(Mobject):
         self.throw_error_if_no_points()
         last = self.get_last_point()
         # Note, this assumes all points are on the xy-plane
-        approx_2d = curve_to_quadratic(
-            [last[:2], handle1[:2], handle2[:2], anchor[:2]],
-            0.1 * get_norm(anchor - last)
-        )
-        if approx_2d is not None and len(approx_2d) % 2 == 1:
-            approx_3d = np.zeros((len(approx_2d), 3))
-            approx_3d[:, :2] = approx_2d
+        v1 = handle1 - last
+        v2 = anchor - handle2
+        angle = angle_between_vectors(v1, v2)
+        if self.use_simple_quadratic_approx and angle < 45 * DEGREES:
+            quad_approx = [last, find_intersection(last, v1, anchor, -v2), anchor]
         else:
-            approx_3d = get_quadratic_approximation_of_cubic(
+            quad_approx = get_quadratic_approximation_of_cubic(
                 last, handle1, handle2, anchor
             )
-
-        if self.consider_points_equal(approx_3d[1], last):
+        if self.consider_points_equal(quad_approx[1], last):
             # This is to prevent subpaths from accidentally being marked closed
-            approx_3d[1] = midpoint(*approx_3d[1:3])
-        self.append_points(approx_3d[1:])
+            quad_approx[1] = midpoint(*quad_approx[1:3])
+        self.append_points(quad_approx[1:])
         return self
 
     def add_quadratic_bezier_curve_to(self, handle: Vect3, anchor: Vect3):
