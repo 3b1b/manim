@@ -179,7 +179,12 @@ void main() {
     // the case of a linear curve (bezier degree 1), just put it on
     // the segment from (0, 0) to (1, 0)
     // mat3 xy_to_uv = get_xy_to_uv(p0.xy, p1.xy, p2.xy, is_linear, is_linear);
-    mat4 xyz_to_uv = get_xyz_to_uv(p0, p1, p2, is_linear, is_linear);
+    mat4 xyz_to_uv = get_xyz_to_uv(
+        position_point_into_frame(p0),
+        position_point_into_frame(p1),
+        position_point_into_frame(p2),
+        is_linear, is_linear
+    );
 
     float uv_scale_factor = length(xyz_to_uv[0].xyz);
     float scaled_aaw = anti_alias_width * (frame_shape.y / pixel_shape.y);
@@ -191,15 +196,15 @@ void main() {
     // Emit each corner
     for(int i = 0; i < 6; i++){
         int vert_index = i / 2;
-        // uv_coords = (xy_to_uv * vec3(corners[i].xy, 1)).xy;
-        uv_coords = (xyz_to_uv * vec4(corners[i], 1)).xy;
+        vec3 pos = corners[i];
+        uv_coords = (xyz_to_uv * vec4(pos, 1)).xy;
         uv_stroke_width = uv_scale_factor * v_stroke_width[vert_index];
         color = finalize_color(
             v_color[vert_index],
             corners[i],
             vec3(0.0, 0.0, 1.0) // TODO
         );
-        gl_Position = get_gl_Position(position_point_into_frame(corners[i]));
+        gl_Position = get_gl_Position(pos);
         EmitVertex();
     }
     EndPrimitive();
