@@ -37,7 +37,7 @@ class DotCloud(PMobject):
         opacity: float = 1.0,
         radius: float = DEFAULT_DOT_RADIUS,
         glow_factor: float = 0.0,
-        anti_alias_width: float = 1.0,
+        anti_alias_width: float = 2.0,
         **kwargs
     ):
         self.radius = radius

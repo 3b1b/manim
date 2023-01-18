@@ -248,6 +248,8 @@ class Camera(object):
         self.fbo = fbo
         self.set_ctx_blending()
 
+        self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
+
         # For multisample antialiasing
         fbo_msaa = self.get_fbo(ctx, self.samples)
         fbo_msaa.use()
