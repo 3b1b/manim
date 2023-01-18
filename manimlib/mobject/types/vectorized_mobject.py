@@ -431,9 +431,8 @@ class VMobject(Mobject):
         handle2: Vect3,
         anchor2: Vect3
     ):
-        self.add_subpath(get_quadratic_approximation_of_cubic(
-            anchor1, handle1, handle2, anchor2
-        ))
+        self.start_new_path(anchor1)
+        self.add_cubic_bezier_curve_to(handle1, handle2, anchor2)
         return self
 
     def add_cubic_bezier_curve_to(
@@ -447,13 +446,19 @@ class VMobject(Mobject):
         """
         self.throw_error_if_no_points()
         last = self.get_last_point()
-        # Not, this assumes all points are on the xy-plane
+        # Note, this assumes all points are on the xy-plane
         approx_2d = curve_to_quadratic(
             [last[:2], handle1[:2], handle2[:2], anchor[:2]],
-            1.0  # High tolerance for error
+            0.1 * get_norm(anchor - last)
         )
-        approx_3d = np.zeros((len(approx_2d), 3))
-        approx_3d[:, :2] = approx_2d
+        if approx_2d is not None and len(approx_2d) % 2 == 1:
+            approx_3d = np.zeros((len(approx_2d), 3))
+            approx_3d[:, :2] = approx_2d
+        else:
+            approx_3d = get_quadratic_approximation_of_cubic(
+                last, handle1, handle2, anchor
+            )
+
         if self.consider_points_equal(approx_3d[1], last):
             # This is to prevent subpaths from accidentally being marked closed
             approx_3d[1] = midpoint(*approx_3d[1:3])
