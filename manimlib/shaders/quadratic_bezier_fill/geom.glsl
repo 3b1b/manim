@@ -83,13 +83,13 @@ void emit_pentagon(
     }
 
     // Compute xy_to_uv matrix, and potentially re-evaluate bezier degree
-    mat3 xy_to_uv = get_xy_to_uv(p0.xy, p1.xy, p2.xy, is_linear, is_linear);
-    uv_anti_alias_width = aaw * length(xy_to_uv[0].xy);
+    mat4 xyz_to_uv = get_xyz_to_uv(p0, p1, p2, is_linear, is_linear);
+    uv_anti_alias_width = aaw * length(xyz_to_uv[0].xyz);
 
     for(int i = 0; i < 5; i++){
         int j = int(sign(i - 1) + 1);  // Maps i = [0, 1, 2, 3, 4] onto j = [0, 0, 1, 2, 2]
         vec3 corner = corners[i];
-        uv_coords = (xy_to_uv * vec3(corner.xy, 1.0)).xy;
+        uv_coords = (xyz_to_uv * vec4(corner, 1.0)).xy;
         emit_vertex_wrapper(corner, j, unit_normal);
     }
     EndPrimitive();
