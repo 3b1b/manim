@@ -4,7 +4,7 @@ layout (triangles) in;
 layout (triangle_strip, max_vertices = 5) out;
 
 uniform float anti_alias_width;
-uniform vec2 pixel_shape;
+uniform float pixel_size;
 
 in vec3 verts[3];
 in float v_orientation[3];
@@ -63,7 +63,7 @@ void emit_pentagon(
     is_linear = float(angle < ANGLE_THRESHOLD);
 
     bool fill_inside = orientation > 0.0;
-    float aaw = anti_alias_width * frame_shape.y / pixel_shape.y;
+    float aaw = anti_alias_width * pixel_size;
     vec3 corners[5] = vec3[5](p0, p0, p1, p2, p2);
 
     if(fill_inside || bool(is_linear)){

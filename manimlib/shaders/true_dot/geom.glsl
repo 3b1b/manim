@@ -4,7 +4,7 @@ layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
 uniform float anti_alias_width;
-uniform vec2 pixel_shape;
+uniform float pixel_size;
 uniform vec3 camera_position;
 
 in vec3 v_point[1];
@@ -24,7 +24,7 @@ void main() {
     radius = v_radius[0];
     center = v_point[0].xy;
     
-    scaled_aaw = (frame_shape.y / pixel_shape.y);
+    scaled_aaw = anti_alias_width * pixel_size;
     radius = v_radius[0] / max(1.0 - v_point[0].z / focal_distance / frame_shape.y, 0.0);
     float rpa = radius + scaled_aaw;
 

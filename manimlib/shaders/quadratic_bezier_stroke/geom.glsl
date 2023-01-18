@@ -5,7 +5,7 @@ layout (triangle_strip, max_vertices = 6) out;
 
 uniform float anti_alias_width;
 uniform float flat_stroke;
-uniform vec2 pixel_shape;
+uniform float pixel_size;
 uniform float joint_type;
 
 in vec3 verts[3];
@@ -181,7 +181,7 @@ void main() {
     mat4 xyz_to_uv = get_xyz_to_uv(p0, p1, p2, is_linear, is_linear);
 
     float uv_scale_factor = length(xyz_to_uv[0].xyz);
-    float scaled_aaw = anti_alias_width * (frame_shape.y / pixel_shape.y);
+    float scaled_aaw = anti_alias_width * pixel_size;
     uv_anti_alias_width = uv_scale_factor * scaled_aaw;
 
     vec3 corners[6];
