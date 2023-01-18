@@ -34,9 +34,10 @@ const int MITER_JOINT = 3;
 // consider them aligned
 const float COS_THRESHOLD = 0.999;
 
+vec3 unit_normal = vec3(0.0, 0.0, 1.0);
 
 #INSERT get_gl_Position.glsl
-#INSERT get_xy_to_uv.glsl
+#INSERT get_xyz_to_uv.glsl
 #INSERT finalize_color.glsl
 
 
@@ -109,6 +110,8 @@ void get_corners(
     // Unit normal and joint angles
     vec3 normal0 = get_joint_unit_normal(v_joint_product[0]);
     vec3 normal2 = get_joint_unit_normal(v_joint_product[2]);
+    // Set global unit normal
+    unit_normal = normal0;
 
     // Make sure normals point in the same direction
     if(dot(normal0, normal2) < 0) buff2 *= -1;
@@ -120,8 +123,10 @@ void get_corners(
         p0_perp = buff0 * normalize(cross(normal0, v01));
         p2_perp = buff2 * normalize(cross(normal2, v12));
     }else{
-        p0_perp = buff0 * normal0;
-        p2_perp = buff2 * normal2;
+        // p0_perp = buff0 * normal0;
+        // p2_perp = buff2 * normal2;
+        p0_perp = buff0 * normalize(cross(camera_position - p0, v01));
+        p2_perp = buff2 * normalize(cross(camera_position - p2, v12));
     }
     vec3 p1_perp = 0.5 * (p0_perp + p2_perp);
 
@@ -171,7 +176,7 @@ void main() {
     // We want to change the coordinates to a space where the curve
     // coincides with y = x^2, between some values x0 and x2. Or, in
     // the case of a linear curve (bezier degree 1), just put it on
-    // the segment from (0, 0) to (1, 0)
+    // the x-axis
     mat4 xyz_to_uv = get_xyz_to_uv(p0, p1, p2, is_linear, is_linear);
 
     float uv_scale_factor = length(xyz_to_uv[0].xyz);
@@ -186,11 +191,7 @@ void main() {
         int vert_index = i / 2;
         uv_coords = (xyz_to_uv * vec4(corners[i], 1)).xy;
         uv_stroke_width = uv_scale_factor * v_stroke_width[vert_index];
-        color = finalize_color(
-            v_color[vert_index],
-            corners[i],
-            vec3(0.0, 0.0, 1.0) // TODO
-        );
+        color = finalize_color(v_color[vert_index], corners[i], unit_normal);
         gl_Position = get_gl_Position(position_point_into_frame(corners[i]));
         EmitVertex();
     }
