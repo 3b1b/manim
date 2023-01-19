@@ -6,11 +6,11 @@ import moderngl
 import numpy as np
 
 from manimlib.constants import GREY_A, GREY_C, GREY_E
-from manimlib.constants import BLACK, WHITE
+from manimlib.constants import BLACK
 from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import DEGREES
 from manimlib.constants import JOINT_TYPE_MAP
-from manimlib.constants import ORIGIN, OUT, UP
+from manimlib.constants import ORIGIN, OUT
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.bezier import bezier
@@ -18,7 +18,6 @@ from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
 from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
 from manimlib.utils.bezier import integer_interpolate
-from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.bezier import find_intersection
 from manimlib.utils.bezier import partial_quadratic_bezier_points
@@ -32,6 +31,7 @@ from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.iterables import arrays_match
 from manimlib.utils.space_ops import angle_between_vectors
+from manimlib.utils.space_ops import cross
 from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
 from manimlib.utils.space_ops import get_norm
@@ -40,13 +40,12 @@ from manimlib.utils.space_ops import line_intersects_path
 from manimlib.utils.space_ops import midpoint
 from manimlib.utils.space_ops import normalize_along_axis
 from manimlib.utils.space_ops import z_to_vector
-from manimlib.utils.simple_functions import arr_clip
 from manimlib.shader_wrapper import ShaderWrapper
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence, Tuple
+    from typing import Callable, Iterable, Tuple
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Vect4Array
 
 DEFAULT_STROKE_COLOR = GREY_A
@@ -59,13 +58,13 @@ class VMobject(Mobject):
         ('point', np.float32, (3,)),
         ('stroke_rgba', np.float32, (4,)),
         ('stroke_width', np.float32, (1,)),
-        ('joint_angle', np.float32, (1,)),
+        ('joint_product', np.float32, (4,)),
         ('fill_rgba', np.float32, (4,)),
         ('orientation', np.float32, (1,)),
         ('vert_index', np.float32, (1,)),
     ])
     fill_data_names = ['point', 'fill_rgba', 'orientation', 'vert_index']
-    stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_angle']
+    stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_product']
 
     fill_render_primitive: int = moderngl.TRIANGLES
     stroke_render_primitive: int = moderngl.TRIANGLE_STRIP
@@ -88,7 +87,7 @@ class VMobject(Mobject):
         long_lines: bool = False,
         # Could also be "no_joint", "bevel", "miter"
         joint_type: str = "auto",
-        flat_stroke: bool = False,
+        flat_stroke: bool = True,
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
         anti_alias_width: float = 1.0,
@@ -109,7 +108,7 @@ class VMobject(Mobject):
 
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
-        self.needs_new_joint_angles = True
+        self.needs_new_joint_products = True
         self.outer_vert_indices = np.zeros(0, dtype='i4')
 
         super().__init__(**kwargs)
@@ -158,7 +157,7 @@ class VMobject(Mobject):
             opacity=self.stroke_opacity,
             background=self.stroke_behind,
         )
-        self.set_gloss(self.gloss)
+        self.set_shading(*self.shading)
         self.set_flat_stroke(self.flat_stroke)
         self.color = self.get_color()
         return self
@@ -229,9 +228,7 @@ class VMobject(Mobject):
         stroke_rgba: Vect4 | None = None,
         stroke_width: float | Iterable[float] | None = None,
         stroke_background: bool = True,
-        reflectiveness: float | None = None,
-        gloss: float | None = None,
-        shadow: float | None = None,
+        shading: Tuple[float, float, float] | None = None,
         recurse: bool = True
     ):
         for mob in self.get_family(recurse):
@@ -260,12 +257,8 @@ class VMobject(Mobject):
                     background=stroke_background,
                 )
 
-            if reflectiveness is not None:
-                mob.set_reflectiveness(reflectiveness, recurse=False)
-            if gloss is not None:
-                mob.set_gloss(gloss, recurse=False)
-            if shadow is not None:
-                mob.set_shadow(shadow, recurse=False)
+            if shading is not None:
+                mob.set_shading(*shading, recurse=False)
         return self
 
     def get_style(self):
@@ -275,9 +268,7 @@ class VMobject(Mobject):
             "stroke_rgba": data['stroke_rgba'].copy(),
             "stroke_width": data['stroke_width'].copy(),
             "stroke_background": self.stroke_behind,
-            "reflectiveness": self.get_reflectiveness(),
-            "gloss": self.get_gloss(),
-            "shadow": self.get_shadow(),
+            "shading": self.get_shading(),
         }
 
     def match_style(self, vmobject: VMobject, recurse: bool = True):
@@ -439,9 +430,8 @@ class VMobject(Mobject):
         handle2: Vect3,
         anchor2: Vect3
     ):
-        self.add_subpath(get_quadratic_approximation_of_cubic(
-            anchor1, handle1, handle2, anchor2
-        ))
+        self.start_new_path(anchor1)
+        self.add_cubic_bezier_curve_to(handle1, handle2, anchor2)
         return self
 
     def add_cubic_bezier_curve_to(
@@ -455,22 +445,20 @@ class VMobject(Mobject):
         """
         self.throw_error_if_no_points()
         last = self.get_last_point()
-        # If the two relevant tangents are close in angle to each other,
-        # then just approximate with a single quadratic bezier curve.
-        # Otherwise, approximate with two
+        # Note, this assumes all points are on the xy-plane
         v1 = handle1 - last
         v2 = anchor - handle2
         angle = angle_between_vectors(v1, v2)
         if self.use_simple_quadratic_approx and angle < 45 * DEGREES:
-            quadratic_approx = [last, find_intersection(last, v1, anchor, -v2), anchor]
+            quad_approx = [last, find_intersection(last, v1, anchor, -v2), anchor]
         else:
-            quadratic_approx = get_quadratic_approximation_of_cubic(
+            quad_approx = get_quadratic_approximation_of_cubic(
                 last, handle1, handle2, anchor
             )
-        if self.consider_points_equal(quadratic_approx[1], last):
+        if self.consider_points_equal(quad_approx[1], last):
             # This is to prevent subpaths from accidentally being marked closed
-            quadratic_approx[1] = midpoint(*quadratic_approx[1:3])
-        self.append_points(quadratic_approx[1:])
+            quad_approx[1] = midpoint(*quad_approx[1:3])
+        self.append_points(quad_approx[1:])
         return self
 
     def add_quadratic_bezier_curve_to(self, handle: Vect3, anchor: Vect3):
@@ -1052,25 +1040,30 @@ class VMobject(Mobject):
         self.needs_new_triangulation = False
         return tri_indices
 
-    def refresh_joint_angles(self):
+    def refresh_joint_products(self):
         for mob in self.get_family():
-            mob.needs_new_joint_angles = True
+            mob.needs_new_joint_products = True
         return self
 
-    def get_joint_angles(self, refresh: bool = False):
-        if not self.needs_new_joint_angles and not refresh:
-            return self.data["joint_angle"]
-        if "joint_angle" in self.locked_data_keys:
-            return self.data["joint_angle"]
+    def recompute_joint_products(self, refresh: bool = False):
+        """
+        The 'joint product' is a 4-vector holding the cross and dot
+        product between tangent vectors at a joint
+        """
+        if not self.needs_new_joint_products and not refresh:
+            return self.data["joint_product"]
 
-        self.needs_new_joint_angles = False
+        if "joint_product" in self.locked_data_keys:
+            return self.data["joint_product"]
+
+        self.needs_new_joint_products = False
 
         points = self.get_points()
 
         if(len(points) < 3):
-            return self.data["joint_angle"]
+            return self.data["joint_product"]
 
-        # Unit tangent vectors
+        # Find all the unit tangent vectors at each joint
         a0, h, a1 = points[0:-1:2], points[1::2], points[2::2]
         a0_to_h = normalize_along_axis(h - a0, 1)
         h_to_a1 = normalize_along_axis(a1 - h, 1)
@@ -1083,23 +1076,24 @@ class VMobject(Mobject):
         vect_from_vert[0:-1:2] = a0_to_h
         vect_from_vert[1::2] = h_to_a1
 
+        # Joint up closed loops, or mark unclosed paths as such
         ends = self.get_subpath_end_indices()
         starts = [0, *(e + 2 for e in ends[:-1])]
         for start, end in zip(starts, ends):
-            if start > len(a0_to_h):
-                continue
             if self.consider_points_equal(points[start], points[end]):
-                vect_to_vert[start] = h_to_a1[end // 2 - 1]
-                vect_from_vert[end] = a0_to_h[start // 2]
+                vect_to_vert[start] = vect_from_vert[end - 1]
+                vect_from_vert[end] = vect_to_vert[start + 1]
+            else:
+                vect_to_vert[start] = vect_from_vert[start]
+                vect_from_vert[end] = vect_to_vert[end]
 
-        # Compute angles, and read them into
-        # the joint_angles array
-        result = self.data["joint_angle"][:, 0]
-        dots = (vect_to_vert * vect_from_vert).sum(1)
-        np.arccos(dots, out=result, where=((dots <= 1) & (dots >= -1)))
-        # Assumes unit normal in the positive z direction
-        result *= np.sign(cross2d(vect_to_vert, vect_from_vert))
-        return result
+        # Compute dot and cross products
+        cross(
+            vect_to_vert, vect_from_vert,
+            out=self.data["joint_product"][:, :3]
+        )
+        self.data["joint_product"][:, 3] = (vect_to_vert * vect_from_vert).sum(1)
+        return self.data["joint_product"]
 
     def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
@@ -1107,7 +1101,7 @@ class VMobject(Mobject):
             func(self, *args, **kwargs)
             if refresh:
                 self.refresh_triangulation()
-                self.refresh_joint_angles()
+                self.refresh_joint_products()
         return wrapper
 
     @triggers_refreshed_triangulation
@@ -1159,9 +1153,9 @@ class VMobject(Mobject):
             self.make_approximately_smooth()
         return self
 
-    def apply_points_function(self, *args, **kwargs,):
+    def apply_points_function(self, *args, **kwargs):
         super().apply_points_function(*args, **kwargs)
-        self.refresh_joint_angles()
+        self.refresh_joint_products()
 
     # For shaders
     def init_shader_data(self):
@@ -1212,6 +1206,7 @@ class VMobject(Mobject):
                 fill_datas.append(submob.data[fill_names])
                 fill_indices.append(submob.get_triangulation())
             if submob.has_stroke():
+                submob.recompute_joint_products()
                 if submob.stroke_behind:
                     lst = back_stroke_data
                 else:
@@ -1235,8 +1230,6 @@ class VMobject(Mobject):
         return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
 
     def refresh_shader_data(self):
-        for submob in self.get_family():
-            submob.get_joint_angles()
         self.get_shader_wrapper_list()
 
 

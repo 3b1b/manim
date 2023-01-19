@@ -504,7 +504,6 @@ class ThreeDAxes(Axes):
         z_normal: Vect3 = DOWN,
         depth: float = 6.0,
         num_axis_pieces: int = 20,
-        gloss: float = 0.5,
         **kwargs
     ):
         Axes.__init__(self, x_range, y_range, **kwargs)

@@ -39,6 +39,7 @@ class CameraFrame(Mobject):
         self.frame_shape = frame_shape
         self.center_point = center_point
         self.focal_dist_to_height = focal_dist_to_height
+        self.perspective_transform = np.identity(4)
         super().__init__(**kwargs)
 
     def init_uniforms(self) -> None:
@@ -81,6 +82,19 @@ class CameraFrame(Mobject):
 
     def get_inverse_camera_rotation_matrix(self):
         return self.get_orientation().as_matrix().T
+
+    def get_perspective_transform(self):
+        """
+        Returns a 4x4 for the affine transformation mapping a point
+        into the camera's internal coordinate system
+        """
+        result = self.perspective_transform
+        result[:] = np.identity(4)
+        result[:3, 3] = -self.get_center()
+        rotation = np.identity(4)
+        rotation[:3, :3] = self.get_inverse_camera_rotation_matrix()
+        result[:] = np.dot(rotation, result)
+        return result
 
     def rotate(self, angle: float, axis: np.ndarray = OUT, **kwargs):
         rot = Rotation.from_rotvec(angle * normalize(axis))
@@ -209,6 +223,7 @@ class Camera(object):
         self.background_rgba: list[float] = list(color_to_rgba(
             background_color, background_opacity
         ))
+        self.perspective_uniforms = dict()
         self.init_frame(**frame_config)
         self.init_context(ctx)
         self.init_shaders()
@@ -232,6 +247,8 @@ class Camera(object):
         self.ctx = ctx
         self.fbo = fbo
         self.set_ctx_blending()
+
+        self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
 
         # For multisample antialiasing
         fbo_msaa = self.get_fbo(ctx, self.samples)
@@ -488,22 +505,19 @@ class Camera(object):
     def refresh_perspective_uniforms(self) -> None:
         frame = self.frame
         # Orient light
-        rotation = frame.get_inverse_camera_rotation_matrix()
-        offset = frame.get_center()
-        light_pos = np.dot(
-            rotation, self.light_source.get_location() + offset
-        )
-        cam_pos = self.frame.get_implied_camera_location()  # TODO
+        perspective_transform = frame.get_perspective_transform()
+        light_pos = self.light_source.get_location()
+        cam_pos = self.frame.get_implied_camera_location()
+        frame_shape = frame.get_shape()
 
-        self.perspective_uniforms = {
-            "frame_shape": frame.get_shape(),
-            "pixel_shape": self.get_pixel_shape(),
-            "camera_offset": tuple(offset),
-            "camera_rotation": tuple(np.array(rotation).T.flatten()),
-            "camera_position": tuple(cam_pos),
-            "light_source_position": tuple(light_pos),
-            "focal_distance": frame.get_focal_distance(),
-        }
+        self.perspective_uniforms.update(
+            frame_shape=frame_shape,
+            pixel_size=frame_shape[0] / self.get_pixel_shape()[0],
+            perspective=tuple(perspective_transform.T.flatten()),
+            camera_position=tuple(cam_pos),
+            light_position=tuple(light_pos),
+            focal_distance=frame.get_focal_distance(),
+        )
 
     def init_textures(self) -> None:
         self.n_textures: int = 0

@@ -4,7 +4,7 @@ layout (triangles) in;
 layout (triangle_strip, max_vertices = 5) out;
 
 uniform float anti_alias_width;
-uniform vec2 pixel_shape;
+uniform float pixel_size;
 
 in vec3 verts[3];
 in float v_orientation[3];
@@ -25,21 +25,12 @@ const float ANGLE_THRESHOLD = 1e-3;
 
 // Analog of import for manim only
 #INSERT get_gl_Position.glsl
-#INSERT get_xy_to_uv.glsl
+#INSERT get_xyz_to_uv.glsl
 #INSERT finalize_color.glsl
 
 
 void emit_vertex_wrapper(vec3 point, int index, vec3 unit_normal){
-    color = finalize_color(
-        v_color[index],
-        point,
-        unit_normal,
-        light_source_position,
-        camera_position,
-        reflectiveness,
-        gloss,
-        shadow
-    );
+    color = finalize_color(v_color[index], point, unit_normal);
     gl_Position = get_gl_Position(point);
     EmitVertex();
 }
@@ -72,7 +63,7 @@ void emit_pentagon(
     is_linear = float(angle < ANGLE_THRESHOLD);
 
     bool fill_inside = orientation > 0.0;
-    float aaw = anti_alias_width * frame_shape.y / pixel_shape.y;
+    float aaw = anti_alias_width * pixel_size;
     vec3 corners[5] = vec3[5](p0, p0, p1, p2, p2);
 
     if(fill_inside || bool(is_linear)){
@@ -88,13 +79,13 @@ void emit_pentagon(
     }
 
     // Compute xy_to_uv matrix, and potentially re-evaluate bezier degree
-    mat3 xy_to_uv = get_xy_to_uv(p0.xy, p1.xy, p2.xy, is_linear, is_linear);
-    uv_anti_alias_width = aaw * length(xy_to_uv[0].xy);
+    mat4 xyz_to_uv = get_xyz_to_uv(p0, p1, p2, is_linear, is_linear);
+    uv_anti_alias_width = aaw * length(xyz_to_uv[0].xyz);
 
     for(int i = 0; i < 5; i++){
         int j = int(sign(i - 1) + 1);  // Maps i = [0, 1, 2, 3, 4] onto j = [0, 0, 1, 2, 2]
         vec3 corner = corners[i];
-        uv_coords = (xy_to_uv * vec3(corner.xy, 1.0)).xy;
+        uv_coords = (xyz_to_uv * vec4(corner, 1.0)).xy;
         emit_vertex_wrapper(corner, j, unit_normal);
     }
     EndPrimitive();

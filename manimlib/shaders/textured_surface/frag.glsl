@@ -4,7 +4,7 @@ uniform sampler2D LightTexture;
 uniform sampler2D DarkTexture;
 uniform float num_textures;
 
-in vec3 xyz_coords;
+in vec3 v_point;
 in vec3 v_normal;
 in vec2 v_im_coords;
 in float v_opacity;
@@ -20,7 +20,7 @@ void main() {
     if(num_textures == 2.0){
         vec4 dark_color = texture(DarkTexture, v_im_coords);
         float dp = dot(
-            normalize(light_source_position - xyz_coords),
+            normalize(light_position - v_point),
             normalize(v_normal)
         );
         float alpha = smoothstep(-dark_shift, dark_shift, dp);
@@ -29,13 +29,8 @@ void main() {
 
     frag_color = finalize_color(
         color,
-        xyz_coords,
-        normalize(v_normal),
-        light_source_position,
-        camera_position,
-        reflectiveness,
-        gloss,
-        shadow
+        v_point,
+        normalize(v_normal)
     );
     frag_color.a = v_opacity;
 }

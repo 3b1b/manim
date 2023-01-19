@@ -144,11 +144,6 @@ void main() {
     frag_color = finalize_color(
         color,
         xyz_coords,
-        vec3(0.0, 0.0, 1.0),
-        light_source_position,
-        camera_position,
-        reflectiveness,
-        gloss,
-        shadow
+        vec3(0.0, 0.0, 1.0)
     );
  }

@@ -23,7 +23,7 @@ from manimlib.utils.space_ops import z_to_vector
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Tuple, TypeVar
-    from manimlib.typing import ManimColor, Vect3
+    from manimlib.typing import ManimColor, Vect3, Sequence
 
     T = TypeVar("T", bound=Mobject)
 
@@ -38,6 +38,7 @@ class SurfaceMesh(VGroup):
         normal_nudge: float = 1e-2,
         depth_test: bool = True,
         joint_type: str = 'no_joint',
+        flat_stroke: bool = False,
         **kwargs
     ):
         self.uv_surface = uv_surface
@@ -51,6 +52,7 @@ class SurfaceMesh(VGroup):
             joint_type=joint_type,
             **kwargs
         )
+        self.set_flat_stroke(flat_stroke)
 
     def init_points(self) -> None:
         uv_surface = self.uv_surface
@@ -252,7 +254,7 @@ class Cube(SGroup):
         self,
         color: ManimColor = BLUE,
         opacity: float = 1,
-        gloss: float = 0.5,
+        shading: Tuple[float, float, float] = (0.1, 0.5, 0.1),
         square_resolution: Tuple[int, int] = (2, 2),
         side_length: float = 2,
         **kwargs,
@@ -262,12 +264,9 @@ class Cube(SGroup):
             side_length=side_length,
             color=color,
             opacity=opacity,
+            shading=shading,
         )
-        super().__init__(
-            *square_to_cube_faces(face),
-            gloss=gloss,
-            **kwargs
-        )
+        super().__init__(*square_to_cube_faces(face), **kwargs)
 
 
 class Prism(Cube):
@@ -288,16 +287,12 @@ class VGroup3D(VGroup):
         self,
         *vmobjects: VMobject,
         depth_test: bool = True,
-        gloss: float = 0.2,
-        shadow: float = 0.2,
-        reflectiveness: float = 0.2,
+        shading: Tuple[float, float, float] = (0.2, 0.2, 0.2),
         joint_type: str = "no_joint",
         **kwargs
     ):
         super().__init__(*vmobjects, **kwargs)
-        self.set_gloss(gloss)
-        self.set_shadow(shadow)
-        self.set_reflectiveness(reflectiveness)
+        self.set_shading(*shading)
         self.set_joint_type(joint_type)
         if depth_test:
             self.apply_depth_test()
@@ -342,7 +337,7 @@ class Dodecahedron(VGroup3D):
         fill_opacity: float = 1,
         stroke_color: ManimColor = BLUE_E,
         stroke_width: float = 1,
-        reflectiveness: float = 0.2,
+        shading: Tuple[float, float, float] = (0.2, 0.2, 0.2),
         **kwargs,
     ):
         style = dict(
@@ -350,7 +345,7 @@ class Dodecahedron(VGroup3D):
             fill_opacity=fill_opacity,
             stroke_color=stroke_color,
             stroke_width=stroke_width,
-            reflectiveness=reflectiveness,
+            shading=shading,
             **kwargs
         )
 

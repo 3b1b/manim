@@ -10,5 +10,5 @@ uniform vec3 offset;
 
 void main(){
     xyz_coords = (point - offset) / scale_factor;
-    gl_Position = get_gl_Position(position_point_into_frame(point));
+    gl_Position = get_gl_Position(point);
 }
