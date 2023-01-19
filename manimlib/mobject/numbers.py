@@ -46,6 +46,7 @@ class DecimalNumber(VMobject):
         self.edge_to_fix = edge_to_fix
         self.font_size = font_size
         self.text_config = dict(text_config)
+        self.char_to_mob_map = dict()
 
         super().__init__(
             color=color,
@@ -62,14 +63,11 @@ class DecimalNumber(VMobject):
         self.set_submobjects([])
         self.text_config["font_size"] = self.get_font_size()
         num_string = self.num_string = self.get_num_string(number)
-        self.add(*(
-            Text(ns, **self.text_config)
-            for ns in num_string
-        ))
+        self.add(*map(self.char_to_mob, num_string))
 
         # Add non-numerical bits
         if self.show_ellipsis:
-            dots = Text("...", **self.text_config)
+            dots = self.char_to_mob("...")
             dots.arrange(RIGHT, buff=2 * dots[0].get_width())
             self.add(dots)
         if self.unit is not None:
@@ -110,6 +108,13 @@ class DecimalNumber(VMobject):
                 num_string = num_string[1:]
         num_string = num_string.replace("-", "–")
         return num_string
+
+    def char_to_mob(self, char: str) -> Tex | Text:
+        if char not in self.char_to_mob_map:
+            self.char_to_mob_map[char] = Text(char, **self.text_config)
+        result = self.char_to_mob_map[char].copy()
+        result.scale(self.get_font_size() / result.font_size)
+        return result
 
     def init_uniforms(self) -> None:
         super().init_uniforms()
