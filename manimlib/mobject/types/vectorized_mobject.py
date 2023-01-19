@@ -875,22 +875,16 @@ class VMobject(Mobject):
 
         bezier_tuples = list(self.get_bezier_tuples_from_points(points))
         atol = self.tolerance_for_point_equality
-        norms = np.array([
+        norms = [
             0 if get_norm(tup[1] - tup[0]) < atol else get_norm(tup[2] - tup[0])
             for tup in bezier_tuples
-        ])
-        total_norm = sum(norms)
+        ]
         # Calculate insertions per curve (ipc)
-        if total_norm < 1e-6:
-            ipc = [n] + [0] * (len(bezier_tuples) - 1)
-        else:
-            ipc = np.round(n * norms / sum(norms)).astype(int)
-
-        diff = n - sum(ipc)
-        for x in range(diff):
-            ipc[np.argmin(ipc)] += 1
-        for x in range(-diff):
-            ipc[np.argmax(ipc)] -= 1
+        ipc = np.zeros(len(bezier_tuples), dtype=int)
+        for _ in range(n):
+            index = np.argmax(norms)
+            ipc[index] += 1
+            norms[index] *= ipc[index] / (ipc[index] + 1)
 
         new_points = [points[0]]
         for tup, n_inserts in zip(bezier_tuples, ipc):
