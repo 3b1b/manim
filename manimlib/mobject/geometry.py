@@ -981,7 +981,8 @@ class RegularPolygon(Polygon):
         **kwargs
     ):
         # Defaults to 0 for odd, 90 for even
-        start_angle = start_angle or (n % 2) * 90 * DEGREES
+        if start_angle is None:
+            start_angle = (n % 2) * 90 * DEGREES
         start_vect = rotate_vector(radius * RIGHT, start_angle)
         vertices = compass_directions(n, start_vect)
         super().__init__(*vertices, **kwargs)
