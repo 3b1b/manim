@@ -22,14 +22,14 @@ CLOSED_THRESHOLD = 0.001
 
 
 def bezier(
-    points: Sequence[Scalable] | VectNArray
-) -> Callable[[float], Scalable]:
+    points: Sequence[float | FloatArray] | VectNArray
+) -> Callable[[float], float | FloatArray]:
     if len(points) == 0:
         raise Exception("bezier cannot be calld on an empty list")
 
     n = len(points) - 1
 
-    def result(t: float) -> Scalable:
+    def result(t: float) -> float | FloatArray:
         return sum(
             ((1 - t)**(n - k)) * (t**k) * choose(n, k) * point
             for k, point in enumerate(points)
