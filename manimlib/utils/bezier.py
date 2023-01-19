@@ -2,18 +2,22 @@ from __future__ import annotations
 
 import numpy as np
 from scipy import linalg
+from fontTools.cu2qu.cu2qu import curve_to_quadratic
 
 from manimlib.logger import log
 from manimlib.utils.simple_functions import choose
 from manimlib.utils.space_ops import cross2d
+from manimlib.utils.space_ops import cross
 from manimlib.utils.space_ops import find_intersection
 from manimlib.utils.space_ops import midpoint
+from manimlib.utils.space_ops import get_norm
+from manimlib.utils.space_ops import z_to_vector
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Sequence, TypeVar, Tuple
-    from manimlib.typing import VectN, FloatArray, VectNArray
+    from manimlib.typing import VectN, FloatArray, VectNArray, Vect3Array
 
     Scalable = TypeVar("Scalable", float, FloatArray)
 
@@ -167,7 +171,7 @@ def match_interpolate(
     )
 
 
-def get_smooth_quadratic_bezier_handle_points(
+def approx_smooth_quadratic_bezier_handles(
     points: FloatArray
 ) -> FloatArray:
     """
@@ -199,6 +203,43 @@ def get_smooth_quadratic_bezier_handle_points(
     handles = 0.5 * np.vstack([smooth_to_right, [last_str]])
     handles += 0.5 * np.vstack([last_stl, smooth_to_left[::-1]])
     return handles
+
+
+def smooth_quadratic_path(anchors: Vect3Array) -> Vect3Array:
+    """
+    Returns a path defining a smooth quadratic bezier spline
+    through anchors.
+    """
+    if len(anchors) < 2:
+        return anchors
+    elif len(anchors) == 2:
+        return np.array([anchors[0], anchors.mean(1), anchors[2]])
+
+    is_flat = (anchors[:, 2] == 0).all()
+    if not is_flat:
+        normal = cross(anchors[2] - anchors[1], anchors[1] - anchors[0])
+        rot = z_to_vector(normal)
+        anchors = np.dot(anchors, rot)
+        shift = anchors[0, 2]
+        anchors[:, 2] -= shift
+    h1s, h2s = get_smooth_cubic_bezier_handle_points(anchors)
+    quads = [anchors[0, :2]]
+    for cub_bs in zip(anchors[:-1], h1s, h2s, anchors[1:]):
+        # Try to use fontTools curve_to_quadratic
+        new_quads = curve_to_quadratic(
+            [b[:2] for b in cub_bs],
+            max_err=0.1 * get_norm(cub_bs[3] - cub_bs[0])
+        )
+        # Otherwise fall back on home baked solution
+        if new_quads is None or len(new_quads) % 2 == 0:
+            new_quads = get_quadratic_approximation_of_cubic(*cub_bs)[:, :2]
+        quads.extend(new_quads[1:])
+    new_path = np.zeros((len(quads), 3))
+    new_path[:, :2] = quads
+    if not is_flat:
+        new_path[:, 2] += shift
+        new_path = np.dot(new_path, rot.T)
+    return new_path
 
 
 def get_smooth_cubic_bezier_handle_points(
