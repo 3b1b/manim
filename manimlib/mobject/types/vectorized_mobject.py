@@ -578,13 +578,10 @@ class VMobject(Mobject):
     def set_points_smoothly(
         self,
         points: Iterable[Vect3],
-        true_smooth: bool = False
+        approx: bool = False
     ):
         self.set_points_as_corners(points)
-        if true_smooth:
-            self.make_smooth()
-        else:
-            self.make_approximately_smooth()
+        self.make_smooth(approx=approx)
         return self
 
     def is_smooth(self) -> bool:
@@ -608,32 +605,23 @@ class VMobject(Mobject):
             self.add_subpath(new_subpath)
         return self
 
-    def make_smooth(self, recurse=True):
+    def make_smooth(self, approx=False, recurse=True):
         """
         Edits the path so as to pass smoothly through all
         the current anchor points.
 
-        This may increase the total number of points.
+        If approx is False, this may increase the total
+        number of points.
         """
+        mode = "approx_smooth" if approx else "true_smooth"
         for submob in self.get_family(recurse):
             if submob.is_smooth():
                 continue
-            submob.change_anchor_mode("true_smooth")
+            submob.change_anchor_mode(mode)
         return self
 
     def make_approximately_smooth(self, recurse=True):
-        """
-        Unlike make_smooth, this will not change the number of
-        points, but it also does not result in a perfectly smooth
-        curve.  It's most useful when the points have been
-        sampled at a not-too-low rate from a continuous function,
-        as in the case of ParametricCurve
-        """
-        for submob in self.get_family(recurse):
-            if submob.is_smooth():
-                continue
-            submob.change_anchor_mode("approx_smooth")
-        return self
+        self.make_smooth(approx=True, recurse=recurse)
 
     def make_jagged(self, recurse=True):
         for submob in self.get_family(recurse):
@@ -1145,7 +1133,7 @@ class VMobject(Mobject):
     ):
         super().apply_function(function, **kwargs)
         if self.make_smooth_after_applying_functions or make_smooth:
-            self.make_approximately_smooth()
+            self.make_smooth(approx=True)
         return self
 
     def apply_points_function(self, *args, **kwargs):

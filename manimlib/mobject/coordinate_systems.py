@@ -252,11 +252,11 @@ class CoordinateSystem(ABC):
                 xs[:] = sorted([*x_values, *added_xs])[:len(x_values)]
             return self.c2p(xs, func(xs))
 
-        graph.add_updater(lambda g: g.set_points_as_corners(
-            get_graph_points()
-        ))
+        graph.add_updater(
+            lambda g: g.set_points_as_corners(get_graph_points())
+        )
         if not jagged:
-            graph.add_updater(lambda g: g.make_approximately_smooth())
+            graph.add_updater(lambda g: g.make_smooth(approx=True))
         return graph
 
     def get_graph_label(

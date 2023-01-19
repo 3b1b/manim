@@ -48,7 +48,7 @@ class ParametricCurve(VMobject):
             self.start_new_path(points[0])
             self.add_points_as_corners(points[1:])
         if self.use_smoothing:
-            self.make_approximately_smooth()
+            self.make_smooth(approx=True)
         if not self.has_points():
             self.set_points(np.array([self.t_func(t_min)]))
         return self
