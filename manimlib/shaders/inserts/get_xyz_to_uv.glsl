@@ -38,35 +38,35 @@ mat4 map_triangles(vec3 src0, vec3 src1, vec3 src2, vec3 dst0, vec3 dst1, vec3 d
 }
 
 
+mat4 rotation(vec3 axis, float cos_angle){
+    float c = cos_angle;
+    float s = sqrt(1 - c * c);  // Sine of the angle
+    float oc = 1.0 - c;
+    float ax = axis.x;
+    float ay = axis.y;
+    float az = axis.z;
+
+    return mat4(
+        oc * ax * ax + c,      oc * ax * ay + az * s, oc * az * ax - ay * s, 0.0,
+        oc * ax * ay - az * s, oc * ay * ay + c,      oc * ay * az + ax * s, 0.0,
+        oc * az * ax + ay * s, oc * ay * az - ax * s, oc * az * az + c,      0.0,
+        0.0, 0.0, 0.0, 1.0
+    );
+}
+
+
 mat4 map_onto_x_axis(vec3 src0, vec3 src1){
     mat4 shift = mat4(1.0);
     shift[3].xyz = -src0;
 
     // Find rotation matrix between unit vectors in each direction    
     vec3 vect = normalize(src1 - src0);
-    // This is the same as cross(vect, vec3(1, 0, 0))
-    vec3 axis = vec3(0.0, vect.z, -vect.y);
-
-    float s = length(axis); // Sine of the angle between them
-    float c = vect.x;       // Cosine of the angle between them
-
     // No rotation needed
-    if(s < 1e-8) return shift;
+    if(vect.x > 1 - 1e-6) return shift;
 
-    axis = axis / s;   // Axis of rotation
-    float oc = 1.0 - c;
-    float ax = axis.x;
-    float ay = axis.y;
-    float az = axis.z;
-
-    // Rotation matrix about axis, with a given angle corresponding to s and c.
-    mat4 rotate = mat4(
-        oc * ax * ax + c,      oc * ax * ay + az * s, oc * az * ax - ay * s, 0.0,
-        oc * ax * ay - az * s, oc * ay * ay + c,      oc * ay * az + ax * s, 0.0,
-        oc * az * ax + ay * s, oc * ay * az - ax * s, oc * az * az + c,      0.0,
-        0.0, 0.0, 0.0, 1.0
-    );
-
+    // Equivalent to cross(vect, vec3(1, 0, 0))
+    vec3 axis = vec3(0.0, vect.z, -vect.y);
+    mat4 rotate = rotation(normalize(axis), vect.x);
     return rotate * shift;
 }
 
