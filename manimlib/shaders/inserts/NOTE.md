@@ -4,4 +4,4 @@ There seems to be no analog to #include in C++ for OpenGL shaders.  While there 
 
 with the code from one of the files in this folder.
 
-The functions in this file often include reference to uniforms which are assumed to be part of the surrounding context into which they are inserted.
+The functions in this file may include declarations of uniforms, so one should not re-declare those in the surrounding context.
