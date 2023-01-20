@@ -13,14 +13,13 @@ out vec4 frag_color;
 const float QUICK_DIST_WIDTH = 0.2;
 
 float dist_to_curve(){
+    // In the linear case, the curve will have
+    // been set to equal the x axis
+    if(bool(is_linear)) return abs(uv_coords.y);
+
     // Returns distance from uv_coords to the curve v = u^2
     float x0 = uv_coords.x;
     float y0 = uv_coords.y;
-
-    // In the linear case, the curve will have
-    // been set to equal the x axis
-    if(bool(is_linear)) return abs(y0);
-
     if(uv_stroke_width < QUICK_DIST_WIDTH){
         // This is a quick approximation for computing
         // the distance to the curve.
@@ -46,7 +45,7 @@ float dist_to_curve(){
         float dfx = 3 * x * x + p;
         x = x - fx / dfx;
     }
-    return distance(uv_coords, vec2(x, x * x));
+    return distance(vec2(x0, y0), vec2(x, x * x));
 }
 
 
