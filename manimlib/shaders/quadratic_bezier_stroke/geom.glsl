@@ -32,7 +32,7 @@ const int MITER_JOINT = 3;
 // When the cosine of the angle between
 // two vectors is larger than this, we
 // consider them aligned
-const float COS_THRESHOLD = 0.999;
+const float COS_THRESHOLD = 0.99;
 
 vec3 unit_normal = vec3(0.0, 0.0, 1.0);
 
@@ -179,7 +179,7 @@ void main() {
     if(!bool(is_linear)){
         bool too_steep;
         xyz_to_uv = get_xyz_to_uv(p0, p1, p2, 2.0, too_steep);
-        if(too_steep) is_linear = 1.0;
+        is_linear = float(too_steep);
         uv_scale_factor = length(xyz_to_uv[0].xyz);
     }
 
