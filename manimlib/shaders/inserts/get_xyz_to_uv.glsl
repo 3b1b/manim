@@ -65,38 +65,40 @@ mat4 map_onto_x_axis(vec3 src0, vec3 src1){
     if(vect.x > 1 - 1e-6) return shift;
 
     // Equivalent to cross(vect, vec3(1, 0, 0))
-    vec3 axis = vec3(0.0, vect.z, -vect.y);
-    mat4 rotate = rotation(normalize(axis), vect.x);
+    vec3 axis = normalize(vec3(0.0, vect.z, -vect.y));
+    mat4 rotate = rotation(axis, vect.x);
     return rotate * shift;
 }
 
 
-mat4 get_xyz_to_uv(vec3 b0, vec3 b1, vec3 b2, float temp_is_linear, out float is_linear){
+mat4 get_xyz_to_uv(
+    vec3 b0, vec3 b1, vec3 b2,
+    float threshold,
+    out bool exceeds_threshold
+){
     /*
-    Returns a matrix for an affine transformation which maps a set of quadratic
-    bezier controls points into a new coordinate system such that the bezier curve
-    coincides with y = x^2, or in the case of a linear curve, it's mapped to the x-axis.
+    Populates the matrix `result` with an affine transformation which maps a set of
+    quadratic bezier controls points into a new coordinate system such that the bezier
+    curve coincides with y = x^2.
+
+    If the x-range under this part of the curve exceeds `threshold`, this returns false
+    and populates result a matrix mapping b0 and b2 onto the x-axis
     */
-    is_linear = temp_is_linear;
+    vec2 xs = xs_on_clean_parabola(b0, b1, b2);
+    float x0 = xs[0];
+    float x1 = 0.5 * (xs[0] + xs[1]);
+    float x2 = xs[1];
     // Portions of the parabola y = x^2 where abs(x) exceeds
     // this value are treated as straight lines.
-    float thresh = 2.0;
-    if (!bool(is_linear)){
-        vec2 xs = xs_on_clean_parabola(b0, b1, b2);
-        float x0 = xs.x;
-        float x2 = xs.y;
-        if((x0 > thresh && x2 > thresh) || (x0 < -thresh && x2 < -thresh)){
-            is_linear = 1.0;
-        }else{
-            // This triangle on the xy plane should be isometric
-            // to (b0, b1, b2), and it should define a quadratic
-            // bezier segment aligned with y = x^2
-            vec3 dst0 = vec3(x0, x0 * x0, 0.0);
-            vec3 dst1 = vec3(0.5 * (x0 + x2), x0 * x2, 0.0);
-            vec3 dst2 = vec3(x2, x2 * x2, 0.0);
-            return map_triangles(b0, b1, b2, dst0, dst1, dst2);
-        }
+    exceeds_threshold = (min(x0, x2) > threshold || max(x0, x2) < -threshold);
+    if(exceeds_threshold){
+        return map_onto_x_axis(b0, b2);
     }
-    // Only lands here if is_linear is 1.0
-    return map_onto_x_axis(b0, b2);
+    // This triangle on the xy plane should be isometric
+    // to (b0, b1, b2), and it should define a quadratic
+    // bezier segment aligned with y = x^2
+    vec3 dst0 = vec3(x0, x0 * x0, 0.0);
+    vec3 dst1 = vec3(x1, x0 * x2, 0.0);
+    vec3 dst2 = vec3(x2, x2 * x2, 0.0);
+    return map_triangles(b0, b1, b2, dst0, dst1, dst2);
 }
