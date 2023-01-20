@@ -578,7 +578,7 @@ class VMobject(Mobject):
     def set_points_smoothly(
         self,
         points: Iterable[Vect3],
-        approx: bool = False
+        approx: bool = True
     ):
         self.set_points_as_corners(points)
         self.make_smooth(approx=approx)
@@ -594,14 +594,20 @@ class VMobject(Mobject):
         self.clear_points()
         for subpath in subpaths:
             anchors = subpath[::2]
+            new_subpath = np.array(subpath)
             if mode == "jagged":
-                new_subpath = np.array(subpath)
                 new_subpath[1::2] = 0.5 * (anchors[:-1] + anchors[1:])
             elif mode == "approx_smooth":
-                new_subpath = np.array(subpath)
                 new_subpath[1::2] = approx_smooth_quadratic_bezier_handles(anchors)
             elif mode == "true_smooth":
                 new_subpath = smooth_quadratic_path(anchors)
+            # Shift any handles which ended up on top of
+            # the previous anchor
+            a0 = new_subpath[0:-1:2]
+            h = new_subpath[1::2]
+            a1 = new_subpath[2::2]
+            false_ends = np.equal(a0, h).all(1)
+            h[false_ends] = 0.5 * (a0[false_ends] + a1[false_ends])
             self.add_subpath(new_subpath)
         return self
 
