@@ -119,13 +119,14 @@ class NumberLine(Line):
         return self.ticks
 
     def number_to_point(self, number: float | VectN) -> Vect3 | Vect3Array:
+        start = self.get_points()[0]
+        end = self.get_points()[-1]
         alpha = (number - self.x_min) / (self.x_max - self.x_min)
-        return outer_interpolate(self.get_start(), self.get_end(), alpha)
+        return outer_interpolate(start, end, alpha)
 
     def point_to_number(self, point: Vect3 | Vect3Array) -> float | VectN:
-        points = self.get_points()
-        start = points[0]
-        end = points[-1]
+        start = self.get_points()[0]
+        end = self.get_points()[-1]
         vect = end - start
         proportion = fdiv(
             np.dot(point - start, vect),
