@@ -251,7 +251,7 @@ class SGroup(Surface):
         *parametric_surfaces: Surface,
         **kwargs
     ):
-        super().__init__(uv_func=None, resolution=(0, 0), **kwargs)
+        super().__init__(resolution=(0, 0), **kwargs)
         self.add(*parametric_surfaces)
 
     def init_points(self):
