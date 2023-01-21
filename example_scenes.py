@@ -555,7 +555,7 @@ class TexAndNumbersExample(Scene):
 
 
 class SurfaceExample(Scene):
-    default_camera_config = dict(samples=4)
+    samples = 4
 
     def construct(self):
         surface_text = Text("For 3d scenes, try using surfaces")
