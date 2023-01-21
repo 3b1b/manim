@@ -941,9 +941,7 @@ class VMobject(Mobject):
             # Keep new_points i2:i3 as they are
             new_points[i3:i4] = high_tup
             new_points[i4:] = high_tup[2]
-        self.set_points(new_points, refresh=False)
-        if self.has_fill():
-            self.refresh_triangulation()
+        self.set_points(new_points)
         return self
 
     def get_subcurve(self, a: float, b: float) -> VMobject:
