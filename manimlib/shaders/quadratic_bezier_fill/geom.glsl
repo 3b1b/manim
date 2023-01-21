@@ -62,6 +62,12 @@ void emit_pentagon(
     float angle = acos(clamp(dot(t01, t12), -1, 1));
     is_linear = float(angle < ANGLE_THRESHOLD);
 
+    if(bool(is_linear)){
+        // Cross with unit z vector
+        p0_perp = normalize(vec3(-t01.y, t01.x, 0));
+        p2_perp = p0_perp;
+    }
+
     bool fill_inside = orientation > 0.0;
     float aaw = anti_alias_width * pixel_size;
     vec3 corners[5] = vec3[5](p0, p0, p1, p2, p2);
@@ -71,8 +77,7 @@ void emit_pentagon(
         corners[0] += aaw * p0_perp;
         corners[2] += 0.5 * aaw * (p0_perp + p2_perp);
         corners[4] += aaw * p2_perp;
-    }
-    if(!fill_inside || bool(is_linear)){
+    } else{
         // Add buffer inside the curve
         corners[1] -= aaw * p0_perp;
         corners[3] -= aaw * p2_perp;
