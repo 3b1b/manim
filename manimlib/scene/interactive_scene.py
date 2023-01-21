@@ -86,7 +86,10 @@ class InteractiveScene(Scene):
         num_decimal_places=1,
     )
     crosshair_width = 0.2
-    crosshair_color = GREY_A
+    crosshair_style = dict(
+        stroke_color=GREY_A,
+        stroke_width=[3, 0, 3],
+    )
 
     def setup(self):
         self.selection = Group()
@@ -165,8 +168,7 @@ class InteractiveScene(Scene):
         crosshair = VGroup(*lines)
 
         crosshair.set_width(self.crosshair_width)
-        crosshair.set_stroke(self.crosshair_color, width=[2, 0, 2])
-        crosshair.insert_n_curves(1)
+        crosshair.set_style(**self.crosshair_style)
         crosshair.set_animating_status(True)
         crosshair.fix_in_frame()
         return crosshair
