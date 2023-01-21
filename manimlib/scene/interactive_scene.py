@@ -128,8 +128,8 @@ class InteractiveScene(Scene):
         p1 = rect.fixed_corner
         p2 = self.mouse_point.get_center()
         rect.set_points_as_corners([
-            p1, [p2[0], p1[1], 0],
-            p2, [p1[0], p2[1], 0],
+            p1, np.array([p2[0], p1[1], 0]),
+            p2, np.array([p1[0], p2[1], 0]),
             p1,
         ])
         return rect
