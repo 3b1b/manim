@@ -241,19 +241,18 @@ class Camera(object):
     def init_context(self, ctx: moderngl.Context | None = None) -> None:
         if ctx is None:
             ctx = moderngl.create_standalone_context()
-            fbo = self.get_fbo(ctx, 0)
+            fbo = self.get_fbo(ctx, self.samples)
         else:
             fbo = ctx.detect_framebuffer()
         self.ctx = ctx
         self.fbo = fbo
+        self.fbo.use()
         self.set_ctx_blending()
 
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
 
-        # For multisample antialiasing
-        fbo_msaa = self.get_fbo(ctx, self.samples)
-        fbo_msaa.use()
-        self.fbo_msaa = fbo_msaa
+        # This is the frame buffer we'll draw into when emitting frames
+        self.draw_fbo = self.get_fbo(ctx, 0)
 
     def set_ctx_blending(self, enable: bool = True) -> None:
         if enable:
@@ -298,7 +297,6 @@ class Camera(object):
 
     def clear(self) -> None:
         self.fbo.clear(*self.background_rgba)
-        self.fbo_msaa.clear(*self.background_rgba)
 
     def reset_pixel_shape(self, new_width: int, new_height: int) -> None:
         self.pixel_width = new_width
@@ -306,13 +304,13 @@ class Camera(object):
         self.refresh_perspective_uniforms()
 
     def get_raw_fbo_data(self, dtype: str = 'f1') -> bytes:
-        # Copy blocks from the fbo_msaa to the drawn fbo using Blit
+        # Copy blocks from fbo into draw_fbo using Blit
         pw, ph = (self.pixel_width, self.pixel_height)
-        gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo_msaa.glo)
-        gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, self.fbo.glo)
+        gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo.glo)
+        gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, self.draw_fbo.glo)
         gl.glBlitFramebuffer(0, 0, pw, ph, 0, 0, pw, ph, gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR)
-        return self.fbo.read(
-            viewport=self.fbo.viewport,
+        return self.draw_fbo.read(
+            viewport=self.draw_fbo.viewport,
             components=self.n_channels,
             dtype=dtype,
         )
