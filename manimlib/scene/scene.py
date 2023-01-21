@@ -62,6 +62,7 @@ class Scene(object):
     default_camera_config: dict = dict()
     default_window_config: dict = dict()
     default_file_writer_config: dict = dict()
+    samples = 0
 
     def __init__(
         self,
@@ -92,6 +93,8 @@ class Scene(object):
 
         self.camera_config = {**self.default_camera_config, **camera_config}
         self.window_config = {**self.default_window_config, **window_config}
+        for config in self.camera_config, self.window_config:
+            config["samples"] = self.samples
         self.file_writer_config = {**self.default_file_writer_config, **file_writer_config}
 
         # Initialize window, if applicable
