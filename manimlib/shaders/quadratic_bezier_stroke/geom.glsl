@@ -188,6 +188,7 @@ void main() {
     get_corners(p0, p1, p2, v01, v12, scaled_aaw, corners);
 
     // Emit each corner
+    float max_sw = max(v_stroke_width[0], v_stroke_width[2]);
     for(int i = 0; i < 6; i++){
         float stroke_width = v_stroke_width[i / 2];
 
@@ -195,7 +196,7 @@ void main() {
             float sign = vec2(-1, 1)[i % 2];
             // In this case, we only really care about
             // the v coordinate
-            uv_coords = vec2(0, sign * (0.5 * stroke_width + scaled_aaw));
+            uv_coords = vec2(0, sign * (0.5 * max_sw + scaled_aaw));
             uv_anti_alias_width = scaled_aaw;
             uv_stroke_width = stroke_width;
         }else{
