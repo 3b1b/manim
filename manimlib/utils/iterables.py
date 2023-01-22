@@ -101,6 +101,8 @@ def resize_preserving_order(nparray: np.ndarray, length: int) -> np.ndarray:
 def resize_with_interpolation(nparray: np.ndarray, length: int) -> np.ndarray:
     if len(nparray) == length:
         return nparray
+    if len(nparray) == 1 or array_is_constant(nparray):
+        return nparray[:1].repeat(length, axis=0)
     if length == 0:
         return np.zeros((0, *nparray.shape[1:]))
     cont_indices = np.linspace(0, len(nparray) - 1, length)
@@ -132,6 +134,7 @@ def arrays_match(arr1: np.ndarray, arr2: np.ndarray) -> bool:
 
 def array_is_constant(arr: np.ndarray) -> bool:
     return len(arr) > 0 and not (arr - arr[0]).any()
+
 
 def hash_obj(obj: object) -> int:
     if isinstance(obj, dict):

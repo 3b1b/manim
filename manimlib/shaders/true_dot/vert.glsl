@@ -22,5 +22,5 @@ void main(){
     gl_Position = get_gl_Position(point);
     float z = -10 * gl_Position.z;
     float scaled_radius = radius * 1.0 / (1.0 - z);
-    gl_PointSize = (scaled_radius / pixel_size) + anti_alias_width;
+    gl_PointSize = 2 * ((scaled_radius / pixel_size) + anti_alias_width);
 }

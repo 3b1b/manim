@@ -32,7 +32,7 @@ const int MITER_JOINT = 3;
 // When the cosine of the angle between
 // two vectors is larger than this, we
 // consider them aligned
-const float COS_THRESHOLD = 0.999;
+const float COS_THRESHOLD = 0.99;
 
 vec3 unit_normal = vec3(0.0, 0.0, 1.0);
 
@@ -49,7 +49,7 @@ vec3 get_joint_unit_normal(vec4 joint_product){
         result = v_joint_product[1].xyz;
     }
     float norm = length(result);
-    return (norm > 1e-10) ? result / norm : vec3(0.0, 0.0, 1.0);
+    return (norm > 1e-5) ? result / norm : vec3(0.0, 0.0, 1.0);
 }
 
 
@@ -171,28 +171,41 @@ void main() {
     float cos_angle = v_joint_product[1].w;
     is_linear = float(cos_angle > COS_THRESHOLD);
 
-    // If the curve is flat, put the middle control in the midpoint
-    if (bool(is_linear)) p1 = 0.5 * (p0 + p2);
-
     // We want to change the coordinates to a space where the curve
     // coincides with y = x^2, between some values x0 and x2. Or, in
-    // the case of a linear curve (bezier degree 1), just put it on
-    // the x-axis
-    mat4 xyz_to_uv = get_xyz_to_uv(p0, p1, p2, is_linear, is_linear);
+    // the case of a linear curve just put it on the x-axis
+    mat4 xyz_to_uv;
+    float uv_scale_factor;
+    if(!bool(is_linear)){
+        bool too_steep;
+        xyz_to_uv = get_xyz_to_uv(p0, p1, p2, 2.0, too_steep);
+        is_linear = float(too_steep);
+        uv_scale_factor = length(xyz_to_uv[0].xyz);
+    }
 
-    float uv_scale_factor = length(xyz_to_uv[0].xyz);
     float scaled_aaw = anti_alias_width * pixel_size;
-    uv_anti_alias_width = uv_scale_factor * scaled_aaw;
-
     vec3 corners[6];
     get_corners(p0, p1, p2, v01, v12, scaled_aaw, corners);
 
     // Emit each corner
+    float max_sw = max(v_stroke_width[0], v_stroke_width[2]);
     for(int i = 0; i < 6; i++){
-        int vert_index = i / 2;
-        uv_coords = (xyz_to_uv * vec4(corners[i], 1)).xy;
-        uv_stroke_width = uv_scale_factor * v_stroke_width[vert_index];
-        color = finalize_color(v_color[vert_index], corners[i], unit_normal);
+        float stroke_width = v_stroke_width[i / 2];
+
+        if(bool(is_linear)){
+            float sign = vec2(-1, 1)[i % 2];
+            // In this case, we only really care about
+            // the v coordinate
+            uv_coords = vec2(0, sign * (0.5 * max_sw + scaled_aaw));
+            uv_anti_alias_width = scaled_aaw;
+            uv_stroke_width = stroke_width;
+        }else{
+            uv_coords = (xyz_to_uv * vec4(corners[i], 1.0)).xy;
+            uv_stroke_width = uv_scale_factor * stroke_width;
+            uv_anti_alias_width = uv_scale_factor * scaled_aaw;
+        }
+
+        color = finalize_color(v_color[i / 2], corners[i], unit_normal);
         gl_Position = get_gl_Position(corners[i]);
         EmitVertex();
     }

@@ -54,7 +54,7 @@ class CoordinateSystem(ABC):
         self,
         x_range: RangeSpecifier = DEFAULT_X_RANGE,
         y_range: RangeSpecifier = DEFAULT_Y_RANGE,
-        num_sampled_graph_points_per_tick: int = 20,
+        num_sampled_graph_points_per_tick: int = 5,
     ):
         self.x_range = x_range
         self.y_range = y_range
@@ -241,23 +241,22 @@ class CoordinateSystem(ABC):
         Use for graphing functions which might change over time, or change with
         conditions
         """
-        x_values = [self.x_axis.p2n(p) for p in graph.get_points()]
+        x_values = np.array([self.x_axis.p2n(p) for p in graph.get_points()])
 
-        def get_x_values():
+        def get_graph_points():
+            xs = x_values
             if get_discontinuities:
                 ds = get_discontinuities()
                 ep = 1e-6
                 added_xs = it.chain(*((d - ep, d + ep) for d in ds))
-                return sorted([*x_values, *added_xs])[:len(x_values)]
-            else:
-                return x_values
+                xs[:] = sorted([*x_values, *added_xs])[:len(x_values)]
+            return self.c2p(xs, func(xs))
 
-        graph.add_updater(lambda g: g.set_points_as_corners([
-            self.c2p(x, func(x))
-            for x in get_x_values()
-        ]))
+        graph.add_updater(
+            lambda g: g.set_points_as_corners(get_graph_points())
+        )
         if not jagged:
-            graph.add_updater(lambda g: g.make_approximately_smooth())
+            graph.add_updater(lambda g: g.make_smooth(approx=True))
         return graph
 
     def get_graph_label(

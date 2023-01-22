@@ -250,7 +250,7 @@ class StreamLines(VGroup):
             line.virtual_time = time
             step = max(1, int(len(points) / self.n_samples_per_line))
             line.set_points_as_corners(points[::step])
-            line.make_approximately_smooth()
+            line.make_smooth(approx=True)
             lines.append(line)
         self.set_submobjects(lines)
 

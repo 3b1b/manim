@@ -26,8 +26,9 @@ class Window(PygletWindow):
         self,
         scene: Scene,
         size: tuple[int, int] = (1280, 720),
+        samples = 0
     ):
-        super().__init__(size=size)
+        super().__init__(size=size, samples=samples)
 
         self.scene = scene
         self.pressed_keys = set()

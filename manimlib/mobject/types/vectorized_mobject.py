@@ -15,8 +15,8 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.bezier import bezier
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
-from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
-from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
+from manimlib.utils.bezier import approx_smooth_quadratic_bezier_handles
+from manimlib.utils.bezier import smooth_quadratic_path
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.bezier import find_intersection
@@ -24,7 +24,6 @@ from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.bezier import outer_interpolate
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import rgb_to_hex
-from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
@@ -199,10 +198,12 @@ class VMobject(Mobject):
         if width is not None:
             for mob in self.get_family(recurse):
                 data = mob.data if mob.get_num_points() > 0 else mob._data_defaults
-                width_arr = np.array(listify(width)).flatten()
-                if len(width_arr) == 0:
-                    continue
-                data['stroke_width'][:, 0] = resize_with_interpolation(width_arr, len(data))
+                if isinstance(width, float | int):
+                    data['stroke_width'][:, 0] = width
+                else:
+                    data['stroke_width'][:, 0] = resize_with_interpolation(
+                        np.array(width), len(data)
+                    ).flatten()
 
         if background is not None:
             for mob in self.get_family(recurse):
@@ -579,66 +580,60 @@ class VMobject(Mobject):
     def set_points_smoothly(
         self,
         points: Iterable[Vect3],
-        true_smooth: bool = False
+        approx: bool = True
     ):
         self.set_points_as_corners(points)
-        if true_smooth:
-            self.make_smooth()
-        else:
-            self.make_approximately_smooth()
+        self.make_smooth(approx=approx)
         return self
+
+    def is_smooth(self) -> bool:
+        dots = self.get_joint_products()[::2, 3]
+        return bool((dots > 1 - 1e-3).all())
 
     def change_anchor_mode(self, mode: str):
         assert(mode in ("jagged", "approx_smooth", "true_smooth"))
-        for submob in self.family_members_with_points():
-            subpaths = submob.get_subpaths()
-            new_points = []
-            for subpath in subpaths:
-                anchors = subpath[::2]
-                new_subpath = np.array(subpath)
-                if mode == "approx_smooth":
-                    new_subpath[1::2] = get_smooth_quadratic_bezier_handle_points(anchors)
-                elif mode == "true_smooth":
-                    h1, h2 = get_smooth_cubic_bezier_handle_points(anchors)
-                    # The format here is that each successive group of 5 points
-                    # represents two quadratic bezier curves. We assume the end
-                    # of one is the start of the next, so eliminate elements 5, 10, 15, etc.
-                    quads = get_quadratic_approximation_of_cubic(anchors[:-1], h1, h2, anchors[1:])
-                    is_start = (np.arange(len(quads)) % 5 == 0)
-                    new_subpath = np.array([quads[0], *quads[~is_start]])
-                elif mode == "jagged":
-                    new_subpath[1::2] = 0.5 * (anchors[:-1] + anchors[1:])
-                if new_points:
-                    # Close previous path
-                    new_points.append(new_points[-1][-1])
-                new_points.append(new_subpath)
-            submob.set_points(np.vstack(new_points))
-            submob.refresh_triangulation()
+        subpaths = self.get_subpaths()
+        self.clear_points()
+        for subpath in subpaths:
+            anchors = subpath[::2]
+            new_subpath = np.array(subpath)
+            if mode == "jagged":
+                new_subpath[1::2] = 0.5 * (anchors[:-1] + anchors[1:])
+            elif mode == "approx_smooth":
+                new_subpath[1::2] = approx_smooth_quadratic_bezier_handles(anchors)
+            elif mode == "true_smooth":
+                new_subpath = smooth_quadratic_path(anchors)
+            # Shift any handles which ended up on top of
+            # the previous anchor
+            a0 = new_subpath[0:-1:2]
+            h = new_subpath[1::2]
+            a1 = new_subpath[2::2]
+            false_ends = np.equal(a0, h).all(1)
+            h[false_ends] = 0.5 * (a0[false_ends] + a1[false_ends])
+            self.add_subpath(new_subpath)
         return self
 
-    def make_smooth(self):
+    def make_smooth(self, approx=False, recurse=True):
         """
-        This will double the number of points in the mobject,
-        so should not be called repeatedly.  It also means
-        transforming between states before and after calling
-        this might have strange artifacts
+        Edits the path so as to pass smoothly through all
+        the current anchor points.
+
+        If approx is False, this may increase the total
+        number of points.
         """
-        self.change_anchor_mode("true_smooth")
+        mode = "approx_smooth" if approx else "true_smooth"
+        for submob in self.get_family(recurse):
+            if submob.is_smooth():
+                continue
+            submob.change_anchor_mode(mode)
         return self
 
-    def make_approximately_smooth(self):
-        """
-        Unlike make_smooth, this will not change the number of
-        points, but it also does not result in a perfectly smooth
-        curve.  It's most useful when the points have been
-        sampled at a not-too-low rate from a continuous function,
-        as in the case of ParametricCurve
-        """
-        self.change_anchor_mode("approx_smooth")
-        return self
+    def make_approximately_smooth(self, recurse=True):
+        self.make_smooth(approx=True, recurse=recurse)
 
-    def make_jagged(self):
-        self.change_anchor_mode("jagged")
+    def make_jagged(self, recurse=True):
+        for submob in self.get_family(recurse):
+            submob.change_anchor_mode("jagged")
         return self
 
     def add_subpath(self, points: Vect3Array):
@@ -687,6 +682,8 @@ class VMobject(Mobject):
         return self.get_subpath_end_indices_from_points(self.get_points())
 
     def get_subpaths_from_points(self, points: Vect3Array) -> list[Vect3Array]:
+        if len(points) == 0:
+            return []
         end_indices = self.get_subpath_end_indices_from_points(points)
         start_indices = [0, *(end_indices[:-1] + 2)]
         return [points[i1:i2 + 1] for i1, i2 in zip(start_indices, end_indices)]
@@ -873,22 +870,16 @@ class VMobject(Mobject):
 
         bezier_tuples = list(self.get_bezier_tuples_from_points(points))
         atol = self.tolerance_for_point_equality
-        norms = np.array([
+        norms = [
             0 if get_norm(tup[1] - tup[0]) < atol else get_norm(tup[2] - tup[0])
             for tup in bezier_tuples
-        ])
-        total_norm = sum(norms)
+        ]
         # Calculate insertions per curve (ipc)
-        if total_norm < 1e-6:
-            ipc = [n] + [0] * (len(bezier_tuples) - 1)
-        else:
-            ipc = np.round(n * norms / sum(norms)).astype(int)
-
-        diff = n - sum(ipc)
-        for x in range(diff):
-            ipc[np.argmin(ipc)] += 1
-        for x in range(-diff):
-            ipc[np.argmax(ipc)] -= 1
+        ipc = np.zeros(len(bezier_tuples), dtype=int)
+        for _ in range(n):
+            index = np.argmax(norms)
+            ipc[index] += 1
+            norms[index] *= ipc[index] / (ipc[index] + 1)
 
         new_points = [points[0]]
         for tup, n_inserts in zip(bezier_tuples, ipc):
@@ -952,9 +943,7 @@ class VMobject(Mobject):
             # Keep new_points i2:i3 as they are
             new_points[i3:i4] = high_tup
             new_points[i4:] = high_tup[2]
-        self.set_points(new_points, refresh=False)
-        if self.has_fill():
-            self.refresh_triangulation()
+        self.set_points(new_points)
         return self
 
     def get_subcurve(self, a: float, b: float) -> VMobject:
@@ -1045,7 +1034,7 @@ class VMobject(Mobject):
             mob.needs_new_joint_products = True
         return self
 
-    def recompute_joint_products(self, refresh: bool = False):
+    def get_joint_products(self, refresh: bool = False):
         """
         The 'joint product' is a 4-vector holding the cross and dot
         product between tangent vectors at a joint
@@ -1150,7 +1139,7 @@ class VMobject(Mobject):
     ):
         super().apply_function(function, **kwargs)
         if self.make_smooth_after_applying_functions or make_smooth:
-            self.make_approximately_smooth()
+            self.make_smooth(approx=True)
         return self
 
     def apply_points_function(self, *args, **kwargs):
@@ -1206,7 +1195,7 @@ class VMobject(Mobject):
                 fill_datas.append(submob.data[fill_names])
                 fill_indices.append(submob.get_triangulation())
             if submob.has_stroke():
-                submob.recompute_joint_products()
+                submob.get_joint_products()
                 if submob.stroke_behind:
                     lst = back_stroke_data
                 else:
