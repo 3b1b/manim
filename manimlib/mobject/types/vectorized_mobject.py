@@ -24,7 +24,6 @@ from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.bezier import outer_interpolate
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import rgb_to_hex
-from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
