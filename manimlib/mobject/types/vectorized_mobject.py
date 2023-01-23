@@ -198,7 +198,7 @@ class VMobject(Mobject):
         if width is not None:
             for mob in self.get_family(recurse):
                 data = mob.data if mob.get_num_points() > 0 else mob._data_defaults
-                if isinstance(width, float | int):
+                if isinstance(width, (float, int)):
                     data['stroke_width'][:, 0] = width
                 else:
                     data['stroke_width'][:, 0] = resize_with_interpolation(
