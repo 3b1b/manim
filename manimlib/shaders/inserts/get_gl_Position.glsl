@@ -1,5 +1,5 @@
 uniform float is_fixed_in_frame;
-uniform mat4 perspective;
+uniform mat4 view;
 uniform vec2 frame_shape;
 uniform float focal_distance;
 
@@ -9,7 +9,7 @@ vec4 get_gl_Position(vec3 point){
     vec4 result = vec4(point, 1.0);
     vec2 shape = DEFAULT_FRAME_SHAPE;
     if(!bool(is_fixed_in_frame)){
-        result = perspective * result;
+        result = view * result;
         shape = frame_shape;
     }
 
