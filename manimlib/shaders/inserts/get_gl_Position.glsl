@@ -6,13 +6,13 @@ uniform float focal_distance;
 const vec2 DEFAULT_FRAME_SHAPE = vec2(8.0 * 16.0 / 9.0, 8.0);
 
 vec4 get_gl_Position(vec3 point){
+    bool is_fixed = bool(is_fixed_in_frame);
     vec4 result = vec4(point, 1.0);
-    vec2 shape = DEFAULT_FRAME_SHAPE;
-    if(!bool(is_fixed_in_frame)){
+    if(!is_fixed){
         result = view * result;
-        shape = frame_shape;
     }
 
+    vec2 shape = is_fixed ? DEFAULT_FRAME_SHAPE : frame_shape;
     result.x *= 2.0 / shape.x;
     result.y *= 2.0 / shape.y;
     result.z /= focal_distance;

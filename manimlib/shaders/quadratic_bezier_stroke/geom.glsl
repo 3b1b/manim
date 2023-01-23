@@ -42,12 +42,8 @@ vec3 unit_normal = vec3(0.0, 0.0, 1.0);
 
 
 vec3 get_joint_unit_normal(vec4 joint_product){
-    vec3 result;
-    if(joint_product.w < COS_THRESHOLD){
-        result = joint_product.xyz;
-    }else{
-        result = v_joint_product[1].xyz;
-    }
+    vec3 result = (joint_product.w < COS_THRESHOLD) ?
+        joint_product.xyz : v_joint_product[1].xyz;
     float norm = length(result);
     return (norm > 1e-5) ? result / norm : vec3(0.0, 0.0, 1.0);
 }
