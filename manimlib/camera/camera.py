@@ -305,10 +305,13 @@ class Camera(object):
 
     def get_raw_fbo_data(self, dtype: str = 'f1') -> bytes:
         # Copy blocks from fbo into draw_fbo using Blit
-        pw, ph = (self.pixel_width, self.pixel_height)
         gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo.glo)
         gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, self.draw_fbo.glo)
-        gl.glBlitFramebuffer(0, 0, pw, ph, 0, 0, pw, ph, gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR)
+        gl.glBlitFramebuffer(
+            *self.fbo.viewport,
+            *self.draw_fbo.viewport,
+            gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR
+        )
         return self.draw_fbo.read(
             viewport=self.draw_fbo.viewport,
             components=self.n_channels,
