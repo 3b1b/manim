@@ -901,7 +901,7 @@ class Scene(object):
             self.hold_on_wait = False
 
     def on_resize(self, width: int, height: int) -> None:
-        self.camera.reset_pixel_shape(width, height)
+        pass
 
     def on_show(self) -> None:
         pass

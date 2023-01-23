@@ -209,8 +209,7 @@ class Camera(object):
         samples: int = 0,
     ):
         self.background_image = background_image
-        self.pixel_width = pixel_width
-        self.pixel_height = pixel_height
+        self.default_pixel_shape = (pixel_width, pixel_height)
         self.fps = fps
         self.max_allowable_norm = max_allowable_norm
         self.image_mode = image_mode
@@ -281,27 +280,20 @@ class Camera(object):
         ctx: moderngl.Context,
         samples: int = 0
     ) -> moderngl.Framebuffer:
-        pw = self.pixel_width
-        ph = self.pixel_height
         return ctx.framebuffer(
             color_attachments=ctx.texture(
-                (pw, ph),
+                self.default_pixel_shape,
                 components=self.n_channels,
                 samples=samples,
             ),
             depth_attachment=ctx.depth_renderbuffer(
-                (pw, ph),
+                self.default_pixel_shape,
                 samples=samples
             )
         )
 
     def clear(self) -> None:
         self.fbo.clear(*self.background_rgba)
-
-    def reset_pixel_shape(self, new_width: int, new_height: int) -> None:
-        self.pixel_width = new_width
-        self.pixel_height = new_height
-        self.refresh_perspective_uniforms()
 
     def get_raw_fbo_data(self, dtype: str = 'f1') -> bytes:
         # Copy blocks from fbo into draw_fbo using Blit
@@ -345,9 +337,11 @@ class Camera(object):
         return texture
 
     # Getting camera attributes
+    def get_pixel_size(self):
+        return self.frame.get_shape()[0] / self.get_pixel_shape()[0]
+
     def get_pixel_shape(self) -> tuple[int, int]:
         return self.fbo.viewport[2:4]
-        # return (self.pixel_width, self.pixel_height)
 
     def get_pixel_width(self) -> int:
         return self.get_pixel_shape()[0]
