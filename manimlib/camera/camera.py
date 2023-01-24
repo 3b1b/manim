@@ -241,20 +241,18 @@ class Camera(object):
 
     def init_context(self, window: Window | None = None) -> None:
         if window is None:
-            ctx = moderngl.create_standalone_context()
-            fbo = self.get_fbo(ctx, self.samples)
+            self.ctx = moderngl.create_standalone_context()
+            self.fbo = self.get_fbo(self.samples)
         else:
-            ctx = window.ctx
-            fbo = ctx.detect_framebuffer()
-        self.ctx = ctx
-        self.fbo = fbo
+            self.ctx = window.ctx
+            self.fbo = self.ctx.detect_framebuffer()
         self.fbo.use()
         self.set_ctx_blending()
 
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
 
         # This is the frame buffer we'll draw into when emitting frames
-        self.draw_fbo = self.get_fbo(ctx, 0)
+        self.draw_fbo = self.get_fbo(samples=0)
 
     def set_ctx_blending(self, enable: bool = True) -> None:
         if enable:
@@ -278,16 +276,15 @@ class Camera(object):
     # Methods associated with the frame buffer
     def get_fbo(
         self,
-        ctx: moderngl.Context,
         samples: int = 0
     ) -> moderngl.Framebuffer:
-        return ctx.framebuffer(
-            color_attachments=ctx.texture(
+        return self.ctx.framebuffer(
+            color_attachments=self.ctx.texture(
                 self.default_pixel_shape,
                 components=self.n_channels,
                 samples=samples,
             ),
-            depth_attachment=ctx.depth_renderbuffer(
+            depth_attachment=self.ctx.depth_renderbuffer(
                 self.default_pixel_shape,
                 samples=samples
             )
@@ -326,7 +323,7 @@ class Camera(object):
     def get_pixel_array(self) -> np.ndarray:
         raw = self.get_raw_fbo_data(dtype='f4')
         flat_arr = np.frombuffer(raw, dtype='f4')
-        arr = flat_arr.reshape([*reversed(self.fbo.size), self.n_channels])
+        arr = flat_arr.reshape([*reversed(self.draw_fbo.size), self.n_channels])
         arr = arr[::-1]
         # Convert from float
         return (self.rgb_max_val * arr).astype(self.pixel_array_dtype)
@@ -342,7 +339,7 @@ class Camera(object):
         return texture
 
     # Getting camera attributes
-    def get_pixel_size(self):
+    def get_pixel_size(self) -> float:
         return self.frame.get_shape()[0] / self.get_pixel_shape()[0]
 
     def get_pixel_shape(self) -> tuple[int, int]:
@@ -353,6 +350,10 @@ class Camera(object):
 
     def get_pixel_height(self) -> int:
         return self.get_pixel_shape()[1]
+
+    def get_aspect_ratio(self):
+        pw, ph = self.get_pixel_shape()
+        return pw / ph
 
     def get_frame_height(self) -> float:
         return self.frame.get_height()
@@ -376,17 +377,15 @@ class Camera(object):
         whether frame_height or frame_width
         remains fixed while the other changes accordingly.
         """
-        pixel_height = self.get_pixel_height()
-        pixel_width = self.get_pixel_width()
         frame_height = self.get_frame_height()
         frame_width = self.get_frame_width()
-        aspect_ratio = fdiv(pixel_width, pixel_height)
+        aspect_ratio = self.get_aspect_ratio()
         if not fixed_dimension:
             frame_height = frame_width / aspect_ratio
         else:
             frame_width = aspect_ratio * frame_height
-        self.frame.set_height(frame_height)
-        self.frame.set_width(frame_width)
+        self.frame.set_height(frame_height, stretch=true)
+        self.frame.set_width(frame_width, stretch=true)
 
     # Rendering
     def capture(self, *mobjects: Mobject) -> None:
@@ -446,9 +445,10 @@ class Camera(object):
 
         # Program and vertex array
         shader_program, vert_format = self.get_shader_program(shader_wrapper)
+        attributes = shader_wrapper.vert_attributes
         vao = self.ctx.vertex_array(
             program=shader_program,
-            content=[(vbo, vert_format, *shader_wrapper.vert_attributes)],
+            content=[(vbo, vert_format, *attributes)],
             index_buffer=ibo,
         )
         return {
