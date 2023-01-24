@@ -1841,7 +1841,7 @@ class Mobject(object):
 
     def init_shader_data(self):
         # TODO, only call this when needed?
-        self.shader_indices = None
+        self.shader_indices = np.zeros(0)
         self.shader_wrapper = ShaderWrapper(
             vert_data=self.data,
             shader_folder=self.shader_folder,

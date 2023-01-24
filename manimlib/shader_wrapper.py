@@ -37,7 +37,7 @@ class ShaderWrapper(object):
         is_fill: bool = False,
     ):
         self.vert_data = vert_data
-        self.vert_indices = vert_indices
+        self.vert_indices = vert_indices or np.zeros(0)
         self.vert_attributes = vert_data.dtype.names
         self.shader_folder = shader_folder
         self.uniforms = uniforms or dict()
@@ -68,9 +68,8 @@ class ShaderWrapper(object):
 
     def copy(self):
         result = copy.copy(self)
-        result.vert_data = np.array(self.vert_data)
-        if result.vert_indices is not None:
-            result.vert_indices = np.array(self.vert_indices)
+        result.vert_data = self.vert_data.copy()
+        result.vert_indices = self.vert_indices.copy()
         if self.uniforms:
             result.uniforms = {key: np.array(value) for key, value in self.uniforms.items()}
         if self.texture_paths:
@@ -136,10 +135,7 @@ class ShaderWrapper(object):
     def combine_with(self, *shader_wrappers: ShaderWrapper) -> ShaderWrapper:
         if len(shader_wrappers) > 0:
             data_list = [self.vert_data, *(sw.vert_data for sw in shader_wrappers)]
-            if self.vert_indices is not None:
-                indices_list = [self.vert_indices, *(sw.vert_indices for sw in shader_wrappers)]
-            else:
-                indices_list = None
+            indices_list = [self.vert_indices, *(sw.vert_indices for sw in shader_wrappers)]
             self.read_in(data_list, indices_list)
         return self
 
@@ -157,10 +153,13 @@ class ShaderWrapper(object):
         # Stack the data
         np.concatenate(data_list, out=self.vert_data)
 
-        if indices_list is None or self.vert_indices is None:
+        if indices_list is None:
             return self
 
         total_verts = sum(len(vi) for vi in indices_list)
+        if total_verts == 0:
+            return self
+
         self.vert_indices = resize_array(self.vert_indices, total_verts)
 
         # Stack vert_indices, but adding the appropriate offset

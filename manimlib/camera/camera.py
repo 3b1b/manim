@@ -502,7 +502,7 @@ class Camera(object):
         # Data buffer
         vert_data = shader_wrapper.vert_data
         indices = shader_wrapper.vert_indices
-        if indices is None:
+        if len(indices) == 0:
             ibo = None
         elif single_use:
             ibo = self.ctx.buffer(indices.astype(np.uint32))
