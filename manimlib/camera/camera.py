@@ -231,7 +231,7 @@ class Camera(object):
         self.init_textures()
         self.init_light_source()
         self.refresh_perspective_uniforms()
-        self.init_fill_fbo()  # Experimental
+        self.init_fill_fbo(self.ctx)  # Experimental
         # A cached map from mobjects to their associated list of render groups
         # so that these render groups are not regenerated unnecessarily for static
         # mobjects
@@ -255,16 +255,17 @@ class Camera(object):
         # This is the frame buffer we'll draw into when emitting frames
         self.draw_fbo = self.get_fbo(samples=0)
 
-    def init_fill_fbo(self):
+    def init_fill_fbo(self, ctx):
         # Experimental
-        self.fill_texture = self.ctx.texture(
+        self.fill_texture = ctx.texture(
             size=self.get_pixel_shape(),
             components=4,
             samples=self.samples,
         )
-        fill_depth = self.ctx.depth_renderbuffer(self.get_pixel_shape(), samples=self.samples)
-        self.fill_fbo = self.ctx.framebuffer(self.fill_texture, fill_depth)
-        self.fill_prog = self.ctx.program(
+        # TODO, depth buffer is not really used yet
+        fill_depth = ctx.depth_renderbuffer(self.get_pixel_shape(), samples=self.samples)
+        self.fill_fbo = ctx.framebuffer(self.fill_texture, fill_depth)
+        self.fill_prog = ctx.program(
             vertex_shader='''
                 #version 330
 
@@ -285,10 +286,8 @@ class Camera(object):
                 out vec4 frag_color;
 
                 void main() {
-                    vec4 color = texture(Texture, v_textcoord);
-                    if(color.a == 0) discard;
-                    frag_color = color;
-                    // frag_color = vec4(1, 0, 0, 0.2);
+                    frag_color = texture(Texture, v_textcoord);
+                    if(frag_color.a == 0) discard;
                 }
             ''',
         )
@@ -297,9 +296,9 @@ class Camera(object):
         self.fill_prog['Texture'].value = tid
         self.n_textures += 1
         verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-        self.fill_texture_vao = self.ctx.simple_vertex_array(
+        self.fill_texture_vao = ctx.simple_vertex_array(
             self.fill_prog,
-            self.ctx.buffer(verts.astype('f4').tobytes()),
+            ctx.buffer(verts.astype('f4').tobytes()),
             'texcoord',
         )
 
