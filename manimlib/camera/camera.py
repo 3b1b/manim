@@ -348,7 +348,7 @@ class Camera(object):
         return self.frame.get_shape()[0] / self.get_pixel_shape()[0]
 
     def get_pixel_shape(self) -> tuple[int, int]:
-        return self.fbo.viewport[2:4]
+        return self.draw_fbo.size
 
     def get_pixel_width(self) -> int:
         return self.get_pixel_shape()[0]
