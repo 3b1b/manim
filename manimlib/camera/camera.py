@@ -231,6 +231,7 @@ class Camera(object):
         self.init_textures()
         self.init_light_source()
         self.refresh_perspective_uniforms()
+        self.init_fill_fbo()  # Experimental
         # A cached map from mobjects to their associated list of render groups
         # so that these render groups are not regenerated unnecessarily for static
         # mobjects
@@ -253,6 +254,54 @@ class Camera(object):
 
         # This is the frame buffer we'll draw into when emitting frames
         self.draw_fbo = self.get_fbo(samples=0)
+
+    def init_fill_fbo(self):
+        # Experimental
+        self.fill_texture = self.ctx.texture(
+            size=self.get_pixel_shape(),
+            components=4,
+            samples=self.samples,
+        )
+        fill_depth = self.ctx.depth_renderbuffer(self.get_pixel_shape(), samples=self.samples)
+        self.fill_fbo = self.ctx.framebuffer(self.fill_texture, fill_depth)
+        self.fill_prog = self.ctx.program(
+            vertex_shader='''
+                #version 330
+
+                in vec2 texcoord;
+                out vec2 v_textcoord;
+
+                void main() {
+                    gl_Position = vec4((2.0 * texcoord - 1.0), 0.0, 1.0);
+                    v_textcoord = texcoord;
+                }
+            ''',
+            fragment_shader='''
+                #version 330
+
+                uniform sampler2D Texture;
+
+                in vec2 v_textcoord;
+                out vec4 frag_color;
+
+                void main() {
+                    vec4 color = texture(Texture, v_textcoord);
+                    if(color.a == 0) discard;
+                    frag_color = color;
+                    // frag_color = vec4(1, 0, 0, 0.2);
+                }
+            ''',
+        )
+        tid = self.n_textures
+        self.fill_texture.use(tid)
+        self.fill_prog['Texture'].value = tid
+        self.n_textures += 1
+        verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+        self.fill_vao = self.ctx.simple_vertex_array(
+            self.fill_prog,
+            self.ctx.buffer(verts.astype('f4').tobytes()),
+            'texcoord',
+        )
 
     def set_ctx_blending(self, enable: bool = True) -> None:
         if enable:
@@ -400,7 +449,24 @@ class Camera(object):
         self.set_shader_uniforms(shader_program, shader_wrapper)
         self.set_ctx_depth_test(shader_wrapper.depth_test)
         self.set_ctx_clip_plane(shader_wrapper.use_clip_plane)
-        render_group["vao"].render(int(shader_wrapper.render_primitive))
+
+        # TODO
+        if shader_wrapper.render_to_texture:
+            self.fill_fbo.clear(0.0, 0.0, 0.0, 0.0)
+            self.fill_fbo.use()
+            self.ctx.enable(moderngl.BLEND)
+            self.ctx.blend_func = moderngl.ONE, moderngl.ONE
+            self.ctx.blend_equation = moderngl.FUNC_SUBTRACT
+            render_group["vao"].render(int(shader_wrapper.render_primitive))
+            self.ctx.blend_func = moderngl.DEFAULT_BLENDING
+            self.ctx.blend_equation = moderngl.FUNC_ADD
+            self.fbo.use()
+            self.fill_texture.use(0)
+            self.fill_prog['Texture'].value = 0
+            self.fill_vao.render(moderngl.TRIANGLE_STRIP)
+        else:
+            render_group["vao"].render(int(shader_wrapper.render_primitive))
+
         if render_group["single_use"]:
             self.release_render_group(render_group)
 

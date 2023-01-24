@@ -59,13 +59,12 @@ class VMobject(Mobject):
         ('stroke_width', np.float32, (1,)),
         ('joint_product', np.float32, (4,)),
         ('fill_rgba', np.float32, (4,)),
-        ('orientation', np.float32, (1,)),
-        ('vert_index', np.float32, (1,)),
+        ('base_point', np.float32, (3,)),
     ])
-    fill_data_names = ['point', 'fill_rgba', 'orientation', 'vert_index']
+    fill_data_names = ['point', 'fill_rgba', 'base_point']
     stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_product']
 
-    fill_render_primitive: int = moderngl.TRIANGLES
+    fill_render_primitive: int = moderngl.TRIANGLE_STRIP
     stroke_render_primitive: int = moderngl.TRIANGLE_STRIP
 
     pre_function_handle_to_anchor_scale_factor: float = 0.01
@@ -992,10 +991,10 @@ class VMobject(Mobject):
         v12s = points[2::2] - points[1::2]
         curve_orientations = np.sign(cross2d(v01s, v12s))
 
-        # Reset orientation data
-        self.data["orientation"][1::2, 0] = curve_orientations
-        if "orientation" in self.locked_data_keys:
-            self.locked_data_keys.remove("orientation")
+        # # Reset orientation data
+        # self.data["orientation"][1::2, 0] = curve_orientations
+        # if "orientation" in self.locked_data_keys:
+        #     self.locked_data_keys.remove("orientation")
 
         concave_parts = curve_orientations < 0
 
@@ -1121,14 +1120,6 @@ class VMobject(Mobject):
         super().set_data(data)
         return self
 
-    def resize_points(
-        self,
-        new_length: int,
-        resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
-    ):
-        super().resize_points(new_length, resize_func)
-        self.data["vert_index"][:, 0] = np.arange(new_length)
-
     # TODO, how to be smart about tangents here?
     @triggers_refreshed_triangulation
     def apply_function(
@@ -1160,10 +1151,10 @@ class VMobject(Mobject):
         stroke_data = np.zeros(0, dtype=stroke_dtype)
         self.fill_shader_wrapper = ShaderWrapper(
             vert_data=fill_data,
-            vert_indices=np.zeros(0, dtype='i4'),
             uniforms=self.uniforms,
             shader_folder=self.fill_shader_folder,
             render_primitive=self.fill_render_primitive,
+            render_to_texture=True,
         )
         self.stroke_shader_wrapper = ShaderWrapper(
             vert_data=stroke_data,
@@ -1187,13 +1178,15 @@ class VMobject(Mobject):
 
         # Build up data lists
         fill_datas = []
-        fill_indices = []
         stroke_datas = []
         back_stroke_data = []
         for submob in family:
             if submob.has_fill():
+                submob.data["base_point"][:] = submob.data["point"][0]
+                # submob.data["base_color"][:] = submob.data["fill_color"][0]
                 fill_datas.append(submob.data[fill_names])
-                fill_indices.append(submob.get_triangulation())
+                # Add dummy
+                fill_datas.append(submob.data[fill_names][-1:])
             if submob.has_stroke():
                 submob.get_joint_products()
                 if submob.stroke_behind:
@@ -1208,7 +1201,7 @@ class VMobject(Mobject):
 
         shader_wrappers = [
             self.back_stroke_shader_wrapper.read_in(back_stroke_data),
-            self.fill_shader_wrapper.read_in(fill_datas, fill_indices),
+            self.fill_shader_wrapper.read_in(fill_datas),
             self.stroke_shader_wrapper.read_in(stroke_datas),
         ]
 

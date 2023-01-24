@@ -2,17 +2,17 @@
 
 in vec3 point;
 in vec4 fill_rgba;
-in float orientation;
-in float vert_index;
+in vec3 base_point;
 
 out vec3 verts;  // Bezier control point
-out float v_orientation;
+out vec4 v_joint_product;
 out vec4 v_color;
+out vec3 v_base_point;
 out float v_vert_index;
 
 void main(){
     verts = point;
-    v_orientation = orientation;
     v_color = fill_rgba;
-    v_vert_index = vert_index;
+    v_base_point = base_point;
+    v_vert_index = gl_VertexID;
 }
