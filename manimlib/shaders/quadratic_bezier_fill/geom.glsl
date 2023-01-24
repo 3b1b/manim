@@ -41,18 +41,21 @@ void main(){
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
 
+    if (v_color[0].a == 0 && v_color[1].a == 0 && v_color[2].a == 0) return;
+
     vec3 unit_normal = get_unit_normal(verts[0], verts[1], verts[2]);
 
     if(int(v_inst_id[0]) % 2 == 0){
         // Emit main triangle
-        fill_all = float(true);
+        fill_all = 1.0;
         uv_coords = vec2(0.0);
         emit_vertex_wrapper(v_base_point[0], v_color[0], unit_normal);
         emit_vertex_wrapper(verts[0], v_color[0], unit_normal);
         emit_vertex_wrapper(verts[2], v_color[2], unit_normal);
     }else{
         // Emit edge triangle
-        fill_all = float(false);
+        fill_all = 0.0;
+        // A quadratic bezier curve with these points coincides with y = x^2
         vec2 uv_coords_arr[3] = vec2[3](
             vec2(0.0, 0.0),
             vec2(0.5, 0),
