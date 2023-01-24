@@ -154,7 +154,7 @@ void main() {
     // actually only need every other strip element
     if (int(v_vert_index[0]) % 2 == 1) return;
 
-    // Curves are marked as eneded when the handle after
+    // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
 

@@ -457,7 +457,10 @@ class Camera(object):
             self.ctx.enable(moderngl.BLEND)
             self.ctx.blend_func = moderngl.ONE, moderngl.ONE
             self.ctx.blend_equation = moderngl.FUNC_SUBTRACT
-            render_group["vao"].render(int(shader_wrapper.render_primitive))
+            render_group["vao"].render(
+                int(shader_wrapper.render_primitive),
+                instances=2,
+            )
             self.ctx.blend_func = moderngl.DEFAULT_BLENDING
             self.ctx.blend_equation = moderngl.FUNC_ADD
             self.fbo.use()

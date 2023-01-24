@@ -1183,7 +1183,6 @@ class VMobject(Mobject):
         for submob in family:
             if submob.has_fill():
                 submob.data["base_point"][:] = submob.data["point"][0]
-                # submob.data["base_color"][:] = submob.data["fill_color"][0]
                 fill_datas.append(submob.data[fill_names])
                 # Add dummy
                 fill_datas.append(submob.data[fill_names][-1:])

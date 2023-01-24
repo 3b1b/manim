@@ -1,7 +1,7 @@
 #version 330
 
 layout (triangles) in;
-layout (triangle_strip, max_vertices = 7) out;
+layout (triangle_strip, max_vertices = 3) out;
 
 uniform float anti_alias_width;
 uniform float pixel_size;
@@ -11,11 +11,10 @@ in vec3 verts[3];
 in vec4 v_color[3];
 in vec3 v_base_point[3];
 in float v_vert_index[3];
-
+in float v_inst_id[3];
 
 out vec4 color;
-
-out float orientation;
+out float fill_all;
 // uv space is where the curve coincides with y = x^2
 out vec2 uv_coords;
 
@@ -38,31 +37,29 @@ void main(){
     // actually only need every other strip element
     if (int(v_vert_index[0]) % 2 == 1) return;
 
-    // Curves are marked as eneded when the handle after
+    // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
 
     vec3 unit_normal = get_unit_normal(verts[0], verts[1], verts[2]);
 
-    // Emit main triangle
-    orientation = 0.0;
-    uv_coords = vec2(0.0);
-    emit_vertex_wrapper(verts[2], v_color[2], unit_normal);
-    emit_vertex_wrapper(v_base_point[0], v_color[1], unit_normal);
-    emit_vertex_wrapper(verts[0], v_color[0], unit_normal);
-
-    // Emit edge triangle
-    orientation = 1.0;
-    uv_coords = vec2(0, 0);
-    // Two dummies
-    emit_vertex_wrapper(verts[0], v_color[0], unit_normal);
-    emit_vertex_wrapper(verts[0], v_color[0], unit_normal);
-    // Inner corner
-    uv_coords = vec2(0.5, 0);
-    emit_vertex_wrapper(verts[1], v_color[1], unit_normal);
-    // Last corner
-    uv_coords = vec2(1.0, 1.0);
-    emit_vertex_wrapper(verts[2], v_color[2], unit_normal);
-    EndPrimitive();
+    if(int(v_inst_id[0]) % 2 == 0){
+        // Emit main triangle
+        fill_all = float(true);
+        uv_coords = vec2(0.0);
+        emit_vertex_wrapper(verts[0], v_color[0], unit_normal);
+        emit_vertex_wrapper(v_base_point[0], v_color[0], unit_normal);
+        emit_vertex_wrapper(verts[2], v_color[2], unit_normal);
+    }else{
+        // Emit edge triangle
+        fill_all = float(false);
+        uv_coords = vec2(0.0, 0.0);
+        emit_vertex_wrapper(verts[0], v_color[0], unit_normal);
+        uv_coords = vec2(0.5, 0);
+        emit_vertex_wrapper(verts[1], v_color[1], unit_normal);
+        uv_coords = vec2(1.0, 1.0);
+        emit_vertex_wrapper(verts[2], v_color[2], unit_normal);
+        EndPrimitive();
+    }
 }
 
