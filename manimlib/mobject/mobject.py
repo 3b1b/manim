@@ -1264,7 +1264,7 @@ class Mobject(object):
             if color is not None:
                 if isinstance(color, list):
                     rgbs = np.array(list(map(color_to_rgb, color)))
-                    resize_with_interpolation(rgbs, len(data))
+                    rgbs = resize_with_interpolation(rgbs, len(data))
                 else:
                     rgbs = color_to_rgb(color)
                 data[name][:, :3] = rgbs
