@@ -1673,12 +1673,7 @@ class Mobject(object):
         for submob, sf in zip(self.submobjects, split_factors):
             new_submobs.append(submob)
             for k in range(1, sf):
-                new_submob = submob.copy()
-                # If the submobject is at all transparent, then
-                # make the copy completely transparent
-                if submob.get_opacity() < 1:
-                    new_submob.set_opacity(0)
-                new_submobs.append(new_submob)
+                new_submobs.append(submob.copy().scale(0))
         self.set_submobjects(new_submobs)
         return self
 
