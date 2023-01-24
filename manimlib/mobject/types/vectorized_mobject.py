@@ -845,8 +845,8 @@ class VMobject(Mobject):
             sp2 = self.insert_n_curves_to_point_list(diff2, sp2)
             if n > 0:
                 # Add intermediate anchor to mark path end
-                new_subpaths1.append(new_subpaths1[0][-1])
-                new_subpaths2.append(new_subpaths2[0][-1])
+                new_subpaths1.append(new_subpaths1[-1][-1])
+                new_subpaths2.append(new_subpaths2[-1][-1])
             new_subpaths1.append(sp1)
             new_subpaths2.append(sp2)
 
