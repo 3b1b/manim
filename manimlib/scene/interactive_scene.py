@@ -68,8 +68,8 @@ class InteractiveScene(Scene):
     """
     corner_dot_config = dict(
         color=WHITE,
-        radius=0.05,
-        glow_factor=1.0,
+        radius=0.025,
+        glow_factor=2.0,
     )
     selection_rectangle_stroke_color = WHITE
     selection_rectangle_stroke_width = 1.0
