@@ -289,7 +289,15 @@ class Scene(object):
     # Only these methods should touch the camera
 
     def get_image(self) -> Image:
-        return self.camera.get_image()
+        if self.window is not None:
+            self.window.size = self.camera.get_pixel_shape()
+            self.window.swap_buffers()
+            self.update_frame()
+            self.window.swap_buffers()
+        image = self.camera.get_image()
+        if self.window is not None:
+            self.window.to_default_position()
+        return image
 
     def show(self) -> None:
         self.update_frame(ignore_skipping=True)
