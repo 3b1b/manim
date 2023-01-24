@@ -711,7 +711,7 @@ class Scene(object):
             self.restore_state(self.redo_stack.pop())
         self.refresh_static_mobjects()
 
-    def checkpoint_paste(self, skip: bool = False):
+    def checkpoint_paste(self, skip: bool = False, record: bool = False):
         """
         Used during interactive development to run (or re-run)
         a block of scene code.
@@ -721,7 +721,7 @@ class Scene(object):
         was called on a block of code starting with that comment.
         """
         shell = get_ipython()
-        if shell is None:
+        if shell is None or self.window is None:
             raise Exception(
                 "Scene.checkpoint_paste cannot be called outside of " +
                 "an ipython shell"
@@ -738,7 +738,19 @@ class Scene(object):
         prev_skipping = self.skip_animations
         self.skip_animations = skip
 
+        if record:
+            # Resize window so rendering happens at the appropriate size
+            self.window.size = self.camera.get_pixel_shape()
+            self.window.swap_buffers()
+            self.update_frame()
+            self.file_writer.begin_insert()
+
         shell.run_cell(pasted)
+
+        if record:
+            self.file_writer.end_insert()
+            # Put window back to how it started
+            self.window.to_default_position()
 
         self.skip_animations = prev_skipping
 

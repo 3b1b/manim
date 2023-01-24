@@ -26,10 +26,14 @@ class Window(PygletWindow):
         self,
         scene: Scene,
         size: tuple[int, int] = (1280, 720),
+        full_size: tuple[int, int] = (1920, 1080),
         samples = 0
     ):
-        super().__init__(size=size, samples=samples)
+        super().__init__(size=full_size, samples=samples)
 
+        self.full_size = full_size
+        self.default_size = size
+        self.default_position = self.find_initial_position(size)
         self.scene = scene
         self.pressed_keys = set()
         self.title = str(scene)
@@ -40,13 +44,11 @@ class Window(PygletWindow):
         self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
         self.timer.start()
 
-        # No idea why, but when self.position is set once
-        # it sometimes doesn't actually change the position
-        # to the specified tuple on the rhs, but doing it
-        # twice seems to make it work.  ¯\_(ツ)_/¯
-        initial_position = self.find_initial_position(size)
-        self.position = initial_position
-        self.position = initial_position
+        self.to_default_position()
+
+    def to_default_position(self):
+        self.size = self.default_size
+        self.position = self.default_position
 
     def find_initial_position(self, size: tuple[int, int]) -> tuple[int, int]:
         custom_position = get_customization()["window_position"]

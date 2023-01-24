@@ -507,11 +507,10 @@ class Camera(object):
         view_matrix = frame.get_view_matrix()
         light_pos = self.light_source.get_location()
         cam_pos = self.frame.get_implied_camera_location()
-        frame_shape = frame.get_shape()
 
         self.perspective_uniforms.update(
-            frame_shape=frame_shape,
-            pixel_size=frame_shape[0] / self.get_pixel_shape()[0],
+            frame_shape=frame.get_shape(),
+            pixel_size=self.get_pixel_size(),
             view=tuple(view_matrix.T.flatten()),
             camera_position=tuple(cam_pos),
             light_position=tuple(light_pos),
