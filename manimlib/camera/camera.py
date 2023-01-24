@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from manimlib.shader_wrapper import ShaderWrapper
     from manimlib.typing import ManimColor, Vect3
+    from manimlib.window import Window
     from typing import Any, Iterable
 
 class CameraFrame(Mobject):
@@ -187,7 +188,7 @@ class CameraFrame(Mobject):
 class Camera(object):
     def __init__(
         self,
-        ctx: moderngl.Context | None = None,
+        window: Window | None = None,
         background_image: str | None = None,
         frame_config: dict = dict(),
         pixel_width: int = DEFAULT_PIXEL_WIDTH,
@@ -209,6 +210,7 @@ class Camera(object):
         samples: int = 0,
     ):
         self.background_image = background_image
+        self.window = window
         self.default_pixel_shape = (pixel_width, pixel_height)
         self.fps = fps
         self.max_allowable_norm = max_allowable_norm
@@ -224,7 +226,7 @@ class Camera(object):
         ))
         self.perspective_uniforms = dict()
         self.init_frame(**frame_config)
-        self.init_context(ctx)
+        self.init_context(window)
         self.init_shaders()
         self.init_textures()
         self.init_light_source()
@@ -237,11 +239,12 @@ class Camera(object):
     def init_frame(self, **config) -> None:
         self.frame = CameraFrame(**config)
 
-    def init_context(self, ctx: moderngl.Context | None = None) -> None:
-        if ctx is None:
+    def init_context(self, window: Window | None = None) -> None:
+        if window is None:
             ctx = moderngl.create_standalone_context()
             fbo = self.get_fbo(ctx, self.samples)
         else:
+            ctx = window.ctx
             fbo = ctx.detect_framebuffer()
         self.ctx = ctx
         self.fbo = fbo
@@ -299,8 +302,12 @@ class Camera(object):
         # Copy blocks from fbo into draw_fbo using Blit
         gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo.glo)
         gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, self.draw_fbo.glo)
+        if self.window is not None:
+            src_viewport = self.window.viewport
+        else:
+            src_viewport = self.fbo.viewport
         gl.glBlitFramebuffer(
-            *self.fbo.viewport,
+            *src_viewport,
             *self.draw_fbo.viewport,
             gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR
         )

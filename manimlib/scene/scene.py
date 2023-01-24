@@ -101,7 +101,7 @@ class Scene(object):
         if self.preview:
             from manimlib.window import Window
             self.window = Window(scene=self, **self.window_config)
-            self.camera_config["ctx"] = self.window.ctx
+            self.camera_config["window"] = self.window
             self.camera_config["fps"] = 30  # Where's that 30 from?
         else:
             self.window = None
