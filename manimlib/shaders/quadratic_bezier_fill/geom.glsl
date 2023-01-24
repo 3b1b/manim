@@ -47,19 +47,22 @@ void main(){
         // Emit main triangle
         fill_all = float(true);
         uv_coords = vec2(0.0);
-        emit_vertex_wrapper(verts[0], v_color[0], unit_normal);
         emit_vertex_wrapper(v_base_point[0], v_color[0], unit_normal);
+        emit_vertex_wrapper(verts[0], v_color[0], unit_normal);
         emit_vertex_wrapper(verts[2], v_color[2], unit_normal);
     }else{
         // Emit edge triangle
         fill_all = float(false);
-        uv_coords = vec2(0.0, 0.0);
-        emit_vertex_wrapper(verts[0], v_color[0], unit_normal);
-        uv_coords = vec2(0.5, 0);
-        emit_vertex_wrapper(verts[1], v_color[1], unit_normal);
-        uv_coords = vec2(1.0, 1.0);
-        emit_vertex_wrapper(verts[2], v_color[2], unit_normal);
-        EndPrimitive();
+        vec2 uv_coords_arr[3] = vec2[3](
+            vec2(0.0, 0.0),
+            vec2(0.5, 0),
+            vec2(1.0, 1.0)
+        );
+        for(int i = 0; i < 3; i ++){
+            uv_coords = uv_coords_arr[i];
+            emit_vertex_wrapper(verts[i], v_color[i], unit_normal);
+        }
     }
+    EndPrimitive();
 }
 

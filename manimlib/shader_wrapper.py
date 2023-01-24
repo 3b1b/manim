@@ -34,7 +34,7 @@ class ShaderWrapper(object):
         depth_test: bool = False,
         use_clip_plane: bool = False,
         render_primitive: int = moderngl.TRIANGLE_STRIP,
-        render_to_texture: bool = False,
+        is_fill: bool = False,
     ):
         self.vert_data = vert_data
         self.vert_indices = vert_indices
@@ -45,7 +45,7 @@ class ShaderWrapper(object):
         self.depth_test = depth_test
         self.use_clip_plane = use_clip_plane
         self.render_primitive = str(render_primitive)
-        self.render_to_texture = render_to_texture
+        self.is_fill = is_fill
         self.init_program_code()
         self.refresh_id()
 

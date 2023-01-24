@@ -1154,7 +1154,7 @@ class VMobject(Mobject):
             uniforms=self.uniforms,
             shader_folder=self.fill_shader_folder,
             render_primitive=self.fill_render_primitive,
-            render_to_texture=True,
+            is_fill=True,
         )
         self.stroke_shader_wrapper = ShaderWrapper(
             vert_data=stroke_data,

@@ -297,7 +297,7 @@ class Camera(object):
         self.fill_prog['Texture'].value = tid
         self.n_textures += 1
         verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-        self.fill_vao = self.ctx.simple_vertex_array(
+        self.fill_texture_vao = self.ctx.simple_vertex_array(
             self.fill_prog,
             self.ctx.buffer(verts.astype('f4').tobytes()),
             'texcoord',
@@ -446,32 +446,38 @@ class Camera(object):
     def render(self, render_group: dict[str, Any]) -> None:
         shader_wrapper = render_group["shader_wrapper"]
         shader_program = render_group["prog"]
+        primitive = int(shader_wrapper.render_primitive)
         self.set_shader_uniforms(shader_program, shader_wrapper)
         self.set_ctx_depth_test(shader_wrapper.depth_test)
         self.set_ctx_clip_plane(shader_wrapper.use_clip_plane)
 
-        # TODO
-        if shader_wrapper.render_to_texture:
-            self.fill_fbo.clear(0.0, 0.0, 0.0, 0.0)
-            self.fill_fbo.use()
-            self.ctx.enable(moderngl.BLEND)
-            self.ctx.blend_func = moderngl.ONE, moderngl.ONE
-            self.ctx.blend_equation = moderngl.FUNC_SUBTRACT
-            render_group["vao"].render(
-                int(shader_wrapper.render_primitive),
-                instances=2,
-            )
-            self.ctx.blend_func = moderngl.DEFAULT_BLENDING
-            self.ctx.blend_equation = moderngl.FUNC_ADD
-            self.fbo.use()
-            self.fill_texture.use(0)
-            self.fill_prog['Texture'].value = 0
-            self.fill_vao.render(moderngl.TRIANGLE_STRIP)
+        if shader_wrapper.is_fill:
+            self.render_fill(render_group["vao"], primitive)
         else:
-            render_group["vao"].render(int(shader_wrapper.render_primitive))
+            render_group["vao"].render(primitive)
 
         if render_group["single_use"]:
             self.release_render_group(render_group)
+
+    def render_fill(self, vao, render_primitive: int):
+        """
+        VMobject fill is handled in a special way, where emited triangles
+        must be blended with moderngl.FUNC_SUBTRACT so as to effectively compute
+        a winding number around each pixel. This is rendered to a separate texture,
+        then that texture is overlayed onto the current fbo
+        """
+        self.fill_fbo.clear(0.0, 0.0, 0.0, 0.0)
+        self.fill_fbo.use()
+        self.ctx.enable(moderngl.BLEND)
+        self.ctx.blend_func = moderngl.ONE, moderngl.ONE
+        self.ctx.blend_equation = moderngl.FUNC_SUBTRACT
+        vao.render(render_primitive, instances=2)
+        self.ctx.blend_func = moderngl.DEFAULT_BLENDING
+        self.ctx.blend_equation = moderngl.FUNC_ADD
+        self.fbo.use()
+        self.fill_texture.use(0)
+        self.fill_prog['Texture'].value = 0
+        self.fill_texture_vao.render(moderngl.TRIANGLE_STRIP)
 
     def get_render_group_list(self, mobject: Mobject) -> Iterable[dict[str, Any]]:
         if mobject.is_changing():
