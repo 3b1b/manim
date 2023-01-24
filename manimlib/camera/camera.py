@@ -271,8 +271,6 @@ class Camera(object):
     def set_ctx_clip_plane(self, enable: bool = True) -> None:
         if enable:
             gl.glEnable(gl.GL_CLIP_DISTANCE0)
-        else:
-            gl.glDisable(gl.GL_CLIP_DISTANCE0)
 
     def init_light_source(self) -> None:
         self.light_source = Point(self.light_source_position)
