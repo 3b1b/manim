@@ -49,6 +49,7 @@ class Window(PygletWindow):
     def to_default_position(self):
         self.size = self.default_size
         self.position = self.default_position
+        self.swap_buffers()
 
     def find_initial_position(self, size: tuple[int, int]) -> tuple[int, int]:
         custom_position = get_customization()["window_position"]
