@@ -9,6 +9,7 @@ import numpy as np
 
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.shaders import get_shader_code_from_file
+from manimlib.utils.shaders import get_shader_program
 
 from typing import TYPE_CHECKING
 
@@ -47,7 +48,28 @@ class ShaderWrapper(object):
         self.render_primitive = str(render_primitive)
         self.is_fill = is_fill
         self.init_program_code()
+        self.init_program()
         self.refresh_id()
+
+    def init_program_code(self) -> None:
+        def get_code(name: str) -> str | None:
+            return get_shader_code_from_file(
+                os.path.join(self.shader_folder, f"{name}.glsl")
+            )
+
+        self.program_code: dict[str, str | None] = {
+            "vertex_shader": get_code("vert"),
+            "geometry_shader": get_code("geom"),
+            "fragment_shader": get_code("frag"),
+        }
+
+    def init_program(self):
+        if not self.shader_folder:
+            self.program = None
+            self.vert_format = None
+            return
+        self.program = get_shader_program(self.ctx, **self.program_code)
+        self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
 
     def __eq__(self, shader_wrapper: ShaderWrapper):
         return all((
@@ -109,27 +131,13 @@ class ShaderWrapper(object):
             for name in ("vertex", "geometry", "fragment")
         )))
 
-    def init_program_code(self) -> None:
-        def get_code(name: str) -> str | None:
-            return get_shader_code_from_file(
-                os.path.join(self.shader_folder, f"{name}.glsl")
-            )
-
-        self.program_code: dict[str, str | None] = {
-            "vertex_shader": get_code("vert"),
-            "geometry_shader": get_code("geom"),
-            "fragment_shader": get_code("frag"),
-        }
-
-    def get_program_code(self) -> dict[str, str | None]:
-        return self.program_code
-
     def replace_code(self, old: str, new: str) -> None:
         code_map = self.program_code
         for (name, code) in code_map.items():
             if code_map[name] is None:
                 continue
             code_map[name] = re.sub(old, new, code_map[name])
+        self.init_program()
         self.refresh_id()
 
     def use_clip_plane(self):

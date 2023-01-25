@@ -67,7 +67,6 @@ class Camera(object):
         self.perspective_uniforms = dict()
         self.init_frame(**frame_config)
         self.init_context(window)
-        self.init_shaders()
         self.init_textures()
         self.init_light_source()
         self.refresh_perspective_uniforms()
@@ -365,7 +364,8 @@ class Camera(object):
         vbo = self.ctx.buffer(vert_data)
 
         # Program and vertex array
-        shader_program, vert_format = self.get_shader_program(shader_wrapper)
+        shader_program = shader_wrapper.program
+        vert_format = shader_wrapper.vert_format
         attributes = shader_wrapper.vert_attributes
         vao = self.ctx.vertex_array(
             program=shader_program,
@@ -392,22 +392,6 @@ class Camera(object):
         self.mob_to_render_groups = {}
 
     # Shaders
-    def init_shaders(self) -> None:
-        # Initialize with the null id going to None
-        self.id_to_shader_program: dict[int, tuple[moderngl.Program, str] | None] = {hash(""): None}
-
-    def get_shader_program(
-        self,
-        shader_wrapper: ShaderWrapper
-    ) -> tuple[moderngl.Program, str] | None:
-        sid = shader_wrapper.get_program_id()
-        if sid not in self.id_to_shader_program:
-            # Create shader program for the first time, then cache
-            # in the id_to_shader_program dictionary
-            program = self.ctx.program(**shader_wrapper.get_program_code())
-            vert_format = moderngl.detect_format(program, shader_wrapper.vert_attributes)
-            self.id_to_shader_program[sid] = (program, vert_format)
-        return self.id_to_shader_program[sid]
 
     def set_shader_uniforms(
         self,

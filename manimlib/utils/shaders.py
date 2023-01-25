@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import re
 from functools import lru_cache
+import moderngl
 
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
@@ -10,10 +11,24 @@ from manimlib.utils.file_ops import find_file
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Sequence
+    from typing import Sequence, Optional
 
 
-@lru_cache(maxsize=12)
+@lru_cache()
+def get_shader_program(
+        ctx: moderngl.context.Context,
+        vertex_shader: str,
+        fragment_shader: Optional[str] = None,
+        geometry_shader: Optional[str] = None,
+    ) -> moderngl.Program:
+    return ctx.program(
+        vertex_shader=vertex_shader,
+        fragment_shader=fragment_shader,
+        geometry_shader=geometry_shader,
+    )
+
+
+@lru_cache()
 def get_shader_code_from_file(filename: str) -> str | None:
     if not filename:
         return None
