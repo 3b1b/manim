@@ -476,12 +476,9 @@ class Camera(object):
         if not winding:
             vao.render(moderngl.TRIANGLES)
             return
-        self.fill_fbo.clear(0.0, 0.0, 0.0, 0.0)
+        self.fill_fbo.clear()
         self.fill_fbo.use()
-        self.ctx.blend_func = (
-            moderngl.ONE, moderngl.ONE,
-            moderngl.ONE, moderngl.ONE,
-        )
+        self.ctx.blend_func = (moderngl.ONE, moderngl.ONE)
         vao.render(render_primitive)
         self.ctx.blend_func = moderngl.DEFAULT_BLENDING
         self.fbo.use()
