@@ -59,13 +59,12 @@ class VMobject(Mobject):
         ('stroke_width', np.float32, (1,)),
         ('joint_product', np.float32, (4,)),
         ('fill_rgba', np.float32, (4,)),
-        ('orientation', np.float32, (1,)),
-        ('vert_index', np.float32, (1,)),
+        ('base_point', np.float32, (3,)),
     ])
-    fill_data_names = ['point', 'fill_rgba', 'orientation', 'vert_index']
+    fill_data_names = ['point', 'fill_rgba', 'base_point']
     stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_product']
 
-    fill_render_primitive: int = moderngl.TRIANGLES
+    fill_render_primitive: int = moderngl.TRIANGLE_STRIP
     stroke_render_primitive: int = moderngl.TRIANGLE_STRIP
 
     pre_function_handle_to_anchor_scale_factor: float = 0.01
@@ -90,6 +89,7 @@ class VMobject(Mobject):
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
         anti_alias_width: float = 1.0,
+        use_winding_fill: bool = True,
         **kwargs
     ):
         self.fill_color = fill_color or color or DEFAULT_FILL_COLOR
@@ -104,6 +104,7 @@ class VMobject(Mobject):
         self.flat_stroke = flat_stroke
         self.use_simple_quadratic_approx = use_simple_quadratic_approx
         self.anti_alias_width = anti_alias_width
+        self._use_winding_fill = use_winding_fill
 
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
@@ -129,8 +130,6 @@ class VMobject(Mobject):
         return super().family_members_with_points()
 
     def replicate(self, n: int) -> VGroup:
-        if self.has_fill():
-            self.get_triangulation()
         return super().replicate(n)
 
     def get_grid(self, *args, **kwargs) -> VGroup:
@@ -143,6 +142,19 @@ class VMobject(Mobject):
         if not all((isinstance(m, VMobject) for m in vmobjects)):
             raise Exception("All submobjects must be of type VMobject")
         super().add(*vmobjects)
+
+    def add_background_rectangle(
+        self,
+        color: ManimColor | None = None,
+        opacity: float = 0.75,
+        **kwargs
+    ):
+        normal = self.family_members_with_points()[0].get_unit_normal()
+        super().add_background_rectangle(color, opacity, **kwargs)
+        rect = self.background_rectangle
+        if np.dot(rect.get_unit_normal(), normal) < 0:
+            rect.reverse_points()
+        return self
 
     # Colors
     def init_colors(self):
@@ -401,6 +413,11 @@ class VMobject(Mobject):
 
     def get_joint_type(self) -> float:
         return self.uniforms["joint_type"]
+
+    def use_winding_fill(self, value: bool = True, recurse: bool = True):
+        for submob in self.get_family(recurse):
+            submob._use_winding_fill = value
+        return self
 
     # Points
     def set_anchors_and_handles(
@@ -808,11 +825,15 @@ class VMobject(Mobject):
 
     # Alignment
     def align_points(self, vmobject: VMobject):
+        winding = self._use_winding_fill and vmobject._use_winding_fill
+        self.use_winding_fill(winding)
+        vmobject.use_winding_fill(winding)
         if self.get_num_points() == len(vmobject.get_points()):
             # If both have fill, and they have the same shape, just
             # give them the same triangulation so that it's not recalculated
             # needlessly throughout an animation
-            if self.has_fill() and vmobject.has_fill() and self.has_same_shape_as(vmobject):
+            if self._use_winding_fill and self.has_fill() \
+                and vmobject.has_fill() and self.has_same_shape_as(vmobject):
                 vmobject.triangulation = self.triangulation
             return self
 
@@ -846,8 +867,8 @@ class VMobject(Mobject):
             sp2 = self.insert_n_curves_to_point_list(diff2, sp2)
             if n > 0:
                 # Add intermediate anchor to mark path end
-                new_subpaths1.append(new_subpaths1[0][-1])
-                new_subpaths2.append(new_subpaths2[0][-1])
+                new_subpaths1.append(new_subpaths1[-1][-1])
+                new_subpaths2.append(new_subpaths2[-1][-1])
             new_subpaths1.append(sp1)
             new_subpaths2.append(sp2)
 
@@ -855,7 +876,14 @@ class VMobject(Mobject):
             new_points = np.vstack(paths)
             mob.resize_points(len(new_points), resize_func=resize_preserving_order)
             mob.set_points(new_points)
+            mob.get_joint_products()
         return self
+
+    def invisible_copy(self):
+        result = self.copy()
+        result.append_vectorized_mobject(self.copy().reverse_points())
+        result.set_opacity(0)
+        return result
 
     def insert_n_curves(self, n: int, recurse: bool = True):
         for mob in self.get_family(recurse):
@@ -899,7 +927,7 @@ class VMobject(Mobject):
         *args, **kwargs
     ):
         super().interpolate(mobject1, mobject2, alpha, *args, **kwargs)
-        if self.has_fill():
+        if self.has_fill() and not self._use_winding_fill:
             tri1 = mobject1.get_triangulation()
             tri2 = mobject2.get_triangulation()
             if not arrays_match(tri1, tri2):
@@ -910,7 +938,7 @@ class VMobject(Mobject):
         assert(isinstance(vmobject, VMobject))
         vm_points = vmobject.get_points()
         if a <= 0 and b >= 1:
-            self.set_points(vm_points, refresh=False)
+            self.set_points(vm_points)
             return self
         num_curves = vmobject.get_num_curves()
 
@@ -992,11 +1020,6 @@ class VMobject(Mobject):
         v12s = points[2::2] - points[1::2]
         curve_orientations = np.sign(cross2d(v01s, v12s))
 
-        # Reset orientation data
-        self.data["orientation"][1::2, 0] = curve_orientations
-        if "orientation" in self.locked_data_keys:
-            self.locked_data_keys.remove("orientation")
-
         concave_parts = curve_orientations < 0
 
         # These are the vertices to which we'll apply a polygon triangulation
@@ -1054,8 +1077,8 @@ class VMobject(Mobject):
 
         # Find all the unit tangent vectors at each joint
         a0, h, a1 = points[0:-1:2], points[1::2], points[2::2]
-        a0_to_h = normalize_along_axis(h - a0, 1)
-        h_to_a1 = normalize_along_axis(a1 - h, 1)
+        a0_to_h = h - a0
+        h_to_a1 = a1 - h
 
         vect_to_vert = np.zeros(points.shape)
         vect_from_vert = np.zeros(points.shape)
@@ -1091,6 +1114,7 @@ class VMobject(Mobject):
             if refresh:
                 self.refresh_triangulation()
                 self.refresh_joint_products()
+            return self
         return wrapper
 
     @triggers_refreshed_triangulation
@@ -1109,10 +1133,11 @@ class VMobject(Mobject):
     def reverse_points(self):
         # This will reset which anchors are
         # considered path ends
-        if not self.has_points():
-            return self
-        inner_ends = self.get_subpath_end_indices()[:-1]
-        self.data["point"][inner_ends + 1] = self.data["point"][inner_ends + 2]
+        for mob in self.get_family():
+            if not mob.has_points():
+                continue
+            inner_ends = mob.get_subpath_end_indices()[:-1]
+            mob.data["point"][inner_ends + 1] = mob.data["point"][inner_ends + 2]
         super().reverse_points()
         return self
 
@@ -1120,14 +1145,6 @@ class VMobject(Mobject):
     def set_data(self, data: np.ndarray):
         super().set_data(data)
         return self
-
-    def resize_points(
-        self,
-        new_length: int,
-        resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
-    ):
-        super().resize_points(new_length, resize_func)
-        self.data["vert_index"][:, 0] = np.arange(new_length)
 
     # TODO, how to be smart about tangents here?
     @triggers_refreshed_triangulation
@@ -1160,10 +1177,10 @@ class VMobject(Mobject):
         stroke_data = np.zeros(0, dtype=stroke_dtype)
         self.fill_shader_wrapper = ShaderWrapper(
             vert_data=fill_data,
-            vert_indices=np.zeros(0, dtype='i4'),
             uniforms=self.uniforms,
             shader_folder=self.fill_shader_folder,
             render_primitive=self.fill_render_primitive,
+            is_fill=True,
         )
         self.stroke_shader_wrapper = ShaderWrapper(
             vert_data=stroke_data,
@@ -1192,8 +1209,13 @@ class VMobject(Mobject):
         back_stroke_data = []
         for submob in family:
             if submob.has_fill():
+                submob.data["base_point"][:] = submob.data["point"][0]
                 fill_datas.append(submob.data[fill_names])
-                fill_indices.append(submob.get_triangulation())
+                if self._use_winding_fill:
+                    # Add dummy
+                    fill_datas.append(submob.data[fill_names][-1:])
+                else:
+                    fill_indices.append(submob.get_triangulation())
             if submob.has_stroke():
                 submob.get_joint_products()
                 if submob.stroke_behind:
@@ -1208,7 +1230,7 @@ class VMobject(Mobject):
 
         shader_wrappers = [
             self.back_stroke_shader_wrapper.read_in(back_stroke_data),
-            self.fill_shader_wrapper.read_in(fill_datas, fill_indices),
+            self.fill_shader_wrapper.read_in(fill_datas, fill_indices or None),
             self.stroke_shader_wrapper.read_in(stroke_datas),
         ]
 

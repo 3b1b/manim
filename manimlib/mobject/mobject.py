@@ -1264,7 +1264,7 @@ class Mobject(object):
             if color is not None:
                 if isinstance(color, list):
                     rgbs = np.array(list(map(color_to_rgb, color)))
-                    resize_with_interpolation(rgbs, len(data))
+                    rgbs = resize_with_interpolation(rgbs, len(data))
                 else:
                     rgbs = color_to_rgb(color)
                 data[name][:, :3] = rgbs
@@ -1673,14 +1673,12 @@ class Mobject(object):
         for submob, sf in zip(self.submobjects, split_factors):
             new_submobs.append(submob)
             for k in range(1, sf):
-                new_submob = submob.copy()
-                # If the submobject is at all transparent, then
-                # make the copy completely transparent
-                if submob.get_opacity() < 1:
-                    new_submob.set_opacity(0)
-                new_submobs.append(new_submob)
+                new_submobs.append(submob.invisible_copy())
         self.set_submobjects(new_submobs)
         return self
+
+    def invisible_copy(self):
+        return self.copy().set_opacity(0)
 
     # Interpolate
 
@@ -1846,7 +1844,7 @@ class Mobject(object):
 
     def init_shader_data(self):
         # TODO, only call this when needed?
-        self.shader_indices = None
+        self.shader_indices = np.zeros(0)
         self.shader_wrapper = ShaderWrapper(
             vert_data=self.data,
             shader_folder=self.shader_folder,

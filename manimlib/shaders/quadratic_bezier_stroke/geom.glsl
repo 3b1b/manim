@@ -99,13 +99,16 @@ void get_corners(
     float buff0 = 0.5 * v_stroke_width[0] + aaw;
     float buff2 = 0.5 * v_stroke_width[2] + aaw;
 
+    vec4 jp0 = normalize(v_joint_product[0]);
+    vec4 jp2 = normalize(v_joint_product[2]);
+
     // Add correction for sharp angles to prevent weird bevel effects
-    if(v_joint_product[0].w < -0.9) buff0 *= 10 * (v_joint_product[0].w + 1.0);
-    if(v_joint_product[2].w < -0.9) buff2 *= 10 * (v_joint_product[2].w + 1.0);
+    if(jp0.w < -0.9) buff0 *= 10 * (jp0.w + 1.0);
+    if(jp2.w < -0.9) buff2 *= 10 * (jp2.w + 1.0);
 
     // Unit normal and joint angles
-    vec3 normal0 = get_joint_unit_normal(v_joint_product[0]);
-    vec3 normal2 = get_joint_unit_normal(v_joint_product[2]);
+    vec3 normal0 = get_joint_unit_normal(jp0);
+    vec3 normal2 = get_joint_unit_normal(jp2);
     // Set global unit normal
     unit_normal = normal0;
 
@@ -142,8 +145,8 @@ void get_corners(
 
     // Account for previous and next control points
     if(bool(flat_stroke)){
-        create_joint(v_joint_product[0], v01, buff0, c1, c1, c0, c0);
-        create_joint(v_joint_product[2], -v12, buff2, c5, c5, c4, c4);
+        create_joint(jp0, v01, buff0, c1, c1, c0, c0);
+        create_joint(jp2, -v12, buff2, c5, c5, c4, c4);
     }
 
     corners = vec3[6](c0, c1, c2, c3, c4, c5);
@@ -154,7 +157,7 @@ void main() {
     // actually only need every other strip element
     if (int(v_vert_index[0]) % 2 == 1) return;
 
-    // Curves are marked as eneded when the handle after
+    // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
 
@@ -164,7 +167,7 @@ void main() {
     vec3 v01 = normalize(p1 - p0);
     vec3 v12 = normalize(p2 - p1);
 
-    float cos_angle = v_joint_product[1].w;
+    float cos_angle = normalize(v_joint_product[1]).w;
     is_linear = float(cos_angle > COS_THRESHOLD);
 
     // We want to change the coordinates to a space where the curve
