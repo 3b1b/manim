@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 
 SVG_HASH_TO_MOB_MAP: dict[int, list[VMobject]] = {}
-PATH_TO_POINTS: dict[str, Tuple[Vect3Array, np.ndarray]] = {}
+PATH_TO_POINTS: dict[str, Vect3Array] = {}
 
 
 def _convert_point_to_3d(x: float, y: float) -> np.ndarray:
@@ -320,16 +320,14 @@ class VMobjectFromSVGPath(VMobject):
                 self.set_points(self.get_points_without_null_curves())
             # So triangulation doesn't get messed up
             self.subdivide_intersections()
+            # Always default to orienting outward
+            if self.get_unit_normal()[2] < 0:
+                self.reverse_points()
             # Save for future use
-            PATH_TO_POINTS[path_string] = (
-                self.get_points().copy(),
-                self.get_triangulation().copy()
-            )
+            PATH_TO_POINTS[path_string] = self.get_points().copy()
         else:
-            points, triangulation = PATH_TO_POINTS[path_string]
+            points = PATH_TO_POINTS[path_string]
             self.set_points(points)
-            self.triangulation = triangulation
-            self.needs_new_triangulation = False
 
     def handle_commands(self) -> None:
         segment_class_to_func_map = {
