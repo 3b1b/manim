@@ -333,10 +333,11 @@ class FillShaderWrapper(ShaderWrapper):
         if not winding:
             vao.render(moderngl.TRIANGLES)
             return
+        original_fbo = self.ctx.fbo
         self.fill_fbo.clear()
         self.fill_fbo.use()
         self.ctx.blend_func = (moderngl.ONE, moderngl.ONE)
         vao.render(self.render_primitive)
         self.ctx.blend_func = moderngl.DEFAULT_BLENDING
-        self.ctx.screen.use()
+        original_fbo.use()
         self.fill_texture_vao.render(moderngl.TRIANGLE_STRIP)
