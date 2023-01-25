@@ -100,7 +100,6 @@ void get_corners(
     float buff2 = 0.5 * v_stroke_width[2] + aaw;
 
     vec4 jp0 = normalize(v_joint_product[0]);
-    vec4 jp1 = normalize(v_joint_product[1]);
     vec4 jp2 = normalize(v_joint_product[2]);
 
     // Add correction for sharp angles to prevent weird bevel effects
@@ -140,7 +139,7 @@ void get_corners(
     vec3 c5 = p2 - p2_perp;
     // Move the inner middle control point to make
     // room for the curve
-    float orientation = dot(normal0, jp1.xyz);
+    float orientation = dot(normal0, v_joint_product[1].xyz);
     if(orientation >= 0.0)     c2 = 0.5 * (c0 + c4);
     else if(orientation < 0.0) c3 = 0.5 * (c1 + c5);
 
