@@ -37,7 +37,7 @@ class ShaderWrapper(object):
         is_fill: bool = False,
     ):
         self.vert_data = vert_data
-        self.vert_indices = vert_indices or np.zeros(0)
+        self.vert_indices = (vert_indices or np.zeros(0)).astype(int)
         self.vert_attributes = vert_data.dtype.names
         self.shader_folder = shader_folder
         self.uniforms = uniforms or dict()
@@ -154,6 +154,7 @@ class ShaderWrapper(object):
         np.concatenate(data_list, out=self.vert_data)
 
         if indices_list is None:
+            self.vert_indices = resize_array(self.vert_indices, 0)
             return self
 
         total_verts = sum(len(vi) for vi in indices_list)
