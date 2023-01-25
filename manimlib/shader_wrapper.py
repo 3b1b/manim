@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 class ShaderWrapper(object):
     def __init__(
         self,
+        context: moderngl.context.Context,
         vert_data: np.ndarray,
         vert_indices: np.ndarray | None = None,
         shader_folder: str | None = None,
@@ -35,6 +36,7 @@ class ShaderWrapper(object):
         render_primitive: int = moderngl.TRIANGLE_STRIP,
         is_fill: bool = False,
     ):
+        self.ctx = context
         self.vert_data = vert_data
         self.vert_indices = (vert_indices or np.zeros(0)).astype(int)
         self.vert_attributes = vert_data.dtype.names

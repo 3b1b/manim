@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from typing import Callable, Iterable, Union, Tuple
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array
+    from moderngl.context import Context
 
     TimeBasedUpdater = Callable[["Mobject", float], "Mobject" | None]
     NonTimeUpdater = Callable[["Mobject"], "Mobject" | None]
@@ -1837,9 +1838,10 @@ class Mobject(object):
 
     # For shader data
 
-    def init_shader_data(self):
+    def init_shader_data(self, ctx: Context):
         self.shader_indices = np.zeros(0)
         self.shader_wrapper = ShaderWrapper(
+            context=ctx,
             vert_data=self.data,
             shader_folder=self.shader_folder,
             texture_paths=self.texture_paths,
@@ -1852,9 +1854,9 @@ class Mobject(object):
             self.shader_wrapper.refresh_id()
         return self
 
-    def get_shader_wrapper(self) -> ShaderWrapper:
+    def get_shader_wrapper(self, ctx: Context) -> ShaderWrapper:
         if not self._shaders_initialized:
-            self.init_shader_data()
+            self.init_shader_data(ctx)
             self._shaders_initialized = True
 
         self.shader_wrapper.vert_data = self.get_shader_data()
@@ -1863,10 +1865,10 @@ class Mobject(object):
         self.shader_wrapper.depth_test = self.depth_test
         return self.shader_wrapper
 
-    def get_shader_wrapper_list(self) -> list[ShaderWrapper]:
+    def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
         shader_wrappers = it.chain(
-            [self.get_shader_wrapper()],
-            *[sm.get_shader_wrapper_list() for sm in self.submobjects]
+            [self.get_shader_wrapper(ctx)],
+            *[sm.get_shader_wrapper_list(ctx) for sm in self.submobjects]
         )
         batches = batch_by_property(shader_wrappers, lambda sw: sw.get_id())
 
@@ -1888,6 +1890,14 @@ class Mobject(object):
 
     def get_shader_vert_indices(self):
         return self.shader_indices
+
+    def render(self, ctx: Context, camera_uniforms: dict):
+        if self.data_has_changed:
+            self.shader_wrappers = self.get_shader_wrapper_list(ctx)
+        for shader_wrapper in self.shader_wrappers:
+            shader_wrapper.update_uniforms(camera_uniforms)
+            shader_wrapper.update_uniforms(self.get_uniforms)
+            shader_wrapper.render()
 
     # Event Handlers
     """

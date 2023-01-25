@@ -337,7 +337,7 @@ class Camera(object):
     def generate_render_group_list(self, mobject: Mobject) -> Iterable[dict[str, Any]]:
         return (
             self.get_render_group(sw, single_use=mobject.is_changing())
-            for sw in mobject.get_shader_wrapper_list()
+            for sw in mobject.get_shader_wrapper_list(self.ctx)
         )
 
     def get_render_group(

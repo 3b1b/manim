@@ -46,6 +46,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Tuple
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Vect4Array
+    from moderngl.context import Context
 
 DEFAULT_STROKE_COLOR = GREY_A
 DEFAULT_FILL_COLOR = GREY_C
@@ -1164,7 +1165,7 @@ class VMobject(Mobject):
         self.refresh_joint_products()
 
     # For shaders
-    def init_shader_data(self):
+    def init_shader_data(self, ctx: Context):
         dtype = self.shader_dtype
         fill_dtype, stroke_dtype = (
             np.dtype([
@@ -1176,6 +1177,7 @@ class VMobject(Mobject):
         fill_data = np.zeros(0, dtype=fill_dtype)
         stroke_data = np.zeros(0, dtype=stroke_dtype)
         self.fill_shader_wrapper = ShaderWrapper(
+            context=ctx,
             vert_data=fill_data,
             uniforms=self.uniforms,
             shader_folder=self.fill_shader_folder,
@@ -1183,21 +1185,29 @@ class VMobject(Mobject):
             is_fill=True,
         )
         self.stroke_shader_wrapper = ShaderWrapper(
+            context=ctx,
             vert_data=stroke_data,
             uniforms=self.uniforms,
             shader_folder=self.stroke_shader_folder,
             render_primitive=self.stroke_render_primitive,
         )
         self.back_stroke_shader_wrapper = self.stroke_shader_wrapper.copy()
+        self.shader_wrappers = [
+            self.back_stroke_shader_wrapper,
+            self.fill_shader_wrapper,
+            self.stroke_shader_wrapper,
+        ]
 
     def refresh_shader_wrapper_id(self):
-        for wrapper in self.get_shader_wrapper_list():
+        if not self._shaders_initialized:
+            return self
+        for wrapper in self.shader_wrappers:
             wrapper.refresh_id()
         return self
 
-    def get_shader_wrapper_list(self) -> list[ShaderWrapper]:
+    def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
         if not self._shaders_initialized:
-            self.init_shader_data()
+            self.init_shader_data(ctx)
             self._shaders_initialized = True
 
         family = self.family_members_with_points()
