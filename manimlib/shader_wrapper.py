@@ -10,11 +10,14 @@ import numpy as np
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.shaders import get_shader_code_from_file
 from manimlib.utils.shaders import get_shader_program
+from manimlib.utils.shaders import image_path_to_texture
+from manimlib.utils.shaders import get_texture_id
+from manimlib.utils.shaders import release_texture
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import List
+    from typing import List, Optional
 
 
 # Mobjects that should be rendered with
@@ -29,10 +32,10 @@ class ShaderWrapper(object):
         self,
         context: moderngl.context.Context,
         vert_data: np.ndarray,
-        vert_indices: np.ndarray | None = None,
-        shader_folder: str | None = None,
-        uniforms: dict[str, float | np.ndarray] | None = None,  # A dictionary mapping names of uniform variables
-        texture_paths: dict[str, str] | None = None,  # A dictionary mapping names to filepaths for textures.
+        vert_indices: Optional[np.ndarray] = None,
+        shader_folder: Optional[str] = None,
+        uniforms: Optional[dict[str, float | np.ndarray]] = None,  # A dictionary mapping names of uniform variables
+        texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
         render_primitive: int = moderngl.TRIANGLE_STRIP,
         is_fill: bool = False,
@@ -43,12 +46,18 @@ class ShaderWrapper(object):
         self.vert_attributes = vert_data.dtype.names
         self.shader_folder = shader_folder
         self.uniforms = uniforms or dict()
-        self.texture_paths = texture_paths or dict()
         self.depth_test = depth_test
         self.render_primitive = str(render_primitive)
         self.is_fill = is_fill
+
+        self.vbo = None
+        self.ibo = None
+        self.vao = None
+
         self.init_program_code()
         self.init_program()
+        if texture_paths is not None:
+            self.init_textures(texture_paths)
         self.refresh_id()
 
     def init_program_code(self) -> None:
@@ -71,6 +80,12 @@ class ShaderWrapper(object):
         self.program = get_shader_program(self.ctx, **self.program_code)
         self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
 
+    def init_textures(self, texture_paths: dict[str, str]):
+        for name, path in texture_paths.items():
+            texture = image_path_to_texture(path, self.ctx)
+            tid = get_texture_id(texture)
+            self.uniforms[name] = tid
+
     def __eq__(self, shader_wrapper: ShaderWrapper):
         return all((
             np.all(self.vert_data == shader_wrapper.vert_data),
@@ -79,10 +94,6 @@ class ShaderWrapper(object):
             all(
                 np.all(self.uniforms[key] == shader_wrapper.uniforms[key])
                 for key in self.uniforms
-            ),
-            all(
-                self.texture_paths[key] == shader_wrapper.texture_paths[key]
-                for key in self.texture_paths
             ),
             self.depth_test == shader_wrapper.depth_test,
             self.render_primitive == shader_wrapper.render_primitive,
@@ -94,8 +105,6 @@ class ShaderWrapper(object):
         result.vert_indices = self.vert_indices.copy()
         if self.uniforms:
             result.uniforms = {key: np.array(value) for key, value in self.uniforms.items()}
-        if self.texture_paths:
-            result.texture_paths = dict(self.texture_paths)
         return result
 
     def is_valid(self) -> bool:
@@ -116,7 +125,6 @@ class ShaderWrapper(object):
         return "|".join(map(str, [
             self.program_id,
             self.uniforms,
-            self.texture_paths,
             self.depth_test,
             self.render_primitive,
         ]))
@@ -186,3 +194,47 @@ class ShaderWrapper(object):
             n_verts = new_n_verts
             n_points += len(data)
         return self
+
+    def update_program_uniforms(self, camera_uniforms: dict):
+        if self.program is None:
+            return
+        for name, value in (*camera_uniforms.items(), *self.uniforms.items()):
+            if name in self.program:
+                if isinstance(value, np.ndarray) and value.ndim > 0:
+                    value = tuple(value)
+                self.program[name].value = value
+
+    def get_vao(self, single_use: bool = False):
+        # Data buffer
+        vert_data = self.vert_data
+        indices = self.vert_indices
+        if len(indices) == 0:
+            self.ibo = None
+        elif single_use or self.is_fill:
+            self.ibo = self.ctx.buffer(indices.astype(np.uint32))
+        else:
+            # The vao.render call is strangely longer
+            # when an index buffer is used, so if the
+            # mobject is not changing, meaning only its
+            # uniforms are being updated, just create
+            # a larger data array based on the indices
+            # and don't bother with the ibo
+            vert_data = vert_data[indices]
+            self.ibo = None
+        self.vbo = self.ctx.buffer(vert_data)
+
+        # Vertex array object
+        self.vao = self.ctx.vertex_array(
+            program=self.program,
+            content=[(self.vbo, self.vert_format, *self.vert_attributes)],
+            index_buffer=self.ibo,
+        )
+        return self.vao
+
+    def release(self):
+        for obj in (self.vbo, self.ibo, self.vao):
+            if obj is not None:
+                obj.release()
+        self.vbo = None
+        self.ibo = None
+        self.vao = None

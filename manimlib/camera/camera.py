@@ -15,6 +15,7 @@ from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.color import color_to_rgba
+from manimlib.utils.shaders import get_texture_id
 
 from typing import TYPE_CHECKING
 
@@ -67,7 +68,6 @@ class Camera(object):
         self.perspective_uniforms = dict()
         self.init_frame(**frame_config)
         self.init_context(window)
-        self.init_textures()
         self.init_light_source()
         self.refresh_perspective_uniforms()
         self.init_fill_fbo(self.ctx)  # Experimental
@@ -136,10 +136,8 @@ class Camera(object):
             ''',
         )
 
-        tid = self.n_textures
-        self.fill_texture.use(tid)
-        self.fill_prog['Texture'].value = tid
-        self.n_textures += 1
+        self.fill_prog['Texture'].value = get_texture_id(self.fill_texture)
+
         verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
         self.fill_texture_vao = ctx.simple_vertex_array(
             self.fill_prog,
@@ -289,9 +287,8 @@ class Camera(object):
 
     def render(self, render_group: dict[str, Any]) -> None:
         shader_wrapper = render_group["shader_wrapper"]
-        shader_program = render_group["prog"]
         primitive = int(shader_wrapper.render_primitive)
-        self.set_shader_uniforms(shader_program, shader_wrapper)
+        shader_wrapper.update_program_uniforms(self.perspective_uniforms)
         self.set_ctx_depth_test(shader_wrapper.depth_test)
         self.set_ctx_clip_plane(shader_wrapper.use_clip_plane())
 
@@ -344,68 +341,19 @@ class Camera(object):
         shader_wrapper: ShaderWrapper,
         single_use: bool = True
     ) -> dict[str, Any]:
-        # Data buffer
-        vert_data = shader_wrapper.vert_data
-        indices = shader_wrapper.vert_indices
-        if len(indices) == 0:
-            ibo = None
-        elif single_use:
-            ibo = self.ctx.buffer(indices.astype(np.uint32))
-        else:
-            ibo = self.ctx.buffer(indices.astype(np.uint32))
-            # # The vao.render call is strangely longer
-            # # when an index buffer is used, so if the
-            # # mobject is not changing, meaning only its
-            # # uniforms are being updated, just create
-            # # a larger data array based on the indices
-            # # and don't bother with the ibo
-            # vert_data = vert_data[indices]
-            # ibo = None
-        vbo = self.ctx.buffer(vert_data)
-
-        # Program and vertex array
-        shader_program = shader_wrapper.program
-        vert_format = shader_wrapper.vert_format
-        attributes = shader_wrapper.vert_attributes
-        vao = self.ctx.vertex_array(
-            program=shader_program,
-            content=[(vbo, vert_format, *attributes)],
-            index_buffer=ibo,
-        )
         return {
-            "vbo": vbo,
-            "ibo": ibo,
-            "vao": vao,
-            "prog": shader_program,
             "shader_wrapper": shader_wrapper,
+            "vao": shader_wrapper.get_vao(single_use),
             "single_use": single_use,
         }
 
     def release_render_group(self, render_group: dict[str, Any]) -> None:
-        for key in ["vbo", "ibo", "vao"]:
-            if render_group[key] is not None:
-                render_group[key].release()
+        render_group["shader_wrapper"].release()
 
     def refresh_static_mobjects(self) -> None:
         for render_group in it.chain(*self.mob_to_render_groups.values()):
             self.release_render_group(render_group)
         self.mob_to_render_groups = {}
-
-    # Shaders
-
-    def set_shader_uniforms(
-        self,
-        shader: moderngl.Program,
-        shader_wrapper: ShaderWrapper
-    ) -> None:
-        for name, path in shader_wrapper.texture_paths.items():
-            tid = self.get_texture_id(path)
-            shader[name].value = tid
-        for name, value in it.chain(self.perspective_uniforms.items(), shader_wrapper.uniforms.items()):
-            if name in shader:
-                if isinstance(value, np.ndarray) and value.ndim > 0:
-                    value = tuple(value)
-                shader[name].value = value
 
     def refresh_perspective_uniforms(self) -> None:
         frame = self.frame
@@ -421,32 +369,6 @@ class Camera(object):
             light_position=tuple(light_pos),
             focal_distance=frame.get_focal_distance(),
         )
-
-    def init_textures(self) -> None:
-        self.n_textures: int = 0
-        self.path_to_texture: dict[
-            str, tuple[int, moderngl.Texture]
-        ] = {}
-
-    def get_texture_id(self, path: str) -> int:
-        if path not in self.path_to_texture:
-            tid = self.n_textures
-            self.n_textures += 1
-            im = Image.open(path).convert("RGBA")
-            texture = self.ctx.texture(
-                size=im.size,
-                components=len(im.getbands()),
-                data=im.tobytes(),
-            )
-            texture.use(location=tid)
-            self.path_to_texture[path] = (tid, texture)
-        return self.path_to_texture[path][0]
-
-    def release_texture(self, path: str):
-        tid_and_texture = self.path_to_texture.pop(path, None)
-        if tid_and_texture:
-            tid_and_texture[1].release()
-        return self
 
 
 # Mostly just defined so old scenes don't break

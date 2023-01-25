@@ -1250,7 +1250,7 @@ class VMobject(Mobject):
 
         for sw in shader_wrappers:
             # Assume uniforms of the first family member
-            sw.uniforms = family[0].get_uniforms()
+            sw.uniforms.update(family[0].get_uniforms())
             sw.depth_test = family[0].depth_test
         return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
 

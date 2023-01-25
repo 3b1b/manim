@@ -1861,7 +1861,7 @@ class Mobject(object):
 
         self.shader_wrapper.vert_data = self.get_shader_data()
         self.shader_wrapper.vert_indices = self.get_shader_vert_indices()
-        self.shader_wrapper.uniforms = self.get_uniforms()
+        self.shader_wrapper.uniforms.update(self.get_uniforms())
         self.shader_wrapper.depth_test = self.depth_test
         return self.shader_wrapper
 
