@@ -103,6 +103,7 @@ class Mobject(object):
         self.target = None
         self.bounding_box: Vect3Array = np.zeros((3, 3))
         self._shaders_initialized: bool = False
+        self._data_has_changed: bool = True
 
         self.init_data()
         self._data_defaults = np.ones(1, dtype=self.data.dtype)
@@ -1892,11 +1893,16 @@ class Mobject(object):
         return self.shader_indices
 
     def render(self, ctx: Context, camera_uniforms: dict):
-        if self.data_has_changed:
+        if self._data_has_changed or self.is_changing():
             self.shader_wrappers = self.get_shader_wrapper_list(ctx)
+            for shader_wrapper in self.shader_wrappers:
+                shader_wrapper.release()
+                shader_wrapper.get_vao()
+            self._data_has_changed = False
         for shader_wrapper in self.shader_wrappers:
-            shader_wrapper.update_uniforms(camera_uniforms)
-            shader_wrapper.update_uniforms(self.get_uniforms)
+            shader_wrapper.uniforms.update(self.get_uniforms())
+            shader_wrapper.uniforms.update(camera_uniforms)
+            shader_wrapper.pre_render()
             shader_wrapper.render()
 
     # Event Handlers

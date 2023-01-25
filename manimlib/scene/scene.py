@@ -575,7 +575,8 @@ class Scene(object):
         self.num_plays += 1
 
     def refresh_static_mobjects(self) -> None:
-        self.camera.refresh_static_mobjects()
+        for mobject in self.mobjects:
+            mobject._data_has_changed = True
 
     def begin_animations(self, animations: Iterable[Animation]) -> None:
         for animation in animations:

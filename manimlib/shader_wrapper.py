@@ -47,7 +47,7 @@ class ShaderWrapper(object):
         self.vert_indices = (vert_indices or np.zeros(0)).astype(int)
         self.vert_attributes = vert_data.dtype.names
         self.shader_folder = shader_folder
-        self.uniforms = uniforms or dict()
+        self.uniforms = dict(uniforms or {})
         self.depth_test = depth_test
         self.render_primitive = render_primitive
 
@@ -168,16 +168,7 @@ class ShaderWrapper(object):
         if enable:
             gl.glEnable(gl.GL_CLIP_DISTANCE0)
 
-
-    # Related to data and rendering
-    def render(self, camera_uniforms: dict):
-        self.update_program_uniforms(camera_uniforms)
-        self.set_ctx_depth_test(self.depth_test)
-        self.set_ctx_clip_plane(self.use_clip_plane())
-
-        # TODO, generate on the fly?
-        assert(self.vao is not None)
-        self.vao.render(self.render_primitive)
+    # Adding data
 
     def combine_with(self, *shader_wrappers: ShaderWrapper) -> ShaderWrapper:
         if len(shader_wrappers) > 0:
@@ -221,10 +212,21 @@ class ShaderWrapper(object):
             n_points += len(data)
         return self
 
-    def update_program_uniforms(self, camera_uniforms: dict):
+    # Related to data and rendering
+    def pre_render(self):
+        self.set_ctx_depth_test(self.depth_test)
+        self.set_ctx_clip_plane(self.use_clip_plane())
+        self.update_program_uniforms()
+
+    def render(self):
+        # TODO, generate on the fly?
+        assert(self.vao is not None)
+        self.vao.render()
+
+    def update_program_uniforms(self):
         if self.program is None:
             return
-        for name, value in (*camera_uniforms.items(), *self.uniforms.items()):
+        for name, value in self.uniforms.items():
             if name in self.program:
                 if isinstance(value, np.ndarray) and value.ndim > 0:
                     value = tuple(value)
@@ -249,13 +251,17 @@ class ShaderWrapper(object):
             program=self.program,
             content=[(vbo, self.vert_format, *self.vert_attributes)],
             index_buffer=ibo,
+            mode=self.render_primitive,
         )
         return self.vao
 
     def release(self):
         for obj in (self.vbo, self.ibo, self.vao):
             if obj is not None:
-                obj.release()
+                try:
+                    obj.release()
+                except AttributeError:
+                    pass
         self.vbo = None
         self.ibo = None
         self.vao = None
@@ -319,12 +325,7 @@ class FillShaderWrapper(ShaderWrapper):
             'texcoord',
         )
 
-    def render(self, camera_uniforms: dict):
-        # TODO, these are copied...
-        self.update_program_uniforms(camera_uniforms)
-        self.set_ctx_depth_test(self.depth_test)
-        self.set_ctx_clip_plane(self.use_clip_plane())
-        #
+    def render(self):
         vao = self.vao
         assert(vao is not None)
         winding = (len(self.vert_indices) == 0)
