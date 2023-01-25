@@ -875,6 +875,7 @@ class VMobject(Mobject):
             new_points = np.vstack(paths)
             mob.resize_points(len(new_points), resize_func=resize_preserving_order)
             mob.set_points(new_points)
+            mob.get_joint_products()
         return self
 
     def insert_n_curves(self, n: int, recurse: bool = True):
@@ -1069,8 +1070,8 @@ class VMobject(Mobject):
 
         # Find all the unit tangent vectors at each joint
         a0, h, a1 = points[0:-1:2], points[1::2], points[2::2]
-        a0_to_h = normalize_along_axis(h - a0, 1)
-        h_to_a1 = normalize_along_axis(a1 - h, 1)
+        a0_to_h = h - a0
+        h_to_a1 = a1 - h
 
         vect_to_vert = np.zeros(points.shape)
         vect_from_vert = np.zeros(points.shape)
