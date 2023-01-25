@@ -1618,9 +1618,6 @@ class Mobject(object):
 
     def align_data(self, mobject: Mobject) -> None:
         for mob1, mob2 in zip(self.get_family(), mobject.get_family()):
-            # In case any data arrays get resized when aligned to shader data
-            mob1.refresh_shader_data()
-            mob2.refresh_shader_data()
             mob1.align_points(mob2)
 
     def align_points(self, mobject: Mobject):
@@ -1731,8 +1728,6 @@ class Mobject(object):
         """
         if self.has_updaters:
             return
-        # Be sure shader data has most up to date information
-        self.refresh_shader_data()
         self.locked_data_keys = set(keys)
 
     def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject):
@@ -1887,9 +1882,6 @@ class Mobject(object):
 
     def get_shader_data(self):
         return self.data
-
-    def refresh_shader_data(self):
-        pass
 
     def get_uniforms(self):
         return self.uniforms

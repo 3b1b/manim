@@ -1244,9 +1244,6 @@ class VMobject(Mobject):
             sw.depth_test = family[0].depth_test
         return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
 
-    def refresh_shader_data(self):
-        self.get_shader_wrapper_list()
-
 
 class VGroup(VMobject):
     def __init__(self, *vmobjects: VMobject, **kwargs):
