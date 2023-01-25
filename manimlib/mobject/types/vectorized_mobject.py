@@ -931,7 +931,7 @@ class VMobject(Mobject):
         assert(isinstance(vmobject, VMobject))
         vm_points = vmobject.get_points()
         if a <= 0 and b >= 1:
-            self.set_points(vm_points, refresh=False)
+            self.set_points(vm_points)
             return self
         num_curves = vmobject.get_num_curves()
 
