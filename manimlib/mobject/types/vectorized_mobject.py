@@ -89,6 +89,7 @@ class VMobject(Mobject):
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
         anti_alias_width: float = 1.0,
+        use_winding_fill: bool = True,
         **kwargs
     ):
         self.fill_color = fill_color or color or DEFAULT_FILL_COLOR
@@ -103,7 +104,7 @@ class VMobject(Mobject):
         self.flat_stroke = flat_stroke
         self.use_simple_quadratic_approx = use_simple_quadratic_approx
         self.anti_alias_width = anti_alias_width
-        self._use_winding_fill = True
+        self._use_winding_fill = use_winding_fill
 
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
