@@ -142,6 +142,19 @@ class VMobject(Mobject):
             raise Exception("All submobjects must be of type VMobject")
         super().add(*vmobjects)
 
+    def add_background_rectangle(
+        self,
+        color: ManimColor | None = None,
+        opacity: float = 0.75,
+        **kwargs
+    ):
+        normal = self.family_members_with_points()[0].get_unit_normal()
+        super().add_background_rectangle(color, opacity, **kwargs)
+        rect = self.background_rectangle
+        if np.dot(rect.get_unit_normal(), normal) < 0:
+            rect.reverse_points()
+        return self
+
     # Colors
     def init_colors(self):
         self.set_fill(
