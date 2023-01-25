@@ -294,7 +294,7 @@ class Camera(object):
         primitive = int(shader_wrapper.render_primitive)
         self.set_shader_uniforms(shader_program, shader_wrapper)
         self.set_ctx_depth_test(shader_wrapper.depth_test)
-        self.set_ctx_clip_plane(shader_wrapper.use_clip_plane)
+        self.set_ctx_clip_plane(shader_wrapper.use_clip_plane())
 
         if shader_wrapper.is_fill:
             self.render_fill(render_group["vao"], primitive, shader_wrapper.vert_indices)

@@ -218,12 +218,10 @@ class Surface(Mobject):
             self.uniforms["clip_plane"][:3] = vect
         if threshold is not None:
             self.uniforms["clip_plane"][3] = threshold
-        self.shader_wrapper.use_clip_plane = True
         return self
 
     def deactivate_clip_plane(self):
         self.uniforms["clip_plane"][:] = 0
-        self.shader_wrapper.use_clip_plane = False
         return self
 
     def get_shader_vert_indices(self) -> np.ndarray:

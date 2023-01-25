@@ -32,7 +32,6 @@ class ShaderWrapper(object):
         uniforms: dict[str, float | np.ndarray] | None = None,  # A dictionary mapping names of uniform variables
         texture_paths: dict[str, str] | None = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
-        use_clip_plane: bool = False,
         render_primitive: int = moderngl.TRIANGLE_STRIP,
         is_fill: bool = False,
     ):
@@ -43,7 +42,6 @@ class ShaderWrapper(object):
         self.uniforms = uniforms or dict()
         self.texture_paths = texture_paths or dict()
         self.depth_test = depth_test
-        self.use_clip_plane = use_clip_plane
         self.render_primitive = str(render_primitive)
         self.is_fill = is_fill
         self.init_program_code()
@@ -131,6 +129,11 @@ class ShaderWrapper(object):
                 continue
             code_map[name] = re.sub(old, new, code_map[name])
         self.refresh_id()
+
+    def use_clip_plane(self):
+        if "clip_plane" not in self.uniforms:
+            return False
+        return any(self.uniforms["clip_plane"])
 
     def combine_with(self, *shader_wrappers: ShaderWrapper) -> ShaderWrapper:
         if len(shader_wrappers) > 0:
