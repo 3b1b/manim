@@ -1196,6 +1196,10 @@ class VMobject(Mobject):
         return self
 
     def get_shader_wrapper_list(self) -> list[ShaderWrapper]:
+        if not self._shaders_initialized:
+            self.init_shader_data()
+            self._shaders_initialized = True
+
         family = self.family_members_with_points()
         if not family:
             return []
