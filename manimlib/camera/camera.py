@@ -70,7 +70,6 @@ class Camera(object):
         self.init_context(window)
         self.init_light_source()
         self.refresh_perspective_uniforms()
-        self.init_fill_fbo(self.ctx)  # Experimental
         # A cached map from mobjects to their associated list of render groups
         # so that these render groups are not regenerated unnecessarily for static
         # mobjects
@@ -87,79 +86,12 @@ class Camera(object):
             self.ctx = window.ctx
             self.fbo = self.ctx.detect_framebuffer()
         self.fbo.use()
-        self.set_ctx_blending()
 
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
+        self.ctx.enable(moderngl.BLEND)
 
         # This is the frame buffer we'll draw into when emitting frames
         self.draw_fbo = self.get_fbo(samples=0)
-
-    def init_fill_fbo(self, ctx: moderngl.context.Context):
-        # Experimental
-        size = self.get_pixel_shape()
-        self.fill_texture = ctx.texture(
-            size=size,
-            components=4,
-            # Important to make sure floating point (not fixed point) is
-            # used so that alpha values are not clipped
-            dtype='f2',
-        )
-        # TODO, depth buffer is not really used yet
-        fill_depth = ctx.depth_renderbuffer(size)
-        self.fill_fbo = ctx.framebuffer(self.fill_texture, fill_depth)
-        self.fill_prog = ctx.program(
-            vertex_shader='''
-                #version 330
-
-                in vec2 texcoord;
-                out vec2 v_textcoord;
-
-                void main() {
-                    gl_Position = vec4((2.0 * texcoord - 1.0), 0.0, 1.0);
-                    v_textcoord = texcoord;
-                }
-            ''',
-            fragment_shader='''
-                #version 330
-
-                uniform sampler2D Texture;
-
-                in vec2 v_textcoord;
-                out vec4 frag_color;
-
-                void main() {
-                    frag_color = texture(Texture, v_textcoord);
-                    frag_color = abs(frag_color);
-                    if(frag_color.a == 0) discard;
-                    //TODO, set gl_FragDepth;
-                }
-            ''',
-        )
-
-        self.fill_prog['Texture'].value = get_texture_id(self.fill_texture)
-
-        verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-        self.fill_texture_vao = ctx.simple_vertex_array(
-            self.fill_prog,
-            ctx.buffer(verts.astype('f4').tobytes()),
-            'texcoord',
-        )
-
-    def set_ctx_blending(self, enable: bool = True) -> None:
-        if enable:
-            self.ctx.enable(moderngl.BLEND)
-        else:
-            self.ctx.disable(moderngl.BLEND)
-
-    def set_ctx_depth_test(self, enable: bool = True) -> None:
-        if enable:
-            self.ctx.enable(moderngl.DEPTH_TEST)
-        else:
-            self.ctx.disable(moderngl.DEPTH_TEST)
-
-    def set_ctx_clip_plane(self, enable: bool = True) -> None:
-        if enable:
-            gl.glEnable(gl.GL_CLIP_DISTANCE0)
 
     def init_light_source(self) -> None:
         self.light_source = Point(self.light_source_position)
@@ -287,38 +219,10 @@ class Camera(object):
 
     def render(self, render_group: dict[str, Any]) -> None:
         shader_wrapper = render_group["shader_wrapper"]
-        primitive = int(shader_wrapper.render_primitive)
-        shader_wrapper.update_program_uniforms(self.perspective_uniforms)
-        self.set_ctx_depth_test(shader_wrapper.depth_test)
-        self.set_ctx_clip_plane(shader_wrapper.use_clip_plane())
-
-        if shader_wrapper.is_fill:
-            self.render_fill(render_group["vao"], primitive, shader_wrapper.vert_indices)
-        else:
-            render_group["vao"].render(primitive)
+        shader_wrapper.render(self.perspective_uniforms)
 
         if render_group["single_use"]:
             self.release_render_group(render_group)
-
-    def render_fill(self, vao, render_primitive: int, indices: np.ndarray):
-        """
-        VMobject fill is handled in a special way, where emited triangles
-        must be blended with moderngl.FUNC_SUBTRACT so as to effectively compute
-        a winding number around each pixel. This is rendered to a separate texture,
-        then that texture is overlayed onto the current fbo
-        """
-        winding = (len(indices) == 0)
-        vao.program['winding'].value = winding
-        if not winding:
-            vao.render(moderngl.TRIANGLES)
-            return
-        self.fill_fbo.clear()
-        self.fill_fbo.use()
-        self.ctx.blend_func = (moderngl.ONE, moderngl.ONE)
-        vao.render(render_primitive)
-        self.ctx.blend_func = moderngl.DEFAULT_BLENDING
-        self.fbo.use()
-        self.fill_texture_vao.render(moderngl.TRIANGLE_STRIP)
 
     def get_render_group_list(self, mobject: Mobject) -> Iterable[dict[str, Any]]:
         if mobject.is_changing():
@@ -341,9 +245,9 @@ class Camera(object):
         shader_wrapper: ShaderWrapper,
         single_use: bool = True
     ) -> dict[str, Any]:
+        shader_wrapper.get_vao()
         return {
             "shader_wrapper": shader_wrapper,
-            "vao": shader_wrapper.get_vao(single_use),
             "single_use": single_use,
         }
 

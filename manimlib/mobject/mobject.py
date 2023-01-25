@@ -1841,7 +1841,7 @@ class Mobject(object):
     def init_shader_data(self, ctx: Context):
         self.shader_indices = np.zeros(0)
         self.shader_wrapper = ShaderWrapper(
-            context=ctx,
+            ctx=ctx,
             vert_data=self.data,
             shader_folder=self.shader_folder,
             texture_paths=self.texture_paths,

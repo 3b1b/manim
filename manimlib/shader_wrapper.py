@@ -4,9 +4,12 @@ import copy
 import os
 import re
 
+import OpenGL.GL as gl
 import moderngl
 import numpy as np
 
+from manimlib.constants import DEFAULT_PIXEL_HEIGHT
+from manimlib.constants import DEFAULT_PIXEL_WIDTH
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.shaders import get_shader_code_from_file
 from manimlib.utils.shaders import get_shader_program
@@ -30,7 +33,7 @@ if TYPE_CHECKING:
 class ShaderWrapper(object):
     def __init__(
         self,
-        context: moderngl.context.Context,
+        ctx: moderngl.context.Context,
         vert_data: np.ndarray,
         vert_indices: Optional[np.ndarray] = None,
         shader_folder: Optional[str] = None,
@@ -38,17 +41,15 @@ class ShaderWrapper(object):
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
         render_primitive: int = moderngl.TRIANGLE_STRIP,
-        is_fill: bool = False,
     ):
-        self.ctx = context
+        self.ctx = ctx
         self.vert_data = vert_data
         self.vert_indices = (vert_indices or np.zeros(0)).astype(int)
         self.vert_attributes = vert_data.dtype.names
         self.shader_folder = shader_folder
         self.uniforms = uniforms or dict()
         self.depth_test = depth_test
-        self.render_primitive = str(render_primitive)
-        self.is_fill = is_fill
+        self.render_primitive = render_primitive
 
         self.vbo = None
         self.ibo = None
@@ -99,6 +100,9 @@ class ShaderWrapper(object):
             self.render_primitive == shader_wrapper.render_primitive,
         ))
 
+    def __del__(self):
+        self.release()
+
     def copy(self):
         result = copy.copy(self)
         result.vert_data = self.vert_data.copy()
@@ -148,10 +152,32 @@ class ShaderWrapper(object):
         self.init_program()
         self.refresh_id()
 
+    # Changing context
     def use_clip_plane(self):
         if "clip_plane" not in self.uniforms:
             return False
         return any(self.uniforms["clip_plane"])
+
+    def set_ctx_depth_test(self, enable: bool = True) -> None:
+        if enable:
+            self.ctx.enable(moderngl.DEPTH_TEST)
+        else:
+            self.ctx.disable(moderngl.DEPTH_TEST)
+
+    def set_ctx_clip_plane(self, enable: bool = True) -> None:
+        if enable:
+            gl.glEnable(gl.GL_CLIP_DISTANCE0)
+
+
+    # Related to data and rendering
+    def render(self, camera_uniforms: dict):
+        self.update_program_uniforms(camera_uniforms)
+        self.set_ctx_depth_test(self.depth_test)
+        self.set_ctx_clip_plane(self.use_clip_plane())
+
+        # TODO, generate on the fly?
+        assert(self.vao is not None)
+        self.vao.render(self.render_primitive)
 
     def combine_with(self, *shader_wrappers: ShaderWrapper) -> ShaderWrapper:
         if len(shader_wrappers) > 0:
@@ -204,30 +230,25 @@ class ShaderWrapper(object):
                     value = tuple(value)
                 self.program[name].value = value
 
-    def get_vao(self, single_use: bool = False):
-        # Data buffer
-        vert_data = self.vert_data
-        indices = self.vert_indices
-        if len(indices) == 0:
-            self.ibo = None
-        elif single_use or self.is_fill:
-            self.ibo = self.ctx.buffer(indices.astype(np.uint32))
-        else:
-            # The vao.render call is strangely longer
-            # when an index buffer is used, so if the
-            # mobject is not changing, meaning only its
-            # uniforms are being updated, just create
-            # a larger data array based on the indices
-            # and don't bother with the ibo
-            vert_data = vert_data[indices]
-            self.ibo = None
-        self.vbo = self.ctx.buffer(vert_data)
+    def get_vertex_buffer_object(self, refresh: bool = True):
+        if refresh:
+            self.vbo = self.ctx.buffer(self.vert_data)
+        return self.vbo
 
+    def get_index_buffer_object(self, refresh: bool = True):
+        if refresh and len(self.vert_indices) > 0:
+            self.ibo = self.ctx.buffer(self.vert_indices.astype(np.uint32))
+        return self.ibo
+
+    def get_vao(self, refresh: bool = True):
+        # Data buffer
+        vbo = self.get_vertex_buffer_object(refresh)
+        ibo = self.get_index_buffer_object(refresh)
         # Vertex array object
         self.vao = self.ctx.vertex_array(
             program=self.program,
-            content=[(self.vbo, self.vert_format, *self.vert_attributes)],
-            index_buffer=self.ibo,
+            content=[(vbo, self.vert_format, *self.vert_attributes)],
+            index_buffer=ibo,
         )
         return self.vao
 
@@ -238,3 +259,83 @@ class ShaderWrapper(object):
         self.vbo = None
         self.ibo = None
         self.vao = None
+
+
+class FillShaderWrapper(ShaderWrapper):
+    def __init__(
+        self,
+        ctx: moderngl.context.Context,
+        *args,
+        **kwargs
+    ):
+        super().__init__(ctx, *args, **kwargs)
+
+        size = (2 * DEFAULT_PIXEL_WIDTH, 2 * DEFAULT_PIXEL_HEIGHT)
+        self.fill_texture = ctx.texture(
+            size=size,
+            components=4,
+            # Important to make sure floating point (not fixed point) is
+            # used so that alpha values are not clipped
+            dtype='f2',
+        )
+        # TODO, depth buffer is not really used yet
+        fill_depth = ctx.depth_renderbuffer(size)
+        self.fill_fbo = ctx.framebuffer(self.fill_texture, fill_depth)
+        self.fill_prog = ctx.program(
+            vertex_shader='''
+                #version 330
+
+                in vec2 texcoord;
+                out vec2 v_textcoord;
+
+                void main() {
+                    gl_Position = vec4((2.0 * texcoord - 1.0), 0.0, 1.0);
+                    v_textcoord = texcoord;
+                }
+            ''',
+            fragment_shader='''
+                #version 330
+
+                uniform sampler2D Texture;
+
+                in vec2 v_textcoord;
+                out vec4 frag_color;
+
+                void main() {
+                    frag_color = texture(Texture, v_textcoord);
+                    frag_color = abs(frag_color);
+                    if(frag_color.a == 0) discard;
+                    //TODO, set gl_FragDepth;
+                }
+            ''',
+        )
+
+        self.fill_prog['Texture'].value = get_texture_id(self.fill_texture)
+
+        verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+        self.fill_texture_vao = ctx.simple_vertex_array(
+            self.fill_prog,
+            ctx.buffer(verts.astype('f4').tobytes()),
+            'texcoord',
+        )
+
+    def render(self, camera_uniforms: dict):
+        # TODO, these are copied...
+        self.update_program_uniforms(camera_uniforms)
+        self.set_ctx_depth_test(self.depth_test)
+        self.set_ctx_clip_plane(self.use_clip_plane())
+        #
+        vao = self.vao
+        assert(vao is not None)
+        winding = (len(self.vert_indices) == 0)
+        vao.program['winding'].value = winding
+        if not winding:
+            vao.render(moderngl.TRIANGLES)
+            return
+        self.fill_fbo.clear()
+        self.fill_fbo.use()
+        self.ctx.blend_func = (moderngl.ONE, moderngl.ONE)
+        vao.render(self.render_primitive)
+        self.ctx.blend_func = moderngl.DEFAULT_BLENDING
+        self.ctx.screen.use()
+        self.fill_texture_vao.render(moderngl.TRIANGLE_STRIP)

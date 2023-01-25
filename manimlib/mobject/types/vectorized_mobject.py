@@ -40,6 +40,7 @@ from manimlib.utils.space_ops import midpoint
 from manimlib.utils.space_ops import normalize_along_axis
 from manimlib.utils.space_ops import z_to_vector
 from manimlib.shader_wrapper import ShaderWrapper
+from manimlib.shader_wrapper import FillShaderWrapper
 
 from typing import TYPE_CHECKING
 
@@ -1176,16 +1177,15 @@ class VMobject(Mobject):
         )
         fill_data = np.zeros(0, dtype=fill_dtype)
         stroke_data = np.zeros(0, dtype=stroke_dtype)
-        self.fill_shader_wrapper = ShaderWrapper(
-            context=ctx,
+        self.fill_shader_wrapper = FillShaderWrapper(
+            ctx=ctx,
             vert_data=fill_data,
             uniforms=self.uniforms,
             shader_folder=self.fill_shader_folder,
             render_primitive=self.fill_render_primitive,
-            is_fill=True,
         )
         self.stroke_shader_wrapper = ShaderWrapper(
-            context=ctx,
+            ctx=ctx,
             vert_data=stroke_data,
             uniforms=self.uniforms,
             shader_folder=self.stroke_shader_folder,
