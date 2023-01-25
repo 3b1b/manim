@@ -255,12 +255,15 @@ class Camera(object):
         # This is the frame buffer we'll draw into when emitting frames
         self.draw_fbo = self.get_fbo(samples=0)
 
-    def init_fill_fbo(self, ctx):
+    def init_fill_fbo(self, ctx: moderngl.context.Context):
         # Experimental
         self.fill_texture = ctx.texture(
             size=self.get_pixel_shape(),
             components=4,
             samples=self.samples,
+            # Important to make sure floating point (not fixed point) is
+            # used so that alpha values are not clipped
+            dtype='f2',
         )
         # TODO, depth buffer is not really used yet
         fill_depth = ctx.depth_renderbuffer(self.get_pixel_shape(), samples=self.samples)
@@ -287,6 +290,7 @@ class Camera(object):
 
                 void main() {
                     frag_color = texture(Texture, v_textcoord);
+                    frag_color = abs(frag_color);
                     if(frag_color.a == 0) discard;
                 }
             ''',
@@ -451,28 +455,31 @@ class Camera(object):
         self.set_ctx_clip_plane(shader_wrapper.use_clip_plane)
 
         if shader_wrapper.is_fill:
-            self.render_fill(render_group["vao"], primitive)
+            self.render_fill(render_group["vao"], primitive, shader_wrapper.vert_indices)
         else:
             render_group["vao"].render(primitive)
 
         if render_group["single_use"]:
             self.release_render_group(render_group)
 
-    def render_fill(self, vao, render_primitive: int):
+    def render_fill(self, vao, render_primitive: int, indices: np.ndarray):
         """
         VMobject fill is handled in a special way, where emited triangles
         must be blended with moderngl.FUNC_SUBTRACT so as to effectively compute
         a winding number around each pixel. This is rendered to a separate texture,
         then that texture is overlayed onto the current fbo
         """
+        winding = (len(indices) == 0)
+        vao.program['winding'].value = winding
+        if not winding:
+            vao.render(moderngl.TRIANGLES)
+            return
         self.fill_fbo.clear(0.0, 0.0, 0.0, 0.0)
         self.fill_fbo.use()
         self.ctx.enable(moderngl.BLEND)
         self.ctx.blend_func = moderngl.ONE, moderngl.ONE
-        self.ctx.blend_equation = moderngl.FUNC_SUBTRACT
-        vao.render(render_primitive, instances=2)
+        vao.render(render_primitive)
         self.ctx.blend_func = moderngl.DEFAULT_BLENDING
-        self.ctx.blend_equation = moderngl.FUNC_ADD
         self.fbo.use()
         self.fill_texture.use(0)
         self.fill_prog['Texture'].value = 0
@@ -507,14 +514,15 @@ class Camera(object):
         elif single_use:
             ibo = self.ctx.buffer(indices.astype(np.uint32))
         else:
-            # The vao.render call is strangely longer
-            # when an index buffer is used, so if the
-            # mobject is not changing, meaning only its
-            # uniforms are being updated, just create
-            # a larger data array based on the indices
-            # and don't bother with the ibo
-            vert_data = vert_data[indices]
-            ibo = None
+            ibo = self.ctx.buffer(indices.astype(np.uint32))
+            # # The vao.render call is strangely longer
+            # # when an index buffer is used, so if the
+            # # mobject is not changing, meaning only its
+            # # uniforms are being updated, just create
+            # # a larger data array based on the indices
+            # # and don't bother with the ibo
+            # vert_data = vert_data[indices]
+            # ibo = None
         vbo = self.ctx.buffer(vert_data)
 
         # Program and vertex array
