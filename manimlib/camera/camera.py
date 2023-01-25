@@ -479,7 +479,7 @@ class Camera(object):
         self.fill_fbo.clear(0.0, 0.0, 0.0, 0.0)
         self.fill_fbo.use()
         self.ctx.blend_func = (
-            moderngl.ONE, moderngl.ZERO,
+            moderngl.ONE, moderngl.ONE,
             moderngl.ONE, moderngl.ONE,
         )
         vao.render(render_primitive)
