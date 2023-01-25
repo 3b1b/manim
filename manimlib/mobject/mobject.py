@@ -1673,9 +1673,12 @@ class Mobject(object):
         for submob, sf in zip(self.submobjects, split_factors):
             new_submobs.append(submob)
             for k in range(1, sf):
-                new_submobs.append(submob.copy().scale(0))
+                new_submobs.append(submob.invisible_copy())
         self.set_submobjects(new_submobs)
         return self
+
+    def invisible_copy(self):
+        return self.copy().set_opacity(0)
 
     # Interpolate
 
