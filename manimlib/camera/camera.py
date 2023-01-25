@@ -257,16 +257,16 @@ class Camera(object):
 
     def init_fill_fbo(self, ctx: moderngl.context.Context):
         # Experimental
+        size = self.get_pixel_shape()
         self.fill_texture = ctx.texture(
-            size=self.get_pixel_shape(),
+            size=size,
             components=4,
-            samples=self.samples,
             # Important to make sure floating point (not fixed point) is
             # used so that alpha values are not clipped
             dtype='f2',
         )
         # TODO, depth buffer is not really used yet
-        fill_depth = ctx.depth_renderbuffer(self.get_pixel_shape(), samples=self.samples)
+        fill_depth = ctx.depth_renderbuffer(size)
         self.fill_fbo = ctx.framebuffer(self.fill_texture, fill_depth)
         self.fill_prog = ctx.program(
             vertex_shader='''
@@ -292,9 +292,11 @@ class Camera(object):
                     frag_color = texture(Texture, v_textcoord);
                     frag_color = abs(frag_color);
                     if(frag_color.a == 0) discard;
+                    //TODO, set gl_FragDepth;
                 }
             ''',
         )
+
         tid = self.n_textures
         self.fill_texture.use(tid)
         self.fill_prog['Texture'].value = tid
@@ -476,13 +478,13 @@ class Camera(object):
             return
         self.fill_fbo.clear(0.0, 0.0, 0.0, 0.0)
         self.fill_fbo.use()
-        self.ctx.enable(moderngl.BLEND)
-        self.ctx.blend_func = moderngl.ONE, moderngl.ONE
+        self.ctx.blend_func = (
+            moderngl.ONE, moderngl.ZERO,
+            moderngl.ONE, moderngl.ONE,
+        )
         vao.render(render_primitive)
         self.ctx.blend_func = moderngl.DEFAULT_BLENDING
         self.fbo.use()
-        self.fill_texture.use(0)
-        self.fill_prog['Texture'].value = 0
         self.fill_texture_vao.render(moderngl.TRIANGLE_STRIP)
 
     def get_render_group_list(self, mobject: Mobject) -> Iterable[dict[str, Any]]:
