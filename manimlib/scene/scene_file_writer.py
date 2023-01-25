@@ -288,6 +288,25 @@ class SceneFileWriter(object):
             )
             self.set_progress_display_description()
 
+    def begin_insert(self):
+        # Begin writing process
+        self.write_to_movie = True
+        self.init_output_directories()
+        movie_path = self.get_movie_file_path()
+        folder, file = os.path.split(movie_path)
+        scene_name, ext = file.split(".")
+        n_inserts = len(list(filter(
+            lambda f: f.startswith(scene_name + "_insert"),
+            os.listdir(folder)
+        )))
+        self.inserted_file_path = movie_path.replace(".", f"_insert_{n_inserts}.")
+        self.open_movie_pipe(self.inserted_file_path)
+
+    def end_insert(self):
+        self.close_movie_pipe()
+        self.write_to_movie = False
+        self.print_file_ready_message(self.inserted_file_path)
+
     def has_progress_display(self):
         return self.progress_display is not None
 

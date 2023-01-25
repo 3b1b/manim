@@ -42,12 +42,8 @@ vec3 unit_normal = vec3(0.0, 0.0, 1.0);
 
 
 vec3 get_joint_unit_normal(vec4 joint_product){
-    vec3 result;
-    if(joint_product.w < COS_THRESHOLD){
-        result = joint_product.xyz;
-    }else{
-        result = v_joint_product[1].xyz;
-    }
+    vec3 result = (joint_product.w < COS_THRESHOLD) ?
+        joint_product.xyz : v_joint_product[1].xyz;
     float norm = length(result);
     return (norm > 1e-5) ? result / norm : vec3(0.0, 0.0, 1.0);
 }
@@ -104,8 +100,8 @@ void get_corners(
     float buff2 = 0.5 * v_stroke_width[2] + aaw;
 
     // Add correction for sharp angles to prevent weird bevel effects
-    if(v_joint_product[0].w < -0.75) buff0 *= 4 * (v_joint_product[0].w + 1.0);
-    if(v_joint_product[2].w < -0.75) buff2 *= 4 * (v_joint_product[2].w + 1.0);
+    if(v_joint_product[0].w < -0.9) buff0 *= 10 * (v_joint_product[0].w + 1.0);
+    if(v_joint_product[2].w < -0.9) buff2 *= 10 * (v_joint_product[2].w + 1.0);
 
     // Unit normal and joint angles
     vec3 normal0 = get_joint_unit_normal(v_joint_product[0]);

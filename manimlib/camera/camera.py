@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from manimlib.shader_wrapper import ShaderWrapper
     from manimlib.typing import ManimColor, Vect3
+    from manimlib.window import Window
     from typing import Any, Iterable
 
 class CameraFrame(Mobject):
@@ -39,7 +40,7 @@ class CameraFrame(Mobject):
         self.frame_shape = frame_shape
         self.center_point = center_point
         self.focal_dist_to_height = focal_dist_to_height
-        self.perspective_transform = np.identity(4)
+        self.view_matrix = np.identity(4)
         super().__init__(**kwargs)
 
     def init_uniforms(self) -> None:
@@ -83,12 +84,12 @@ class CameraFrame(Mobject):
     def get_inverse_camera_rotation_matrix(self):
         return self.get_orientation().as_matrix().T
 
-    def get_perspective_transform(self):
+    def get_view_matrix(self):
         """
         Returns a 4x4 for the affine transformation mapping a point
         into the camera's internal coordinate system
         """
-        result = self.perspective_transform
+        result = self.view_matrix
         result[:] = np.identity(4)
         result[:3, 3] = -self.get_center()
         rotation = np.identity(4)
@@ -187,7 +188,7 @@ class CameraFrame(Mobject):
 class Camera(object):
     def __init__(
         self,
-        ctx: moderngl.Context | None = None,
+        window: Window | None = None,
         background_image: str | None = None,
         frame_config: dict = dict(),
         pixel_width: int = DEFAULT_PIXEL_WIDTH,
@@ -209,8 +210,8 @@ class Camera(object):
         samples: int = 0,
     ):
         self.background_image = background_image
-        self.pixel_width = pixel_width
-        self.pixel_height = pixel_height
+        self.window = window
+        self.default_pixel_shape = (pixel_width, pixel_height)
         self.fps = fps
         self.max_allowable_norm = max_allowable_norm
         self.image_mode = image_mode
@@ -225,7 +226,7 @@ class Camera(object):
         ))
         self.perspective_uniforms = dict()
         self.init_frame(**frame_config)
-        self.init_context(ctx)
+        self.init_context(window)
         self.init_shaders()
         self.init_textures()
         self.init_light_source()
@@ -238,21 +239,20 @@ class Camera(object):
     def init_frame(self, **config) -> None:
         self.frame = CameraFrame(**config)
 
-    def init_context(self, ctx: moderngl.Context | None = None) -> None:
-        if ctx is None:
-            ctx = moderngl.create_standalone_context()
-            fbo = self.get_fbo(ctx, self.samples)
+    def init_context(self, window: Window | None = None) -> None:
+        if window is None:
+            self.ctx = moderngl.create_standalone_context()
+            self.fbo = self.get_fbo(self.samples)
         else:
-            fbo = ctx.detect_framebuffer()
-        self.ctx = ctx
-        self.fbo = fbo
+            self.ctx = window.ctx
+            self.fbo = self.ctx.detect_framebuffer()
         self.fbo.use()
         self.set_ctx_blending()
 
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
 
         # This is the frame buffer we'll draw into when emitting frames
-        self.draw_fbo = self.get_fbo(ctx, 0)
+        self.draw_fbo = self.get_fbo(samples=0)
 
     def set_ctx_blending(self, enable: bool = True) -> None:
         if enable:
@@ -269,8 +269,6 @@ class Camera(object):
     def set_ctx_clip_plane(self, enable: bool = True) -> None:
         if enable:
             gl.glEnable(gl.GL_CLIP_DISTANCE0)
-        else:
-            gl.glDisable(gl.GL_CLIP_DISTANCE0)
 
     def init_light_source(self) -> None:
         self.light_source = Point(self.light_source_position)
@@ -278,19 +276,16 @@ class Camera(object):
     # Methods associated with the frame buffer
     def get_fbo(
         self,
-        ctx: moderngl.Context,
         samples: int = 0
     ) -> moderngl.Framebuffer:
-        pw = self.pixel_width
-        ph = self.pixel_height
-        return ctx.framebuffer(
-            color_attachments=ctx.texture(
-                (pw, ph),
+        return self.ctx.framebuffer(
+            color_attachments=self.ctx.texture(
+                self.default_pixel_shape,
                 components=self.n_channels,
                 samples=samples,
             ),
-            depth_attachment=ctx.depth_renderbuffer(
-                (pw, ph),
+            depth_attachment=self.ctx.depth_renderbuffer(
+                self.default_pixel_shape,
                 samples=samples
             )
         )
@@ -298,17 +293,19 @@ class Camera(object):
     def clear(self) -> None:
         self.fbo.clear(*self.background_rgba)
 
-    def reset_pixel_shape(self, new_width: int, new_height: int) -> None:
-        self.pixel_width = new_width
-        self.pixel_height = new_height
-        self.refresh_perspective_uniforms()
-
     def get_raw_fbo_data(self, dtype: str = 'f1') -> bytes:
         # Copy blocks from fbo into draw_fbo using Blit
-        pw, ph = (self.pixel_width, self.pixel_height)
         gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo.glo)
         gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, self.draw_fbo.glo)
-        gl.glBlitFramebuffer(0, 0, pw, ph, 0, 0, pw, ph, gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR)
+        if self.window is not None:
+            src_viewport = self.window.viewport
+        else:
+            src_viewport = self.fbo.viewport
+        gl.glBlitFramebuffer(
+            *src_viewport,
+            *self.draw_fbo.viewport,
+            gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR
+        )
         return self.draw_fbo.read(
             viewport=self.draw_fbo.viewport,
             components=self.n_channels,
@@ -326,7 +323,7 @@ class Camera(object):
     def get_pixel_array(self) -> np.ndarray:
         raw = self.get_raw_fbo_data(dtype='f4')
         flat_arr = np.frombuffer(raw, dtype='f4')
-        arr = flat_arr.reshape([*reversed(self.fbo.size), self.n_channels])
+        arr = flat_arr.reshape([*reversed(self.draw_fbo.size), self.n_channels])
         arr = arr[::-1]
         # Convert from float
         return (self.rgb_max_val * arr).astype(self.pixel_array_dtype)
@@ -342,15 +339,21 @@ class Camera(object):
         return texture
 
     # Getting camera attributes
+    def get_pixel_size(self) -> float:
+        return self.frame.get_shape()[0] / self.get_pixel_shape()[0]
+
     def get_pixel_shape(self) -> tuple[int, int]:
-        return self.fbo.viewport[2:4]
-        # return (self.pixel_width, self.pixel_height)
+        return self.draw_fbo.size
 
     def get_pixel_width(self) -> int:
         return self.get_pixel_shape()[0]
 
     def get_pixel_height(self) -> int:
         return self.get_pixel_shape()[1]
+
+    def get_aspect_ratio(self):
+        pw, ph = self.get_pixel_shape()
+        return pw / ph
 
     def get_frame_height(self) -> float:
         return self.frame.get_height()
@@ -374,17 +377,15 @@ class Camera(object):
         whether frame_height or frame_width
         remains fixed while the other changes accordingly.
         """
-        pixel_height = self.get_pixel_height()
-        pixel_width = self.get_pixel_width()
         frame_height = self.get_frame_height()
         frame_width = self.get_frame_width()
-        aspect_ratio = fdiv(pixel_width, pixel_height)
+        aspect_ratio = self.get_aspect_ratio()
         if not fixed_dimension:
             frame_height = frame_width / aspect_ratio
         else:
             frame_width = aspect_ratio * frame_height
-        self.frame.set_height(frame_height)
-        self.frame.set_width(frame_width)
+        self.frame.set_height(frame_height, stretch=true)
+        self.frame.set_width(frame_width, stretch=true)
 
     # Rendering
     def capture(self, *mobjects: Mobject) -> None:
@@ -444,9 +445,10 @@ class Camera(object):
 
         # Program and vertex array
         shader_program, vert_format = self.get_shader_program(shader_wrapper)
+        attributes = shader_wrapper.vert_attributes
         vao = self.ctx.vertex_array(
             program=shader_program,
-            content=[(vbo, vert_format, *shader_wrapper.vert_attributes)],
+            content=[(vbo, vert_format, *attributes)],
             index_buffer=ibo,
         )
         return {
@@ -502,16 +504,14 @@ class Camera(object):
 
     def refresh_perspective_uniforms(self) -> None:
         frame = self.frame
-        # Orient light
-        perspective_transform = frame.get_perspective_transform()
+        view_matrix = frame.get_view_matrix()
         light_pos = self.light_source.get_location()
         cam_pos = self.frame.get_implied_camera_location()
-        frame_shape = frame.get_shape()
 
         self.perspective_uniforms.update(
-            frame_shape=frame_shape,
-            pixel_size=frame_shape[0] / self.get_pixel_shape()[0],
-            perspective=tuple(perspective_transform.T.flatten()),
+            frame_shape=frame.get_shape(),
+            pixel_size=self.get_pixel_size(),
+            view=tuple(view_matrix.T.flatten()),
             camera_position=tuple(cam_pos),
             light_position=tuple(light_pos),
             focal_distance=frame.get_focal_distance(),

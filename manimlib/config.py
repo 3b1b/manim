@@ -414,9 +414,10 @@ def get_window_config(args: Namespace, custom_config: dict, camera_config: dict)
     if not (args.full_screen or custom_config["full_screen"]):
         window_width //= 2
     window_height = int(window_width / aspect_ratio)
-    return {
-        "size": (window_width, window_height),
-    }
+    return dict(
+        full_size=(camera_config["pixel_width"], camera_config["pixel_height"]),
+        size=(window_width, window_height),
+    )
 
 
 def get_camera_config(args: Namespace, custom_config: dict) -> dict:
