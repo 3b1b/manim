@@ -5,6 +5,7 @@ import numpy as np
 
 from manimlib.constants import GREY_C, YELLOW
 from manimlib.constants import ORIGIN, NULL_POINTS
+from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.utils.iterables import resize_with_interpolation
 
@@ -94,6 +95,7 @@ class DotCloud(PMobject):
         self.center()
         return self
 
+    @Mobject.affects_data
     def set_radii(self, radii: npt.ArrayLike):
         n_points = self.get_num_points()
         radii = np.array(radii).reshape((len(radii), 1))
@@ -104,6 +106,7 @@ class DotCloud(PMobject):
     def get_radii(self) -> np.ndarray:
         return self.data["radius"]
 
+    @Mobject.affects_data
     def set_radius(self, radius: float):
         data = self.data if self.get_num_points() > 0 else self._data_defaults
         data["radius"][:] = radius

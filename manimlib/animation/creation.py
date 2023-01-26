@@ -30,15 +30,6 @@ class ShowPartial(Animation, ABC):
         self.should_match_start = should_match_start
         super().__init__(mobject, **kwargs)
 
-    def begin(self) -> None:
-        super().begin()
-        if not self.should_match_start:
-            self.mobject.lock_matching_data(self.mobject, self.starting_mobject)
-
-    def finish(self) -> None:
-        super().finish()
-        self.mobject.unlock_data()
-
     def interpolate_submobject(
         self,
         submob: VMobject,
@@ -114,11 +105,9 @@ class DrawBorderThenFill(Animation):
         self.outline = self.get_outline()
         super().begin()
         self.mobject.match_style(self.outline)
-        self.mobject.lock_matching_data(self.mobject, self.outline)
 
     def finish(self) -> None:
         super().finish()
-        self.mobject.unlock_data()
         self.mobject.refresh_joint_products()
 
     def get_outline(self) -> VMobject:
@@ -146,9 +135,6 @@ class DrawBorderThenFill(Animation):
         if index == 1 and self.sm_to_index[hash(submob)] == 0:
             # First time crossing over
             submob.set_data(outline.data)
-            submob.unlock_data()
-            if not self.mobject.has_updaters:
-                submob.lock_matching_data(submob, start)
             submob.needs_new_triangulation = False
             self.sm_to_index[hash(submob)] = 1
 

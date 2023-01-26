@@ -233,6 +233,7 @@ class VMobject(Mobject):
         self.set_stroke(color, width, background=background)
         return self
 
+    @Mobject.affects_family_data
     def set_style(
         self,
         fill_color: ManimColor | Iterable[ManimColor] | None = None,
@@ -1071,6 +1072,7 @@ class VMobject(Mobject):
             return self.data["joint_product"]
 
         self.needs_new_joint_products = False
+        self._data_has_changed = True
 
         points = self.get_points()
 
@@ -1109,6 +1111,11 @@ class VMobject(Mobject):
         self.data["joint_product"][:, 3] = (vect_to_vert * vect_from_vert).sum(1)
         return self.data["joint_product"]
 
+    def lock_matching_data(self, vmobject1: VMobject, vmobject2: VMobject):
+        for mob in [self, vmobject1, vmobject2]:
+            mob.get_joint_products()
+        super().lock_matching_data(vmobject1, vmobject2)
+
     def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
         def wrapper(self, *args, refresh=True, **kwargs):
@@ -1119,10 +1126,11 @@ class VMobject(Mobject):
             return self
         return wrapper
 
-    @triggers_refreshed_triangulation
     def set_points(self, points: Vect3Array):
         assert(len(points) == 0 or len(points) % 2 == 1)
         super().set_points(points)
+        self.refresh_triangulation()
+        self.get_joint_products(refresh=True)
         return self
 
     @triggers_refreshed_triangulation

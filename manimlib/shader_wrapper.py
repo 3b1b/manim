@@ -51,15 +51,15 @@ class ShaderWrapper(object):
         self.depth_test = depth_test
         self.render_primitive = render_primitive
 
-        self.vbo = None
-        self.ibo = None
-        self.vao = None
-
         self.init_program_code()
         self.init_program()
         if texture_paths is not None:
             self.init_textures(texture_paths)
         self.refresh_id()
+
+        self.vbo = None
+        self.ibo = None
+        self.vao = None
 
     def init_program_code(self) -> None:
         def get_code(name: str) -> str | None:
@@ -100,15 +100,16 @@ class ShaderWrapper(object):
             self.render_primitive == shader_wrapper.render_primitive,
         ))
 
-    def __del__(self):
-        self.release()
-
     def copy(self):
         result = copy.copy(self)
+        result.ctx = self.ctx
         result.vert_data = self.vert_data.copy()
         result.vert_indices = self.vert_indices.copy()
         if self.uniforms:
             result.uniforms = {key: np.array(value) for key, value in self.uniforms.items()}
+        result.vao = None
+        result.vbo = None
+        result.ibo = None
         return result
 
     def is_valid(self) -> bool:
@@ -219,7 +220,6 @@ class ShaderWrapper(object):
         self.update_program_uniforms()
 
     def render(self):
-        # TODO, generate on the fly?
         assert(self.vao is not None)
         self.vao.render()
 
@@ -242,7 +242,8 @@ class ShaderWrapper(object):
             self.ibo = self.ctx.buffer(self.vert_indices.astype(np.uint32))
         return self.ibo
 
-    def get_vao(self, refresh: bool = True):
+    def generate_vao(self, refresh: bool = True):
+        self.release()
         # Data buffer
         vbo = self.get_vertex_buffer_object(refresh)
         ibo = self.get_index_buffer_object(refresh)
@@ -258,10 +259,7 @@ class ShaderWrapper(object):
     def release(self):
         for obj in (self.vbo, self.ibo, self.vao):
             if obj is not None:
-                try:
-                    obj.release()
-                except AttributeError:
-                    pass
+                obj.release()
         self.vbo = None
         self.ibo = None
         self.vao = None

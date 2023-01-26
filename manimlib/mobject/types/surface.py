@@ -72,6 +72,7 @@ class Surface(Mobject):
         # To be implemented in subclasses
         return (u, v, 0.0)
 
+    @Mobject.affects_data
     def init_points(self):
         dim = self.dim
         nu, nv = self.resolution
@@ -130,6 +131,7 @@ class Surface(Mobject):
         )
         return normalize_along_axis(normals, 1)
 
+    @Mobject.affects_data
     def pointwise_become_partial(
         self,
         smobject: "Surface",
@@ -298,6 +300,7 @@ class TexturedSurface(Surface):
             **kwargs
         )
 
+    @Mobject.affects_data
     def init_points(self):
         surf = self.uv_surface
         nu, nv = surf.resolution
@@ -315,6 +318,7 @@ class TexturedSurface(Surface):
         super().init_uniforms()
         self.uniforms["num_textures"] = self.num_textures
 
+    @Mobject.affects_data
     def set_opacity(self, opacity: float | Iterable[float]):
         op_arr = np.array(listify(opacity))
         self.data["opacity"][:, 0] = resize_with_interpolation(op_arr, len(self.data))

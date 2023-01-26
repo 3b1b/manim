@@ -143,11 +143,6 @@ class Mobject(object):
         # Typically implemented in subclass, unlpess purposefully left blank
         pass
 
-    def set_data(self, data: np.ndarray):
-        assert(data.dtype == self.data.dtype)
-        self.data = data
-        return self
-
     def set_uniforms(self, uniforms: dict):
         for key, value in uniforms.items():
             if isinstance(value, np.ndarray):
@@ -160,8 +155,36 @@ class Mobject(object):
         # Borrowed from https://github.com/ManimCommunity/manim/
         return _AnimationBuilder(self)
 
-    # Only these methods should directly affect points
+    def note_changed_data(self, recurse_up: bool = True):
+        self._data_has_changed = True
+        if recurse_up:
+            for mob in self.parents:
+                mob.note_changed_data()
 
+    def affects_data(func: Callable):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            func(self, *args, **kwargs)
+            self.note_changed_data()
+        return wrapper
+
+    def affects_family_data(func: Callable):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            func(self, *args, **kwargs)
+            for mob in self.family_members_with_points():
+                mob.note_changed_data()
+            return self
+        return wrapper
+
+    # Only these methods should directly affect points
+    @affects_data
+    def set_data(self, data: np.ndarray):
+        assert(data.dtype == self.data.dtype)
+        self.data = data
+        return self
+
+    @affects_data
     def resize_points(
         self,
         new_length: int,
@@ -177,11 +200,13 @@ class Mobject(object):
         self.refresh_bounding_box()
         return self
 
+    @affects_data
     def set_points(self, points: Vect3Array):
         self.resize_points(len(points), resize_func=resize_preserving_order)
         self.data["point"][:] = points
         return self
 
+    @affects_data
     def append_points(self, new_points: Vect3Array):
         n = self.get_num_points()
         self.resize_points(n + len(new_points))
@@ -192,11 +217,13 @@ class Mobject(object):
         self.refresh_bounding_box()
         return self
 
+    @affects_family_data
     def reverse_points(self):
         for mob in self.get_family():
             mob.data = mob.data[::-1]
         return self
 
+    @affects_family_data
     def apply_points_function(
         self,
         func: Callable[[np.ndarray], np.ndarray],
@@ -330,6 +357,7 @@ class Mobject(object):
     def split(self) -> list[Mobject]:
         return self.submobjects
 
+    @affects_data
     def assemble_family(self):
         sub_families = (sm.get_family() for sm in self.submobjects)
         self.family = [self, *it.chain(*sub_families)]
@@ -593,6 +621,7 @@ class Mobject(object):
         # won't have changed, just directly match.
         result.non_time_updaters = list(self.non_time_updaters)
         result.time_based_updaters = list(self.time_based_updaters)
+        result._data_has_changed = True
 
         family = self.get_family()
         for attr, value in list(self.__dict__.items()):
@@ -1216,6 +1245,7 @@ class Mobject(object):
 
     # Color functions
 
+    @affects_family_data
     def set_rgba_array(
         self,
         rgba_array: npt.ArrayLike,
@@ -1254,6 +1284,7 @@ class Mobject(object):
             mob.set_rgba_array(rgba_array)
         return self
 
+    @affects_family_data
     def set_rgba_array_by_color(
         self,
         color: ManimColor | Iterable[ManimColor] | None = None,
@@ -1681,6 +1712,7 @@ class Mobject(object):
 
     # Interpolate
 
+    @affects_data
     def interpolate(
         self,
         mobject1: Mobject,
@@ -1893,11 +1925,10 @@ class Mobject(object):
         return self.shader_indices
 
     def render(self, ctx: Context, camera_uniforms: dict):
-        if self._data_has_changed or self.is_changing():
+        if self._data_has_changed:
             self.shader_wrappers = self.get_shader_wrapper_list(ctx)
             for shader_wrapper in self.shader_wrappers:
-                shader_wrapper.release()
-                shader_wrapper.get_vao()
+                shader_wrapper.generate_vao()
             self._data_has_changed = False
         for shader_wrapper in self.shader_wrappers:
             shader_wrapper.uniforms.update(self.get_uniforms())
