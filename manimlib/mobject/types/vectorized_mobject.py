@@ -417,6 +417,7 @@ class VMobject(Mobject):
     def get_joint_type(self) -> float:
         return self.uniforms["joint_type"]
 
+    @Mobject.affects_family_data
     def use_winding_fill(self, value: bool = True, recurse: bool = True):
         for submob in self.get_family(recurse):
             submob._use_winding_fill = value
@@ -835,7 +836,7 @@ class VMobject(Mobject):
             # If both have fill, and they have the same shape, just
             # give them the same triangulation so that it's not recalculated
             # needlessly throughout an animation
-            if self._use_winding_fill and self.has_fill() \
+            if not self._use_winding_fill and self.has_fill() \
                 and vmobject.has_fill() and self.has_same_shape_as(vmobject):
                 vmobject.triangulation = self.triangulation
             return self
