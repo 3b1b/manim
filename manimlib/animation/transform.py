@@ -121,6 +121,10 @@ class Transform(Animation):
         target_copy: Mobject,
         alpha: float
     ):
+        if alpha == 0:
+            submob.become(start)
+        elif alpha == 1:
+            submob.become(target_copy)
         submob.interpolate(start, target_copy, alpha, self.path_func)
         return self
 
