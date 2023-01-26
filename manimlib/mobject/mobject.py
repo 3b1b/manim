@@ -683,7 +683,6 @@ class Mobject(object):
         for attr, value in list(mobject.__dict__.items()):
             if isinstance(value, Mobject) and value in family2:
                 setattr(self, attr, family1[family2.index(value)])
-        self.refresh_bounding_box(recurse_down=True)
         if match_updaters:
             self.match_updaters(mobject)
         return self
