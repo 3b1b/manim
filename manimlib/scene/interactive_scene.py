@@ -317,14 +317,12 @@ class InteractiveScene(Scene):
                 mob.refresh_bounding_box()
             else:
                 self.add_to_selection(mob)
-        self.refresh_static_mobjects()
 
     def clear_selection(self):
         for mob in self.selection:
             mob.set_animating_status(False)
             mob.refresh_bounding_box()
         self.selection.set_submobjects([])
-        self.refresh_static_mobjects()
 
     def disable_interaction(self, *mobjects: Mobject):
         for mob in mobjects:
