@@ -1730,6 +1730,8 @@ class Mobject(object):
             self.data[key] = func(md1, md2, alpha)
 
         for key in self.uniforms:
+            if key not in mobject1.uniforms or key not in mobject2.uniforms:
+                continue
             self.uniforms[key] = interpolate(
                 mobject1.uniforms[key],
                 mobject2.uniforms[key],
