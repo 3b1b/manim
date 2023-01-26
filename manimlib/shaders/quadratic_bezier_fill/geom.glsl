@@ -31,7 +31,7 @@ const vec2 SIMPLE_QUADRATIC[3] = vec2[3](
 
 void emit_triangle(vec3 points[3], vec4 v_color[3]){
     vec3 unit_normal = get_unit_normal(points[0], points[1], points[2]);
-    orientation = sign(unit_normal.z);
+    orientation = winding ? sign(unit_normal.z) : 1.0;
 
     for(int i = 0; i < 3; i++){
         uv_coords = SIMPLE_QUADRATIC[i];

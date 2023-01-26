@@ -1053,8 +1053,10 @@ class VMobject(Mobject):
         null2 = (iti[0::3] - 1 == iti[1::3]) & (iti[0::3] - 2 == iti[2::3])
         inner_tri_indices = iti[~(null1 | null2).repeat(3)]
 
-        outer_tri_indices = self.get_outer_vert_indices()
-        tri_indices = np.hstack([outer_tri_indices, inner_tri_indices])
+        ovi = self.get_outer_vert_indices()
+        # Flip outer triangles with negative orientation
+        ovi[0::3][concave_parts], ovi[2::3][concave_parts] = ovi[2::3][concave_parts], ovi[0::3][concave_parts]
+        tri_indices = np.hstack([ovi, inner_tri_indices])
         self.triangulation = tri_indices
         self.needs_new_triangulation = False
         return tri_indices
