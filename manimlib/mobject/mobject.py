@@ -2048,6 +2048,8 @@ class Group(Mobject):
             raise Exception("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)
+        if any(m.is_fixed_in_frame for m in mobjects):
+            self.fix_in_frame()
 
     def __add__(self, other: Mobject | Group):
         assert(isinstance(other, Mobject))
