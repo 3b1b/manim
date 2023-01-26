@@ -14,7 +14,7 @@ from manimlib.utils.shaders import get_shader_code_from_file
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
 from manimlib.utils.shaders import get_texture_id
-from manimlib.utils.shaders import get_intermediary_palette
+from manimlib.utils.shaders import get_fill_palette
 from manimlib.utils.shaders import release_texture
 
 from typing import TYPE_CHECKING
@@ -284,13 +284,15 @@ class FillShaderWrapper(ShaderWrapper):
             vao.render(moderngl.TRIANGLES)
             return
 
-        texture_fbo, texture_vao = get_intermediary_palette(self.ctx)
-
         original_fbo = self.ctx.fbo
+        texture_fbo, texture_vao = get_fill_palette(self.ctx)
+
         texture_fbo.clear()
         texture_fbo.use()
         self.ctx.blend_func = (moderngl.ONE, moderngl.ONE)
         vao.render(self.render_primitive)
-        self.ctx.blend_func = moderngl.DEFAULT_BLENDING
+
+        self.ctx.blend_func = (moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA)
         original_fbo.use()
         texture_vao.render(moderngl.TRIANGLE_STRIP)
+        self.ctx.blend_func = moderngl.DEFAULT_BLENDING

@@ -5,6 +5,7 @@ import re
 from functools import lru_cache
 import moderngl
 from PIL import Image
+import numpy as np
 
 from manimlib.constants import DEFAULT_PIXEL_HEIGHT
 from manimlib.constants import DEFAULT_PIXEL_WIDTH
@@ -101,19 +102,15 @@ def get_colormap_code(rgb_list: Sequence[float]) -> str:
 
 
 @lru_cache()
-def get_intermediary_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
+def get_fill_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
     """
     Creates a texture, loaded into a frame buffer, and a vao
     which can display that texture as a simple quad onto a screen.
     """
     size = (2 * DEFAULT_PIXEL_WIDTH, 2 * DEFAULT_PIXEL_HEIGHT)
-    texture = ctx.texture(
-        size=size,
-        components=4,
-        # Important to make sure floating point (not fixed point) is
-        # used so that alpha values are not clipped
-        dtype='f2',
-    )
+    # Important to make sure dtype is floating point (not fixed point)
+    # so that alpha values can be negative and are not clipped
+    texture = ctx.texture(size=size, components=4, dtype='f2')
     depth_buffer = ctx.depth_renderbuffer(size)  # TODO, currently not used
     texture_fbo = ctx.framebuffer(texture, depth_buffer)
 
@@ -133,7 +130,6 @@ def get_intermediary_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
             #version 330
 
             uniform sampler2D Texture;
-            uniform sampler2D DepthTexture;
             uniform float v_nudge;
             uniform float h_nudge;
 
@@ -142,25 +138,26 @@ def get_intermediary_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
 
             void main() {
                 // Apply poor man's anti-aliasing
-                vec2 tc0 = v_textcoord + vec2(v_nudge, h_nudge);
-                vec2 tc1 = v_textcoord + vec2(v_nudge, -h_nudge);
-                vec2 tc2 = v_textcoord + vec2(-v_nudge, h_nudge);
-                vec2 tc3 = v_textcoord + vec2(-v_nudge, -h_nudge);
+                vec2 tc0 = v_textcoord + vec2(0, 0);
+                vec2 tc1 = v_textcoord + vec2(0, h_nudge);
+                vec2 tc2 = v_textcoord + vec2(v_nudge, 0);
+                vec2 tc3 = v_textcoord + vec2(v_nudge, h_nudge);
                 frag_color = 
-                    0.25 * abs(texture(Texture, tc0)) +
-                    0.25 * abs(texture(Texture, tc1)) +
-                    0.25 * abs(texture(Texture, tc2)) +
-                    0.25 * abs(texture(Texture, tc3));
+                    0.25 * texture(Texture, tc0) +
+                    0.25 * texture(Texture, tc1) +
+                    0.25 * texture(Texture, tc2) +
+                    0.25 * texture(Texture, tc3);
                 if(frag_color.a == 0) discard;
+                frag_color = abs(frag_color);
                 //TODO, set gl_FragDepth;
             }
         ''',
     )
 
     simple_program['Texture'].value = get_texture_id(texture)
-    # Quarter pixel width/height
-    simple_program['h_nudge'].value = 0.25 / size[0]
-    simple_program['v_nudge'].value = 0.25 / size[1]
+    # Half pixel width/height
+    simple_program['h_nudge'].value = 0.5 / size[0]
+    simple_program['v_nudge'].value = 0.5 / size[1]
 
     verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     fill_texture_vao = ctx.simple_vertex_array(
