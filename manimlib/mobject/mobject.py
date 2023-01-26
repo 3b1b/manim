@@ -587,11 +587,9 @@ class Mobject(object):
         return self
 
     def deepcopy(self):
-        try:
-            # Often faster than deepcopy
-            return pickle.loads(pickle.dumps(self))
-        except AttributeError:
-            return copy.deepcopy(self)
+        result = copy.deepcopy(self)
+        result._shaders_initialized = False
+        result._data_has_changed = True
 
     @stash_mobject_pointers
     def copy(self, deep: bool = False):
