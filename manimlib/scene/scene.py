@@ -195,7 +195,7 @@ class Scene(object):
     def embed(
         self,
         close_scene_on_exit: bool = True,
-        show_animation_progress: bool = True,
+        show_animation_progress: bool = False,
     ) -> None:
         if not self.preview:
             return  # Embed is only relevant with a preview
@@ -709,7 +709,12 @@ class Scene(object):
             self.undo_stack.append(self.get_state())
             self.restore_state(self.redo_stack.pop())
 
-    def checkpoint_paste(self, skip: bool = False, record: bool = False):
+    def checkpoint_paste(
+        self,
+        skip: bool = False,
+        record: bool = False,
+        progress_bar: bool = True
+    ):
         """
         Used during interactive development to run (or re-run)
         a block of scene code.
@@ -736,6 +741,9 @@ class Scene(object):
         prev_skipping = self.skip_animations
         self.skip_animations = skip
 
+        prev_progress = self.show_animation_progress
+        self.show_animation_progress = progress_bar
+
         if record:
             self.camera.use_window_fbo(False)
             self.file_writer.begin_insert()
@@ -747,6 +755,7 @@ class Scene(object):
             self.camera.use_window_fbo(True)
 
         self.skip_animations = prev_skipping
+        self.show_animation_progress = prev_progress
 
     def checkpoint(self, key: str):
         self.checkpoint_states[key] = self.get_state()
