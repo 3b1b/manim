@@ -36,6 +36,11 @@ void emit_triangle(vec3 points[3], vec4 v_color[3]){
     for(int i = 0; i < 3; i++){
         uv_coords = SIMPLE_QUADRATIC[i];
         color = finalize_color(v_color[i], points[i], unit_normal);
+        if(winding){
+            // Pure black will be used to discard fragments later
+            if(color.rgb == vec3(0.0)) color.rgb += vec3(0.01);
+            // color.a = sqrt(color.a);
+        }
         gl_Position = get_gl_Position(points[i]);
         EmitVertex();
     }

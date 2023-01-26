@@ -110,7 +110,7 @@ def get_fill_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
     size = (2 * DEFAULT_PIXEL_WIDTH, 2 * DEFAULT_PIXEL_HEIGHT)
     # Important to make sure dtype is floating point (not fixed point)
     # so that alpha values can be negative and are not clipped
-    texture = ctx.texture(size=size, components=4, dtype='f2')
+    texture = ctx.texture(size=size, components=4, dtype='f4')
     depth_buffer = ctx.depth_renderbuffer(size)  # TODO, currently not used
     texture_fbo = ctx.framebuffer(texture, depth_buffer)
 
@@ -147,8 +147,7 @@ def get_fill_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
                     0.25 * texture(Texture, tc1) +
                     0.25 * texture(Texture, tc2) +
                     0.25 * texture(Texture, tc3);
-                if(frag_color.a == 0) discard;
-                frag_color = abs(frag_color);
+                if(distance(frag_color.rgb, vec3(0.0)) < 1e-3) discard;
                 //TODO, set gl_FragDepth;
             }
         ''',

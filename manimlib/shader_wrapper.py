@@ -289,10 +289,9 @@ class FillShaderWrapper(ShaderWrapper):
 
         texture_fbo.clear()
         texture_fbo.use()
-        self.ctx.blend_func = (moderngl.ONE, moderngl.ONE)
-        vao.render(self.render_primitive)
+        vao.render()
 
-        self.ctx.blend_func = (moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA)
         original_fbo.use()
+        self.ctx.blend_func = (moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA)
         texture_vao.render(moderngl.TRIANGLE_STRIP)
-        self.ctx.blend_func = moderngl.DEFAULT_BLENDING
+        self.ctx.blend_func = (moderngl.DEFAULT_BLENDING)
