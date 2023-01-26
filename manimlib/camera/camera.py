@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import itertools as it
-
 import moderngl
 import numpy as np
 import OpenGL.GL as gl
@@ -15,15 +13,12 @@ from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.color import color_to_rgba
-from manimlib.utils.shaders import get_texture_id
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.shader_wrapper import ShaderWrapper
     from manimlib.typing import ManimColor, Vect3
     from manimlib.window import Window
-    from typing import Any, Iterable
 
 
 class Camera(object):
