@@ -7,14 +7,14 @@ import re
 import OpenGL.GL as gl
 import moderngl
 import numpy as np
+from functools import lru_cache
 
-from manimlib.constants import DEFAULT_PIXEL_HEIGHT
-from manimlib.constants import DEFAULT_PIXEL_WIDTH
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.shaders import get_shader_code_from_file
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
 from manimlib.utils.shaders import get_texture_id
+from manimlib.utils.shaders import get_intermediary_palette
 from manimlib.utils.shaders import release_texture
 
 from typing import TYPE_CHECKING
@@ -274,68 +274,6 @@ class FillShaderWrapper(ShaderWrapper):
     ):
         super().__init__(ctx, *args, **kwargs)
 
-        size = (2 * DEFAULT_PIXEL_WIDTH, 2 * DEFAULT_PIXEL_HEIGHT)
-        texture = ctx.texture(
-            size=size,
-            components=4,
-            # Important to make sure floating point (not fixed point) is
-            # used so that alpha values are not clipped
-            dtype='f2',
-        )
-        depth_buffer = ctx.depth_renderbuffer(size)  # TODO, currently not used
-        self.texture_fbo = ctx.framebuffer(texture, depth_buffer)
-
-        simple_program = ctx.program(
-            vertex_shader='''
-                #version 330
-
-                in vec2 texcoord;
-                out vec2 v_textcoord;
-
-                void main() {
-                    gl_Position = vec4((2.0 * texcoord - 1.0), 0.0, 1.0);
-                    v_textcoord = texcoord;
-                }
-            ''',
-            fragment_shader='''
-                #version 330
-
-                uniform sampler2D Texture;
-                uniform sampler2D DepthTexture;
-                uniform float v_nudge;
-                uniform float h_nudge;
-
-                in vec2 v_textcoord;
-                out vec4 frag_color;
-
-                void main() {
-                    // Apply poor man's anti-aliasing
-                    vec2 tc0 = v_textcoord + vec2(v_nudge, h_nudge);
-                    vec2 tc1 = v_textcoord + vec2(v_nudge, -h_nudge);
-                    vec2 tc2 = v_textcoord + vec2(-v_nudge, h_nudge);
-                    vec2 tc3 = v_textcoord + vec2(-v_nudge, -h_nudge);
-                    frag_color = 
-                        0.25 * abs(texture(Texture, tc0)) +
-                        0.25 * abs(texture(Texture, tc1)) +
-                        0.25 * abs(texture(Texture, tc2)) +
-                        0.25 * abs(texture(Texture, tc3));
-                    if(frag_color.a == 0) discard;
-                    //TODO, set gl_FragDepth;
-                }
-            ''',
-        )
-
-        simple_program['Texture'].value = get_texture_id(texture)
-        # Quarter pixel width/height
-        simple_program['h_nudge'].value = 0.25 / size[0]
-        simple_program['v_nudge'].value = 0.25 / size[1]
-
-        verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-        self.fill_texture_vao = ctx.simple_vertex_array(
-            simple_program,
-            ctx.buffer(verts.astype('f4').tobytes()),
-            'texcoord',
-        )
 
     def render(self):
         vao = self.vao
@@ -345,11 +283,14 @@ class FillShaderWrapper(ShaderWrapper):
         if not winding:
             vao.render(moderngl.TRIANGLES)
             return
+
+        texture_fbo, texture_vao = get_intermediary_palette(self.ctx)
+
         original_fbo = self.ctx.fbo
-        self.texture_fbo.clear()
-        self.texture_fbo.use()
+        texture_fbo.clear()
+        texture_fbo.use()
         self.ctx.blend_func = (moderngl.ONE, moderngl.ONE)
         vao.render(self.render_primitive)
         self.ctx.blend_func = moderngl.DEFAULT_BLENDING
         original_fbo.use()
-        self.fill_texture_vao.render(moderngl.TRIANGLE_STRIP)
+        texture_vao.render(moderngl.TRIANGLE_STRIP)
