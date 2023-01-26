@@ -1710,7 +1710,6 @@ class Mobject(object):
 
     # Interpolate
 
-    @affects_data
     def interpolate(
         self,
         mobject1: Mobject,
@@ -1719,6 +1718,8 @@ class Mobject(object):
         path_func: Callable[[np.ndarray, np.ndarray, float], np.ndarray] = straight_path
     ):
         keys = [k for k in self.data.dtype.names if k not in self.locked_data_keys]
+        if keys:
+            self.note_changed_data()
         for key in keys:
             func = path_func if key in self.pointlike_data_keys else interpolate
             md1 = mobject1.data[key]
