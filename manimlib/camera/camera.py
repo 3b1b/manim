@@ -69,12 +69,16 @@ class Camera(object):
         self.frame = CameraFrame(**config)
 
     def init_context(self, window: Window | None = None) -> None:
+        self.window = window
         if window is None:
             self.ctx = moderngl.create_standalone_context()
             self.fbo = self.get_fbo(self.samples)
         else:
             self.ctx = window.ctx
-            self.fbo = self.ctx.detect_framebuffer()
+            self.window_fbo = self.ctx.detect_framebuffer()
+            self.fbo_for_files = self.get_fbo(self.samples)
+            self.fbo = self.window_fbo
+
         self.fbo.use()
 
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
@@ -85,6 +89,13 @@ class Camera(object):
 
     def init_light_source(self) -> None:
         self.light_source = Point(self.light_source_position)
+
+    def use_window_fbo(self, use: bool = True):
+        assert(self.window is not None)
+        if use:
+            self.fbo = self.window_fbo
+        else:
+            self.fbo = self.fbo_for_files
 
     # Methods associated with the frame buffer
     def get_fbo(
@@ -110,10 +121,7 @@ class Camera(object):
         # Copy blocks from fbo into draw_fbo using Blit
         gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo.glo)
         gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, self.draw_fbo.glo)
-        if self.window is not None:
-            src_viewport = self.window.viewport
-        else:
-            src_viewport = self.fbo.viewport
+        src_viewport = self.fbo.viewport
         gl.glBlitFramebuffer(
             *src_viewport,
             *self.draw_fbo.viewport,
@@ -203,6 +211,7 @@ class Camera(object):
     # Rendering
     def capture(self, *mobjects: Mobject) -> None:
         self.refresh_uniforms()
+        self.fbo.use()
         for mobject in mobjects:
             mobject.render(self.ctx, self.uniforms)
 

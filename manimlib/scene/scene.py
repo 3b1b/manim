@@ -737,18 +737,14 @@ class Scene(object):
         self.skip_animations = skip
 
         if record:
-            # Resize window so rendering happens at the appropriate size
-            self.window.size = self.camera.get_pixel_shape()
-            self.window.swap_buffers()
-            self.update_frame()
+            self.camera.use_window_fbo(False)
             self.file_writer.begin_insert()
 
         shell.run_cell(pasted)
 
         if record:
             self.file_writer.end_insert()
-            # Put window back to how it started
-            self.window.to_default_position()
+            self.camera.use_window_fbo(True)
 
         self.skip_animations = prev_skipping
 

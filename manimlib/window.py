@@ -26,12 +26,10 @@ class Window(PygletWindow):
         self,
         scene: Scene,
         size: tuple[int, int] = (1280, 720),
-        full_size: tuple[int, int] = (1920, 1080),
         samples = 0
     ):
-        super().__init__(size=full_size, samples=samples)
+        super().__init__(size=size, samples=samples)
 
-        self.full_size = full_size
         self.default_size = size
         self.default_position = self.find_initial_position(size)
         self.scene = scene
