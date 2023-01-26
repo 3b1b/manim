@@ -940,8 +940,9 @@ class VMobject(Mobject):
     def pointwise_become_partial(self, vmobject: VMobject, a: float, b: float):
         assert(isinstance(vmobject, VMobject))
         vm_points = vmobject.get_points()
+        self.data["joint_product"] = vmobject.data["joint_product"]
         if a <= 0 and b >= 1:
-            self.set_points(vm_points)
+            self.set_points(vm_points, refresh_joints=False)
             return self
         num_curves = vmobject.get_num_curves()
 
@@ -974,7 +975,9 @@ class VMobject(Mobject):
             # Keep new_points i2:i3 as they are
             new_points[i3:i4] = high_tup
             new_points[i4:] = high_tup[2]
-        self.set_points(new_points)
+        self.data["joint_product"][:i1] = [0, 0, 0, 1]
+        self.data["joint_product"][i4:] = [0, 0, 0, 1]
+        self.set_points(new_points, refresh_joints=False)
         return self
 
     def get_subcurve(self, a: float, b: float) -> VMobject:
@@ -1126,11 +1129,12 @@ class VMobject(Mobject):
             return self
         return wrapper
 
-    def set_points(self, points: Vect3Array):
+    def set_points(self, points: Vect3Array, refresh_joints: bool = True):
         assert(len(points) == 0 or len(points) % 2 == 1)
         super().set_points(points)
         self.refresh_triangulation()
-        self.get_joint_products(refresh=True)
+        if refresh_joints:
+            self.get_joint_products(refresh=True)
         return self
 
     @triggers_refreshed_triangulation
