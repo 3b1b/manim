@@ -6,13 +6,15 @@ in vec4 color;
 in float fill_all;
 in float orientation;
 in vec2 uv_coords;
+in vec3 point;
 
 out vec4 frag_color;
 
+#INSERT finalize_color.glsl
+
 void main() {
     if (color.a == 0) discard;
-    frag_color = color;
-
+    frag_color = finalize_color(color, point, vec3(0.0, 0.0, 1.0));
     /*
     We want negatively oriented triangles to be canceled with positively
     oriented ones. The easiest way to do this is to give them negative alpha,
