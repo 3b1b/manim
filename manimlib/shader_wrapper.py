@@ -275,17 +275,17 @@ class FillShaderWrapper(ShaderWrapper):
         super().__init__(ctx, *args, **kwargs)
 
         size = (2 * DEFAULT_PIXEL_WIDTH, 2 * DEFAULT_PIXEL_HEIGHT)
-        self.fill_texture = ctx.texture(
+        texture = ctx.texture(
             size=size,
             components=4,
             # Important to make sure floating point (not fixed point) is
             # used so that alpha values are not clipped
             dtype='f2',
         )
-        # TODO, depth buffer is not really used yet
-        fill_depth = ctx.depth_renderbuffer(size)
-        self.fill_fbo = ctx.framebuffer(self.fill_texture, fill_depth)
-        self.fill_prog = ctx.program(
+        depth_buffer = ctx.depth_renderbuffer(size)  # TODO, currently not used
+        self.texture_fbo = ctx.framebuffer(texture, depth_buffer)
+
+        simple_program = ctx.program(
             vertex_shader='''
                 #version 330
 
@@ -301,24 +301,38 @@ class FillShaderWrapper(ShaderWrapper):
                 #version 330
 
                 uniform sampler2D Texture;
+                uniform sampler2D DepthTexture;
+                uniform float v_nudge;
+                uniform float h_nudge;
 
                 in vec2 v_textcoord;
                 out vec4 frag_color;
 
                 void main() {
-                    frag_color = texture(Texture, v_textcoord);
-                    frag_color = abs(frag_color);
+                    // Apply poor man's anti-aliasing
+                    vec2 tc0 = v_textcoord + vec2(v_nudge, h_nudge);
+                    vec2 tc1 = v_textcoord + vec2(v_nudge, -h_nudge);
+                    vec2 tc2 = v_textcoord + vec2(-v_nudge, h_nudge);
+                    vec2 tc3 = v_textcoord + vec2(-v_nudge, -h_nudge);
+                    frag_color = 
+                        0.25 * abs(texture(Texture, tc0)) +
+                        0.25 * abs(texture(Texture, tc1)) +
+                        0.25 * abs(texture(Texture, tc2)) +
+                        0.25 * abs(texture(Texture, tc3));
                     if(frag_color.a == 0) discard;
                     //TODO, set gl_FragDepth;
                 }
             ''',
         )
 
-        self.fill_prog['Texture'].value = get_texture_id(self.fill_texture)
+        simple_program['Texture'].value = get_texture_id(texture)
+        # Quarter pixel width/height
+        simple_program['h_nudge'].value = 0.25 / size[0]
+        simple_program['v_nudge'].value = 0.25 / size[1]
 
         verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
         self.fill_texture_vao = ctx.simple_vertex_array(
-            self.fill_prog,
+            simple_program,
             ctx.buffer(verts.astype('f4').tobytes()),
             'texcoord',
         )
@@ -332,8 +346,8 @@ class FillShaderWrapper(ShaderWrapper):
             vao.render(moderngl.TRIANGLES)
             return
         original_fbo = self.ctx.fbo
-        self.fill_fbo.clear()
-        self.fill_fbo.use()
+        self.texture_fbo.clear()
+        self.texture_fbo.use()
         self.ctx.blend_func = (moderngl.ONE, moderngl.ONE)
         vao.render(self.render_primitive)
         self.ctx.blend_func = moderngl.DEFAULT_BLENDING
