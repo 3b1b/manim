@@ -32,7 +32,7 @@ void main() {
     cap is to make sure the original fragment color can be recovered even after
     blending with an (alpha = 1) color.
     */
-    float a = 0.98 * frag_color.a;
+    float a = 0.99 * frag_color.a;
     if(winding && orientation < 0) a = -a / (1 - a);
     frag_color.a = a;
 

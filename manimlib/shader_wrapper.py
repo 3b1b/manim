@@ -13,7 +13,7 @@ from manimlib.utils.shaders import get_shader_code_from_file
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
 from manimlib.utils.shaders import get_texture_id
-from manimlib.utils.shaders import get_fill_palette
+from manimlib.utils.shaders import get_fill_canvas
 from manimlib.utils.shaders import release_texture
 
 from typing import TYPE_CHECKING
@@ -275,7 +275,7 @@ class FillShaderWrapper(ShaderWrapper):
         **kwargs
     ):
         super().__init__(ctx, *args, **kwargs)
-        self.texture_fbo, self.texture_vao = get_fill_palette(self.ctx)
+        self.fill_canvas = get_fill_canvas(self.ctx)
 
     def render(self):
         vao = self.vao
@@ -287,9 +287,10 @@ class FillShaderWrapper(ShaderWrapper):
             return
 
         original_fbo = self.ctx.fbo
+        texture_fbo, texture_vao, null_rgb = self.fill_canvas
 
-        self.texture_fbo.clear()
-        self.texture_fbo.use()
+        texture_fbo.clear(*null_rgb, 0.0)
+        texture_fbo.use()
         gl.glBlendFuncSeparate(
             # Ordinary blending for colors
             gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
@@ -306,6 +307,6 @@ class FillShaderWrapper(ShaderWrapper):
         gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
         gl.glBlendEquation(gl.GL_FUNC_ADD)
 
-        self.texture_vao.render(moderngl.TRIANGLE_STRIP)
+        texture_vao.render(moderngl.TRIANGLE_STRIP)
 
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
