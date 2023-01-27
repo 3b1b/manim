@@ -195,6 +195,7 @@ class Surface(Mobject):
             ).reshape(shape)
         return points.reshape((nu * nv, *resolution[2:]))
 
+    @Mobject.affects_data
     def sort_faces_back_to_front(self, vect: Vect3 = OUT):
         tri_is = self.triangle_indices
         points = self.get_points()
