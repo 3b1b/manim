@@ -140,7 +140,7 @@ def get_fill_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
             in vec2 v_textcoord;
             out vec4 color;
 
-            const float MIN_RGB = 2.0 / 256;
+            const float MIN_RGB = 3.0 / 256;
 
             void main() {
                 // Apply poor man's anti-aliasing
