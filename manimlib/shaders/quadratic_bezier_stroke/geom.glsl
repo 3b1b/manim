@@ -167,7 +167,9 @@ void main() {
     vec3 v01 = normalize(p1 - p0);
     vec3 v12 = normalize(p2 - p1);
 
-    float cos_angle = normalize(v_joint_product[1]).w;
+    vec4 jp1 = v_joint_product[1];
+    float norm = length(jp1);
+    float cos_angle = (norm > 0) ? (jp1 / norm).w : 1.0;
     is_linear = float(cos_angle > COS_THRESHOLD);
 
     // We want to change the coordinates to a space where the curve
@@ -195,7 +197,7 @@ void main() {
             float sign = vec2(-1, 1)[i % 2];
             // In this case, we only really care about
             // the v coordinate
-            uv_coords = vec2(0, sign * (0.5 * max_sw + scaled_aaw));
+            uv_coords = vec2(0, sign * (0.5 * stroke_width + scaled_aaw));
             uv_anti_alias_width = scaled_aaw;
             uv_stroke_width = stroke_width;
         }else{

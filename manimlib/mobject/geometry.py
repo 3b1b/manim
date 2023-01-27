@@ -715,22 +715,20 @@ class Arrow(Line):
         else:
             alpha = tip_len / arc_len
         self.pointwise_become_partial(self, 0, 1 - alpha)
-        self.start_new_path(self.get_points()[-1])
+        # Dumb that this is needed
+        self.start_new_path(self.point_from_proportion(0.99))
         self.add_line_to(prev_end)
         return self
 
+    @Mobject.affects_data
     def create_tip_with_stroke_width(self):
-        if not self.has_points():
+        if self.get_num_points() < 3:
             return self
-        width = min(
-            self.max_stroke_width,
+        tip_width = self.tip_width_ratio * min(
+            float(self.get_stroke_width()),
             self.max_width_to_length_ratio * self.get_length(),
         )
-        widths_array = np.full(self.get_num_points(), width)
-        if len(widths_array) > 3:
-            tip_width = self.tip_width_ratio * width
-            widths_array[-3:] = tip_width * np.linspace(1, 0, 3)
-            self.set_stroke(width=widths_array)
+        self.data['stroke_width'][-3:, 0] = tip_width * np.linspace(1, 0, 3)
         return self
 
     def reset_tip(self):
