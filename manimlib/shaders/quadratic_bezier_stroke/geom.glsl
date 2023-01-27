@@ -49,6 +49,12 @@ vec3 get_joint_unit_normal(vec4 joint_product){
 }
 
 
+vec4 normalized_joint_product(vec4 joint_product){
+    float norm = length(joint_product);
+    return (norm > 1e-10) ? joint_product / norm : vec4(0.0, 0.0, 0.0, 1.0);
+}
+
+
 void create_joint(
     vec4 joint_product,
     vec3 unit_tan,
@@ -78,6 +84,25 @@ void create_joint(
     changing_c1 = static_c1 + shift * unit_tan;
 }
 
+vec3 get_perp(int index, vec4 joint_product, vec3 point, vec3 tangent, float aaw){
+    /*
+    Perpendicular vectors to the left of the curve
+    */
+    float buff = 0.5 * v_stroke_width[index] + aaw;
+    // Add correction for sharp angles to prevent weird bevel effects
+    if(joint_product.w < -0.9) buff *= 10 * (joint_product.w + 1.0);
+    vec3 normal = get_joint_unit_normal(joint_product);
+    // Set global unit normal
+    unit_normal = normal;
+    // Choose the "outward" normal direction
+    if(normal.z < 0) normal *= -1;
+    if(bool(flat_stroke)){
+        return buff * normalize(cross(normal, tangent));
+    }else{
+        return buff * normalize(cross(camera_position - point, tangent));
+    }
+}
+
 // This function is responsible for finding the corners of
 // a bounding region around the bezier curve, which can be
 // emitted as a triangle fan, with vertices vaguely close
@@ -95,40 +120,15 @@ void get_corners(
     float aaw,
     out vec3 corners[6]
 ){
-
-    float buff0 = 0.5 * v_stroke_width[0] + aaw;
-    float buff2 = 0.5 * v_stroke_width[2] + aaw;
-
-    vec4 jp0 = normalize(v_joint_product[0]);
-    vec4 jp2 = normalize(v_joint_product[2]);
-
-    // Add correction for sharp angles to prevent weird bevel effects
-    if(jp0.w < -0.9) buff0 *= 10 * (jp0.w + 1.0);
-    if(jp2.w < -0.9) buff2 *= 10 * (jp2.w + 1.0);
-
-    // Unit normal and joint angles
-    vec3 normal0 = get_joint_unit_normal(jp0);
-    vec3 normal2 = get_joint_unit_normal(jp2);
-    // Set global unit normal
-    unit_normal = normal0;
-
-    // Choose the "outward" normal direction
-    normal0 *= sign(normal0.z);
-    normal2 *= sign(normal2.z);
-
-    vec3 p0_perp;
-    vec3 p2_perp;
-    if(bool(flat_stroke)){
-        // Perpendicular vectors to the left of the curve
-        p0_perp = buff0 * normalize(cross(normal0, v01));
-        p2_perp = buff2 * normalize(cross(normal2, v12));
-    }else{
-        // p0_perp = buff0 * normal0;
-        // p2_perp = buff2 * normal2;
-        p0_perp = buff0 * normalize(cross(camera_position - p0, v01));
-        p2_perp = buff2 * normalize(cross(camera_position - p2, v12));
-    }
+    bool linear = bool(is_linear);
+    vec4 jp0 = normalized_joint_product(v_joint_product[0]);
+    vec4 jp2 = normalized_joint_product(v_joint_product[2]);
+    vec3 p0_perp = get_perp(0, jp0, p0, v01, aaw);
+    vec3 p2_perp = get_perp(2, jp2, p2, v12, aaw);
     vec3 p1_perp = 0.5 * (p0_perp + p2_perp);
+    if(linear){
+        p1_perp *= (0.5 * v_stroke_width[1] + aaw) / length(p1_perp);
+    }
 
     // The order of corners should be for a triangle_strip.
     vec3 c0 = p0 + p0_perp;
@@ -139,14 +139,15 @@ void get_corners(
     vec3 c5 = p2 - p2_perp;
     // Move the inner middle control point to make
     // room for the curve
-    float orientation = dot(normal0, v_joint_product[1].xyz);
-    if(orientation >= 0.0)     c2 = 0.5 * (c0 + c4);
-    else if(orientation < 0.0) c3 = 0.5 * (c1 + c5);
+    // float orientation = dot(unit_normal, v_joint_product[1].xyz);
+    float orientation = v_joint_product[1].z;
+    if(!linear && orientation >= 0.0)     c2 = 0.5 * (c0 + c4);
+    else if(!linear && orientation < 0.0) c3 = 0.5 * (c1 + c5);
 
     // Account for previous and next control points
     if(bool(flat_stroke)){
-        create_joint(jp0, v01, buff0, c1, c1, c0, c0);
-        create_joint(jp2, -v12, buff2, c5, c5, c4, c4);
+        create_joint(jp0, v01, length(p0_perp), c1, c1, c0, c0);
+        create_joint(jp2, -v12, length(p2_perp), c5, c5, c4, c4);
     }
 
     corners = vec3[6](c0, c1, c2, c3, c4, c5);
@@ -167,10 +168,9 @@ void main() {
     vec3 v01 = normalize(p1 - p0);
     vec3 v12 = normalize(p2 - p1);
 
-    vec4 jp1 = v_joint_product[1];
-    float norm = length(jp1);
-    float cos_angle = (norm > 0) ? (jp1 / norm).w : 1.0;
-    is_linear = float(cos_angle > COS_THRESHOLD);
+
+    vec4 jp1 = normalized_joint_product(v_joint_product[1]);
+    is_linear = float(jp1.w > COS_THRESHOLD);
 
     // We want to change the coordinates to a space where the curve
     // coincides with y = x^2, between some values x0 and x2. Or, in
