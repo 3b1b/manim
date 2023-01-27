@@ -1719,6 +1719,12 @@ class Mobject(object):
         keys = [k for k in self.data.dtype.names if k not in self.locked_data_keys]
         if keys:
             self.note_changed_data()
+            if alpha == 0:
+                self.data[:] = mobject1.data[:]
+                keys = []
+            elif alpha == 1:
+                self.data[:] = mobject2.data[:]
+                keys = []
         for key in keys:
             func = path_func if key in self.pointlike_data_keys else interpolate
             md1 = mobject1.data[key]
