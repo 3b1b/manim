@@ -127,7 +127,11 @@ def get_fill_canvas(ctx) -> Tuple[Framebuffer, VertexArray, Tuple[float, float, 
     # We'll paint onto a canvas with initially negative rgbs, and
     # discard any pixels remaining close to this value. This is
     # because alphas are effectively being used for another purpose,
-    # and 
+    # and we don't want to overlap with any colors one might actually
+    # use. It should be negative enough to be distinguishable from
+    # ordinary colors with some margin, but the farther it's pulled back
+    # from zero the more it will be true that overlapping filled objects
+    # with transparency have an unnaturally bright composition.
     null_rgb = (-0.25, -0.25, -0.25)
 
     simple_program = ctx.program(
