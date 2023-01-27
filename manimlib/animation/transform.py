@@ -70,6 +70,7 @@ class Transform(Animation):
     def finish(self) -> None:
         super().finish()
         self.mobject.unlock_data()
+        self.mobject.become(self.target_mobject)
 
     def create_target(self) -> Mobject:
         # Has no meaningful effect here, but may be useful
