@@ -290,9 +290,18 @@ class FillShaderWrapper(ShaderWrapper):
 
         texture_fbo.clear()
         texture_fbo.use()
+        self.ctx.blend_func = (
+            # Ordinary blending for colors
+            moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
+            # Just take the max of the alphas, given the shenanigans
+            # with how alphas are being used to compute winding numbers
+            moderngl.ONE, moderngl.ONE
+        )
+        self.ctx.blend_equation = moderngl.FUNC_ADD, moderngl.MAX
         vao.render(moderngl.TRIANGLE_STRIP)
 
         original_fbo.use()
         self.ctx.blend_func = (moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA)
+        self.ctx.blend_equation = moderngl.FUNC_ADD
         texture_vao.render(moderngl.TRIANGLE_STRIP)
         self.ctx.blend_func = moderngl.DEFAULT_BLENDING
