@@ -885,6 +885,8 @@ class VMobject(Mobject):
 
     def invisible_copy(self):
         result = self.copy()
+        if not result.has_fill() or result.get_num_points() == 0:
+            return result
         result.append_vectorized_mobject(self.copy().reverse_points())
         result.set_opacity(0)
         return result
