@@ -6,6 +6,8 @@ from manimlib.animation.animation import Animation
 from manimlib.animation.animation import prepare_animation
 from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Group
+from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.iterables import remove_list_redundancies
@@ -14,7 +16,7 @@ from manimlib.utils.simple_functions import clip
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable
+    from typing import Callable, Optional
 
     from manimlib.mobject.mobject import Mobject
     from manimlib.scene.scene import Scene
@@ -28,8 +30,8 @@ class AnimationGroup(Animation):
         *animations: Animation | _AnimationBuilder,
         run_time: float = -1,  # If negative, default to sum of inputed animation runtimes
         lag_ratio: float = 0.0,
-        group: Mobject | None = None,
-        group_type: type = Group,
+        group: Optional[Mobject] = None,
+        group_type: Optional[type] = None,
         **kwargs
     ):
         self.animations = [prepare_animation(anim) for anim in animations]
@@ -37,11 +39,15 @@ class AnimationGroup(Animation):
         self.max_end_time = max((awt[2] for awt in self.anims_with_timings), default=0)
         self.run_time = self.max_end_time if run_time < 0 else run_time
         self.lag_ratio = lag_ratio
-        self.group = group
-        if self.group is None:
-            self.group = group_type(*remove_list_redundancies(
-                [anim.mobject for anim in self.animations]
-            ))
+        mobs = remove_list_redundancies([a.mobject for a in self.animations])
+        if group is not None:
+            self.group = group
+        if group_type is not None:
+            self.group = group_type(*mobs)
+        elif all(isinstance(anim.mobject, VMobject) for anim in animations):
+            self.group = VGroup(*mobs)
+        else:
+            self.group = Group(*mobs)
 
         super().__init__(
             self.group,

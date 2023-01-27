@@ -32,7 +32,6 @@ class TransformMatchingParts(AnimationGroup):
         mismatch_animation: type = Transform,
         run_time: float = 2,
         lag_ratio: float = 0,
-        group_type: type = Group,
         **kwargs,
     ):
         self.source = source
@@ -76,7 +75,6 @@ class TransformMatchingParts(AnimationGroup):
             *self.anims,
             run_time=run_time,
             lag_ratio=lag_ratio,
-            group_type=group_type,
         )
 
     def add_transform(
