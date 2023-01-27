@@ -408,14 +408,15 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    def remove(self, *mobjects: Mobject, reassemble: bool = True):
-        for mobject in mobjects:
-            if mobject in self.submobjects:
-                self.submobjects.remove(mobject)
-            if self in mobject.parents:
-                mobject.parents.remove(self)
-        if reassemble:
-            self.assemble_family()
+    def remove(self, *to_remove: Mobject, reassemble: bool = True):
+        for parent in self.get_family():
+            for child in to_remove:
+                if child in parent.submobjects:
+                    parent.submobjects.remove(child)
+                if parent in child.parents:
+                    child.parents.remove(parent)
+            if reassemble:
+                parent.assemble_family()
         return self
 
     def add_to_back(self, *mobjects: Mobject):
