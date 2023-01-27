@@ -288,13 +288,12 @@ class Scene(object):
 
     def get_image(self) -> Image:
         if self.window is not None:
-            self.window.size = self.camera.get_pixel_shape()
-            self.window.swap_buffers()
-            self.update_frame()
-            self.window.swap_buffers()
+            self.camera.use_window_fbo(False)
+            self.camera.clear()
+            self.camera.capture(*self.mobjects)
         image = self.camera.get_image()
         if self.window is not None:
-            self.window.to_default_position()
+            self.camera.use_window_fbo(True)
         return image
 
     def show(self) -> None:
