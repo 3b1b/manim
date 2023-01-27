@@ -17,6 +17,7 @@ from manimlib.utils.color import color_to_rgba
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Optional
     from manimlib.typing import ManimColor, Vect3
     from manimlib.window import Window
 
@@ -24,8 +25,8 @@ if TYPE_CHECKING:
 class Camera(object):
     def __init__(
         self,
-        window: Window | None = None,
-        background_image: str | None = None,
+        window: Optional[Window] = None,
+        background_image: Optional[str] = None,
         frame_config: dict = dict(),
         pixel_width: int = DEFAULT_PIXEL_WIDTH,
         pixel_height: int = DEFAULT_PIXEL_HEIGHT,
@@ -62,30 +63,37 @@ class Camera(object):
         ))
         self.uniforms = dict()
         self.init_frame(**frame_config)
-        self.init_context(window)
+        self.init_context()
+        self.init_fbo()
         self.init_light_source()
 
     def init_frame(self, **config) -> None:
         self.frame = CameraFrame(**config)
 
-    def init_context(self, window: Window | None = None) -> None:
-        self.window = window
-        if window is None:
+    def init_context(self) -> None:
+        if self.window is None:
             self.ctx = moderngl.create_standalone_context()
-            self.fbo = self.get_fbo(self.samples)
         else:
-            self.ctx = window.ctx
-            self.window_fbo = self.ctx.detect_framebuffer()
-            self.fbo_for_files = self.get_fbo(self.samples)
-            self.fbo = self.window_fbo
-
-        self.fbo.use()
+            self.ctx = self.window.ctx
 
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
         self.ctx.enable(moderngl.BLEND)
 
+    def init_fbo(self) -> None:
+        # This is the buffer used when writing to a video/image file
+        self.fbo_for_files = self.get_fbo(self.samples)
+
         # This is the frame buffer we'll draw into when emitting frames
         self.draw_fbo = self.get_fbo(samples=0)
+
+        if self.window is None:
+            self.window_fbo = None
+            self.fbo = self.fbo_for_files
+        else:
+            self.window_fbo = self.ctx.detect_framebuffer()
+            self.fbo = self.window_fbo
+
+        self.fbo.use()
 
     def init_light_source(self) -> None:
         self.light_source = Point(self.light_source_position)
