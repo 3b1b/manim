@@ -88,7 +88,7 @@ class Mobject(object):
         self.opacity = opacity
         self.shading = shading
         self.texture_paths = texture_paths
-        self.is_fixed_in_frame = is_fixed_in_frame
+        self._is_fixed_in_frame = is_fixed_in_frame
         self.depth_test = depth_test
 
         # Internal state
@@ -132,7 +132,7 @@ class Mobject(object):
 
     def init_uniforms(self):
         self.uniforms: UniformDict = {
-            "is_fixed_in_frame": float(self.is_fixed_in_frame),
+            "is_fixed_in_frame": float(self._is_fixed_in_frame),
             "shading": np.array(self.shading, dtype=float),
         }
 
@@ -1808,16 +1808,18 @@ class Mobject(object):
         return wrapper
 
     @affects_shader_info_id
-    def fix_in_frame(self):
-        self.uniforms["is_fixed_in_frame"] = 1.0
-        self.is_fixed_in_frame = True
+    def fix_in_frame(self, recurse: bool = True):
+        for mob in self.get_family(recurse):
+            mob.uniforms["is_fixed_in_frame"] = 1.0
         return self
 
     @affects_shader_info_id
     def unfix_from_frame(self):
         self.uniforms["is_fixed_in_frame"] = 0.0
-        self.is_fixed_in_frame = False
         return self
+
+    def is_fixed_in_frame(self) -> bool:
+        return bool(self.uniforms["is_fixed_in_frame"])
 
     @affects_shader_info_id
     def apply_depth_test(self):
@@ -2057,7 +2059,7 @@ class Group(Mobject):
             raise Exception("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)
-        if any(m.is_fixed_in_frame for m in mobjects):
+        if any(m.is_fixed_in_frame() for m in mobjects):
             self.fix_in_frame()
 
     def __add__(self, other: Mobject | Group):
