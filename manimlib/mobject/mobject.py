@@ -50,7 +50,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Union, Tuple
     import numpy.typing as npt
-    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array
+    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict
     from moderngl.context import Context
 
     TimeBasedUpdater = Callable[["Mobject", float], "Mobject" | None]
@@ -131,7 +131,7 @@ class Mobject(object):
         self.data = np.zeros(length, dtype=self.shader_dtype)
 
     def init_uniforms(self):
-        self.uniforms: dict[str, float | np.ndarray] = {
+        self.uniforms: UniformDict = {
             "is_fixed_in_frame": float(self.is_fixed_in_frame),
             "shading": np.array(self.shading, dtype=float),
         }
@@ -1894,7 +1894,7 @@ class Mobject(object):
 
         self.shader_wrapper.vert_data = self.get_shader_data()
         self.shader_wrapper.vert_indices = self.get_shader_vert_indices()
-        self.shader_wrapper.uniforms.update(self.get_uniforms())
+        self.shader_wrapper.update_program_uniforms(self.get_uniforms())
         self.shader_wrapper.depth_test = self.depth_test
         return self.shader_wrapper
 
@@ -1931,8 +1931,8 @@ class Mobject(object):
                 shader_wrapper.generate_vao()
             self._data_has_changed = False
         for shader_wrapper in self.shader_wrappers:
-            shader_wrapper.uniforms.update(self.get_uniforms())
-            shader_wrapper.uniforms.update(camera_uniforms)
+            shader_wrapper.update_program_uniforms(self.get_uniforms())
+            shader_wrapper.update_program_uniforms(camera_uniforms, universal=True)
             shader_wrapper.pre_render()
             shader_wrapper.render()
 

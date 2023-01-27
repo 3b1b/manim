@@ -7,7 +7,6 @@ import re
 import OpenGL.GL as gl
 import moderngl
 import numpy as np
-from functools import lru_cache
 
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.shaders import get_shader_code_from_file
@@ -20,7 +19,8 @@ from manimlib.utils.shaders import release_texture
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import List, Optional
+    from typing import List, Optional, Dict
+    from manimlib.typing import UniformDict
 
 
 # Mobjects that should be rendered with
@@ -37,7 +37,7 @@ class ShaderWrapper(object):
         vert_data: np.ndarray,
         vert_indices: Optional[np.ndarray] = None,
         shader_folder: Optional[str] = None,
-        uniforms: Optional[dict[str, float | np.ndarray]] = None,  # A dictionary mapping names of uniform variables
+        uniforms: Optional[UniformDict] = None,  # A dictionary mapping names of uniform variables
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
         render_primitive: int = moderngl.TRIANGLE_STRIP,
@@ -47,12 +47,13 @@ class ShaderWrapper(object):
         self.vert_indices = (vert_indices or np.zeros(0)).astype(int)
         self.vert_attributes = vert_data.dtype.names
         self.shader_folder = shader_folder
-        self.uniforms = dict(uniforms or {})
+        self.uniforms: UniformDict = dict()
         self.depth_test = depth_test
         self.render_primitive = render_primitive
 
         self.init_program_code()
         self.init_program()
+        self.update_program_uniforms(uniforms or dict())
         if texture_paths is not None:
             self.init_textures(texture_paths)
         self.refresh_id()
@@ -93,7 +94,7 @@ class ShaderWrapper(object):
             np.all(self.vert_indices == shader_wrapper.vert_indices),
             self.shader_folder == shader_wrapper.shader_folder,
             all(
-                np.all(self.uniforms[key] == shader_wrapper.uniforms[key])
+                self.uniforms[key] == shader_wrapper.uniforms[key]
                 for key in self.uniforms
             ),
             self.depth_test == shader_wrapper.depth_test,
@@ -105,8 +106,6 @@ class ShaderWrapper(object):
         result.ctx = self.ctx
         result.vert_data = self.vert_data.copy()
         result.vert_indices = self.vert_indices.copy()
-        if self.uniforms:
-            result.uniforms = {key: np.array(value) for key, value in self.uniforms.items()}
         result.vao = None
         result.vbo = None
         result.ibo = None
@@ -217,20 +216,23 @@ class ShaderWrapper(object):
     def pre_render(self):
         self.set_ctx_depth_test(self.depth_test)
         self.set_ctx_clip_plane(self.use_clip_plane())
-        self.update_program_uniforms()
 
     def render(self):
         assert(self.vao is not None)
         self.vao.render()
 
-    def update_program_uniforms(self):
+    def update_program_uniforms(self, uniforms: UniformDict, universal: bool = False):
         if self.program is None:
             return
-        for name, value in self.uniforms.items():
-            if name in self.program:
-                if isinstance(value, np.ndarray) and value.ndim > 0:
-                    value = tuple(value)
-                self.program[name].value = value
+        for name, value in uniforms.items():
+            if name not in self.program:
+                continue
+            if isinstance(value, np.ndarray) and value.ndim > 0:
+                value = tuple(value)
+            if universal and self.uniforms.get(name, None) == value:
+                continue
+            self.program[name].value = value
+            self.uniforms[name] = value
 
     def get_vertex_buffer_object(self, refresh: bool = True):
         if refresh:
@@ -273,7 +275,6 @@ class FillShaderWrapper(ShaderWrapper):
         **kwargs
     ):
         super().__init__(ctx, *args, **kwargs)
-
 
     def render(self):
         vao = self.vao

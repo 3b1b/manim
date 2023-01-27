@@ -19,6 +19,8 @@ if TYPE_CHECKING:
     ]
     Selector = Union[SingleSelector, Iterable[SingleSelector]]
 
+    UniformDict = Dict[str, float | bool | np.ndarray | tuple]
+
     # These are various alternate names for np.ndarray meant to specify
     # certain shapes.
     # 
