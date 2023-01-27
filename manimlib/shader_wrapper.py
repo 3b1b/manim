@@ -56,11 +56,8 @@ class ShaderWrapper(object):
         self.update_program_uniforms(uniforms or dict())
         if texture_paths is not None:
             self.init_textures(texture_paths)
+        self.init_vao()
         self.refresh_id()
-
-        self.vbo = None
-        self.ibo = None
-        self.vao = None
 
     def init_program_code(self) -> None:
         def get_code(name: str) -> str | None:
@@ -88,6 +85,11 @@ class ShaderWrapper(object):
             tid = get_texture_id(texture)
             self.uniforms[name] = tid
 
+    def init_vao(self):
+        self.vbo = None
+        self.ibo = None
+        self.vao = None
+
     def __eq__(self, shader_wrapper: ShaderWrapper):
         return all((
             np.all(self.vert_data == shader_wrapper.vert_data),
@@ -106,9 +108,7 @@ class ShaderWrapper(object):
         result.ctx = self.ctx
         result.vert_data = self.vert_data.copy()
         result.vert_indices = self.vert_indices.copy()
-        result.vao = None
-        result.vbo = None
-        result.ibo = None
+        result.init_vao()
         return result
 
     def is_valid(self) -> bool:
@@ -247,8 +247,9 @@ class ShaderWrapper(object):
     def generate_vao(self, refresh: bool = True):
         self.release()
         # Data buffer
-        vbo = self.get_vertex_buffer_object(refresh)
-        ibo = self.get_index_buffer_object(refresh)
+        vbo = self.vbo = self.get_vertex_buffer_object(refresh)
+        ibo = self.ibo = self.get_index_buffer_object(refresh)
+
         # Vertex array object
         self.vao = self.ctx.vertex_array(
             program=self.program,
