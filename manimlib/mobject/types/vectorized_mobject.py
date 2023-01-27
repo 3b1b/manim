@@ -658,7 +658,7 @@ class VMobject(Mobject):
         return self
 
     def add_subpath(self, points: Vect3Array):
-        assert(len(points) % 2 == 1)
+        assert(len(points) % 2 == 1 or len(points) == 0)
         if not self.has_points():
             self.set_points(points)
             return self
