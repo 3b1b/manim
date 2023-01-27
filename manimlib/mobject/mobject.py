@@ -625,7 +625,7 @@ class Mobject(object):
         result._data_has_changed = True
 
         family = self.get_family()
-        for attr, value in list(self.__dict__.items()):
+        for attr, value in self.__dict__.items():
             if isinstance(value, Mobject) and value is not self:
                 if value in family:
                     setattr(result, attr, result.family[self.family.index(value)])
