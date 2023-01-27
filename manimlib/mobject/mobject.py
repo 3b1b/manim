@@ -1768,20 +1768,26 @@ class Mobject(object):
         self.locked_data_keys = set(keys)
 
     def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject):
-        for sm, sm1, sm2 in zip(self.get_family(), mobject1.get_family(), mobject2.get_family()):
-            if sm.data.dtype == sm1.data.dtype == sm2.data.dtype:
-                names = sm.data.dtype.names
-                sm.lock_data(filter(
-                    lambda name: arrays_match(sm1.data[name], sm2.data[name]),
-                    names,
-                ))
-                sm.const_data_keys = set(filter(
-                    lambda name: all(
-                        array_is_constant(mob.data[name])
-                        for mob in (sm, sm1, sm2)
-                    ),
-                    names
-                ))
+        tuples = zip(
+            self.get_family(),
+            mobject1.get_family(),
+            mobject2.get_family(),
+        )
+        for sm, sm1, sm2 in tuples:
+            if not sm.data.dtype == sm1.data.dtype == sm2.data.dtype:
+                continue
+            names = sm.data.dtype.names
+            sm.lock_data(filter(
+                lambda name: arrays_match(sm1.data[name], sm2.data[name]),
+                names,
+            ))
+            sm.const_data_keys = set(filter(
+                lambda name: all(
+                    array_is_constant(mob.data[name])
+                    for mob in (sm, sm1, sm2)
+                ),
+                names
+            ))
 
         return self
 
