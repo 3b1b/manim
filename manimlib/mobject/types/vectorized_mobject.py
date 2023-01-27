@@ -827,6 +827,12 @@ class VMobject(Mobject):
             )
         return normal
 
+    def ensure_positive_orientation(self, recurse=True):
+        for mob in self.get_family(recurse):
+            if mob.get_unit_normal()[2] < 0:
+                mob.reverse_points()
+        return self
+
     # Alignment
     def align_points(self, vmobject: VMobject):
         winding = self._use_winding_fill and vmobject._use_winding_fill
