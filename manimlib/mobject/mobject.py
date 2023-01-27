@@ -181,7 +181,7 @@ class Mobject(object):
     @affects_data
     def set_data(self, data: np.ndarray):
         assert(data.dtype == self.data.dtype)
-        self.data = data
+        self.data = data.copy()
         return self
 
     @affects_data
