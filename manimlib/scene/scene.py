@@ -289,7 +289,6 @@ class Scene(object):
     def get_image(self) -> Image:
         if self.window is not None:
             self.camera.use_window_fbo(False)
-            self.camera.clear()
             self.camera.capture(*self.mobjects)
         image = self.camera.get_image()
         if self.window is not None:
@@ -311,7 +310,6 @@ class Scene(object):
 
         if self.window:
             self.window.clear()
-        self.camera.clear()
         self.camera.capture(*self.mobjects)
 
         if self.window:

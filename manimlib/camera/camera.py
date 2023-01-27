@@ -210,6 +210,7 @@ class Camera(object):
 
     # Rendering
     def capture(self, *mobjects: Mobject) -> None:
+        self.clear()
         self.refresh_uniforms()
         self.fbo.use()
         for mobject in mobjects:
