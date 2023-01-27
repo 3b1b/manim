@@ -31,15 +31,11 @@ const vec2 SIMPLE_QUADRATIC[3] = vec2[3](
 
 
 void emit_triangle(vec3 points[3], vec4 v_color[3]){
-    unit_normal = v_unit_normal[1];
-    orientation = 1.0;
-    if(winding){
-        orientation = sign(determinant(mat3(
-            v_unit_normal[1],
-            points[1] - points[0],
-            points[2] - points[0]
-        )));
-    }
+    orientation = sign(determinant(mat3(
+        unit_normal,
+        points[1] - points[0],
+        points[2] - points[0]
+    )));
 
     for(int i = 0; i < 3; i++){
         uv_coords = SIMPLE_QUADRATIC[i];
@@ -69,7 +65,8 @@ void main(){
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
 
-    vec3 mid_vert;
+    unit_normal = v_unit_normal[1];
+
     if(winding){
         // Emit main triangle
         fill_all = 1.0;
