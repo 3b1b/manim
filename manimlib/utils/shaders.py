@@ -9,6 +9,7 @@ import numpy as np
 
 from manimlib.constants import DEFAULT_PIXEL_HEIGHT
 from manimlib.constants import DEFAULT_PIXEL_WIDTH
+from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
 
@@ -107,10 +108,13 @@ def get_fill_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
     Creates a texture, loaded into a frame buffer, and a vao
     which can display that texture as a simple quad onto a screen.
     """
-    size = (2 * DEFAULT_PIXEL_WIDTH, 2 * DEFAULT_PIXEL_HEIGHT)
+    cam_config = get_customization()['camera_resolutions']
+    res_name = cam_config['default_resolution']
+    size = tuple(map(int, cam_config[res_name].split("x")))
+
     # Important to make sure dtype is floating point (not fixed point)
     # so that alpha values can be negative and are not clipped
-    texture = ctx.texture(size=size, components=4, dtype='f4')
+    texture = ctx.texture(size=size, components=4, dtype='f2')
     depth_buffer = ctx.depth_renderbuffer(size)  # TODO, currently not used
     texture_fbo = ctx.framebuffer(texture, depth_buffer)
 
@@ -134,7 +138,9 @@ def get_fill_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
             uniform float h_nudge;
 
             in vec2 v_textcoord;
-            out vec4 frag_color;
+            out vec4 color;
+
+            const float MIN_RGB = 2.0 / 256;
 
             void main() {
                 // Apply poor man's anti-aliasing
@@ -142,12 +148,15 @@ def get_fill_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
                 vec2 tc1 = v_textcoord + vec2(0, h_nudge);
                 vec2 tc2 = v_textcoord + vec2(v_nudge, 0);
                 vec2 tc3 = v_textcoord + vec2(v_nudge, h_nudge);
-                frag_color = 
+                color = 
                     0.25 * texture(Texture, tc0) +
                     0.25 * texture(Texture, tc1) +
                     0.25 * texture(Texture, tc2) +
                     0.25 * texture(Texture, tc3);
-                if(distance(frag_color.rgb, vec3(0.0)) < 1e-3) discard;
+                if(abs(color.r) < MIN_RGB && abs(color.g) < MIN_RGB && abs(color.b) < MIN_RGB)
+                    discard;
+                // Counteract scaling in quadratic_bezier_frag
+                color = color / 0.98;
                 //TODO, set gl_FragDepth;
             }
         ''',
