@@ -599,7 +599,7 @@ class Mobject(object):
 
         result.parents = []
         result.target = None
-        result.save_state = None
+        result.saved_state = None
 
         # copy.copy is only a shallow copy, so the internal
         # data which are numpy arrays or other mobjects still
