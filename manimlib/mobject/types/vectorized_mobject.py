@@ -669,6 +669,8 @@ class VMobject(Mobject):
 
     def append_vectorized_mobject(self, vmobject: VMobject):
         self.add_subpath(vmobject.get_points())
+        n = vmobject.get_num_points()
+        self.data[-n:] = vmobject.data
         return self
 
     #
