@@ -189,14 +189,13 @@ class Scene(object):
             "Press `command + q` or `esc` to quit"
         )
         self.skip_animations = False
-        self.refresh_static_mobjects()
         while not self.is_window_closing():
             self.update_frame(1 / self.camera.fps)
 
     def embed(
         self,
         close_scene_on_exit: bool = True,
-        show_animation_progress: bool = True,
+        show_animation_progress: bool = False,
     ) -> None:
         if not self.preview:
             return  # Embed is only relevant with a preview
@@ -251,7 +250,6 @@ class Scene(object):
 
         # Operation to run after each ipython command
         def post_cell_func():
-            self.refresh_static_mobjects()
             if not self.is_window_closing():
                 self.update_frame(dt=0, ignore_skipping=True)
             self.save_state()
@@ -562,8 +560,6 @@ class Scene(object):
             self.real_animation_start_time = time.time()
             self.virtual_animation_start_time = self.time
 
-        self.refresh_static_mobjects()
-
     def post_play(self):
         if not self.skip_animations:
             self.file_writer.end_animation()
@@ -573,9 +569,6 @@ class Scene(object):
             self.update_frame(dt=0, ignore_skipping=True)
 
         self.num_plays += 1
-
-    def refresh_static_mobjects(self) -> None:
-        self.camera.refresh_static_mobjects()
 
     def begin_animations(self, animations: Iterable[Animation]) -> None:
         for animation in animations:
@@ -651,7 +644,6 @@ class Scene(object):
                 self.emit_frame()
                 if stop_condition is not None and stop_condition():
                     break
-        self.refresh_static_mobjects()
         self.post_play()
 
     def hold_loop(self):
@@ -711,15 +703,18 @@ class Scene(object):
         if self.undo_stack:
             self.redo_stack.append(self.get_state())
             self.restore_state(self.undo_stack.pop())
-        self.refresh_static_mobjects()
 
     def redo(self):
         if self.redo_stack:
             self.undo_stack.append(self.get_state())
             self.restore_state(self.redo_stack.pop())
-        self.refresh_static_mobjects()
 
-    def checkpoint_paste(self, skip: bool = False, record: bool = False):
+    def checkpoint_paste(
+        self,
+        skip: bool = False,
+        record: bool = False,
+        progress_bar: bool = True
+    ):
         """
         Used during interactive development to run (or re-run)
         a block of scene code.
@@ -746,21 +741,21 @@ class Scene(object):
         prev_skipping = self.skip_animations
         self.skip_animations = skip
 
+        prev_progress = self.show_animation_progress
+        self.show_animation_progress = progress_bar
+
         if record:
-            # Resize window so rendering happens at the appropriate size
-            self.window.size = self.camera.get_pixel_shape()
-            self.window.swap_buffers()
-            self.update_frame()
+            self.camera.use_window_fbo(False)
             self.file_writer.begin_insert()
 
         shell.run_cell(pasted)
 
         if record:
             self.file_writer.end_insert()
-            # Put window back to how it started
-            self.window.to_default_position()
+            self.camera.use_window_fbo(True)
 
         self.skip_animations = prev_skipping
+        self.show_animation_progress = prev_progress
 
     def checkpoint(self, key: str):
         self.checkpoint_states[key] = self.get_state()

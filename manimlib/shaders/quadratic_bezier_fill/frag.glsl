@@ -6,20 +6,41 @@ in vec4 color;
 in float fill_all;
 in float orientation;
 in vec2 uv_coords;
+in vec3 point;
 
 out vec4 frag_color;
 
+#INSERT finalize_color.glsl
+
 void main() {
     if (color.a == 0) discard;
-    frag_color = color;
+    frag_color = finalize_color(color, point, vec3(0.0, 0.0, 1.0));
+    /*
+    We want negatively oriented triangles to be canceled with positively
+    oriented ones. The easiest way to do this is to give them negative alpha,
+    and change the blend function to just add them. However, this messes with
+    usual blending, so instead the following line is meant to let this canceling
+    work even for the normal blending equation:
 
-    if(winding && orientation > 0) frag_color *= -1;
+    (1 - alpha) * dst + alpha * src
+
+    We want the effect of blending with a positively oriented triangle followed
+    by a negatively oriented one to return to whatever the original frag value
+    was. You can work out this will work if the alpha for negative orientations
+    is changed to -alpha / (1 - alpha). This has a singularity at alpha = 1,
+    so we cap it at a value very close to 1. Effectively, the purpose of this
+    cap is to make sure the original fragment color can be recovered even after
+    blending with an alpha = 1 color.
+    */
+    float a = 0.999 * frag_color.a;
+    if(winding && orientation < 0) a = -a / (1 - a);
+    frag_color.a = a;
 
     if (bool(fill_all)) return;
 
     float x = uv_coords.x;
     float y = uv_coords.y;
     float Fxy = (y - x * x);
-    if(!winding && orientation > 0) Fxy *= -1;
+    if(!winding && orientation < 0) Fxy *= -1;
     if(Fxy < 0) discard;
 }

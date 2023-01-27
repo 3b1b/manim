@@ -47,6 +47,7 @@ class ImageMobject(Mobject):
         self.set_width(2 * size[0] / size[1], stretch=True)
         self.set_height(self.height)
 
+    @Mobject.affects_data
     def set_opacity(self, opacity: float, recurse: bool = True):
         self.data["opacity"][:, 0] = resize_with_interpolation(
             np.array(listify(opacity)),

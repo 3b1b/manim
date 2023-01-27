@@ -5,7 +5,6 @@ import numpy as np
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgba
-from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
 
 from typing import TYPE_CHECKING
@@ -52,6 +51,7 @@ class PMobject(Mobject):
         self.add_points([point], rgbas, color, opacity)
         return self
 
+    @Mobject.affects_data
     def set_color_by_gradient(self, *colors: ManimColor):
         self.data["rgba"][:] = np.array(list(map(
             color_to_rgba,
@@ -59,17 +59,20 @@ class PMobject(Mobject):
         )))
         return self
 
+    @Mobject.affects_data
     def match_colors(self, pmobject: PMobject):
         self.data["rgba"][:] = resize_with_interpolation(
             pmobject.data["rgba"], self.get_num_points()
         )
         return self
 
+    @Mobject.affects_data
     def filter_out(self, condition: Callable[[np.ndarray], bool]):
         for mob in self.family_members_with_points():
             mob.data = mob.data[~np.apply_along_axis(condition, 1, mob.get_points())]
         return self
 
+    @Mobject.affects_data
     def sort_points(self, function: Callable[[Vect3], None] = lambda p: p[0]):
         """
         function is any map from R^3 to R
@@ -81,6 +84,7 @@ class PMobject(Mobject):
             mob.data[:] = mob.data[indices]
         return self
 
+    @Mobject.affects_data
     def ingest_submobjects(self):
         self.data = np.vstack([
             sm.data for sm in self.get_family()
@@ -91,6 +95,7 @@ class PMobject(Mobject):
         index = alpha * (self.get_num_points() - 1)
         return self.get_points()[int(index)]
 
+    @Mobject.affects_data
     def pointwise_become_partial(self, pmobject: PMobject, a: float, b: float):
         lower_index = int(a * pmobject.get_num_points())
         upper_index = int(b * pmobject.get_num_points())

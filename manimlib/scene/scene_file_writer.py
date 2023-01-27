@@ -293,13 +293,10 @@ class SceneFileWriter(object):
         self.write_to_movie = True
         self.init_output_directories()
         movie_path = self.get_movie_file_path()
-        folder, file = os.path.split(movie_path)
-        scene_name, ext = file.split(".")
-        n_inserts = len(list(filter(
-            lambda f: f.startswith(scene_name + "_insert"),
-            os.listdir(folder)
-        )))
-        self.inserted_file_path = movie_path.replace(".", f"_insert_{n_inserts}.")
+        count = 0
+        while os.path.exists(name := movie_path.replace(".", f"_insert_{count}.")):
+            count += 1
+        self.inserted_file_path = name
         self.open_movie_pipe(self.inserted_file_path)
 
     def end_insert(self):

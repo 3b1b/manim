@@ -40,12 +40,14 @@ from manimlib.utils.space_ops import midpoint
 from manimlib.utils.space_ops import normalize_along_axis
 from manimlib.utils.space_ops import z_to_vector
 from manimlib.shader_wrapper import ShaderWrapper
+from manimlib.shader_wrapper import FillShaderWrapper
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Tuple
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Vect4Array
+    from moderngl.context import Context
 
 DEFAULT_STROKE_COLOR = GREY_A
 DEFAULT_FILL_COLOR = GREY_C
@@ -231,6 +233,7 @@ class VMobject(Mobject):
         self.set_stroke(color, width, background=background)
         return self
 
+    @Mobject.affects_family_data
     def set_style(
         self,
         fill_color: ManimColor | Iterable[ManimColor] | None = None,
@@ -414,6 +417,7 @@ class VMobject(Mobject):
     def get_joint_type(self) -> float:
         return self.uniforms["joint_type"]
 
+    @Mobject.affects_family_data
     def use_winding_fill(self, value: bool = True, recurse: bool = True):
         for submob in self.get_family(recurse):
             submob._use_winding_fill = value
@@ -654,7 +658,7 @@ class VMobject(Mobject):
         return self
 
     def add_subpath(self, points: Vect3Array):
-        assert(len(points) % 2 == 1)
+        assert(len(points) % 2 == 1 or len(points) == 0)
         if not self.has_points():
             self.set_points(points)
             return self
@@ -832,7 +836,7 @@ class VMobject(Mobject):
             # If both have fill, and they have the same shape, just
             # give them the same triangulation so that it's not recalculated
             # needlessly throughout an animation
-            if self._use_winding_fill and self.has_fill() \
+            if not self._use_winding_fill and self.has_fill() \
                 and vmobject.has_fill() and self.has_same_shape_as(vmobject):
                 vmobject.triangulation = self.triangulation
             return self
@@ -881,6 +885,8 @@ class VMobject(Mobject):
 
     def invisible_copy(self):
         result = self.copy()
+        if not result.has_fill() or result.get_num_points() == 0:
+            return result
         result.append_vectorized_mobject(self.copy().reverse_points())
         result.set_opacity(0)
         return result
@@ -937,8 +943,9 @@ class VMobject(Mobject):
     def pointwise_become_partial(self, vmobject: VMobject, a: float, b: float):
         assert(isinstance(vmobject, VMobject))
         vm_points = vmobject.get_points()
+        self.data["joint_product"] = vmobject.data["joint_product"]
         if a <= 0 and b >= 1:
-            self.set_points(vm_points)
+            self.set_points(vm_points, refresh_joints=False)
             return self
         num_curves = vmobject.get_num_curves()
 
@@ -971,7 +978,9 @@ class VMobject(Mobject):
             # Keep new_points i2:i3 as they are
             new_points[i3:i4] = high_tup
             new_points[i4:] = high_tup[2]
-        self.set_points(new_points)
+        self.data["joint_product"][:i1] = [0, 0, 0, 1]
+        self.data["joint_product"][i4:] = [0, 0, 0, 1]
+        self.set_points(new_points, refresh_joints=False)
         return self
 
     def get_subcurve(self, a: float, b: float) -> VMobject:
@@ -1046,8 +1055,10 @@ class VMobject(Mobject):
         null2 = (iti[0::3] - 1 == iti[1::3]) & (iti[0::3] - 2 == iti[2::3])
         inner_tri_indices = iti[~(null1 | null2).repeat(3)]
 
-        outer_tri_indices = self.get_outer_vert_indices()
-        tri_indices = np.hstack([outer_tri_indices, inner_tri_indices])
+        ovi = self.get_outer_vert_indices()
+        # Flip outer triangles with negative orientation
+        ovi[0::3][concave_parts], ovi[2::3][concave_parts] = ovi[2::3][concave_parts], ovi[0::3][concave_parts]
+        tri_indices = np.hstack([ovi, inner_tri_indices])
         self.triangulation = tri_indices
         self.needs_new_triangulation = False
         return tri_indices
@@ -1069,6 +1080,7 @@ class VMobject(Mobject):
             return self.data["joint_product"]
 
         self.needs_new_joint_products = False
+        self._data_has_changed = True
 
         points = self.get_points()
 
@@ -1107,6 +1119,11 @@ class VMobject(Mobject):
         self.data["joint_product"][:, 3] = (vect_to_vert * vect_from_vert).sum(1)
         return self.data["joint_product"]
 
+    def lock_matching_data(self, vmobject1: VMobject, vmobject2: VMobject):
+        for mob in [self, vmobject1, vmobject2]:
+            mob.get_joint_products()
+        super().lock_matching_data(vmobject1, vmobject2)
+
     def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
         def wrapper(self, *args, refresh=True, **kwargs):
@@ -1117,10 +1134,12 @@ class VMobject(Mobject):
             return self
         return wrapper
 
-    @triggers_refreshed_triangulation
-    def set_points(self, points: Vect3Array):
+    def set_points(self, points: Vect3Array, refresh_joints: bool = True):
         assert(len(points) == 0 or len(points) % 2 == 1)
         super().set_points(points)
+        self.refresh_triangulation()
+        if refresh_joints:
+            self.get_joint_products(refresh=True)
         return self
 
     @triggers_refreshed_triangulation
@@ -1164,7 +1183,7 @@ class VMobject(Mobject):
         self.refresh_joint_products()
 
     # For shaders
-    def init_shader_data(self):
+    def init_shader_data(self, ctx: Context):
         dtype = self.shader_dtype
         fill_dtype, stroke_dtype = (
             np.dtype([
@@ -1175,27 +1194,39 @@ class VMobject(Mobject):
         )
         fill_data = np.zeros(0, dtype=fill_dtype)
         stroke_data = np.zeros(0, dtype=stroke_dtype)
-        self.fill_shader_wrapper = ShaderWrapper(
+        self.fill_shader_wrapper = FillShaderWrapper(
+            ctx=ctx,
             vert_data=fill_data,
             uniforms=self.uniforms,
             shader_folder=self.fill_shader_folder,
             render_primitive=self.fill_render_primitive,
-            is_fill=True,
         )
         self.stroke_shader_wrapper = ShaderWrapper(
+            ctx=ctx,
             vert_data=stroke_data,
             uniforms=self.uniforms,
             shader_folder=self.stroke_shader_folder,
             render_primitive=self.stroke_render_primitive,
         )
         self.back_stroke_shader_wrapper = self.stroke_shader_wrapper.copy()
+        self.shader_wrappers = [
+            self.back_stroke_shader_wrapper,
+            self.fill_shader_wrapper,
+            self.stroke_shader_wrapper,
+        ]
 
     def refresh_shader_wrapper_id(self):
-        for wrapper in self.get_shader_wrapper_list():
+        if not self._shaders_initialized:
+            return self
+        for wrapper in self.shader_wrappers:
             wrapper.refresh_id()
         return self
 
-    def get_shader_wrapper_list(self) -> list[ShaderWrapper]:
+    def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
+        if not self._shaders_initialized:
+            self.init_shader_data(ctx)
+            self._shaders_initialized = True
+
         family = self.family_members_with_points()
         if not family:
             return []
@@ -1236,12 +1267,9 @@ class VMobject(Mobject):
 
         for sw in shader_wrappers:
             # Assume uniforms of the first family member
-            sw.uniforms = family[0].get_uniforms()
+            sw.uniforms.update(family[0].get_uniforms())
             sw.depth_test = family[0].depth_test
         return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
-
-    def refresh_shader_data(self):
-        self.get_shader_wrapper_list()
 
 
 class VGroup(VMobject):
