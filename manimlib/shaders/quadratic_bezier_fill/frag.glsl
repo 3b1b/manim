@@ -7,6 +7,7 @@ in float fill_all;
 in float orientation;
 in vec2 uv_coords;
 in vec3 point;
+in vec3 unit_normal;
 
 out vec4 frag_color;
 
@@ -14,7 +15,7 @@ out vec4 frag_color;
 
 void main() {
     if (color.a == 0) discard;
-    frag_color = finalize_color(color, point, vec3(0.0, 0.0, 1.0));
+    frag_color = finalize_color(color, point, unit_normal);
     /*
     We want negatively oriented triangles to be canceled with positively
     oriented ones. The easiest way to do this is to give them negative alpha,

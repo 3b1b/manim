@@ -62,8 +62,9 @@ class VMobject(Mobject):
         ('joint_product', np.float32, (4,)),
         ('fill_rgba', np.float32, (4,)),
         ('base_point', np.float32, (3,)),
+        ('unit_normal', np.float32, (3,)),
     ])
-    fill_data_names = ['point', 'fill_rgba', 'base_point']
+    fill_data_names = ['point', 'fill_rgba', 'base_point', 'unit_normal']
     stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_product']
 
     fill_render_primitive: int = moderngl.TRIANGLE_STRIP
@@ -827,7 +828,24 @@ class VMobject(Mobject):
                 points[1] - points[0],
                 points[2] - points[1],
             )
+        self.data["unit_normal"][:] = normal
         return normal
+
+    def refresh_unit_normal(self):
+        self.get_unit_normal()
+        return self
+
+    def rotate(
+        self,
+        angle: float,
+        axis: Vect3 = OUT,
+        about_point: Vect3 | None = None,
+        **kwargs
+    ):
+        super().rotate(angle, axis, about_point, **kwargs)
+        for mob in self.get_family():
+            mob.refresh_unit_normal()
+        return self
 
     def ensure_positive_orientation(self, recurse=True):
         for mob in self.get_family(recurse):
@@ -1148,6 +1166,7 @@ class VMobject(Mobject):
         self.refresh_triangulation()
         if refresh_joints:
             self.get_joint_products(refresh=True)
+            self.get_unit_normal()
         return self
 
     @triggers_refreshed_triangulation
@@ -1157,16 +1176,14 @@ class VMobject(Mobject):
         return self
 
     @triggers_refreshed_triangulation
-    def reverse_points(self):
+    def reverse_points(self, recurse: bool = True):
         # This will reset which anchors are
         # considered path ends
-        for mob in self.get_family():
+        for mob in self.get_family(recurse):
             if not mob.has_points():
                 continue
             inner_ends = mob.get_subpath_end_indices()[:-1]
             mob.data["point"][inner_ends + 1] = mob.data["point"][inner_ends + 2]
-        super().reverse_points()
-        return self
 
     @triggers_refreshed_triangulation
     def set_data(self, data: np.ndarray):
@@ -1248,11 +1265,12 @@ class VMobject(Mobject):
         back_stroke_data = []
         for submob in family:
             if submob.has_fill():
-                submob.data["base_point"][:] = submob.data["point"][0]
-                fill_datas.append(submob.data[fill_names])
+                data = submob.data[fill_names]
+                data["base_point"][:] = data["point"][0]
+                fill_datas.append(data)
                 if self._use_winding_fill:
                     # Add dummy
-                    fill_datas.append(submob.data[fill_names][-1:])
+                    fill_datas.append(data[-1:])
                 else:
                     fill_indices.append(submob.get_triangulation())
             if submob.has_stroke():

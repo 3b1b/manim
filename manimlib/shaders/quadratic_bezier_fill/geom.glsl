@@ -9,11 +9,13 @@ in vec3 verts[3];
 in vec4 v_color[3];
 in vec3 v_base_point[3];
 in float v_vert_index[3];
+in vec3 v_unit_normal[3];
 
 out vec4 color;
 out float fill_all;
 out float orientation;
 out vec3 point;
+out vec3 unit_normal;
 // uv space is where the curve coincides with y = x^2
 out vec2 uv_coords;
 
@@ -26,12 +28,18 @@ const vec2 SIMPLE_QUADRATIC[3] = vec2[3](
 
 // Analog of import for manim only
 #INSERT get_gl_Position.glsl
-#INSERT get_unit_normal.glsl
 
 
 void emit_triangle(vec3 points[3], vec4 v_color[3]){
-    vec3 unit_normal = get_unit_normal(points[0], points[1], points[2]);
-    orientation = winding ? sign(unit_normal.z) : 1.0;
+    unit_normal = v_unit_normal[1];
+    orientation = 1.0;
+    if(winding){
+        orientation = sign(determinant(mat3(
+            v_unit_normal[1],
+            points[1] - points[0],
+            points[2] - points[0]
+        )));
+    }
 
     for(int i = 0; i < 3; i++){
         uv_coords = SIMPLE_QUADRATIC[i];
