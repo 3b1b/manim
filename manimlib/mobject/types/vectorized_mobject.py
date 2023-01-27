@@ -1288,6 +1288,8 @@ class VMobject(Mobject):
             self.fill_shader_wrapper.read_in(fill_datas, fill_indices or None),
             self.stroke_shader_wrapper.read_in(stroke_datas),
         ]
+        # TODO, account for submob uniforms separately?
+        self.uniforms.update(family[0].uniforms)
         return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
 
 
