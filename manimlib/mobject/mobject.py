@@ -591,19 +591,22 @@ class Mobject(object):
         result._shaders_initialized = False
         result._data_has_changed = True
 
-    @stash_mobject_pointers
     def copy(self, deep: bool = False):
         if deep:
             return self.deepcopy()
 
         result = copy.copy(self)
 
-        # The line above is only a shallow copy, so the internal
-        # data which are numpyu arrays or other mobjects still
+        result.parents = []
+        result.target = None
+        result.save_state = None
+
+        # copy.copy is only a shallow copy, so the internal
+        # data which are numpy arrays or other mobjects still
         # need to be further copied.
         result.data = self.data.copy()
         result.uniforms = {
-            key: np.array(value)
+            key: value.copy() if isinstance(value, np.ndarray) else value
             for key, value in self.uniforms.items()
         }
 
