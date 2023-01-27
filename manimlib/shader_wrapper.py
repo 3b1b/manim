@@ -275,6 +275,7 @@ class FillShaderWrapper(ShaderWrapper):
         **kwargs
     ):
         super().__init__(ctx, *args, **kwargs)
+        self.texture_fbo, self.texture_vao = get_fill_palette(self.ctx)
 
     def render(self):
         vao = self.vao
@@ -286,22 +287,25 @@ class FillShaderWrapper(ShaderWrapper):
             return
 
         original_fbo = self.ctx.fbo
-        texture_fbo, texture_vao = get_fill_palette(self.ctx)
 
-        texture_fbo.clear()
-        texture_fbo.use()
-        self.ctx.blend_func = (
+        self.texture_fbo.clear()
+        self.texture_fbo.use()
+        gl.glBlendFuncSeparate(
             # Ordinary blending for colors
-            moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
+            gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
             # Just take the max of the alphas, given the shenanigans
             # with how alphas are being used to compute winding numbers
-            moderngl.ONE, moderngl.ONE
+            gl.GL_ONE, gl.GL_ONE,
         )
+        gl.glBlendEquationSeparate(gl.GL_FUNC_ADD, gl.GL_MAX)
         self.ctx.blend_equation = moderngl.FUNC_ADD, moderngl.MAX
+
         vao.render(moderngl.TRIANGLE_STRIP)
 
         original_fbo.use()
-        self.ctx.blend_func = (moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA)
-        self.ctx.blend_equation = moderngl.FUNC_ADD
-        texture_vao.render(moderngl.TRIANGLE_STRIP)
-        self.ctx.blend_func = moderngl.DEFAULT_BLENDING
+        gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
+        gl.glBlendEquation(gl.GL_FUNC_ADD)
+
+        self.texture_vao.render(moderngl.TRIANGLE_STRIP)
+
+        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
