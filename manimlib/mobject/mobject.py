@@ -1823,21 +1823,24 @@ class Mobject(object):
         return self
 
     @affects_shader_info_id
-    def unfix_from_frame(self):
-        self.uniforms["is_fixed_in_frame"] = 0.0
+    def unfix_from_frame(self, recurse: bool = True):
+        for mob in self.get_family(recurse):
+            mob.uniforms["is_fixed_in_frame"] = 0.0
         return self
 
     def is_fixed_in_frame(self) -> bool:
         return bool(self.uniforms["is_fixed_in_frame"])
 
     @affects_shader_info_id
-    def apply_depth_test(self):
-        self.depth_test = True
+    def apply_depth_test(self, recurse: bool = True):
+        for mob in self.get_family(recurse):
+            mob.depth_test = True
         return self
 
     @affects_shader_info_id
-    def deactivate_depth_test(self):
-        self.depth_test = False
+    def deactivate_depth_test(self, recurse: bool = True):
+        for mob in self.get_family(recurse):
+            mob.depth_test = False
         return self
 
     # Shader code manipulation
