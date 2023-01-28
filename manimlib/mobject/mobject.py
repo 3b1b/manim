@@ -408,8 +408,13 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    def remove(self, *to_remove: Mobject, reassemble: bool = True):
-        for parent in self.get_family():
+    def remove(
+        self,
+        *to_remove: Mobject,
+        reassemble: bool = True,
+        recurse: bool = True
+    ):
+        for parent in self.get_family(recurse):
             for child in to_remove:
                 if child in parent.submobjects:
                     parent.submobjects.remove(child)
@@ -418,6 +423,9 @@ class Mobject(object):
             if reassemble:
                 parent.assemble_family()
         return self
+
+    def clear(self):
+        self.remove(*self.submobjects, recurse=False)
 
     def add_to_back(self, *mobjects: Mobject):
         self.set_submobjects(list_update(mobjects, self.submobjects))
