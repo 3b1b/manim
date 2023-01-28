@@ -1943,6 +1943,7 @@ class Mobject(object):
                 shader_wrapper.generate_vao()
             self._data_has_changed = False
         for shader_wrapper in self.shader_wrappers:
+            shader_wrapper.depth_test = self.depth_test
             shader_wrapper.update_program_uniforms(self.get_uniforms())
             shader_wrapper.update_program_uniforms(camera_uniforms, universal=True)
             shader_wrapper.pre_render()
