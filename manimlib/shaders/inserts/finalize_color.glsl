@@ -24,9 +24,6 @@ vec4 add_light(vec4 color, vec3 point, vec3 unit_normal){
     vec3 to_camera = normalize(camera_position - point);
     vec3 to_light = normalize(light_position - point);
 
-    // Note, this effectively treats surfaces as two-sided
-    // if(dot(to_camera, unit_normal) < 0) unit_normal *= -1;
-
     float light_to_normal = dot(to_light, unit_normal);
     // When unit normal points towards light, brighten
     float bright_factor = max(light_to_normal, 0) * reflectiveness;
