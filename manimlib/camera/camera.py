@@ -72,9 +72,9 @@ class Camera(object):
 
     def init_context(self) -> None:
         if self.window is None:
-            self.ctx = moderngl.create_standalone_context()
+            self.ctx: moderngl.Context = moderngl.create_standalone_context()
         else:
-            self.ctx = self.window.ctx
+            self.ctx: moderngl.Context = self.window.ctx
 
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
         self.ctx.enable(moderngl.BLEND)
