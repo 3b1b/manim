@@ -163,6 +163,8 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Tu
 
                 // Un-blend from the null value
                 color.rgb -= (1 - color.a) * null_rgb;
+                // Counteract scaling in fill frag
+                color.a *= 1.01;
 
                 gl_FragDepth = texture(DepthTexture, v_textcoord)[0];
             }
