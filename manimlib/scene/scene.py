@@ -983,3 +983,9 @@ class EndScene(Exception):
 class ThreeDScene(Scene):
     samples = 4
     default_frame_orientation = (-30, 70)
+
+    def add(self, *mobjects, set_depth_test: bool = True):
+        for mob in mobjects:
+            if set_depth_test and not mob.is_fixed_in_frame():
+                mob.apply_depth_test()
+        super().add(*mobjects)
