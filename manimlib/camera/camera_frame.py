@@ -29,6 +29,7 @@ class CameraFrame(Mobject):
         self.center_point = center_point
         self.focal_dist_to_height = focal_dist_to_height
         self.view_matrix = np.identity(4)
+        self.default_orientation = Rotation.identity()
         super().__init__(**kwargs)
 
     def init_uniforms(self) -> None:
@@ -50,11 +51,15 @@ class CameraFrame(Mobject):
     def get_orientation(self):
         return Rotation.from_quat(self.uniforms["orientation"])
 
+    def make_orientation_default(self):
+        self.default_orientation = self.get_orientation()
+        return self
+
     def to_default_state(self):
         self.center()
         self.set_height(FRAME_HEIGHT)
         self.set_width(FRAME_WIDTH)
-        self.set_orientation(Rotation.identity())
+        self.set_orientation(self.default_orientation)
         return self
 
     def get_euler_angles(self):
@@ -101,7 +106,11 @@ class CameraFrame(Mobject):
         for i, var in enumerate([theta, phi, gamma]):
             if var is not None:
                 eulers[i] = var * units
-        self.set_orientation(Rotation.from_euler("zxz", eulers[::-1]))
+        if all(eulers == 0):
+            rot = Rotation.identity()
+        else:
+            rot = Rotation.from_euler("zxz", eulers[::-1])
+        self.set_orientation(rot)
         return self
 
     def reorient(

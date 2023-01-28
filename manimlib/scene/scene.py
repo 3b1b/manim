@@ -18,6 +18,7 @@ from tqdm.auto import tqdm as ProgressDisplay
 from manimlib.animation.animation import prepare_animation
 from manimlib.animation.fading import VFadeInThenOut
 from manimlib.camera.camera import Camera
+from manimlib.camera.camera_frame import CameraFrame
 from manimlib.config import get_module
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
@@ -63,6 +64,8 @@ class Scene(object):
     default_window_config: dict = dict()
     default_file_writer_config: dict = dict()
     samples = 0
+    # Euler angles, in degrees
+    default_frame_orientation = (0, 0)
 
     def __init__(
         self,
@@ -108,6 +111,10 @@ class Scene(object):
 
         # Core state of the scene
         self.camera: Camera = Camera(**self.camera_config)
+        self.frame: CameraFrame = self.camera.frame
+        self.frame.reorient(*self.default_frame_orientation)
+        self.frame.make_orientation_default()
+
         self.file_writer = SceneFileWriter(self, **self.file_writer_config)
         self.mobjects: list[Mobject] = [self.camera.frame]
         self.id_to_mobject_map: dict[int, Mobject] = dict()
@@ -971,3 +978,8 @@ class SceneState():
 
 class EndScene(Exception):
     pass
+
+
+class ThreeDScene(Scene):
+    samples = 4
+    default_frame_orientation = (-30, 70)
