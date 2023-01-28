@@ -103,7 +103,7 @@ def get_colormap_code(rgb_list: Sequence[float]) -> str:
 
 
 @lru_cache()
-def get_fill_canvas(ctx) -> Tuple[Framebuffer, VertexArray, Tuple[float, float, float]]:
+def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Tuple[float, float, float]]:
     """
     Because VMobjects with fill are rendered in a funny way, using
     alpha blending to effectively compute the winding number around
@@ -121,8 +121,8 @@ def get_fill_canvas(ctx) -> Tuple[Framebuffer, VertexArray, Tuple[float, float, 
     # Important to make sure dtype is floating point (not fixed point)
     # so that alpha values can be negative and are not clipped
     texture = ctx.texture(size=size, components=4, dtype='f2')
-    depth_buffer = ctx.depth_renderbuffer(size)  # TODO, currently not used
-    texture_fbo = ctx.framebuffer(texture, depth_buffer)
+    depth_texture = ctx.depth_texture(size=size)
+    texture_fbo = ctx.framebuffer(texture, depth_texture)
 
     # We'll paint onto a canvas with initially negative rgbs, and
     # discard any pixels remaining close to this value. This is
@@ -150,6 +150,7 @@ def get_fill_canvas(ctx) -> Tuple[Framebuffer, VertexArray, Tuple[float, float, 
             #version 330
 
             uniform sampler2D Texture;
+            uniform sampler2D DepthTexture;
             uniform vec3 null_rgb;
 
             in vec2 v_textcoord;
@@ -164,12 +165,13 @@ def get_fill_canvas(ctx) -> Tuple[Framebuffer, VertexArray, Tuple[float, float, 
                 // Un-blend from the null value
                 color.rgb -= (1 - color.a) * null_rgb;
 
-                //TODO, set gl_FragDepth;
+                gl_FragDepth = texture(DepthTexture, v_textcoord)[0];
             }
         ''',
     )
 
     simple_program['Texture'].value = get_texture_id(texture)
+    simple_program['DepthTexture'].value = get_texture_id(depth_texture)
     simple_program['null_rgb'].value = null_rgb
 
     verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
