@@ -7,6 +7,7 @@ in float fill_all;
 in float orientation;
 in vec2 uv_coords;
 in vec3 point;
+in vec3 unit_normal;
 
 out vec4 frag_color;
 
@@ -14,7 +15,7 @@ out vec4 frag_color;
 
 void main() {
     if (color.a == 0) discard;
-    frag_color = finalize_color(color, point, vec3(0.0, 0.0, 1.0));
+    frag_color = finalize_color(color, point, unit_normal);
     /*
     We want negatively oriented triangles to be canceled with positively
     oriented ones. The easiest way to do this is to give them negative alpha,
@@ -30,9 +31,9 @@ void main() {
     is changed to -alpha / (1 - alpha). This has a singularity at alpha = 1,
     so we cap it at a value very close to 1. Effectively, the purpose of this
     cap is to make sure the original fragment color can be recovered even after
-    blending with an alpha = 1 color.
+    blending with an (alpha = 1) color.
     */
-    float a = 0.999 * frag_color.a;
+    float a = 0.99 * frag_color.a;
     if(winding && orientation < 0) a = -a / (1 - a);
     frag_color.a = a;
 

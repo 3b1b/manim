@@ -265,7 +265,7 @@ class FlashAround(VShowPassingFlash):
         **kwargs
     ):
         path = self.get_path(mobject, buff)
-        if mobject.is_fixed_in_frame:
+        if mobject.is_fixed_in_frame():
             path.fix_in_frame()
         path.insert_n_curves(n_inserted_curves)
         path.set_points(path.get_points_without_null_curves())

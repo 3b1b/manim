@@ -50,7 +50,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Union, Tuple
     import numpy.typing as npt
-    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array
+    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict
     from moderngl.context import Context
 
     TimeBasedUpdater = Callable[["Mobject", float], "Mobject" | None]
@@ -88,7 +88,7 @@ class Mobject(object):
         self.opacity = opacity
         self.shading = shading
         self.texture_paths = texture_paths
-        self.is_fixed_in_frame = is_fixed_in_frame
+        self._is_fixed_in_frame = is_fixed_in_frame
         self.depth_test = depth_test
 
         # Internal state
@@ -131,8 +131,8 @@ class Mobject(object):
         self.data = np.zeros(length, dtype=self.shader_dtype)
 
     def init_uniforms(self):
-        self.uniforms: dict[str, float | np.ndarray] = {
-            "is_fixed_in_frame": float(self.is_fixed_in_frame),
+        self.uniforms: UniformDict = {
+            "is_fixed_in_frame": float(self._is_fixed_in_frame),
             "shading": np.array(self.shading, dtype=float),
         }
 
@@ -408,14 +408,15 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    def remove(self, *mobjects: Mobject, reassemble: bool = True):
-        for mobject in mobjects:
-            if mobject in self.submobjects:
-                self.submobjects.remove(mobject)
-            if self in mobject.parents:
-                mobject.parents.remove(self)
-        if reassemble:
-            self.assemble_family()
+    def remove(self, *to_remove: Mobject, reassemble: bool = True):
+        for parent in self.get_family():
+            for child in to_remove:
+                if child in parent.submobjects:
+                    parent.submobjects.remove(child)
+                if parent in child.parents:
+                    child.parents.remove(parent)
+            if reassemble:
+                parent.assemble_family()
         return self
 
     def add_to_back(self, *mobjects: Mobject):
@@ -591,19 +592,22 @@ class Mobject(object):
         result._shaders_initialized = False
         result._data_has_changed = True
 
-    @stash_mobject_pointers
     def copy(self, deep: bool = False):
         if deep:
             return self.deepcopy()
 
         result = copy.copy(self)
 
-        # The line above is only a shallow copy, so the internal
-        # data which are numpyu arrays or other mobjects still
+        result.parents = []
+        result.target = None
+        result.saved_state = None
+
+        # copy.copy is only a shallow copy, so the internal
+        # data which are numpy arrays or other mobjects still
         # need to be further copied.
         result.data = self.data.copy()
         result.uniforms = {
-            key: np.array(value)
+            key: value.copy() if isinstance(value, np.ndarray) else value
             for key, value in self.uniforms.items()
         }
 
@@ -622,7 +626,7 @@ class Mobject(object):
         result._data_has_changed = True
 
         family = self.get_family()
-        for attr, value in list(self.__dict__.items()):
+        for attr, value in self.__dict__.items():
             if isinstance(value, Mobject) and value is not self:
                 if value in family:
                     setattr(result, attr, result.family[self.family.index(value)])
@@ -1765,20 +1769,26 @@ class Mobject(object):
         self.locked_data_keys = set(keys)
 
     def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject):
-        for sm, sm1, sm2 in zip(self.get_family(), mobject1.get_family(), mobject2.get_family()):
-            if sm.data.dtype == sm1.data.dtype == sm2.data.dtype:
-                names = sm.data.dtype.names
-                sm.lock_data(filter(
-                    lambda name: arrays_match(sm1.data[name], sm2.data[name]),
-                    names,
-                ))
-                sm.const_data_keys = set(filter(
-                    lambda name: all(
-                        array_is_constant(mob.data[name])
-                        for mob in (sm, sm1, sm2)
-                    ),
-                    names
-                ))
+        tuples = zip(
+            self.get_family(),
+            mobject1.get_family(),
+            mobject2.get_family(),
+        )
+        for sm, sm1, sm2 in tuples:
+            if not sm.data.dtype == sm1.data.dtype == sm2.data.dtype:
+                continue
+            names = sm.data.dtype.names
+            sm.lock_data(filter(
+                lambda name: arrays_match(sm1.data[name], sm2.data[name]),
+                names,
+            ))
+            sm.const_data_keys = set(filter(
+                lambda name: all(
+                    array_is_constant(mob.data[name])
+                    for mob in (sm, sm1, sm2)
+                ),
+                names
+            ))
 
         return self
 
@@ -1799,16 +1809,18 @@ class Mobject(object):
         return wrapper
 
     @affects_shader_info_id
-    def fix_in_frame(self):
-        self.uniforms["is_fixed_in_frame"] = 1.0
-        self.is_fixed_in_frame = True
+    def fix_in_frame(self, recurse: bool = True):
+        for mob in self.get_family(recurse):
+            mob.uniforms["is_fixed_in_frame"] = 1.0
         return self
 
     @affects_shader_info_id
     def unfix_from_frame(self):
         self.uniforms["is_fixed_in_frame"] = 0.0
-        self.is_fixed_in_frame = False
         return self
+
+    def is_fixed_in_frame(self) -> bool:
+        return bool(self.uniforms["is_fixed_in_frame"])
 
     @affects_shader_info_id
     def apply_depth_test(self):
@@ -1894,7 +1906,7 @@ class Mobject(object):
 
         self.shader_wrapper.vert_data = self.get_shader_data()
         self.shader_wrapper.vert_indices = self.get_shader_vert_indices()
-        self.shader_wrapper.uniforms.update(self.get_uniforms())
+        self.shader_wrapper.update_program_uniforms(self.get_uniforms())
         self.shader_wrapper.depth_test = self.depth_test
         return self.shader_wrapper
 
@@ -1931,8 +1943,9 @@ class Mobject(object):
                 shader_wrapper.generate_vao()
             self._data_has_changed = False
         for shader_wrapper in self.shader_wrappers:
-            shader_wrapper.uniforms.update(self.get_uniforms())
-            shader_wrapper.uniforms.update(camera_uniforms)
+            shader_wrapper.depth_test = self.depth_test
+            shader_wrapper.update_program_uniforms(self.get_uniforms())
+            shader_wrapper.update_program_uniforms(camera_uniforms, universal=True)
             shader_wrapper.pre_render()
             shader_wrapper.render()
 
@@ -2048,7 +2061,7 @@ class Group(Mobject):
             raise Exception("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)
-        if any(m.is_fixed_in_frame for m in mobjects):
+        if any(m.is_fixed_in_frame() for m in mobjects):
             self.fix_in_frame()
 
     def __add__(self, other: Mobject | Group):

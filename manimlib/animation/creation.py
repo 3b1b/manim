@@ -100,7 +100,8 @@ class DrawBorderThenFill(Animation):
     def begin(self) -> None:
         # Trigger triangulation calculation
         for submob in self.mobject.get_family():
-            submob.get_triangulation()
+            if not submob._use_winding_fill:
+                submob.get_triangulation()
 
         self.outline = self.get_outline()
         super().begin()

@@ -685,7 +685,6 @@ class Arrow(Line):
         self.width_to_tip_len = width_to_tip_len
         self.max_tip_length_to_length_ratio = max_tip_length_to_length_ratio
         self.max_width_to_length_ratio = max_width_to_length_ratio
-        self.max_stroke_width = stroke_width
         super().__init__(
             start, end,
             stroke_color=stroke_color,
@@ -715,22 +714,21 @@ class Arrow(Line):
         else:
             alpha = tip_len / arc_len
         self.pointwise_become_partial(self, 0, 1 - alpha)
-        self.start_new_path(self.get_points()[-1])
+        # Dumb that this is needed
+        self.start_new_path(self.point_from_proportion(1 - 1e-5))
         self.add_line_to(prev_end)
         return self
 
+    @Mobject.affects_data
     def create_tip_with_stroke_width(self):
-        if not self.has_points():
+        if self.get_num_points() < 3:
             return self
-        width = min(
-            self.max_stroke_width,
+        tip_width = self.tip_width_ratio * min(
+            float(self.get_stroke_width()),
             self.max_width_to_length_ratio * self.get_length(),
         )
-        widths_array = np.full(self.get_num_points(), width)
-        if len(widths_array) > 3:
-            tip_width = self.tip_width_ratio * width
-            widths_array[-3:] = tip_width * np.linspace(1, 0, 3)
-            self.set_stroke(width=widths_array)
+        self.data['stroke_width'][:-3] = self.data['stroke_width'][0]
+        self.data['stroke_width'][-3:, 0] = tip_width * np.linspace(1, 0, 3)
         return self
 
     def reset_tip(self):
@@ -747,13 +745,14 @@ class Arrow(Line):
         *args, **kwargs
     ):
         super().set_stroke(color=color, width=width, *args, **kwargs)
-        if isinstance(width, numbers.Number):
-            self.max_stroke_width = width
-            self.create_tip_with_stroke_width()
+        if self.has_points():
+            self.reset_tip()
         return self
 
     def _handle_scale_side_effects(self, scale_factor: float):
-        return self.reset_tip()
+        if scale_factor != 1.0:
+            self.reset_tip()
+        return self
 
 
 class FillArrow(Line):

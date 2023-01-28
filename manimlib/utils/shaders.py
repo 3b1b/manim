@@ -9,6 +9,7 @@ import numpy as np
 
 from manimlib.constants import DEFAULT_PIXEL_HEIGHT
 from manimlib.constants import DEFAULT_PIXEL_WIDTH
+from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
 
@@ -102,17 +103,36 @@ def get_colormap_code(rgb_list: Sequence[float]) -> str:
 
 
 @lru_cache()
-def get_fill_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
+def get_fill_canvas(ctx) -> Tuple[Framebuffer, VertexArray, Tuple[float, float, float]]:
     """
-    Creates a texture, loaded into a frame buffer, and a vao
-    which can display that texture as a simple quad onto a screen.
+    Because VMobjects with fill are rendered in a funny way, using
+    alpha blending to effectively compute the winding number around
+    each pixel, they need to be rendered to a separate texture, which
+    is then composited onto the ordinary frame buffer.
+
+    This returns a texture, loaded into a frame buffer, and a vao
+    which can display that texture as a simple quad onto a screen,
+    along with the rgb value which is meant to be discarded.
     """
-    size = (2 * DEFAULT_PIXEL_WIDTH, 2 * DEFAULT_PIXEL_HEIGHT)
+    cam_config = get_customization()['camera_resolutions']
+    res_name = cam_config['default_resolution']
+    size = tuple(map(int, cam_config[res_name].split("x")))
+
     # Important to make sure dtype is floating point (not fixed point)
     # so that alpha values can be negative and are not clipped
-    texture = ctx.texture(size=size, components=4, dtype='f4')
+    texture = ctx.texture(size=size, components=4, dtype='f2')
     depth_buffer = ctx.depth_renderbuffer(size)  # TODO, currently not used
     texture_fbo = ctx.framebuffer(texture, depth_buffer)
+
+    # We'll paint onto a canvas with initially negative rgbs, and
+    # discard any pixels remaining close to this value. This is
+    # because alphas are effectively being used for another purpose,
+    # and we don't want to overlap with any colors one might actually
+    # use. It should be negative enough to be distinguishable from
+    # ordinary colors with some margin, but the farther it's pulled back
+    # from zero the more it will be true that overlapping filled objects
+    # with transparency have an unnaturally bright composition.
+    null_rgb = (-0.25, -0.25, -0.25)
 
     simple_program = ctx.program(
         vertex_shader='''
@@ -130,33 +150,27 @@ def get_fill_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
             #version 330
 
             uniform sampler2D Texture;
-            uniform float v_nudge;
-            uniform float h_nudge;
+            uniform vec3 null_rgb;
 
             in vec2 v_textcoord;
-            out vec4 frag_color;
+            out vec4 color;
+
+            const float MIN_DIST_TO_NULL = 0.2;
 
             void main() {
-                // Apply poor man's anti-aliasing
-                vec2 tc0 = v_textcoord + vec2(0, 0);
-                vec2 tc1 = v_textcoord + vec2(0, h_nudge);
-                vec2 tc2 = v_textcoord + vec2(v_nudge, 0);
-                vec2 tc3 = v_textcoord + vec2(v_nudge, h_nudge);
-                frag_color = 
-                    0.25 * texture(Texture, tc0) +
-                    0.25 * texture(Texture, tc1) +
-                    0.25 * texture(Texture, tc2) +
-                    0.25 * texture(Texture, tc3);
-                if(distance(frag_color.rgb, vec3(0.0)) < 1e-3) discard;
+                color = texture(Texture, v_textcoord);
+                if(distance(color.rgb, null_rgb) < MIN_DIST_TO_NULL) discard;
+
+                // Un-blend from the null value
+                color.rgb -= (1 - color.a) * null_rgb;
+
                 //TODO, set gl_FragDepth;
             }
         ''',
     )
 
     simple_program['Texture'].value = get_texture_id(texture)
-    # Half pixel width/height
-    simple_program['h_nudge'].value = 0.5 / size[0]
-    simple_program['v_nudge'].value = 0.5 / size[1]
+    simple_program['null_rgb'].value = null_rgb
 
     verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     fill_texture_vao = ctx.simple_vertex_array(
@@ -164,4 +178,4 @@ def get_fill_palette(ctx) -> Tuple[Framebuffer, VertexArray]:
         ctx.buffer(verts.astype('f4').tobytes()),
         'texcoord',
     )
-    return (texture_fbo, fill_texture_vao)
+    return (texture_fbo, fill_texture_vao, null_rgb)

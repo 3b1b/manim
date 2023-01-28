@@ -74,6 +74,7 @@ class SVGMobject(VMobject):
 
         super().__init__(**kwargs )
         self.init_svg_mobject()
+        self.ensure_positive_orientation()
 
         # Rather than passing style into super().__init__
         # do it after svg has been taken in
@@ -320,10 +321,6 @@ class VMobjectFromSVGPath(VMobject):
                 self.set_points(self.get_points_without_null_curves())
             # So triangulation doesn't get messed up
             self.subdivide_intersections()
-            # Always default to orienting outward, account
-            # for the fact that this will get flipped in SVG.__init__
-            if self.get_unit_normal()[2] > 0:
-                self.reverse_points()
             # Save for future use
             PATH_TO_POINTS[path_string] = self.get_points().copy()
         else:

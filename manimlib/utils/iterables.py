@@ -133,7 +133,7 @@ def arrays_match(arr1: np.ndarray, arr2: np.ndarray) -> bool:
 
 
 def array_is_constant(arr: np.ndarray) -> bool:
-    return len(arr) > 0 and not (arr - arr[0]).any()
+    return len(arr) > 0 and (arr == arr[0]).all()
 
 
 def hash_obj(obj: object) -> int:

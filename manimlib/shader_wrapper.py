@@ -7,20 +7,20 @@ import re
 import OpenGL.GL as gl
 import moderngl
 import numpy as np
-from functools import lru_cache
 
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.shaders import get_shader_code_from_file
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
 from manimlib.utils.shaders import get_texture_id
-from manimlib.utils.shaders import get_fill_palette
+from manimlib.utils.shaders import get_fill_canvas
 from manimlib.utils.shaders import release_texture
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import List, Optional
+    from typing import List, Optional, Dict
+    from manimlib.typing import UniformDict
 
 
 # Mobjects that should be rendered with
@@ -37,7 +37,7 @@ class ShaderWrapper(object):
         vert_data: np.ndarray,
         vert_indices: Optional[np.ndarray] = None,
         shader_folder: Optional[str] = None,
-        uniforms: Optional[dict[str, float | np.ndarray]] = None,  # A dictionary mapping names of uniform variables
+        uniforms: Optional[UniformDict] = None,  # A dictionary mapping names of uniform variables
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
         render_primitive: int = moderngl.TRIANGLE_STRIP,
@@ -47,19 +47,17 @@ class ShaderWrapper(object):
         self.vert_indices = (vert_indices or np.zeros(0)).astype(int)
         self.vert_attributes = vert_data.dtype.names
         self.shader_folder = shader_folder
-        self.uniforms = dict(uniforms or {})
+        self.uniforms: UniformDict = dict()
         self.depth_test = depth_test
         self.render_primitive = render_primitive
 
         self.init_program_code()
         self.init_program()
+        self.update_program_uniforms(uniforms or dict())
         if texture_paths is not None:
             self.init_textures(texture_paths)
+        self.init_vao()
         self.refresh_id()
-
-        self.vbo = None
-        self.ibo = None
-        self.vao = None
 
     def init_program_code(self) -> None:
         def get_code(name: str) -> str | None:
@@ -82,10 +80,16 @@ class ShaderWrapper(object):
         self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
 
     def init_textures(self, texture_paths: dict[str, str]):
-        for name, path in texture_paths.items():
-            texture = image_path_to_texture(path, self.ctx)
-            tid = get_texture_id(texture)
-            self.uniforms[name] = tid
+        names_to_ids = {
+            name: get_texture_id(image_path_to_texture(path, self.ctx))
+            for name, path in texture_paths.items()
+        }
+        self.update_program_uniforms(names_to_ids)
+
+    def init_vao(self):
+        self.vbo = None
+        self.ibo = None
+        self.vao = None
 
     def __eq__(self, shader_wrapper: ShaderWrapper):
         return all((
@@ -93,7 +97,7 @@ class ShaderWrapper(object):
             np.all(self.vert_indices == shader_wrapper.vert_indices),
             self.shader_folder == shader_wrapper.shader_folder,
             all(
-                np.all(self.uniforms[key] == shader_wrapper.uniforms[key])
+                self.uniforms[key] == shader_wrapper.uniforms[key]
                 for key in self.uniforms
             ),
             self.depth_test == shader_wrapper.depth_test,
@@ -105,11 +109,7 @@ class ShaderWrapper(object):
         result.ctx = self.ctx
         result.vert_data = self.vert_data.copy()
         result.vert_indices = self.vert_indices.copy()
-        if self.uniforms:
-            result.uniforms = {key: np.array(value) for key, value in self.uniforms.items()}
-        result.vao = None
-        result.vbo = None
-        result.ibo = None
+        result.init_vao()
         return result
 
     def is_valid(self) -> bool:
@@ -217,20 +217,23 @@ class ShaderWrapper(object):
     def pre_render(self):
         self.set_ctx_depth_test(self.depth_test)
         self.set_ctx_clip_plane(self.use_clip_plane())
-        self.update_program_uniforms()
 
     def render(self):
         assert(self.vao is not None)
         self.vao.render()
 
-    def update_program_uniforms(self):
+    def update_program_uniforms(self, uniforms: UniformDict, universal: bool = False):
         if self.program is None:
             return
-        for name, value in self.uniforms.items():
-            if name in self.program:
-                if isinstance(value, np.ndarray) and value.ndim > 0:
-                    value = tuple(value)
-                self.program[name].value = value
+        for name, value in uniforms.items():
+            if name not in self.program:
+                continue
+            if isinstance(value, np.ndarray) and value.ndim > 0:
+                value = tuple(value)
+            if universal and self.uniforms.get(name, None) == value:
+                continue
+            self.program[name].value = value
+            self.uniforms[name] = value
 
     def get_vertex_buffer_object(self, refresh: bool = True):
         if refresh:
@@ -245,8 +248,9 @@ class ShaderWrapper(object):
     def generate_vao(self, refresh: bool = True):
         self.release()
         # Data buffer
-        vbo = self.get_vertex_buffer_object(refresh)
-        ibo = self.get_index_buffer_object(refresh)
+        vbo = self.vbo = self.get_vertex_buffer_object(refresh)
+        ibo = self.ibo = self.get_index_buffer_object(refresh)
+
         # Vertex array object
         self.vao = self.ctx.vertex_array(
             program=self.program,
@@ -273,7 +277,7 @@ class FillShaderWrapper(ShaderWrapper):
         **kwargs
     ):
         super().__init__(ctx, *args, **kwargs)
-
+        self.fill_canvas = get_fill_canvas(self.ctx)
 
     def render(self):
         vao = self.vao
@@ -285,13 +289,26 @@ class FillShaderWrapper(ShaderWrapper):
             return
 
         original_fbo = self.ctx.fbo
-        texture_fbo, texture_vao = get_fill_palette(self.ctx)
+        texture_fbo, texture_vao, null_rgb = self.fill_canvas
 
-        texture_fbo.clear()
+        texture_fbo.clear(*null_rgb, 0.0)
         texture_fbo.use()
-        vao.render()
+        gl.glBlendFuncSeparate(
+            # Ordinary blending for colors
+            gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
+            # Just take the max of the alphas, given the shenanigans
+            # with how alphas are being used to compute winding numbers
+            gl.GL_ONE, gl.GL_ONE,
+        )
+        gl.glBlendEquationSeparate(gl.GL_FUNC_ADD, gl.GL_MAX)
+        self.ctx.blend_equation = moderngl.FUNC_ADD, moderngl.MAX
+
+        vao.render(moderngl.TRIANGLE_STRIP)
 
         original_fbo.use()
-        self.ctx.blend_func = (moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA)
+        gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
+        gl.glBlendEquation(gl.GL_FUNC_ADD)
+
         texture_vao.render(moderngl.TRIANGLE_STRIP)
-        self.ctx.blend_func = (moderngl.DEFAULT_BLENDING)
+
+        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
