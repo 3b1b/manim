@@ -1809,23 +1809,26 @@ class Mobject(object):
 
     def affects_shader_info_id(func: Callable):
         @wraps(func)
-        def wrapper(self):
-            for mob in self.get_family():
-                func(mob)
-                mob.refresh_shader_wrapper_id()
-            return self
+        def wrapper(self, *args, **kwargs):
+            result = func(self, *args, **kwargs)
+            self.refresh_shader_wrapper_id()
+            return result
         return wrapper
 
     @affects_shader_info_id
-    def fix_in_frame(self, recurse: bool = True):
+    def set_uniform(self, recurse: bool = True, **new_uniforms):
         for mob in self.get_family(recurse):
-            mob.uniforms["is_fixed_in_frame"] = 1.0
+            mob.uniforms.update(new_uniforms)
+        return self
+
+    @affects_shader_info_id
+    def fix_in_frame(self, recurse: bool = True):
+        self.set_uniform(recurse, is_fixed_in_frame=1.0)
         return self
 
     @affects_shader_info_id
     def unfix_from_frame(self, recurse: bool = True):
-        for mob in self.get_family(recurse):
-            mob.uniforms["is_fixed_in_frame"] = 0.0
+        self.set_uniform(recurse, is_fixed_in_frame=0.0)
         return self
 
     def is_fixed_in_frame(self) -> bool:
