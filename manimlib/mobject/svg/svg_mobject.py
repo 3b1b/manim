@@ -295,15 +295,11 @@ class VMobjectFromSVGPath(VMobject):
     def __init__(
         self,
         path_obj: se.Path,
-        should_subdivide_sharp_curves: bool = False,
-        should_remove_null_curves: bool = True,
         **kwargs
     ):
         # Get rid of arcs
         path_obj.approximate_arcs_with_quads()
         self.path_obj = path_obj
-        self.should_subdivide_sharp_curves = should_subdivide_sharp_curves
-        self.should_remove_null_curves = should_remove_null_curves
         super().__init__(**kwargs)
 
     def init_points(self) -> None:
@@ -313,12 +309,6 @@ class VMobjectFromSVGPath(VMobject):
         path_string = self.path_obj.d()
         if path_string not in PATH_TO_POINTS:
             self.handle_commands()
-            if self.should_subdivide_sharp_curves:
-                # For a healthy triangulation later
-                self.subdivide_sharp_curves()
-            if self.should_remove_null_curves:
-                # Get rid of any null curves
-                self.set_points(self.get_points_without_null_curves())
             # Save for future use
             PATH_TO_POINTS[path_string] = self.get_points().copy()
         else:
