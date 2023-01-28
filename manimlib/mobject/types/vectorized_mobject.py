@@ -63,6 +63,7 @@ class VMobject(Mobject):
         ('fill_rgba', np.float32, (4,)),
         ('base_point', np.float32, (3,)),
         ('unit_normal', np.float32, (3,)),
+        ('fill_border_width', np.float32, (1,)),
     ])
     fill_data_names = ['point', 'fill_rgba', 'base_point', 'unit_normal']
     stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_product']
@@ -92,6 +93,7 @@ class VMobject(Mobject):
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
         anti_alias_width: float = 1.0,
+        fill_border_width: float = 0.5,
         use_winding_fill: bool = True,
         **kwargs
     ):
@@ -107,6 +109,7 @@ class VMobject(Mobject):
         self.flat_stroke = flat_stroke
         self.use_simple_quadratic_approx = use_simple_quadratic_approx
         self.anti_alias_width = anti_alias_width
+        self.fill_border_width = fill_border_width
         self._use_winding_fill = use_winding_fill
 
         self.needs_new_triangulation = True
@@ -164,6 +167,7 @@ class VMobject(Mobject):
         self.set_fill(
             color=self.fill_color,
             opacity=self.fill_opacity,
+            border_width=self.fill_border_width,
         )
         self.set_stroke(
             color=self.stroke_color,
@@ -195,9 +199,13 @@ class VMobject(Mobject):
         self,
         color: ManimColor | Iterable[ManimColor] = None,
         opacity: float | Iterable[float] | None = None,
+        border_width: float | None = None,
         recurse: bool = True
     ):
         self.set_rgba_array_by_color(color, opacity, 'fill_rgba', recurse)
+        if border_width is not None:
+            for mob in self.get_family(recurse):
+                mob.data["fill_border_width"] = border_width
         return self
 
     def set_stroke(
@@ -1258,11 +1266,15 @@ class VMobject(Mobject):
 
         # Build up data lists
         fill_datas = []
+        fill_border_datas = []
         fill_indices = []
         stroke_datas = []
-        back_stroke_data = []
+        back_stroke_datas = []
         for submob in family:
-            if submob.has_fill():
+            submob.get_joint_products()
+            has_fill = submob.has_fill()
+            has_stroke = submob.has_stroke()
+            if has_fill:
                 data = submob.data[fill_names]
                 data["base_point"][:] = data["point"][0]
                 fill_datas.append(data)
@@ -1271,12 +1283,16 @@ class VMobject(Mobject):
                     fill_datas.append(data[-1:])
                 else:
                     fill_indices.append(submob.get_triangulation())
-            if submob.has_stroke():
-                submob.get_joint_products()
-                if submob.stroke_behind:
-                    lst = back_stroke_data
-                else:
-                    lst = stroke_datas
+                # Add fill border
+                if not has_stroke:
+                    names = list(stroke_names)
+                    names[names.index('stroke_rgba')] = 'fill_rgba'
+                    names[names.index('stroke_width')] = 'fill_border_width'
+                    border_stroke_data = submob.data[names]
+                    fill_border_datas.append(border_stroke_data)
+                    fill_border_datas.append(border_stroke_data[-1:])
+            if has_stroke:
+                lst = back_stroke_datas if submob.stroke_behind else stroke_datas
                 lst.append(submob.data[stroke_names])
                 # Set data array to be one longer than number of points,
                 # with a dummy vertex added at the end. This is to ensure
@@ -1284,7 +1300,9 @@ class VMobject(Mobject):
                 lst.append(submob.data[stroke_names][-1:])
 
         shader_wrappers = [
-            self.back_stroke_shader_wrapper.read_in(back_stroke_data),
+            self.back_stroke_shader_wrapper.read_in(
+                [*back_stroke_datas, *fill_border_datas]
+            ),
             self.fill_shader_wrapper.read_in(fill_datas, fill_indices or None),
             self.stroke_shader_wrapper.read_in(stroke_datas),
         ]

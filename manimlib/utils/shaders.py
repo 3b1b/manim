@@ -150,8 +150,6 @@ def get_fill_canvas(ctx) -> Tuple[Framebuffer, VertexArray, Tuple[float, float, 
             #version 330
 
             uniform sampler2D Texture;
-            uniform float v_nudge;
-            uniform float h_nudge;
             uniform vec3 null_rgb;
 
             in vec2 v_textcoord;
@@ -160,17 +158,7 @@ def get_fill_canvas(ctx) -> Tuple[Framebuffer, VertexArray, Tuple[float, float, 
             const float MIN_DIST_TO_NULL = 0.2;
 
             void main() {
-                // Apply poor man's anti-aliasing
-                vec2 nudges[4] = vec2[4](
-                    vec2(0, 0),
-                    vec2(0, h_nudge),
-                    vec2(v_nudge, 0),
-                    vec2(v_nudge, h_nudge)
-                );
-                color = vec4(0.0);
-                for(int i = 0; i < 4; i++){
-                    color += 0.25 * texture(Texture, v_textcoord + nudges[i]);
-                }
+                color = texture(Texture, v_textcoord);
                 if(distance(color.rgb, null_rgb) < MIN_DIST_TO_NULL) discard;
 
                 // Un-blend from the null value
@@ -182,9 +170,6 @@ def get_fill_canvas(ctx) -> Tuple[Framebuffer, VertexArray, Tuple[float, float, 
     )
 
     simple_program['Texture'].value = get_texture_id(texture)
-    # Half pixel width/height
-    simple_program['h_nudge'].value = 0.5 / size[0]
-    simple_program['v_nudge'].value = 0.5 / size[1]
     simple_program['null_rgb'].value = null_rgb
 
     verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
