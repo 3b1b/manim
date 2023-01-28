@@ -62,8 +62,11 @@ class CameraFrame(Mobject):
         self.set_orientation(self.default_orientation)
         return self
 
-    def get_euler_angles(self):
-        return self.get_orientation().as_euler("zxz")[::-1]
+    def get_euler_angles(self) -> np.ndarray:
+        orientation = self.get_orientation()
+        if all(orientation.as_quat() == [0, 0, 0, 1]):
+            return np.zeros(3)
+        return orientation.as_euler("zxz")[::-1]
 
     def get_theta(self):
         return self.get_euler_angles()[0]
