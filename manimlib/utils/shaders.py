@@ -7,8 +7,8 @@ import moderngl
 from PIL import Image
 import numpy as np
 
-from manimlib.constants import DEFAULT_PIXEL_HEIGHT
-from manimlib.constants import DEFAULT_PIXEL_WIDTH
+from manimlib.config import parse_cli
+from manimlib.config import get_configuration
 from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
@@ -114,9 +114,8 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Tu
     which can display that texture as a simple quad onto a screen,
     along with the rgb value which is meant to be discarded.
     """
-    cam_config = get_customization()['camera_resolutions']
-    res_name = cam_config['default_resolution']
-    size = tuple(map(int, cam_config[res_name].split("x")))
+    cam_config = get_configuration(parse_cli())['camera_config']
+    size = (cam_config['pixel_width'], cam_config['pixel_height'])
 
     # Important to make sure dtype is floating point (not fixed point)
     # so that alpha values can be negative and are not clipped
