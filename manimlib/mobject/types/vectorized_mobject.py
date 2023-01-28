@@ -459,6 +459,8 @@ class VMobject(Mobject):
     def use_winding_fill(self, value: bool = True, recurse: bool = True):
         for submob in self.get_family(recurse):
             submob._use_winding_fill = value
+            if not value:
+                submob.subdivide_intersections()
         return self
 
     # Points
@@ -899,8 +901,11 @@ class VMobject(Mobject):
             # If both have fill, and they have the same shape, just
             # give them the same triangulation so that it's not recalculated
             # needlessly throughout an animation
-            if not self._use_winding_fill and self.has_fill() \
-                and vmobject.has_fill() and self.has_same_shape_as(vmobject):
+            match_tris = not self._use_winding_fill and \
+                         self.has_fill() and \
+                         vmobject.has_fill() and \
+                         self.has_same_shape_as(vmobject)
+            if match_tris:
                 vmobject.triangulation = self.triangulation
             return self
 
@@ -921,8 +926,7 @@ class VMobject(Mobject):
 
         def get_nth_subpath(path_list, n):
             if n >= len(path_list):
-                # Create a null path at the very end
-                return [path_list[-1][-1]] * 3
+                return [path_list[-1][-1]]
             return path_list[n]
 
         for n in range(n_subpaths):

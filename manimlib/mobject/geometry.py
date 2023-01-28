@@ -448,12 +448,8 @@ class Annulus(VMobject):
         )
 
         self.radius = outer_radius
-        # Make sure to add enough components that triangulation doesn't fail
-        kw = dict(
-            n_components=int(max(8, np.ceil(TAU / math.acos(inner_radius / outer_radius))))
-        )
-        outer_path = outer_radius * Arc.create_quadratic_bezier_points(TAU, 0, **kw)
-        inner_path = inner_radius * Arc.create_quadratic_bezier_points(-TAU, 0, **kw)
+        outer_path = outer_radius * Arc.create_quadratic_bezier_points(TAU, 0)
+        inner_path = inner_radius * Arc.create_quadratic_bezier_points(-TAU, 0)
         self.add_subpath(outer_path)
         self.add_subpath(inner_path)
         self.shift(center)

@@ -383,7 +383,6 @@ class Bubble(SVGMobject):
             self.flip()
 
         self.content = Mobject()
-        self.refresh_triangulation()
 
     def get_tip(self):
         # TODO, find a better way

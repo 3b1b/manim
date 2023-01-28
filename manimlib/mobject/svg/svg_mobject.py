@@ -319,8 +319,6 @@ class VMobjectFromSVGPath(VMobject):
             if self.should_remove_null_curves:
                 # Get rid of any null curves
                 self.set_points(self.get_points_without_null_curves())
-            # So triangulation doesn't get messed up
-            self.subdivide_intersections()
             # Save for future use
             PATH_TO_POINTS[path_string] = self.get_points().copy()
         else:
