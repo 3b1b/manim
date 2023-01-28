@@ -149,7 +149,6 @@ class TransformMatchingStrings(TransformMatchingParts):
         super().__init__(
             source, target,
             matched_pairs=matched_pairs,
-            group_type=VGroup,
             **kwargs,
         )
 
