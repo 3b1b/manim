@@ -329,6 +329,10 @@ class VMobject(Mobject):
         self.set_stroke(opacity=opacity, recurse=recurse)
         return self
 
+    def set_anti_alias_width(self, anti_alias_width: float, recurse: bool = True):
+        self.set_uniform(recurse, anti_alias_width=anti_alias_width)
+        return self
+
     def fade(self, darkness: float = 0.5, recurse: bool = True):
         mobs = self.get_family() if recurse else [self]
         for mob in mobs:
@@ -398,6 +402,9 @@ class VMobject(Mobject):
         if self.has_fill():
             return self.get_fill_color()
         return self.get_stroke_color()
+
+    def get_anti_alias_width(self):
+        return self.uniforms["anti_alias_width"]
 
     def has_stroke(self) -> bool:
         return any(self.data['stroke_width']) and any(self.data['stroke_rgba'][:, 3])
