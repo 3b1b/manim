@@ -1190,6 +1190,9 @@ class VMobject(Mobject):
                 continue
             inner_ends = mob.get_subpath_end_indices()[:-1]
             mob.data["point"][inner_ends + 1] = mob.data["point"][inner_ends + 2]
+            mob.data["unit_normal"] *= -1
+        super().reverse_points()
+        return self
 
     @triggers_refreshed_triangulation
     def set_data(self, data: np.ndarray):
