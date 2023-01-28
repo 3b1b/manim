@@ -433,6 +433,28 @@ class VMobject(Mobject):
     def get_joint_type(self) -> float:
         return self.uniforms["joint_type"]
 
+    def apply_depth_test(
+        self,
+        anti_alias_width: float = 0,
+        fill_border_width: float = 0,
+        recurse: bool=True
+    ):
+        super().apply_depth_test(recurse)
+        self.set_anti_alias_width(anti_alias_width)
+        self.set_fill(border_width=fill_border_width)
+        return self
+
+    def deactivate_depth_test(
+        self,
+        anti_alias_width: float = 1.0,
+        fill_border_width: float = 0.5,
+        recurse: bool=True
+    ):
+        super().apply_depth_test(recurse)
+        self.set_anti_alias_width(anti_alias_width)
+        self.set_fill(border_width=fill_border_width)
+        return self
+
     @Mobject.affects_family_data
     def use_winding_fill(self, value: bool = True, recurse: bool = True):
         for submob in self.get_family(recurse):
