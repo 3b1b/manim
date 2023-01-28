@@ -80,10 +80,11 @@ class ShaderWrapper(object):
         self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
 
     def init_textures(self, texture_paths: dict[str, str]):
-        for name, path in texture_paths.items():
-            texture = image_path_to_texture(path, self.ctx)
-            tid = get_texture_id(texture)
-            self.uniforms[name] = tid
+        names_to_ids = {
+            name: get_texture_id(image_path_to_texture(path, self.ctx))
+            for name, path in texture_paths.items()
+        }
+        self.update_program_uniforms(names_to_ids)
 
     def init_vao(self):
         self.vbo = None
