@@ -215,6 +215,7 @@ class ShaderWrapper(object):
 
     # Related to data and rendering
     def pre_render(self):
+        return self
         self.set_ctx_depth_test(self.depth_test)
         self.set_ctx_clip_plane(self.use_clip_plane())
 
@@ -248,8 +249,8 @@ class ShaderWrapper(object):
     def generate_vao(self, refresh: bool = True):
         self.release()
         # Data buffer
-        vbo = self.vbo = self.get_vertex_buffer_object(refresh)
-        ibo = self.ibo = self.get_index_buffer_object(refresh)
+        vbo = self.get_vertex_buffer_object(refresh)
+        ibo = self.get_index_buffer_object(refresh)
 
         # Vertex array object
         self.vao = self.ctx.vertex_array(
