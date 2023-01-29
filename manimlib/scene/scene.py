@@ -53,7 +53,6 @@ if TYPE_CHECKING:
 
 PAN_3D_KEY = 'd'
 FRAME_SHIFT_KEY = 'f'
-ZOOM_KEY = 'z'
 RESET_FRAME_KEY = 'r'
 QUIT_KEY = 'q'
 
@@ -61,7 +60,6 @@ QUIT_KEY = 'q'
 class Scene(object):
     random_seed: int = 0
     pan_sensitivity: float = 0.5
-    scroll_sensitivity: float = 10.0
     max_num_saved_states: int = 50
     default_camera_config: dict = dict()
     default_window_config: dict = dict()
@@ -832,6 +830,7 @@ class Scene(object):
         modifiers: int
     ) -> None:
         self.mouse_drag_point.move_to(point)
+        self.frame.shift(-d_point)
 
         event_data = {"point": point, "d_point": d_point, "buttons": buttons, "modifiers": modifiers}
         propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseDragEvent, **event_data)
@@ -872,11 +871,8 @@ class Scene(object):
             return
 
         frame = self.camera.frame
-        if self.window.is_key_pressed(ord(ZOOM_KEY)):
-            ff_offset = offset * FRAME_HEIGHT / frame.get_height()
-            frame.scale(1 - ff_offset[1], about_point=point)
-        else:
-            frame.shift(-self.scroll_sensitivity * offset)
+        ff_offset = offset * FRAME_HEIGHT / frame.get_height()
+        frame.scale(1 - ff_offset[1], about_point=point)
 
     def on_key_release(
         self,
