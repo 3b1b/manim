@@ -144,23 +144,13 @@ class VMobject(Mobject):
     def __getitem__(self, value: int | slice) -> VMobject:
         return super().__getitem__(value)
 
+    def __iter__(self) -> Iterable[VMobject]:
+        return super().__iter__()
+
     def add(self, *vmobjects: VMobject):
         if not all((isinstance(m, VMobject) for m in vmobjects)):
             raise Exception("All submobjects must be of type VMobject")
         super().add(*vmobjects)
-
-    def add_background_rectangle(
-        self,
-        color: ManimColor | None = None,
-        opacity: float = 0.75,
-        **kwargs
-    ):
-        normal = self.family_members_with_points()[0].get_unit_normal()
-        super().add_background_rectangle(color, opacity, **kwargs)
-        rect = self.background_rectangle
-        if np.dot(rect.get_unit_normal(), normal) < 0:
-            rect.reverse_points()
-        return self
 
     # Colors
     def init_colors(self):
@@ -459,7 +449,7 @@ class VMobject(Mobject):
     def use_winding_fill(self, value: bool = True, recurse: bool = True):
         for submob in self.get_family(recurse):
             submob._use_winding_fill = value
-            if not value:
+            if not value and submob.has_points():
                 submob.subdivide_intersections()
         return self
 
