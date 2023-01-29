@@ -77,17 +77,17 @@ class Window(PygletWindow):
         py: int,
         relative: bool = False
     ) -> np.ndarray:
-        pw, ph = self.size
-        fw, fh = self.scene.camera.get_frame_shape()
-        fc = self.scene.camera.get_frame_center()
+        pixel_shape = np.array(self.size)
+        frame_shape = np.array(self.scene.frame.get_shape())
+
+        coords = (frame_shape / pixel_shape) * np.array([px, py])
+        view = self.scene.frame.get_view_matrix()
+
         if relative:
-            return np.array([px / pw, py / ph, 0])
-        else:
-            return np.array([
-                fc[0] + px * fw / pw - fw / 2,
-                fc[1] + py * fh / ph - fh / 2,
-                0
-            ])
+            return np.dot([*coords, 0], view[:3, :3])
+
+        coords -= 0.5 * frame_shape
+        return np.dot([*coords, 0, 1], np.linalg.inv(view).T)[:3]
 
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int) -> None:
         super().on_mouse_motion(x, y, dx, dy)

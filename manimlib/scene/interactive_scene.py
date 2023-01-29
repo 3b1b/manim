@@ -126,7 +126,7 @@ class InteractiveScene(Scene):
 
     def update_selection_rectangle(self, rect: Rectangle):
         p1 = rect.fixed_corner
-        p2 = self.mouse_point.get_center()
+        p2 = self.frame.to_fixed_frame_point(self.mouse_point.get_center())
         rect.set_points_as_corners([
             p1, np.array([p2[0], p1[1], 0]),
             p2, np.array([p1[0], p2[1], 0]),
@@ -377,7 +377,9 @@ class InteractiveScene(Scene):
     def enable_selection(self):
         self.is_selecting = True
         self.add(self.selection_rectangle)
-        self.selection_rectangle.fixed_corner = self.mouse_point.get_center().copy()
+        self.selection_rectangle.fixed_corner = self.frame.to_fixed_frame_point(
+            self.mouse_point.get_center()
+        )
 
     def gather_new_selection(self):
         self.is_selecting = False
@@ -568,7 +570,8 @@ class InteractiveScene(Scene):
 
     def on_mouse_motion(self, point: np.ndarray, d_point: np.ndarray) -> None:
         super().on_mouse_motion(point, d_point)
-        self.crosshair.move_to(point)
+        ff_point = self.frame.to_fixed_frame_point(point)
+        self.crosshair.move_to(ff_point)
         if self.is_grabbing:
             self.handle_grabbing(point)
         elif self.window.is_key_pressed(ord(RESIZE_KEY)):

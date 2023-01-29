@@ -58,7 +58,7 @@ QUIT_KEY = 'q'
 
 class Scene(object):
     random_seed: int = 0
-    pan_sensitivity: float = 3.0
+    pan_sensitivity: float = 0.5
     max_num_saved_states: int = 50
     default_camera_config: dict = dict()
     default_window_config: dict = dict()
@@ -813,16 +813,13 @@ class Scene(object):
         frame = self.camera.frame
         # Handle perspective changes
         if self.window.is_key_pressed(ord(PAN_3D_KEY)):
-            frame.increment_theta(-self.pan_sensitivity * d_point[0])
-            frame.increment_phi(self.pan_sensitivity * d_point[1])
+            ff_d_point = frame.to_fixed_frame_point(d_point)
+            ff_d_point *= self.pan_sensitivity
+            frame.increment_theta(-ff_d_point[0])
+            frame.increment_phi(ff_d_point[1])
         # Handle frame movements
         elif self.window.is_key_pressed(ord(FRAME_SHIFT_KEY)):
-            shift = -d_point
-            shift[0] *= frame.get_width() / 2
-            shift[1] *= frame.get_height() / 2
-            transform = frame.get_inverse_camera_rotation_matrix()
-            shift = np.dot(np.transpose(transform), shift)
-            frame.shift(shift)
+            frame.shift(-d_point)
 
     def on_mouse_drag(
         self,
