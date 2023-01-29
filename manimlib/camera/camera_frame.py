@@ -183,3 +183,7 @@ class CameraFrame(Mobject):
         to_camera = self.get_inverse_camera_rotation_matrix()[2]
         dist = self.get_focal_distance()
         return self.get_center() + dist * to_camera
+
+    def to_fixed_frame_point(self, point: Vect3):
+        view = np.linalg.inv(self.get_view_matrix())
+        return np.dot([*point, 1], view)[:3]
