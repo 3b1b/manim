@@ -25,6 +25,7 @@ from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.constants import COMMAND_MODIFIER
 from manimlib.constants import SHIFT_MODIFIER
 from manimlib.constants import RED
+from manimlib.constants import FRAME_HEIGHT
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
@@ -871,14 +872,11 @@ class Scene(object):
             return
 
         frame = self.camera.frame
-        offset *= self.scroll_sensitivity
         if self.window.is_key_pressed(ord(ZOOM_KEY)):
-            frame.scale(
-                1 - offset[1] / frame.get_height(),
-                about_point=point
-            )
+            ff_offset = offset * FRAME_HEIGHT / frame.get_height()
+            frame.scale(1 - ff_offset[1], about_point=point)
         else:
-            frame.shift(-offset)
+            frame.shift(-self.scroll_sensitivity * offset)
 
     def on_key_release(
         self,
