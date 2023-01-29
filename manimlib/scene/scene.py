@@ -43,6 +43,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable
+    from manimlib.typing import Vect3
 
     from PIL.Image import Image
 
@@ -59,6 +60,7 @@ QUIT_KEY = 'q'
 class Scene(object):
     random_seed: int = 0
     pan_sensitivity: float = 0.5
+    scroll_sensitivity: float = 5.0
     max_num_saved_states: int = 50
     default_camera_config: dict = dict()
     default_window_config: dict = dict()
@@ -800,8 +802,8 @@ class Scene(object):
 
     def on_mouse_motion(
         self,
-        point: np.ndarray,
-        d_point: np.ndarray
+        point: Vect3,
+        d_point: Vect3
     ) -> None:
         self.mouse_point.move_to(point)
 
@@ -823,8 +825,8 @@ class Scene(object):
 
     def on_mouse_drag(
         self,
-        point: np.ndarray,
-        d_point: np.ndarray,
+        point: Vect3,
+        d_point: Vect3,
         buttons: int,
         modifiers: int
     ) -> None:
@@ -837,7 +839,7 @@ class Scene(object):
 
     def on_mouse_press(
         self,
-        point: np.ndarray,
+        point: Vect3,
         button: int,
         mods: int
     ) -> None:
@@ -849,7 +851,7 @@ class Scene(object):
 
     def on_mouse_release(
         self,
-        point: np.ndarray,
+        point: Vect3,
         button: int,
         mods: int
     ) -> None:
@@ -860,8 +862,8 @@ class Scene(object):
 
     def on_mouse_scroll(
         self,
-        point: np.ndarray,
-        offset: np.ndarray
+        point: Vect3,
+        offset: Vect3
     ) -> None:
         event_data = {"point": point, "offset": offset}
         propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseScrollEvent, **event_data)
@@ -869,13 +871,14 @@ class Scene(object):
             return
 
         frame = self.camera.frame
+        offset *= self.scroll_sensitivity
         if self.window.is_key_pressed(ord(ZOOM_KEY)):
-            factor = 1 + np.arctan(10 * offset[1])
-            frame.scale(1 / factor, about_point=point)
+            frame.scale(
+                1 - offset[1] / frame.get_height(),
+                about_point=point
+            )
         else:
-            transform = frame.get_inverse_camera_rotation_matrix()
-            shift = np.dot(np.transpose(transform), offset)
-            frame.shift(-20.0 * shift)
+            frame.shift(-offset)
 
     def on_key_release(
         self,
