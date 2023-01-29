@@ -30,10 +30,7 @@ class SingleStringTex(SVGMobject):
         fill_opacity: float = 1.0,
         stroke_width: float = 0,
         svg_default: dict = dict(fill_color=WHITE),
-        path_string_config: dict = dict(
-            should_subdivide_sharp_curves=True,
-            should_remove_null_curves=True,
-        ),
+        path_string_config: dict = dict(),
         font_size: int = 48,
         alignment: str = R"\centering",
         math_mode: bool = True,
