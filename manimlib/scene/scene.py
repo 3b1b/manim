@@ -814,7 +814,7 @@ class Scene(object):
         frame = self.camera.frame
         # Handle perspective changes
         if self.window.is_key_pressed(ord(PAN_3D_KEY)):
-            ff_d_point = frame.to_fixed_frame_point(d_point)
+            ff_d_point = np.dot(d_point, frame.get_view_matrix()[:3, :3].T)
             ff_d_point *= self.pan_sensitivity
             frame.increment_theta(-ff_d_point[0])
             frame.increment_phi(ff_d_point[1])
