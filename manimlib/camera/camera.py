@@ -169,10 +169,10 @@ class Camera(object):
 
     # Getting camera attributes
     def get_pixel_size(self) -> float:
-        return self.frame.get_shape()[0] / self.get_pixel_shape()[0]
+        return self.frame.get_width() / self.get_pixel_shape()[0]
 
     def get_pixel_shape(self) -> tuple[int, int]:
-        return self.draw_fbo.size
+        return self.fbo.size
 
     def get_pixel_width(self) -> int:
         return self.get_pixel_shape()[0]
@@ -233,7 +233,7 @@ class Camera(object):
         self.uniforms.update(
             view=tuple(view_matrix.T.flatten()),
             focal_distance=frame.get_focal_distance() / frame.get_scale(),
-            frame_shape=frame.get_shape(),
+            frame_scale=frame.get_scale(),
             pixel_size=self.get_pixel_size(),
             camera_position=tuple(cam_pos),
             light_position=tuple(light_pos),
