@@ -6,7 +6,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from manimlib.constants import DEGREES, RADIANS
-from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
+from manimlib.constants import FRAME_SHAPE
 from manimlib.constants import DOWN, LEFT, ORIGIN, OUT, RIGHT, UP
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.space_ops import normalize
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class CameraFrame(Mobject):
     def __init__(
         self,
-        frame_shape: tuple[float, float] = (FRAME_WIDTH, FRAME_HEIGHT),
+        frame_shape: tuple[float, float] = FRAME_SHAPE,
         center_point: Vect3 = ORIGIN,
         focal_dist_to_height: float = 2.0,
         **kwargs,
@@ -56,9 +56,8 @@ class CameraFrame(Mobject):
         return self
 
     def to_default_state(self):
+        self.set_shape(*FRAME_SHAPE)
         self.center()
-        self.set_height(FRAME_HEIGHT)
-        self.set_width(FRAME_WIDTH)
         self.set_orientation(self.default_orientation)
         return self
 
