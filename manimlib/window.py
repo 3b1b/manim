@@ -114,7 +114,7 @@ class Window(PygletWindow):
         super().on_mouse_scroll(x, y, x_offset, y_offset)
         point = self.pixel_coords_to_space_coords(x, y)
         offset = self.pixel_coords_to_space_coords(x_offset, y_offset, relative=True)
-        self.scene.on_mouse_scroll(point, offset)
+        self.scene.on_mouse_scroll(point, offset, x_offset, y_offset)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         self.pressed_keys.add(symbol)  # Modifiers?

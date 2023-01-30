@@ -60,6 +60,7 @@ QUIT_KEY = 'q'
 class Scene(object):
     random_seed: int = 0
     pan_sensitivity: float = 0.5
+    scroll_sensitivity: float = 20
     max_num_saved_states: int = 50
     default_camera_config: dict = dict()
     default_window_config: dict = dict()
@@ -864,16 +865,20 @@ class Scene(object):
     def on_mouse_scroll(
         self,
         point: Vect3,
-        offset: Vect3
+        offset: Vect3,
+        x_pixel_offset: float,
+        y_pixel_offset: float
     ) -> None:
         event_data = {"point": point, "offset": offset}
         propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseScrollEvent, **event_data)
         if propagate_event is not None and propagate_event is False:
             return
 
-        frame = self.camera.frame
-        ff_offset = offset / frame.get_scale()
-        frame.scale(1 - ff_offset[1], about_point=point)
+        rel_offset = y_pixel_offset / self.camera.get_pixel_height()
+        self.frame.scale(
+            1 - self.scroll_sensitivity * rel_offset,
+            about_point=point
+        )
 
     def on_key_release(
         self,
