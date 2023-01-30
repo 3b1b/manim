@@ -821,7 +821,7 @@ class Scene(object):
             frame.increment_phi(ff_d_point[1])
         # Handle frame movements
         elif self.window.is_key_pressed(ord(FRAME_SHIFT_KEY)):
-            frame.shift(-d_point / self.frame.get_scale())
+            frame.shift(-d_point)
 
     def on_mouse_drag(
         self,
@@ -831,7 +831,7 @@ class Scene(object):
         modifiers: int
     ) -> None:
         self.mouse_drag_point.move_to(point)
-        self.frame.shift(-d_point / self.frame.get_scale())
+        self.frame.shift(-d_point)
 
         event_data = {"point": point, "d_point": d_point, "buttons": buttons, "modifiers": modifiers}
         propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseDragEvent, **event_data)

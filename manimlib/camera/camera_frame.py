@@ -90,8 +90,8 @@ class CameraFrame(Mobject):
         """
         shift = Matrix44.from_translation(-self.get_center()).T
         rotation = Matrix44.from_quaternion(self.uniforms["orientation"]).T
-        self.view_matrix[:] = np.dot(rotation, shift)
-        self.view_matrix[:3, :3] /= self.get_scale()
+        scale = Matrix44(np.identity(3) / self.get_scale())
+        self.view_matrix[:] = shift * rotation * scale
         return self.view_matrix
 
     def get_inv_view_matrix(self):
