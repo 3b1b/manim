@@ -9,7 +9,6 @@ import itertools as it
 from manimlib.constants import BLACK, BLUE, BLUE_D, BLUE_E, GREEN, GREY_A, WHITE, RED
 from manimlib.constants import DEGREES, PI
 from manimlib.constants import DL, UL, DOWN, DR, LEFT, ORIGIN, OUT, RIGHT, UP
-from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
 from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
 from manimlib.constants import MED_SMALL_BUFF, SMALL_BUFF
 from manimlib.mobject.functions import ParametricCurve
