@@ -48,7 +48,7 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Union, Tuple
+    from typing import Callable, Iterable, Union, Tuple, Optional
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict
     from moderngl.context import Context
@@ -1166,6 +1166,21 @@ class Mobject(object):
     def set_min_depth(self, min_depth: float, **kwargs):
         if self.get_depth() < min_depth:
             self.set_depth(min_depth, **kwargs)
+        return self
+
+    def set_shape(
+        self,
+        width: Optional[float] = None,
+        height: Optional[float] = None,
+        depth: Optional[float] = None,
+        **kwargs
+    ):
+        if width is not None:
+            self.set_width(width, stretch=True, **kwargs)
+        if height is not None:
+            self.set_height(height, stretch=True, **kwargs)
+        if depth is not None:
+            self.set_depth(depth, stretch=True, **kwargs)
         return self
 
     def set_coord(self, value: float, dim: int, direction: Vect3 = ORIGIN):
