@@ -7,6 +7,7 @@ from moderngl_window.context.pyglet.window import Window as PygletWindow
 from moderngl_window.timers.clock import Timer
 from screeninfo import get_monitors
 
+from manimlib.constants import FRAME_SHAPE
 from manimlib.utils.customization import get_customization
 
 from typing import TYPE_CHECKING
@@ -78,16 +79,14 @@ class Window(PygletWindow):
         relative: bool = False
     ) -> np.ndarray:
         pixel_shape = np.array(self.size)
-        frame_shape = np.array(self.scene.frame.get_shape())
+        frame_shape = np.array(FRAME_SHAPE)
+        frame = self.scene.frame
 
-        coords = (frame_shape / pixel_shape) * np.array([px, py])
-        view = self.scene.frame.get_view_matrix()
-
-        if relative:
-            return np.dot([*coords, 0], view[:3, :3])
-
-        coords -= 0.5 * frame_shape
-        return np.dot([*coords, 0, 1], np.linalg.inv(view).T)[:3]
+        coords = np.zeros(3)
+        coords[:2] = (frame_shape / pixel_shape) * np.array([px, py])
+        if not relative:
+            coords[:2] -= 0.5 * frame_shape
+        return frame.from_fixed_frame_point(coords, relative)
 
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int) -> None:
         super().on_mouse_motion(x, y, dx, dy)

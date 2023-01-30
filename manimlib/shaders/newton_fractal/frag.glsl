@@ -26,8 +26,6 @@ uniform float saturation_factor;
 uniform float black_for_cycles;
 uniform float is_parameter_space;
 
-uniform vec2 frame_shape;
-
 in vec3 xyz_coords;
 
 out vec4 frag_color;

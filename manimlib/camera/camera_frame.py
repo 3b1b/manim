@@ -4,6 +4,7 @@ import math
 
 import numpy as np
 from scipy.spatial.transform import Rotation
+from pyrr import Matrix44
 
 from manimlib.constants import DEGREES, RADIANS
 from manimlib.constants import FRAME_SHAPE
@@ -76,6 +77,9 @@ class CameraFrame(Mobject):
     def get_gamma(self):
         return self.get_euler_angles()[2]
 
+    def get_scale(self):
+        return self.get_height() / FRAME_SHAPE[1]
+
     def get_inverse_camera_rotation_matrix(self):
         return self.get_orientation().as_matrix().T
 
@@ -84,13 +88,14 @@ class CameraFrame(Mobject):
         Returns a 4x4 for the affine transformation mapping a point
         into the camera's internal coordinate system
         """
-        result = self.view_matrix
-        result[:] = np.identity(4)
-        result[:3, 3] = -self.get_center()
-        rotation = np.identity(4)
-        rotation[:3, :3] = self.get_inverse_camera_rotation_matrix()
-        result[:] = np.dot(rotation, result)
-        return result
+        shift = Matrix44.from_translation(-self.get_center()).T
+        rotation = Matrix44.from_quaternion(self.uniforms["orientation"]).T
+        self.view_matrix[:] = np.dot(rotation, shift)
+        self.view_matrix[:3, :3] /= self.get_scale()
+        return self.view_matrix
+
+    def get_inv_view_matrix(self):
+        return np.linalg.inv(self.get_view_matrix())
 
     def rotate(self, angle: float, axis: np.ndarray = OUT, **kwargs):
         rot = Rotation.from_rotvec(angle * normalize(axis))
@@ -160,6 +165,10 @@ class CameraFrame(Mobject):
     def get_shape(self):
         return (self.get_width(), self.get_height())
 
+    def get_aspect_ratio(self):
+        width, height = self.get_shape()
+        return width / height
+
     def get_center(self) -> np.ndarray:
         # Assumes first point is at the center
         return self.get_points()[0]
@@ -183,6 +192,12 @@ class CameraFrame(Mobject):
         dist = self.get_focal_distance()
         return self.get_center() + dist * to_camera
 
-    def to_fixed_frame_point(self, point: Vect3):
+    def to_fixed_frame_point(self, point: Vect3, relative: bool = False):
         view = self.get_view_matrix()
-        return np.dot([*point, 1], view.T)[:3]
+        point4d = [*point, 0 if relative else 1]
+        return np.dot(point4d, view.T)[:3]
+
+    def from_fixed_frame_point(self, point: Vect3, relative: bool = False):
+        inv_view = self.get_inv_view_matrix()
+        point4d = [*point, 0 if relative else 1]
+        return np.dot(point4d, inv_view.T)[:3]

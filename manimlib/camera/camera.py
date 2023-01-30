@@ -231,12 +231,12 @@ class Camera(object):
         cam_pos = self.frame.get_implied_camera_location()
 
         self.uniforms.update(
+            view=tuple(view_matrix.T.flatten()),
+            focal_distance=frame.get_focal_distance() / frame.get_scale(),
             frame_shape=frame.get_shape(),
             pixel_size=self.get_pixel_size(),
-            view=tuple(view_matrix.T.flatten()),
             camera_position=tuple(cam_pos),
             light_position=tuple(light_pos),
-            focal_distance=frame.get_focal_distance(),
         )
 
 

@@ -804,6 +804,7 @@ class Scene(object):
         point: Vect3,
         d_point: Vect3
     ) -> None:
+        assert(self.window is not None)
         self.mouse_point.move_to(point)
 
         event_data = {"point": point, "d_point": d_point}
@@ -814,13 +815,13 @@ class Scene(object):
         frame = self.camera.frame
         # Handle perspective changes
         if self.window.is_key_pressed(ord(PAN_3D_KEY)):
-            ff_d_point = np.dot(d_point, frame.get_view_matrix()[:3, :3].T)
+            ff_d_point = frame.to_fixed_frame_point(d_point, relative=True)
             ff_d_point *= self.pan_sensitivity
             frame.increment_theta(-ff_d_point[0])
             frame.increment_phi(ff_d_point[1])
         # Handle frame movements
         elif self.window.is_key_pressed(ord(FRAME_SHIFT_KEY)):
-            frame.shift(-d_point)
+            frame.shift(-d_point / self.frame.get_scale())
 
     def on_mouse_drag(
         self,
@@ -830,7 +831,7 @@ class Scene(object):
         modifiers: int
     ) -> None:
         self.mouse_drag_point.move_to(point)
-        self.frame.shift(-d_point)
+        self.frame.shift(-d_point / self.frame.get_scale())
 
         event_data = {"point": point, "d_point": d_point, "buttons": buttons, "modifiers": modifiers}
         propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseDragEvent, **event_data)
@@ -871,7 +872,7 @@ class Scene(object):
             return
 
         frame = self.camera.frame
-        ff_offset = offset * FRAME_HEIGHT / frame.get_height()
+        ff_offset = offset / frame.get_scale()
         frame.scale(1 - ff_offset[1], about_point=point)
 
     def on_key_release(
