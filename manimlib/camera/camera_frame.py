@@ -23,27 +23,21 @@ class CameraFrame(Mobject):
         self,
         frame_shape: tuple[float, float] = FRAME_SHAPE,
         center_point: Vect3 = ORIGIN,
-        focal_dist_to_height: float = 2.0,
+        # Field of view in the y direction
+        fovy: float = 45 * DEGREES,
         **kwargs,
     ):
-        self.frame_shape = frame_shape
-        self.center_point = center_point
-        self.focal_dist_to_height = focal_dist_to_height
-        self.view_matrix = np.identity(4)
-        self.default_orientation = Rotation.identity()
         super().__init__(**kwargs)
 
-    def init_uniforms(self) -> None:
-        super().init_uniforms()
-        # As a quaternion
-        self.uniforms["orientation"] = Rotation.identity().as_quat()
-        self.uniforms["focal_dist_to_height"] = self.focal_dist_to_height
+        self.view_matrix = np.identity(4)
+        self.default_orientation = Rotation.identity()
 
-    def init_points(self) -> None:
-        self.set_points([ORIGIN, LEFT, RIGHT, DOWN, UP])
-        self.set_width(self.frame_shape[0], stretch=True)
-        self.set_height(self.frame_shape[1], stretch=True)
-        self.move_to(self.center_point)
+        self.set_points(np.array([ORIGIN, LEFT, RIGHT, DOWN, UP]))
+        self.set_width(frame_shape[0], stretch=True)
+        self.set_height(frame_shape[1], stretch=True)
+        self.move_to(center_point)
+        self.uniforms["orientation"] = Rotation.identity().as_quat()
+        self.uniforms["fovy"] = fovy
 
     def set_orientation(self, rotation: Rotation):
         self.uniforms["orientation"][:] = rotation.as_quat()
@@ -155,11 +149,11 @@ class CameraFrame(Mobject):
         return self
 
     def set_focal_distance(self, focal_distance: float):
-        self.uniforms["focal_dist_to_height"] = focal_distance / self.get_height()
+        self.uniforms["fovy"] = 2 * math.atan(0.5 * self.get_height() / focal_distance)
         return self
 
     def set_field_of_view(self, field_of_view: float):
-        self.uniforms["focal_dist_to_height"] = 2 * math.tan(field_of_view / 2)
+        self.uniforms["fovy"] = field_of_view
         return self
 
     def get_shape(self):
@@ -182,10 +176,10 @@ class CameraFrame(Mobject):
         return points[4, 1] - points[3, 1]
 
     def get_focal_distance(self) -> float:
-        return self.uniforms["focal_dist_to_height"] * self.get_height()
+        return 0.5 * self.get_height() / math.tan(0.5 * self.uniforms["fovy"])
 
     def get_field_of_view(self) -> float:
-        return 2 * math.atan(self.uniforms["focal_dist_to_height"] / 2)
+        return self.uniforms["fovy"]
 
     def get_implied_camera_location(self) -> np.ndarray:
         to_camera = self.get_inverse_camera_rotation_matrix()[2]
