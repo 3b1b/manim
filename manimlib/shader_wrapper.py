@@ -215,7 +215,6 @@ class ShaderWrapper(object):
 
     # Related to data and rendering
     def pre_render(self):
-        return self
         self.set_ctx_depth_test(self.depth_test)
         self.set_ctx_clip_plane(self.use_clip_plane())
 
