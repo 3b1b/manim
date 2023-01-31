@@ -320,7 +320,9 @@ class TexturedSurface(Surface):
         surf = self.uv_surface
         nu, nv = surf.resolution
         self.resize_points(surf.get_num_points())
+        self.resolution = surf.resolution
         self.data['point'][:] = surf.data['point']
+        self.data['normal'][:] = surf.data['normal']
         self.data['opacity'][:, 0] = surf.data["rgba"][:, 3]
         self.data["im_coords"] = np.array([
             [u, v]

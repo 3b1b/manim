@@ -1,8 +1,7 @@
 #version 330
 
 in vec3 point;
-in vec3 du_point;
-in vec3 dv_point;
+in vec3 normal;
 in vec2 im_coords;
 in float opacity;
 
@@ -16,7 +15,7 @@ out float v_opacity;
 
 void main(){
     v_point = point;
-    v_normal = get_unit_normal(point, du_point, dv_point);
+    v_normal = normal;
     v_im_coords = im_coords;
     v_opacity = opacity;
     emit_gl_Position(point);
