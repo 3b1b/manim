@@ -96,8 +96,8 @@ class Surface(Mobject):
         ]
         self.set_points(points)
         self.data["normal"] = normalize_along_axis(cross(
-            du_points - points,
-            dv_points - points,
+            (du_points - points) / self.epsilon,
+            (dv_points - points) / self.epsilon,
         ), 1)
 
     def apply_points_function(self, *args, **kwargs):
