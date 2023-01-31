@@ -20,7 +20,7 @@ from manimlib.constants import MED_SMALL_BUFF
 from manimlib.constants import TAU
 from manimlib.constants import WHITE
 from manimlib.event_handler import EVENT_DISPATCHER
-from manimlib.event_handler.event_listner import EventListner
+from manimlib.event_handler.event_listner import EventListener
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
 from manimlib.shader_wrapper import ShaderWrapper
@@ -1990,14 +1990,14 @@ class Mobject(object):
     """
 
     def init_event_listners(self):
-        self.event_listners: list[EventListner] = []
+        self.event_listners: list[EventListener] = []
 
     def add_event_listner(
         self,
         event_type: EventType,
         event_callback: Callable[[Mobject, dict[str]]]
     ):
-        event_listner = EventListner(self, event_type, event_callback)
+        event_listner = EventListener(self, event_type, event_callback)
         self.event_listners.append(event_listner)
         EVENT_DISPATCHER.add_listner(event_listner)
         return self
@@ -2007,7 +2007,7 @@ class Mobject(object):
         event_type: EventType,
         event_callback: Callable[[Mobject, dict[str]]]
     ):
-        event_listner = EventListner(self, event_type, event_callback)
+        event_listner = EventListener(self, event_type, event_callback)
         while event_listner in self.event_listners:
             self.event_listners.remove(event_listner)
         EVENT_DISPATCHER.remove_listner(event_listner)
