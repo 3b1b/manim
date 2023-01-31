@@ -92,13 +92,15 @@ class CameraFrame(Mobject):
         if refresh:
             shift = np.identity(4)
             rotation = np.identity(4)
-            scale = np.identity(4)
+            scale_mat = np.identity(4)
 
             shift[:3, 3] = -self.get_center()
             rotation[:3, :3] = self.get_inverse_camera_rotation_matrix()
-            scale[:3, :3] /= self.get_scale()
+            scale = self.get_scale()
+            if scale > 0:
+                scale_mat[:3, :3] /= self.get_scale()
 
-            self.view_matrix = np.dot(scale, np.dot(rotation, shift))
+            self.view_matrix = np.dot(scale_mat, np.dot(rotation, shift))
 
         return self.view_matrix
 
