@@ -96,7 +96,7 @@ class Sphere(Surface):
     def __init__(
         self,
         u_range: Tuple[float, float] = (0, TAU),
-        v_range: Tuple[float, float] = (0, PI),
+        v_range: Tuple[float, float] = (1e-5, PI - 1e-5),
         resolution: Tuple[int, int] = (101, 51),
         radius: float = 1.0,
         **kwargs,
