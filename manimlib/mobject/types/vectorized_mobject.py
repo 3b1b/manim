@@ -1317,9 +1317,10 @@ class VMobject(Mobject):
                 names = list(stroke_names)
                 names[names.index('stroke_rgba')] = 'fill_rgba'
                 names[names.index('stroke_width')] = 'fill_border_width'
-                border_stroke_data = submob.data[names]
+                border_stroke_data = submob.data[names].astype(
+                    self.stroke_shader_wrapper.vert_data.dtype
+                )
                 fill_border_datas.append(border_stroke_data[indices])
-
 
         shader_wrappers = [
             self.back_stroke_shader_wrapper.read_in(
