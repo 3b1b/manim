@@ -599,6 +599,7 @@ class Mobject(object):
         result = copy.deepcopy(self)
         result._shaders_initialized = False
         result._data_has_changed = True
+        return result
 
     def copy(self, deep: bool = False):
         if deep:
