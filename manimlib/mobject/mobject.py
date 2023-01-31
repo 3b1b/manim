@@ -695,6 +695,7 @@ class Mobject(object):
             sm1.texture_paths = sm2.texture_paths
             sm1.depth_test = sm2.depth_test
             sm1.render_primitive = sm2.render_primitive
+            sm1.needs_new_bounding_box = sm2.needs_new_bounding_box
         # Make sure named family members carry over
         for attr, value in list(mobject.__dict__.items()):
             if isinstance(value, Mobject) and value in family2:
