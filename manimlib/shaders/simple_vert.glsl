@@ -2,8 +2,8 @@
 
 in vec3 point;
 
-#INSERT get_gl_Position.glsl
+#INSERT emit_gl_Position.glsl
 
 void main(){
-    gl_Position = get_gl_Position(point);
+    emit_gl_Position(point);
 }

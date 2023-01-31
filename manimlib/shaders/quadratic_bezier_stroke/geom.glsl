@@ -36,7 +36,7 @@ const float COS_THRESHOLD = 0.99;
 
 vec3 unit_normal = vec3(0.0, 0.0, 1.0);
 
-#INSERT get_gl_Position.glsl
+#INSERT emit_gl_Position.glsl
 #INSERT get_xyz_to_uv.glsl
 #INSERT finalize_color.glsl
 
@@ -207,7 +207,7 @@ void main() {
         }
 
         color = finalize_color(v_color[i / 2], corners[i], unit_normal);
-        gl_Position = get_gl_Position(corners[i]);
+        emit_gl_Position(corners[i]);
         EmitVertex();
     }
     EndPrimitive();
