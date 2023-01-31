@@ -144,23 +144,13 @@ class VMobject(Mobject):
     def __getitem__(self, value: int | slice) -> VMobject:
         return super().__getitem__(value)
 
+    def __iter__(self) -> Iterable[VMobject]:
+        return super().__iter__()
+
     def add(self, *vmobjects: VMobject):
         if not all((isinstance(m, VMobject) for m in vmobjects)):
             raise Exception("All submobjects must be of type VMobject")
         super().add(*vmobjects)
-
-    def add_background_rectangle(
-        self,
-        color: ManimColor | None = None,
-        opacity: float = 0.75,
-        **kwargs
-    ):
-        normal = self.family_members_with_points()[0].get_unit_normal()
-        super().add_background_rectangle(color, opacity, **kwargs)
-        rect = self.background_rectangle
-        if np.dot(rect.get_unit_normal(), normal) < 0:
-            rect.reverse_points()
-        return self
 
     # Colors
     def init_colors(self):
@@ -329,6 +319,10 @@ class VMobject(Mobject):
         self.set_stroke(opacity=opacity, recurse=recurse)
         return self
 
+    def set_anti_alias_width(self, anti_alias_width: float, recurse: bool = True):
+        self.set_uniform(recurse, anti_alias_width=anti_alias_width)
+        return self
+
     def fade(self, darkness: float = 0.5, recurse: bool = True):
         mobs = self.get_family() if recurse else [self]
         for mob in mobs:
@@ -399,6 +393,9 @@ class VMobject(Mobject):
             return self.get_fill_color()
         return self.get_stroke_color()
 
+    def get_anti_alias_width(self):
+        return self.uniforms["anti_alias_width"]
+
     def has_stroke(self) -> bool:
         return any(self.data['stroke_width']) and any(self.data['stroke_rgba'][:, 3])
 
@@ -426,10 +423,34 @@ class VMobject(Mobject):
     def get_joint_type(self) -> float:
         return self.uniforms["joint_type"]
 
+    def apply_depth_test(
+        self,
+        anti_alias_width: float = 0,
+        fill_border_width: float = 0,
+        recurse: bool=True
+    ):
+        super().apply_depth_test(recurse)
+        self.set_anti_alias_width(anti_alias_width)
+        self.set_fill(border_width=fill_border_width)
+        return self
+
+    def deactivate_depth_test(
+        self,
+        anti_alias_width: float = 1.0,
+        fill_border_width: float = 0.5,
+        recurse: bool=True
+    ):
+        super().apply_depth_test(recurse)
+        self.set_anti_alias_width(anti_alias_width)
+        self.set_fill(border_width=fill_border_width)
+        return self
+
     @Mobject.affects_family_data
     def use_winding_fill(self, value: bool = True, recurse: bool = True):
         for submob in self.get_family(recurse):
             submob._use_winding_fill = value
+            if not value and submob.has_points():
+                submob.subdivide_intersections()
         return self
 
     # Points
@@ -870,8 +891,11 @@ class VMobject(Mobject):
             # If both have fill, and they have the same shape, just
             # give them the same triangulation so that it's not recalculated
             # needlessly throughout an animation
-            if not self._use_winding_fill and self.has_fill() \
-                and vmobject.has_fill() and self.has_same_shape_as(vmobject):
+            match_tris = not self._use_winding_fill and \
+                         self.has_fill() and \
+                         vmobject.has_fill() and \
+                         self.has_same_shape_as(vmobject)
+            if match_tris:
                 vmobject.triangulation = self.triangulation
             return self
 
@@ -892,8 +916,7 @@ class VMobject(Mobject):
 
         def get_nth_subpath(path_list, n):
             if n >= len(path_list):
-                # Create a null path at the very end
-                return [path_list[-1][-1]] * 3
+                return [path_list[-1][-1]]
             return path_list[n]
 
         for n in range(n_subpaths):
@@ -1277,23 +1300,6 @@ class VMobject(Mobject):
             submob.get_joint_products()
             has_fill = submob.has_fill()
             has_stroke = submob.has_stroke()
-            if has_fill:
-                data = submob.data[fill_names]
-                data["base_point"][:] = data["point"][0]
-                fill_datas.append(data)
-                if self._use_winding_fill:
-                    # Add dummy
-                    fill_datas.append(data[-1:])
-                else:
-                    fill_indices.append(submob.get_triangulation())
-                # Add fill border
-                if not has_stroke:
-                    names = list(stroke_names)
-                    names[names.index('stroke_rgba')] = 'fill_rgba'
-                    names[names.index('stroke_width')] = 'fill_border_width'
-                    border_stroke_data = submob.data[names]
-                    fill_border_datas.append(border_stroke_data)
-                    fill_border_datas.append(border_stroke_data[-1:])
             if has_stroke:
                 lst = back_stroke_datas if submob.stroke_behind else stroke_datas
                 lst.append(submob.data[stroke_names])
@@ -1301,6 +1307,24 @@ class VMobject(Mobject):
                 # with a dummy vertex added at the end. This is to ensure
                 # it can be safely stacked onto other stroke data arrays.
                 lst.append(submob.data[stroke_names][-1:])
+            if has_fill:
+                data = submob.data[fill_names]
+                data["base_point"][:] = data["point"][0]
+                fill_datas.append(data)
+                if self._use_winding_fill:
+                    # Add dummy, as above
+                    fill_datas.append(data[-1:])
+                else:
+                    fill_indices.append(submob.get_triangulation())
+            if not has_stroke and has_fill:
+                # Add fill border
+                names = list(stroke_names)
+                names[names.index('stroke_rgba')] = 'fill_rgba'
+                names[names.index('stroke_width')] = 'fill_border_width'
+                border_stroke_data = submob.data[names]
+                fill_border_datas.append(border_stroke_data)
+                fill_border_datas.append(border_stroke_data[-1:])
+
 
         shader_wrappers = [
             self.back_stroke_shader_wrapper.read_in(

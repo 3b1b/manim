@@ -72,9 +72,9 @@ class Camera(object):
 
     def init_context(self) -> None:
         if self.window is None:
-            self.ctx = moderngl.create_standalone_context()
+            self.ctx: moderngl.Context = moderngl.create_standalone_context()
         else:
-            self.ctx = self.window.ctx
+            self.ctx: moderngl.Context = self.window.ctx
 
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
         self.ctx.enable(moderngl.BLEND)
@@ -169,10 +169,10 @@ class Camera(object):
 
     # Getting camera attributes
     def get_pixel_size(self) -> float:
-        return self.frame.get_shape()[0] / self.get_pixel_shape()[0]
+        return self.frame.get_width() / self.get_pixel_shape()[0]
 
     def get_pixel_shape(self) -> tuple[int, int]:
-        return self.draw_fbo.size
+        return self.fbo.size
 
     def get_pixel_width(self) -> int:
         return self.get_pixel_shape()[0]
@@ -231,12 +231,12 @@ class Camera(object):
         cam_pos = self.frame.get_implied_camera_location()
 
         self.uniforms.update(
-            frame_shape=frame.get_shape(),
-            pixel_size=self.get_pixel_size(),
             view=tuple(view_matrix.T.flatten()),
+            focal_distance=frame.get_focal_distance() / frame.get_scale(),
+            frame_scale=frame.get_scale(),
+            pixel_size=self.get_pixel_size(),
             camera_position=tuple(cam_pos),
             light_position=tuple(light_pos),
-            focal_distance=frame.get_focal_distance(),
         )
 
 

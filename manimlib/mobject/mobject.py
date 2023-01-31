@@ -48,7 +48,7 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Union, Tuple
+    from typing import Callable, Iterable, Union, Tuple, Optional
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict
     from moderngl.context import Context
@@ -408,8 +408,13 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    def remove(self, *to_remove: Mobject, reassemble: bool = True):
-        for parent in self.get_family():
+    def remove(
+        self,
+        *to_remove: Mobject,
+        reassemble: bool = True,
+        recurse: bool = True
+    ):
+        for parent in self.get_family(recurse):
             for child in to_remove:
                 if child in parent.submobjects:
                     parent.submobjects.remove(child)
@@ -418,6 +423,9 @@ class Mobject(object):
             if reassemble:
                 parent.assemble_family()
         return self
+
+    def clear(self):
+        self.remove(*self.submobjects, recurse=False)
 
     def add_to_back(self, *mobjects: Mobject):
         self.set_submobjects(list_update(mobjects, self.submobjects))
@@ -1160,6 +1168,21 @@ class Mobject(object):
             self.set_depth(min_depth, **kwargs)
         return self
 
+    def set_shape(
+        self,
+        width: Optional[float] = None,
+        height: Optional[float] = None,
+        depth: Optional[float] = None,
+        **kwargs
+    ):
+        if width is not None:
+            self.set_width(width, stretch=True, **kwargs)
+        if height is not None:
+            self.set_height(height, stretch=True, **kwargs)
+        if depth is not None:
+            self.set_depth(depth, stretch=True, **kwargs)
+        return self
+
     def set_coord(self, value: float, dim: int, direction: Vect3 = ORIGIN):
         curr = self.get_coord(dim, direction)
         shift_vect = np.zeros(self.dim)
@@ -1801,35 +1824,41 @@ class Mobject(object):
 
     def affects_shader_info_id(func: Callable):
         @wraps(func)
-        def wrapper(self):
-            for mob in self.get_family():
-                func(mob)
-                mob.refresh_shader_wrapper_id()
-            return self
+        def wrapper(self, *args, **kwargs):
+            result = func(self, *args, **kwargs)
+            self.refresh_shader_wrapper_id()
+            return result
         return wrapper
 
     @affects_shader_info_id
-    def fix_in_frame(self, recurse: bool = True):
+    def set_uniform(self, recurse: bool = True, **new_uniforms):
         for mob in self.get_family(recurse):
-            mob.uniforms["is_fixed_in_frame"] = 1.0
+            mob.uniforms.update(new_uniforms)
         return self
 
     @affects_shader_info_id
-    def unfix_from_frame(self):
-        self.uniforms["is_fixed_in_frame"] = 0.0
+    def fix_in_frame(self, recurse: bool = True):
+        self.set_uniform(recurse, is_fixed_in_frame=1.0)
+        return self
+
+    @affects_shader_info_id
+    def unfix_from_frame(self, recurse: bool = True):
+        self.set_uniform(recurse, is_fixed_in_frame=0.0)
         return self
 
     def is_fixed_in_frame(self) -> bool:
         return bool(self.uniforms["is_fixed_in_frame"])
 
     @affects_shader_info_id
-    def apply_depth_test(self):
-        self.depth_test = True
+    def apply_depth_test(self, recurse: bool = True):
+        for mob in self.get_family(recurse):
+            mob.depth_test = True
         return self
 
     @affects_shader_info_id
-    def deactivate_depth_test(self):
-        self.depth_test = False
+    def deactivate_depth_test(self, recurse: bool = True):
+        for mob in self.get_family(recurse):
+            mob.depth_test = False
         return self
 
     # Shader code manipulation

@@ -1,20 +1,17 @@
 uniform float is_fixed_in_frame;
 uniform mat4 view;
-uniform vec2 frame_shape;
 uniform float focal_distance;
 
-const vec2 DEFAULT_FRAME_SHAPE = vec2(8.0 * 16.0 / 9.0, 8.0);
+const float DEFAULT_FRAME_HEIGHT = 8.0;
+const float DEFAULT_FRAME_WIDTH = DEFAULT_FRAME_HEIGHT * 16.0 / 9.0;
 
 vec4 get_gl_Position(vec3 point){
-    bool is_fixed = bool(is_fixed_in_frame);
     vec4 result = vec4(point, 1.0);
-    if(!is_fixed){
+    if(!bool(is_fixed_in_frame)){
         result = view * result;
     }
-
-    vec2 shape = is_fixed ? DEFAULT_FRAME_SHAPE : frame_shape;
-    result.x *= 2.0 / shape.x;
-    result.y *= 2.0 / shape.y;
+    result.x *= 2.0 / DEFAULT_FRAME_WIDTH;
+    result.y *= 2.0 / DEFAULT_FRAME_HEIGHT;
     result.z /= focal_distance;
     result.w = 1.0 - result.z;
     // Flip and scale to prevent premature clipping

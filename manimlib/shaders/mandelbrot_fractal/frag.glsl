@@ -15,8 +15,6 @@ uniform vec3 color6;
 uniform vec3 color7;
 uniform vec3 color8;
 
-uniform vec2 frame_shape;
-
 in vec3 xyz_coords;
 
 out vec4 frag_color;

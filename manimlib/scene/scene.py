@@ -18,12 +18,14 @@ from tqdm.auto import tqdm as ProgressDisplay
 from manimlib.animation.animation import prepare_animation
 from manimlib.animation.fading import VFadeInThenOut
 from manimlib.camera.camera import Camera
+from manimlib.camera.camera_frame import CameraFrame
 from manimlib.config import get_module
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.constants import COMMAND_MODIFIER
 from manimlib.constants import SHIFT_MODIFIER
 from manimlib.constants import RED
+from manimlib.constants import FRAME_HEIGHT
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
@@ -42,6 +44,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable
+    from manimlib.typing import Vect3
 
     from PIL.Image import Image
 
@@ -50,19 +53,21 @@ if TYPE_CHECKING:
 
 PAN_3D_KEY = 'd'
 FRAME_SHIFT_KEY = 'f'
-ZOOM_KEY = 'z'
 RESET_FRAME_KEY = 'r'
 QUIT_KEY = 'q'
 
 
 class Scene(object):
     random_seed: int = 0
-    pan_sensitivity: float = 3.0
+    pan_sensitivity: float = 0.5
+    scroll_sensitivity: float = 20
     max_num_saved_states: int = 50
     default_camera_config: dict = dict()
     default_window_config: dict = dict()
     default_file_writer_config: dict = dict()
     samples = 0
+    # Euler angles, in degrees
+    default_frame_orientation = (0, 0)
 
     def __init__(
         self,
@@ -108,6 +113,10 @@ class Scene(object):
 
         # Core state of the scene
         self.camera: Camera = Camera(**self.camera_config)
+        self.frame: CameraFrame = self.camera.frame
+        self.frame.reorient(*self.default_frame_orientation)
+        self.frame.make_orientation_default()
+
         self.file_writer = SceneFileWriter(self, **self.file_writer_config)
         self.mobjects: list[Mobject] = [self.camera.frame]
         self.id_to_mobject_map: dict[int, Mobject] = dict()
@@ -793,9 +802,10 @@ class Scene(object):
 
     def on_mouse_motion(
         self,
-        point: np.ndarray,
-        d_point: np.ndarray
+        point: Vect3,
+        d_point: Vect3
     ) -> None:
+        assert(self.window is not None)
         self.mouse_point.move_to(point)
 
         event_data = {"point": point, "d_point": d_point}
@@ -806,25 +816,23 @@ class Scene(object):
         frame = self.camera.frame
         # Handle perspective changes
         if self.window.is_key_pressed(ord(PAN_3D_KEY)):
-            frame.increment_theta(-self.pan_sensitivity * d_point[0])
-            frame.increment_phi(self.pan_sensitivity * d_point[1])
+            ff_d_point = frame.to_fixed_frame_point(d_point, relative=True)
+            ff_d_point *= self.pan_sensitivity
+            frame.increment_theta(-ff_d_point[0])
+            frame.increment_phi(ff_d_point[1])
         # Handle frame movements
         elif self.window.is_key_pressed(ord(FRAME_SHIFT_KEY)):
-            shift = -d_point
-            shift[0] *= frame.get_width() / 2
-            shift[1] *= frame.get_height() / 2
-            transform = frame.get_inverse_camera_rotation_matrix()
-            shift = np.dot(np.transpose(transform), shift)
-            frame.shift(shift)
+            frame.shift(-d_point)
 
     def on_mouse_drag(
         self,
-        point: np.ndarray,
-        d_point: np.ndarray,
+        point: Vect3,
+        d_point: Vect3,
         buttons: int,
         modifiers: int
     ) -> None:
         self.mouse_drag_point.move_to(point)
+        self.frame.shift(-d_point)
 
         event_data = {"point": point, "d_point": d_point, "buttons": buttons, "modifiers": modifiers}
         propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseDragEvent, **event_data)
@@ -833,7 +841,7 @@ class Scene(object):
 
     def on_mouse_press(
         self,
-        point: np.ndarray,
+        point: Vect3,
         button: int,
         mods: int
     ) -> None:
@@ -845,7 +853,7 @@ class Scene(object):
 
     def on_mouse_release(
         self,
-        point: np.ndarray,
+        point: Vect3,
         button: int,
         mods: int
     ) -> None:
@@ -856,22 +864,21 @@ class Scene(object):
 
     def on_mouse_scroll(
         self,
-        point: np.ndarray,
-        offset: np.ndarray
+        point: Vect3,
+        offset: Vect3,
+        x_pixel_offset: float,
+        y_pixel_offset: float
     ) -> None:
         event_data = {"point": point, "offset": offset}
         propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseScrollEvent, **event_data)
         if propagate_event is not None and propagate_event is False:
             return
 
-        frame = self.camera.frame
-        if self.window.is_key_pressed(ord(ZOOM_KEY)):
-            factor = 1 + np.arctan(10 * offset[1])
-            frame.scale(1 / factor, about_point=point)
-        else:
-            transform = frame.get_inverse_camera_rotation_matrix()
-            shift = np.dot(np.transpose(transform), offset)
-            frame.shift(-20.0 * shift)
+        rel_offset = y_pixel_offset / self.camera.get_pixel_height()
+        self.frame.scale(
+            1 - self.scroll_sensitivity * rel_offset,
+            about_point=point
+        )
 
     def on_key_release(
         self,
@@ -971,3 +978,14 @@ class SceneState():
 
 class EndScene(Exception):
     pass
+
+
+class ThreeDScene(Scene):
+    samples = 4
+    default_frame_orientation = (-30, 70)
+
+    def add(self, *mobjects, set_depth_test: bool = True):
+        for mob in mobjects:
+            if set_depth_test and not mob.is_fixed_in_frame():
+                mob.apply_depth_test()
+        super().add(*mobjects)

@@ -248,8 +248,8 @@ class ShaderWrapper(object):
     def generate_vao(self, refresh: bool = True):
         self.release()
         # Data buffer
-        vbo = self.vbo = self.get_vertex_buffer_object(refresh)
-        ibo = self.ibo = self.get_index_buffer_object(refresh)
+        vbo = self.get_vertex_buffer_object(refresh)
+        ibo = self.get_index_buffer_object(refresh)
 
         # Vertex array object
         self.vao = self.ctx.vertex_array(

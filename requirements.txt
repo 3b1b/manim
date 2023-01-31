@@ -13,6 +13,7 @@ pydub
 pygments
 PyOpenGL
 pyperclip
+pyrr
 pyyaml
 rich
 scipy

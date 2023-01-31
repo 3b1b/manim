@@ -136,7 +136,6 @@ class DrawBorderThenFill(Animation):
         if index == 1 and self.sm_to_index[hash(submob)] == 0:
             # First time crossing over
             submob.set_data(outline.data)
-            submob.needs_new_triangulation = False
             self.sm_to_index[hash(submob)] = 1
 
         if index == 0:
