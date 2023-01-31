@@ -15,7 +15,6 @@ out vec3 verts;
 out vec4 v_joint_product;
 out float v_stroke_width;
 out vec4 v_color;
-out float v_vert_index;
 
 const float STROKE_WIDTH_CONVERSION = 0.01;
 
@@ -27,5 +26,4 @@ void main(){
     }
     v_joint_product = joint_product;
     v_color = stroke_rgba;
-    v_vert_index = gl_VertexID;
 }

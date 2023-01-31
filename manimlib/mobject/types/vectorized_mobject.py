@@ -68,8 +68,8 @@ class VMobject(Mobject):
     fill_data_names = ['point', 'fill_rgba', 'base_point', 'unit_normal']
     stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_product']
 
-    fill_render_primitive: int = moderngl.TRIANGLE_STRIP
-    stroke_render_primitive: int = moderngl.TRIANGLE_STRIP
+    fill_render_primitive: int = moderngl.TRIANGLES
+    stroke_render_primitive: int = moderngl.TRIANGLES
 
     pre_function_handle_to_anchor_scale_factor: float = 0.01
     make_smooth_after_applying_functions: bool = False
@@ -1300,21 +1300,17 @@ class VMobject(Mobject):
             submob.get_joint_products()
             has_fill = submob.has_fill()
             has_stroke = submob.has_stroke()
+            indices = submob.get_outer_vert_indices()
             if has_stroke:
                 lst = back_stroke_datas if submob.stroke_behind else stroke_datas
-                lst.append(submob.data[stroke_names])
-                # Set data array to be one longer than number of points,
-                # with a dummy vertex added at the end. This is to ensure
-                # it can be safely stacked onto other stroke data arrays.
-                lst.append(submob.data[stroke_names][-1:])
+                lst.append(submob.data[stroke_names][indices])
             if has_fill:
                 data = submob.data[fill_names]
                 data["base_point"][:] = data["point"][0]
-                fill_datas.append(data)
                 if self._use_winding_fill:
-                    # Add dummy, as above
-                    fill_datas.append(data[-1:])
+                    fill_datas.append(data[indices])
                 else:
+                    fill_datas.append(data)
                     fill_indices.append(submob.get_triangulation())
             if not has_stroke and has_fill:
                 # Add fill border
@@ -1324,10 +1320,7 @@ class VMobject(Mobject):
                 border_stroke_data = submob.data[names].astype(
                     self.stroke_shader_wrapper.vert_data.dtype
                 )
-                print(border_stroke_data.dtype)
-                fill_border_datas.append(border_stroke_data)
-                fill_border_datas.append(border_stroke_data[-1:])
-
+                fill_border_datas.append(border_stroke_data[indices])
 
         shader_wrappers = [
             self.back_stroke_shader_wrapper.read_in(

@@ -285,7 +285,7 @@ class FillShaderWrapper(ShaderWrapper):
         winding = (len(self.vert_indices) == 0)
         vao.program['winding'].value = winding
         if not winding:
-            vao.render(moderngl.TRIANGLES)
+            vao.render()
             return
 
         original_fbo = self.ctx.fbo
@@ -303,7 +303,7 @@ class FillShaderWrapper(ShaderWrapper):
         gl.glBlendEquationSeparate(gl.GL_FUNC_ADD, gl.GL_MAX)
         self.ctx.blend_equation = moderngl.FUNC_ADD, moderngl.MAX
 
-        vao.render(moderngl.TRIANGLE_STRIP)
+        vao.render()
 
         original_fbo.use()
         gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
