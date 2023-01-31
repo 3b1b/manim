@@ -1239,6 +1239,15 @@ class VMobject(Mobject):
         super().apply_points_function(*args, **kwargs)
         self.refresh_joint_products()
 
+    def set_animating_status(self, is_animating: bool, recurse: bool = True):
+        super().set_animating_status(is_animating, recurse)
+        if is_animating:
+            for submob in self.get_family(recurse):
+                submob.get_joint_products(refresh=True)
+                if not submob._use_winding_fill:
+                    submob.get_triangulation()
+        return self
+
     # For shaders
     def init_shader_data(self, ctx: Context):
         dtype = self.shader_dtype
