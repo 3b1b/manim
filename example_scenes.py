@@ -681,6 +681,8 @@ class InteractiveDevelopment(Scene):
 
 
 class ControlsExample(Scene):
+    drag_to_pan = False
+
     def setup(self):
         self.textbox = Textbox()
         self.checkbox = Checkbox()

@@ -636,6 +636,8 @@ class NumberPlane(Axes):
         lines2 = VGroup()
         inputs = np.arange(axis2.x_min, axis2.x_max + step, step)
         for i, x in enumerate(inputs):
+            if abs(x) < 1e-8:
+                continue
             new_line = line.copy()
             new_line.shift(axis2.n2p(x) - axis2.n2p(0))
             if i % (1 + ratio) == 0:

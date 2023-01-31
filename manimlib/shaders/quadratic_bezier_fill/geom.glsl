@@ -27,7 +27,7 @@ const vec2 SIMPLE_QUADRATIC[3] = vec2[3](
 );
 
 // Analog of import for manim only
-#INSERT get_gl_Position.glsl
+#INSERT emit_gl_Position.glsl
 
 
 void emit_triangle(vec3 points[3], vec4 v_color[3]){
@@ -41,7 +41,7 @@ void emit_triangle(vec3 points[3], vec4 v_color[3]){
         uv_coords = SIMPLE_QUADRATIC[i];
         color = v_color[i];
         point = points[i];
-        gl_Position = get_gl_Position(points[i]);
+        emit_gl_Position(points[i]);
         EmitVertex();
     }
     EndPrimitive();
