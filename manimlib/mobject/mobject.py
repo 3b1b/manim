@@ -617,7 +617,6 @@ class Mobject(object):
         # copy.copy is only a shallow copy, so the internal
         # data which are numpy arrays or other mobjects still
         # need to be further copied.
-        result.data = self.data.copy()
         result.uniforms = {
             key: value.copy() if isinstance(value, np.ndarray) else value
             for key, value in self.uniforms.items()
@@ -636,15 +635,14 @@ class Mobject(object):
         result.non_time_updaters = list(self.non_time_updaters)
         result.time_based_updaters = list(self.time_based_updaters)
         result._data_has_changed = True
+        result._shaders_initialized = False
 
         family = self.get_family()
         for attr, value in self.__dict__.items():
             if isinstance(value, Mobject) and value is not self:
                 if value in family:
                     setattr(result, attr, result.family[self.family.index(value)])
-            if isinstance(value, np.ndarray):
-                setattr(result, attr, value.copy())
-            if isinstance(value, ShaderWrapper):
+            elif isinstance(value, np.ndarray):
                 setattr(result, attr, value.copy())
         return result
 
