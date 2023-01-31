@@ -125,16 +125,29 @@ class Camera(object):
     def clear(self) -> None:
         self.fbo.clear(*self.background_rgba)
 
-    def get_raw_fbo_data(self, dtype: str = 'f1') -> bytes:
-        # Copy blocks from fbo into draw_fbo using Blit
-        gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo.glo)
-        gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, self.draw_fbo.glo)
-        src_viewport = self.fbo.viewport
+    def blit(self, src_fbo, dst_fbo):
+        """
+        Copy blocks between fbo's using Blit
+        """
+        gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, src_fbo.glo)
+        gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, dst_fbo.glo)
         gl.glBlitFramebuffer(
-            *src_viewport,
-            *self.draw_fbo.viewport,
+            *src_fbo.viewport,
+            *src_fbo.viewport,
             gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR
         )
+
+    def get_raw_fbo_data(self, dtype: str = 'f1') -> bytes:
+        # # Copy blocks from fbo into draw_fbo using Blit
+        # gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo.glo)
+        # gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, self.draw_fbo.glo)
+        # src_viewport = self.fbo.viewport
+        # gl.glBlitFramebuffer(
+        #     *src_viewport,
+        #     *self.draw_fbo.viewport,
+        #     gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR
+        # )
+        self.blit(self.fbo, self.draw_fbo)
         return self.draw_fbo.read(
             viewport=self.draw_fbo.viewport,
             components=self.n_channels,
@@ -223,6 +236,8 @@ class Camera(object):
         self.fbo.use()
         for mobject in mobjects:
             mobject.render(self.ctx, self.uniforms)
+        if self.window is not None and self.fbo is not self.window_fbo:
+            self.blit(self.fbo, self.window_fbo)
 
     def refresh_uniforms(self) -> None:
         frame = self.frame
