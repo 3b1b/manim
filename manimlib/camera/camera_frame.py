@@ -32,8 +32,9 @@ class CameraFrame(Mobject):
         self.uniforms["orientation"] = Rotation.identity().as_quat()
         self.uniforms["fovy"] = fovy
 
-        self.view_matrix = np.identity(4)
         self.default_orientation = Rotation.identity()
+        self.view_matrix = np.identity(4)
+        self.camera_location = OUT  # This will be updated by set_points
 
         self.set_points(np.array([ORIGIN, LEFT, RIGHT, DOWN, UP]))
         self.set_width(frame_shape[0], stretch=True)
@@ -43,6 +44,7 @@ class CameraFrame(Mobject):
     def note_changed_data(self, recurse_up: bool = True):
         super().note_changed_data(recurse_up)
         self.get_view_matrix(refresh=True)
+        self.get_implied_camera_location(refresh=True)
 
     def set_orientation(self, rotation: Rotation):
         self.uniforms["orientation"][:] = rotation.as_quat()
@@ -103,9 +105,9 @@ class CameraFrame(Mobject):
     def get_inv_view_matrix(self):
         return np.linalg.inv(self.get_view_matrix())
 
+    @Mobject.affects_data
     def interpolate(self, *args, **kwargs):
         super().interpolate(*args, **kwargs)
-        self.get_view_matrix(refresh=True)
 
     @Mobject.affects_data
     def rotate(self, angle: float, axis: np.ndarray = OUT, **kwargs):
@@ -198,10 +200,12 @@ class CameraFrame(Mobject):
     def get_field_of_view(self) -> float:
         return self.uniforms["fovy"]
 
-    def get_implied_camera_location(self) -> np.ndarray:
-        to_camera = self.get_inverse_camera_rotation_matrix()[2]
-        dist = self.get_focal_distance()
-        return self.get_center() + dist * to_camera
+    def get_implied_camera_location(self, refresh=False) -> np.ndarray:
+        if refresh:
+            to_camera = self.get_inverse_camera_rotation_matrix()[2]
+            dist = self.get_focal_distance()
+            self.camera_location = self.get_center() + dist * to_camera
+        return self.camera_location
 
     def to_fixed_frame_point(self, point: Vect3, relative: bool = False):
         view = self.get_view_matrix()
