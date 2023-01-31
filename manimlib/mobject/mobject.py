@@ -1319,11 +1319,9 @@ class Mobject(object):
         for mob in self.get_family(recurse):
             data = mob.data if mob.has_points() > 0 else mob._data_defaults
             if color is not None:
-                if isinstance(color, list):
-                    rgbs = np.array(list(map(color_to_rgb, color)))
+                rgbs = np.array(list(map(color_to_rgb, listify(color))))
+                if 1 < len(rgbs) < len(data):
                     rgbs = resize_with_interpolation(rgbs, len(data))
-                else:
-                    rgbs = color_to_rgb(color)
                 data[name][:, :3] = rgbs
             if opacity is not None:
                 if isinstance(opacity, list):

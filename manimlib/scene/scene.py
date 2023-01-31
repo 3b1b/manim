@@ -60,6 +60,7 @@ class Scene(object):
     random_seed: int = 0
     pan_sensitivity: float = 0.5
     scroll_sensitivity: float = 20
+    drag_to_pan: bool = True
     max_num_saved_states: int = 50
     default_camera_config: dict = dict()
     default_window_config: dict = dict()
@@ -831,7 +832,8 @@ class Scene(object):
         modifiers: int
     ) -> None:
         self.mouse_drag_point.move_to(point)
-        self.frame.shift(-d_point)
+        if self.drag_to_pan:
+            self.frame.shift(-d_point)
 
         event_data = {"point": point, "d_point": d_point, "buttons": buttons, "modifiers": modifiers}
         propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseDragEvent, **event_data)
