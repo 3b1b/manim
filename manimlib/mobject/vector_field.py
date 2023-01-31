@@ -22,7 +22,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, TypeVar, Tuple
-    import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, VectN, Vect3Array
 
     from manimlib.mobject.coordinate_systems import CoordinateSystem

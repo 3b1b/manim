@@ -17,7 +17,7 @@ from manimlib.utils.space_ops import cross
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence, Tuple
+    from typing import Callable, Iterable, Sequence, Tuple, Self
 
     from manimlib.camera.camera import Camera
     from manimlib.typing import ManimColor, Vect3, Vect3Array
@@ -100,18 +100,19 @@ class Surface(Mobject):
             (dv_points - points) / self.epsilon,
         ), 1)
 
-    def apply_points_function(self, *args, **kwargs):
+    def apply_points_function(self, *args, **kwargs) -> Self:
         super().apply_points_function(*args, **kwargs)
         self.get_unit_normals()
+        return self
 
-    def compute_triangle_indices(self):
+    def compute_triangle_indices(self) -> np.ndarray:
         # TODO, if there is an event which changes
         # the resolution of the surface, make sure
         # this is called.
         nu, nv = self.resolution
         if nu == 0 or nv == 0:
             self.triangle_indices = np.zeros(0, dtype=int)
-            return
+            return self.triangle_indices
         index_grid = np.arange(nu * nv).reshape((nu, nv))
         indices = np.zeros(6 * (nu - 1) * (nv - 1), dtype=int)
         indices[0::6] = index_grid[:-1, :-1].flatten()  # Top left
@@ -121,6 +122,7 @@ class Surface(Mobject):
         indices[4::6] = index_grid[+1:, :-1].flatten()  # Bottom left
         indices[5::6] = index_grid[+1:, +1:].flatten()  # Bottom right
         self.triangle_indices = indices
+        return self.triangle_indices
 
     def get_triangle_indices(self) -> np.ndarray:
         return self.triangle_indices
@@ -154,7 +156,7 @@ class Surface(Mobject):
         a: float,
         b: float,
         axis: int | None = None
-    ):
+    ) -> Self:
         assert(isinstance(smobject, Surface))
         if axis is None:
             axis = self.prefered_creation_axis
@@ -211,7 +213,7 @@ class Surface(Mobject):
         return points.reshape((nu * nv, *resolution[2:]))
 
     @Mobject.affects_data
-    def sort_faces_back_to_front(self, vect: Vect3 = OUT):
+    def sort_faces_back_to_front(self, vect: Vect3 = OUT) -> Self:
         tri_is = self.triangle_indices
         points = self.get_points()
 
@@ -221,24 +223,25 @@ class Surface(Mobject):
             tri_is[k::3] = tri_is[k::3][indices]
         return self
 
-    def always_sort_to_camera(self, camera: Camera):
+    def always_sort_to_camera(self, camera: Camera) -> Self:
         def updater(surface: Surface):
             vect = camera.get_location() - surface.get_center()
             surface.sort_faces_back_to_front(vect)
         self.add_updater(updater)
+        return self
 
     def set_clip_plane(
         self,
         vect: Vect3 | None = None,
         threshold: float | None = None
-    ):
+    ) -> Self:
         if vect is not None:
             self.uniforms["clip_plane"][:3] = vect
         if threshold is not None:
             self.uniforms["clip_plane"][3] = threshold
         return self
 
-    def deactivate_clip_plane(self):
+    def deactivate_clip_plane(self) -> Self:
         self.uniforms["clip_plane"][:] = 0
         return self
 
@@ -335,7 +338,7 @@ class TexturedSurface(Surface):
         self.uniforms["num_textures"] = self.num_textures
 
     @Mobject.affects_data
-    def set_opacity(self, opacity: float | Iterable[float]):
+    def set_opacity(self, opacity: float | Iterable[float]) -> Self:
         op_arr = np.array(listify(opacity))
         self.data["opacity"][:, 0] = resize_with_interpolation(op_arr, len(self.data))
         return self
@@ -345,7 +348,7 @@ class TexturedSurface(Surface):
         color: ManimColor | Iterable[ManimColor] | None,
         opacity: float | Iterable[float] | None = None,
         recurse: bool = True
-    ):
+    ) -> Self:
         if opacity is not None:
             self.set_opacity(opacity)
         return self
@@ -356,7 +359,7 @@ class TexturedSurface(Surface):
         a: float,
         b: float,
         axis: int = 1
-    ):
+    ) -> Self:
         super().pointwise_become_partial(tsmobject, a, b, axis)
         im_coords = self.data["im_coords"]
         im_coords[:] = tsmobject.data["im_coords"]

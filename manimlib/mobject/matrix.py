@@ -18,7 +18,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Sequence
+    from typing import Sequence, Self
     import numpy.typing as npt
     from manimlib.mobject.mobject import Mobject
     from manimlib.typing import ManimColor, Vect3
@@ -129,7 +129,7 @@ class Matrix(VMobject):
         v_buff: float,
         h_buff: float,
         aligned_corner: Vect3,
-    ):
+    ) -> Self:
         for i, row in enumerate(matrix):
             for j, elem in enumerate(row):
                 mob = matrix[i][j]
@@ -139,7 +139,7 @@ class Matrix(VMobject):
                 )
         return self
 
-    def add_brackets(self, v_buff: float, h_buff: float):
+    def add_brackets(self, v_buff: float, h_buff: float) -> Self:
         height = len(self.mob_matrix)
         brackets = Tex("".join((
             R"\left[\begin{array}{c}",
@@ -168,13 +168,13 @@ class Matrix(VMobject):
             for row in self.mob_matrix
         ])
 
-    def set_column_colors(self, *colors: ManimColor):
+    def set_column_colors(self, *colors: ManimColor) -> Self:
         columns = self.get_columns()
         for color, column in zip(colors, columns):
             column.set_color(color)
         return self
 
-    def add_background_to_entries(self):
+    def add_background_to_entries(self) -> Self:
         for mob in self.get_entries():
             mob.add_background_rectangle()
         return self
