@@ -13,7 +13,6 @@ in vec3 verts[3];
 in vec4 v_joint_product[3];
 in float v_stroke_width[3];
 in vec4 v_color[3];
-in float v_vert_index[3];
 
 out vec4 color;
 out float uv_stroke_width;
@@ -154,10 +153,6 @@ void get_corners(
 }
 
 void main() {
-    // We use the triangle strip primative, but
-    // actually only need every other strip element
-    if (int(v_vert_index[0]) % 2 == 1) return;
-
     // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;

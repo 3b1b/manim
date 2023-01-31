@@ -57,10 +57,6 @@ void emit_simple_triangle(){
 
 
 void main(){
-    // We use the triangle strip primative, but
-    // actually only need every other strip element
-    if (winding && int(v_vert_index[0]) % 2 == 1) return;
-
     // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
