@@ -48,7 +48,7 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Union, Tuple, Optional, Self
+    from typing import Callable, Iterable, Iterator, Union, Tuple, Optional, Self
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict
     from moderngl.context import Context
@@ -350,7 +350,7 @@ class Mobject(object):
             return GroupClass(*self.split().__getitem__(value))
         return self.split().__getitem__(value)
 
-    def __iter__(self) -> Iterable[Self]:
+    def __iter__(self) -> Iterator[Self]:
         return iter(self.split())
 
     def __len__(self) -> int:
