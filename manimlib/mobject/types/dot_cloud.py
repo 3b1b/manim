@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import numpy.typing as npt
-    from typing import Sequence, Tuple
+    from typing import Sequence, Tuple, Self
     from manimlib.typing import ManimColor, Vect3, Vect3Array
 
 
@@ -70,7 +70,7 @@ class DotCloud(PMobject):
         v_buff_ratio: float = 1.0,
         d_buff_ratio: float = 1.0,
         height: float = DEFAULT_GRID_HEIGHT,
-    ):
+    ) -> Self:
         n_points = n_rows * n_cols * n_layers
         points = np.repeat(range(n_points), 3, axis=0).reshape((n_points, 3))
         points[:, 0] = points[:, 0] % n_cols
@@ -96,7 +96,7 @@ class DotCloud(PMobject):
         return self
 
     @Mobject.affects_data
-    def set_radii(self, radii: npt.ArrayLike):
+    def set_radii(self, radii: npt.ArrayLike) -> Self:
         n_points = self.get_num_points()
         radii = np.array(radii).reshape((len(radii), 1))
         self.data["radius"][:] = resize_with_interpolation(radii, n_points)
@@ -107,7 +107,7 @@ class DotCloud(PMobject):
         return self.data["radius"]
 
     @Mobject.affects_data
-    def set_radius(self, radius: float):
+    def set_radius(self, radius: float) -> Self:
         data = self.data if self.get_num_points() > 0 else self._data_defaults
         data["radius"][:] = radius
         self.refresh_bounding_box()
@@ -116,13 +116,14 @@ class DotCloud(PMobject):
     def get_radius(self) -> float:
         return self.get_radii().max()
 
-    def set_glow_factor(self, glow_factor: float) -> None:
+    def set_glow_factor(self, glow_factor: float) -> Self:
         self.uniforms["glow_factor"] = glow_factor
+        return self
 
     def get_glow_factor(self) -> float:
         return self.uniforms["glow_factor"]
 
-    def compute_bounding_box(self) -> np.ndarray:
+    def compute_bounding_box(self) -> Vect3Array:
         bb = super().compute_bounding_box()
         radius = self.get_radius()
         bb[0] += np.full((3,), -radius)
@@ -134,7 +135,7 @@ class DotCloud(PMobject):
         scale_factor: float | npt.ArrayLike,
         scale_radii: bool = True,
         **kwargs
-    ):
+    ) -> Self:
         super().scale(scale_factor, **kwargs)
         if scale_radii:
             self.set_radii(scale_factor * self.get_radii())
@@ -145,7 +146,7 @@ class DotCloud(PMobject):
         reflectiveness: float = 0.5,
         gloss: float = 0.1,
         shadow: float = 0.2
-    ):
+    ) -> Self:
         self.set_shading(reflectiveness, gloss, shadow)
         self.apply_depth_test()
         return self
