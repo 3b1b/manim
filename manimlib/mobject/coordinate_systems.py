@@ -21,6 +21,7 @@ from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.dot_cloud import DotCloud
 from manimlib.mobject.types.surface import ParametricSurface
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import binary_search
 from manimlib.utils.space_ops import angle_of_vector
@@ -31,7 +32,7 @@ from manimlib.utils.space_ops import normalize
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence, Type, TypeVar
+    from typing import Callable, Iterable, Sequence, Type, TypeVar, Optional, Self
     from manimlib.mobject.mobject import Mobject
     from manimlib.typing import ManimColor, Vect3, Vect3Array, VectN, RangeSpecifier
 
@@ -235,7 +236,13 @@ class CoordinateSystem(ABC):
         """
         return self.input_to_graph_point(x, graph)
 
-    def bind_graph_to_func(self, graph, func, jagged=False, get_discontinuities=None):
+    def bind_graph_to_func(
+        self,
+        graph: VMobject,
+        func: Callable[[Vect3], Vect3],
+        jagged: bool = False,
+        get_discontinuities: Optional[Callable[[], Vect3]] = None
+    ) -> VMobject:
         """
         Use for graphing functions which might change over time, or change with
         conditions
@@ -659,7 +666,7 @@ class NumberPlane(Axes):
         kwargs["buff"] = 0
         return Arrow(self.c2p(0, 0), self.c2p(*coords), **kwargs)
 
-    def prepare_for_nonlinear_transform(self, num_inserted_curves: int = 50):
+    def prepare_for_nonlinear_transform(self, num_inserted_curves: int = 50) -> Self:
         for mob in self.family_members_with_points():
             num_curves = mob.get_num_curves()
             if num_inserted_curves > num_curves:
@@ -698,7 +705,7 @@ class ComplexPlane(NumberPlane):
         skip_first: bool = True,
         font_size: int = 36,
         **kwargs
-    ):
+    ) -> Self:
         if numbers is None:
             numbers = self.get_default_coordinate_values(skip_first)
 
