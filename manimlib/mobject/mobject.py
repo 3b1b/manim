@@ -1320,7 +1320,7 @@ class Mobject(object):
             data = mob.data if mob.has_points() > 0 else mob._data_defaults
             if color is not None:
                 rgbs = np.array(list(map(color_to_rgb, listify(color))))
-                if 1 < len(rgbs) < len(data):
+                if 1 < len(rgbs):
                     rgbs = resize_with_interpolation(rgbs, len(data))
                 data[name][:, :3] = rgbs
             if opacity is not None:
