@@ -268,16 +268,8 @@ class UpdatersExample(Scene):
         # that of the newly constructed object
         brace = always_redraw(Brace, square, UP)
 
-        text, number = label = VGroup(
-            Text("Width = "),
-            DecimalNumber(
-                0,
-                show_ellipsis=True,
-                num_decimal_places=2,
-                include_sign=True,
-            )
-        )
-        label.arrange(RIGHT)
+        label = TexText("Width = 0.00")
+        number = label.make_number_changable("0.00")
 
         # This ensures that the method deicmal.next_to(square)
         # is called on every frame
