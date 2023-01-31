@@ -344,7 +344,7 @@ class Mobject(object):
 
     # Family matters
 
-    def __getitem__(self, value: int | slice) -> Mobject:
+    def __getitem__(self, value: int | slice) -> Self:
         if isinstance(value, slice):
             GroupClass = self.get_group_class()
             return GroupClass(*self.split().__getitem__(value))
@@ -739,7 +739,7 @@ class Mobject(object):
 
     # Creating new Mobjects from this one
 
-    def replicate(self, n: int) -> Group:
+    def replicate(self, n: int) -> Self:
         group_class = self.get_group_class()
         return group_class(*(self.copy() for _ in range(n)))
 
@@ -752,7 +752,7 @@ class Mobject(object):
         group_by_rows: bool = False,
         group_by_cols: bool = False,
         **kwargs
-    ) -> Group:
+    ) -> Self:
         """
         Returns a new mobject containing multiple copies of this one
         arranged in a grid
