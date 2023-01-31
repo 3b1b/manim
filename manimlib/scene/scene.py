@@ -25,7 +25,6 @@ from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.constants import COMMAND_MODIFIER
 from manimlib.constants import SHIFT_MODIFIER
 from manimlib.constants import RED
-from manimlib.constants import FRAME_HEIGHT
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
