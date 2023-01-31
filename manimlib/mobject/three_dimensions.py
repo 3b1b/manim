@@ -65,7 +65,7 @@ class SurfaceMesh(VGroup):
         u_indices = np.linspace(0, full_nu - 1, part_nu)
         v_indices = np.linspace(0, full_nv - 1, part_nv)
 
-        points, du_points, dv_points = uv_surface.get_surface_points_and_nudged_points()
+        points = uv_surface.get_points()
         normals = uv_surface.get_unit_normals()
         nudge = self.normal_nudge
         nudged_points = points + nudge * normals
