@@ -70,7 +70,7 @@ class Transform(Animation):
     def finish(self) -> None:
         super().finish()
         self.mobject.unlock_data()
-        if self.target_mobject is not None:
+        if self.target_mobject is not None and self.rate_func(1) == 1:
             self.mobject.become(self.target_mobject)
 
     def create_target(self) -> Mobject:
