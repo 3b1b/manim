@@ -890,6 +890,11 @@ class VMobject(Mobject):
         # Figure out what the subpaths are, and align
         subpaths1 = self.get_subpaths()
         subpaths2 = vmobject.get_subpaths()
+        for subpaths in [subpaths1, subpaths2]:
+            subpaths.sort(key=lambda sp: -sum(
+                get_norm(p2 - p1)
+                for p1, p2 in zip(sp, sp[1:])
+            ))
         n_subpaths = max(len(subpaths1), len(subpaths2))
 
         # Start building new ones
@@ -898,7 +903,7 @@ class VMobject(Mobject):
 
         def get_nth_subpath(path_list, n):
             if n >= len(path_list):
-                return [path_list[-1][-1]]
+                return np.vstack([path_list[0][:-1], path_list[0][::-1]])
             return path_list[n]
 
         for n in range(n_subpaths):
