@@ -3,6 +3,7 @@ from __future__ import annotations
 import itertools as it
 import numpy as np
 import pyperclip
+from IPython.core.getipython import get_ipython
 
 from manimlib.animation.fading import FadeIn
 from manimlib.constants import ARROW_SYMBOLS, CTRL_SYMBOL, DELETE_SYMBOL, SHIFT_SYMBOL
@@ -26,6 +27,7 @@ from manimlib.mobject.types.vectorized_mobject import VHighlight
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene import Scene
 from manimlib.scene.scene import SceneState
+from manimlib.scene.scene import PAN_3D_KEY
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.tex_file_writing import LatexError
@@ -234,9 +236,6 @@ class InteractiveScene(Scene):
         super().remove(*mobjects)
         self.regenerate_selection_search_set()
 
-    # def increment_time(self, dt: float) -> None:
-    #     super().increment_time(dt)
-
     # Related to selection
 
     def toggle_selection_mode(self):
@@ -345,8 +344,17 @@ class InteractiveScene(Scene):
     # Functions for keyboard actions
 
     def copy_selection(self):
-        ids = map(id, self.selection)
-        pyperclip.copy(",".join(map(str, ids)))
+        names = []
+        shell = get_ipython()
+        for mob in self.selection:
+            name = str(id(mob))
+            if shell is None:
+                continue
+            for key, value in shell.user_ns.items():
+                if mob is value:
+                    name = key
+            names.append(name)
+        pyperclip.copy(", ".join(names))
 
     def paste_selection(self):
         clipboard_str = pyperclip.paste()
