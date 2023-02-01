@@ -89,7 +89,7 @@ vec3 get_perp(int index, vec4 joint_product, vec3 point, vec3 tangent, float aaw
     */
     float buff = 0.5 * v_stroke_width[index] + aaw;
     // Add correction for sharp angles to prevent weird bevel effects
-    if(joint_product.w < -0.9) buff *= 10 * (joint_product.w + 1.0);
+    if(joint_product.w < -0.75) buff *= 4 * (joint_product.w + 1.0);
     vec3 normal = get_joint_unit_normal(joint_product);
     // Set global unit normal
     unit_normal = normal;

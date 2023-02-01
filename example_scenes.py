@@ -31,7 +31,7 @@ class OpeningManimExample(Scene):
         )
         linear_transform_words.arrange(RIGHT)
         linear_transform_words.to_edge(UP)
-        linear_transform_words.set_stroke(BLACK, 10, background=True)
+        linear_transform_words.set_backstroke(width=5)
 
         self.play(
             ShowCreation(grid),
@@ -52,7 +52,7 @@ class OpeningManimExample(Scene):
             this is the map $z \\rightarrow z^2$
         """)
         complex_map_words.to_corner(UR)
-        complex_map_words.set_stroke(BLACK, 5, background=True)
+        complex_map_words.set_backstroke(width=5)
 
         self.play(
             FadeOut(grid),
