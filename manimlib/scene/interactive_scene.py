@@ -8,8 +8,9 @@ from manimlib.animation.fading import FadeIn
 from manimlib.constants import ARROW_SYMBOLS, CTRL_SYMBOL, DELETE_SYMBOL, SHIFT_SYMBOL
 from manimlib.constants import COMMAND_MODIFIER, SHIFT_MODIFIER
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, RIGHT, UL, UP, UR
-from manimlib.constants import FRAME_WIDTH, SMALL_BUFF
+from manimlib.constants import FRAME_WIDTH, FRAME_HEIGHT, SMALL_BUFF
 from manimlib.constants import PI
+from manimlib.constants import DEGREES
 from manimlib.constants import MANIM_COLORS, WHITE, GREY_A, GREY_C
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
@@ -456,6 +457,7 @@ class InteractiveScene(Scene):
         else:
             self.save_mobject_to_file(self.selection)
 
+    # Key actions
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
         char = chr(symbol)
@@ -494,6 +496,8 @@ class InteractiveScene(Scene):
             self.toggle_selection_mode()
         elif char == "s" and modifiers == COMMAND_MODIFIER:
             self.save_selection_to_file()
+        elif char == PAN_3D_KEY and modifiers == COMMAND_MODIFIER:
+            self.copy_frame_anim_call()
         elif symbol in ARROW_SYMBOLS:
             self.nudge_selection(
                 vect=[LEFT, UP, RIGHT, DOWN][ARROW_SYMBOLS.index(symbol)],
@@ -601,3 +605,18 @@ class InteractiveScene(Scene):
             self.choose_color(point)
         else:
             self.clear_selection()
+
+    # Copying code to recreate state
+    def copy_frame_anim_call(self):
+        frame = self.frame
+        center = frame.get_center()
+        height = frame.get_height()
+        angles = frame.get_euler_angles()
+
+        call = f"self.frame.animate.reorient"
+        call += str(tuple((angles / DEGREES).astype(int)))
+        if any(center != 0):
+            call += f".move_to({list(np.round(center, 2))})"
+        if height != FRAME_HEIGHT:
+            call += ".set_height({:.2f})".format(height)
+        pyperclip.copy(call)
