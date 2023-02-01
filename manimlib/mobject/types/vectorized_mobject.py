@@ -1315,9 +1315,9 @@ class VMobject(Mobject):
                 fill_border_datas.append(border_stroke_data[indices])
 
         shader_wrappers = [
-            self.back_stroke_shader_wrapper.read_in(back_stroke_datas),
+            self.back_stroke_shader_wrapper.read_in([*back_stroke_datas, *fill_border_datas]),
             self.fill_shader_wrapper.read_in(fill_datas, fill_indices or None),
-            self.stroke_shader_wrapper.read_in([*fill_border_datas, *stroke_datas]),
+            self.stroke_shader_wrapper.read_in(stroke_datas),
         ]
         # TODO, account for submob uniforms separately?
         self.uniforms.update(family[0].uniforms)
