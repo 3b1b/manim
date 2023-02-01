@@ -159,6 +159,7 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Tu
 
             void main() {
                 color = texture(Texture, v_textcoord);
+                if(color.a == 0) discard;
                 if(distance(color.rgb, null_rgb) < MIN_DIST_TO_NULL) discard;
 
                 // Un-blend from the null value
@@ -180,5 +181,6 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Tu
         simple_program,
         ctx.buffer(verts.astype('f4').tobytes()),
         'texcoord',
+        mode=moderngl.TRIANGLE_STRIP
     )
     return (texture_fbo, fill_texture_vao, null_rgb)
