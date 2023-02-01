@@ -29,6 +29,11 @@ from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.tex_file_writing import LatexError
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from manimlib.typing import Vect3
+
 
 SELECT_KEY = 's'
 UNSELECT_KEY = 'u'
@@ -68,7 +73,7 @@ class InteractiveScene(Scene):
     """
     corner_dot_config = dict(
         color=WHITE,
-        radius=0.025,
+        radius=0.05,
         glow_factor=2.0,
     )
     selection_rectangle_stroke_color = WHITE
@@ -273,7 +278,7 @@ class InteractiveScene(Scene):
 
     def get_corner_dots(self, mobject: Mobject) -> Mobject:
         dots = DotCloud(**self.corner_dot_config)
-        radius = self.corner_dot_config["radius"]
+        radius = float(self.corner_dot_config["radius"])
         if mobject.get_depth() < 1e-2:
             vects = [DL, UL, UR, DR]
         else:
@@ -389,7 +394,9 @@ class InteractiveScene(Scene):
             for mob in reversed(self.get_selection_search_set()):
                 if self.selection_rectangle.is_touching(mob):
                     additions.append(mob)
-            self.add_to_selection(*additions)
+                    if self.selection_rectangle.get_arc_length() < 1e-2:
+                        break
+            self.toggle_from_selection(*additions)
 
     def prepare_grab(self):
         mp = self.mouse_point.get_center()
@@ -509,7 +516,6 @@ class InteractiveScene(Scene):
         super().on_key_release(symbol, modifiers)
         if chr(symbol) == SELECT_KEY:
             self.gather_new_selection()
-            # self.remove(self.crosshair)
         if chr(symbol) in GRAB_KEYS:
             self.is_grabbing = False
         elif chr(symbol) == INFORMATION_KEY:
@@ -518,7 +524,7 @@ class InteractiveScene(Scene):
             self.prepare_resizing(about_corner=False)
 
     # Mouse actions
-    def handle_grabbing(self, point: np.ndarray):
+    def handle_grabbing(self, point: Vect3):
         diff = point - self.mouse_to_selection
         if self.window.is_key_pressed(ord(GRAB_KEY)):
             self.selection.move_to(diff)
@@ -527,7 +533,7 @@ class InteractiveScene(Scene):
         elif self.window.is_key_pressed(ord(Y_GRAB_KEY)):
             self.selection.set_y(diff[1])
 
-    def handle_resizing(self, point: np.ndarray):
+    def handle_resizing(self, point: Vect3):
         if not hasattr(self, "scale_about_point"):
             return
         vect = point - self.scale_about_point
@@ -547,15 +553,16 @@ class InteractiveScene(Scene):
                 about_point=self.scale_about_point
             )
 
-    def handle_sweeping_selection(self, point: np.ndarray):
+    def handle_sweeping_selection(self, point: Vect3):
         mob = self.point_to_mobject(
-            point, search_set=self.get_selection_search_set(),
+            point,
+            search_set=self.get_selection_search_set(),
             buff=SMALL_BUFF
         )
         if mob is not None:
             self.add_to_selection(mob)
 
-    def choose_color(self, point: np.ndarray):
+    def choose_color(self, point: Vect3):
         # Search through all mobject on the screen, not just the palette
         to_search = [
             sm
@@ -568,10 +575,9 @@ class InteractiveScene(Scene):
             self.selection.set_color(mob.get_color())
         self.remove(self.color_palette)
 
-    def on_mouse_motion(self, point: np.ndarray, d_point: np.ndarray) -> None:
+    def on_mouse_motion(self, point: Vect3, d_point: Vect3) -> None:
         super().on_mouse_motion(point, d_point)
-        ff_point = self.frame.to_fixed_frame_point(point)
-        self.crosshair.move_to(ff_point)
+        self.crosshair.move_to(self.frame.to_fixed_frame_point(point))
         if self.is_grabbing:
             self.handle_grabbing(point)
         elif self.window.is_key_pressed(ord(RESIZE_KEY)):
@@ -579,17 +585,19 @@ class InteractiveScene(Scene):
         elif self.window.is_key_pressed(ord(SELECT_KEY)) and self.window.is_key_pressed(SHIFT_SYMBOL):
             self.handle_sweeping_selection(point)
 
-    def on_mouse_release(self, point: np.ndarray, button: int, mods: int) -> None:
+    def on_mouse_drag(
+        self,
+        point: Vect3,
+        d_point: Vect3,
+        buttons: int,
+        modifiers: int
+    ) -> None:
+        super().on_mouse_drag(point, d_point, buttons, modifiers)
+        self.crosshair.move_to(self.frame.to_fixed_frame_point(point))
+
+    def on_mouse_release(self, point: Vect3, button: int, mods: int) -> None:
         super().on_mouse_release(point, button, mods)
         if self.color_palette in self.mobjects:
             self.choose_color(point)
-            return
-        mobject = self.point_to_mobject(
-            point,
-            search_set=self.get_selection_search_set(),
-            buff=1e-4,
-        )
-        if mobject is not None:
-            self.toggle_from_selection(mobject)
         else:
             self.clear_selection()
