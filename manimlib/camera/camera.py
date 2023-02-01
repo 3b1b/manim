@@ -133,7 +133,7 @@ class Camera(object):
         gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, dst_fbo.glo)
         gl.glBlitFramebuffer(
             *src_fbo.viewport,
-            *src_fbo.viewport,
+            *dst_fbo.viewport,
             gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR
         )
 
