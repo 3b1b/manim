@@ -202,7 +202,7 @@ class Mobject(object):
         return self
 
     @affects_data
-    def set_points(self, points: Vect3Array) -> Self:
+    def set_points(self, points: Vect3Array | list[Vect3]) -> Self:
         self.resize_points(len(points), resize_func=resize_preserving_order)
         self.data["point"][:] = points
         return self
