@@ -10,7 +10,7 @@ from manimlib.utils.iterables import resize_with_interpolation
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable
+    from typing import Callable, Self
     from manimlib.typing import ManimColor, Vect3, Vect3Array, Vect4Array
 
 
@@ -28,7 +28,7 @@ class PMobject(Mobject):
         rgbas: Vect4Array | None = None,
         color: ManimColor | None = None,
         opacity: float | None = None
-    ):
+    ) -> Self:
         """
         points must be a Nx3 numpy array, as must rgbas if it is not None
         """
@@ -46,13 +46,13 @@ class PMobject(Mobject):
             self.data["rgba"][-len(rgbas):] = rgbas
         return self
 
-    def add_point(self, point: Vect3, rgba=None, color=None, opacity=None):
+    def add_point(self, point: Vect3, rgba=None, color=None, opacity=None) -> Self:
         rgbas = None if rgba is None else [rgba]
         self.add_points([point], rgbas, color, opacity)
         return self
 
     @Mobject.affects_data
-    def set_color_by_gradient(self, *colors: ManimColor):
+    def set_color_by_gradient(self, *colors: ManimColor) -> Self:
         self.data["rgba"][:] = np.array(list(map(
             color_to_rgba,
             color_gradient(colors, self.get_num_points())
@@ -60,20 +60,20 @@ class PMobject(Mobject):
         return self
 
     @Mobject.affects_data
-    def match_colors(self, pmobject: PMobject):
+    def match_colors(self, pmobject: PMobject) -> Self:
         self.data["rgba"][:] = resize_with_interpolation(
             pmobject.data["rgba"], self.get_num_points()
         )
         return self
 
     @Mobject.affects_data
-    def filter_out(self, condition: Callable[[np.ndarray], bool]):
+    def filter_out(self, condition: Callable[[np.ndarray], bool]) -> Self:
         for mob in self.family_members_with_points():
             mob.data = mob.data[~np.apply_along_axis(condition, 1, mob.get_points())]
         return self
 
     @Mobject.affects_data
-    def sort_points(self, function: Callable[[Vect3], None] = lambda p: p[0]):
+    def sort_points(self, function: Callable[[Vect3], None] = lambda p: p[0]) -> Self:
         """
         function is any map from R^3 to R
         """
@@ -85,7 +85,7 @@ class PMobject(Mobject):
         return self
 
     @Mobject.affects_data
-    def ingest_submobjects(self):
+    def ingest_submobjects(self) -> Self:
         self.data = np.vstack([
             sm.data for sm in self.get_family()
         ])
@@ -96,7 +96,7 @@ class PMobject(Mobject):
         return self.get_points()[int(index)]
 
     @Mobject.affects_data
-    def pointwise_become_partial(self, pmobject: PMobject, a: float, b: float):
+    def pointwise_become_partial(self, pmobject: PMobject, a: float, b: float) -> Self:
         lower_index = int(a * pmobject.get_num_points())
         upper_index = int(b * pmobject.get_num_points())
         self.data = pmobject.data[lower_index:upper_index].copy()

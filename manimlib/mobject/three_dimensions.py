@@ -166,7 +166,6 @@ class Cylinder(Surface):
         self.scale(self.radius)
         self.set_depth(self.height, stretch=True)
         self.apply_matrix(z_to_vector(self.axis))
-        return self
 
     def uv_func(self, u: float, v: float) -> np.ndarray:
         return np.array([np.cos(u), np.sin(u), v])
@@ -186,6 +185,7 @@ class Line3D(Cylinder):
             height=get_norm(axis),
             radius=width / 2,
             axis=axis,
+            resolution=resolution,
             **kwargs
         )
         self.shift((start + end) / 2)
@@ -375,16 +375,6 @@ class Dodecahedron(VGroup3D):
             pentagons.append(pc)
 
         super().__init__(*pentagons, **style)
-
-        # # Rotate those two pentagons by all the axis permuations to fill
-        # # out the dodecahedron
-        # Id = np.identity(3)
-        # for i in range(3):
-        #     perm = [j % 3 for j in range(i, i + 3)]
-        #     for b in [1, -1]:
-        #         matrix = b * np.array([Id[0][perm], Id[1][perm], Id[2][perm]])
-        #         self.add(pentagon1.copy().apply_matrix(matrix, about_point=ORIGIN))
-        #         self.add(pentagon2.copy().apply_matrix(matrix, about_point=ORIGIN))
 
 
 class Prismify(VGroup3D):

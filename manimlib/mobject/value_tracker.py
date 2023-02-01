@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-
+from typing import Self
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.iterables import listify
 
@@ -36,7 +36,7 @@ class ValueTracker(Mobject):
             return result[0]
         return result
 
-    def set_value(self, value: float | complex | np.ndarray):
+    def set_value(self, value: float | complex | np.ndarray) -> Self:
         self.uniforms["value"][:] = value
         return self
 

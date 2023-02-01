@@ -14,7 +14,7 @@ from manimlib.utils.customization import get_customization
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Sequence
+    from typing import Sequence, Self
     from manimlib.mobject.mobject import Mobject
     from manimlib.typing import ManimColor
 
@@ -60,20 +60,20 @@ class BackgroundRectangle(SurroundingRectangle):
         )
         self.original_fill_opacity = fill_opacity
 
-    def pointwise_become_partial(self, mobject: Mobject, a: float, b: float):
+    def pointwise_become_partial(self, mobject: Mobject, a: float, b: float) -> Self:
         self.set_fill(opacity=b * self.original_fill_opacity)
         return self
 
-    def set_style_data(
+    def set_style(
         self,
         stroke_color: ManimColor | None = None,
         stroke_width: float | None = None,
         fill_color: ManimColor | None = None,
         fill_opacity: float | None = None,
         family: bool = True
-    ):
+    ) -> Self:
         # Unchangeable style, except for fill_opacity
-        VMobject.set_style_data(
+        VMobject.set_style(
             self,
             stroke_color=BLACK,
             stroke_width=0,
