@@ -76,7 +76,7 @@ class Matrix(VMobject):
         self,
         matrix: Sequence[Sequence[str | float | VMobject]],
         v_buff: float = 0.8,
-        h_buff: float = 1.3,
+        h_buff: float = 1.0,
         bracket_h_buff: float = 0.2,
         bracket_v_buff: float = 0.25,
         add_background_rectangles_to_entries: bool = False,
