@@ -927,14 +927,6 @@ class VMobject(Mobject):
             mob.get_joint_products()
         return self
 
-    def invisible_copy(self) -> Self:
-        result = self.copy()
-        if not result.has_fill() or result.get_num_points() == 0:
-            return result
-        result.append_vectorized_mobject(self.copy().reverse_points())
-        result.set_opacity(0)
-        return result
-
     def insert_n_curves(self, n: int, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):
             if mob.get_num_curves() > 0:
