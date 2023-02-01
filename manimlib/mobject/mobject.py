@@ -48,7 +48,7 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Union, Tuple, Optional, Self
+    from typing import Callable, Iterable, Iterator, Union, Tuple, Optional, Self
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict
     from moderngl.context import Context
@@ -350,7 +350,7 @@ class Mobject(object):
             return GroupClass(*self.split().__getitem__(value))
         return self.split().__getitem__(value)
 
-    def __iter__(self) -> Iterable[Self]:
+    def __iter__(self) -> Iterator[Self]:
         return iter(self.split())
 
     def __len__(self) -> int:
@@ -617,7 +617,6 @@ class Mobject(object):
         # copy.copy is only a shallow copy, so the internal
         # data which are numpy arrays or other mobjects still
         # need to be further copied.
-        result.data = self.data.copy()
         result.uniforms = {
             key: value.copy() if isinstance(value, np.ndarray) else value
             for key, value in self.uniforms.items()
@@ -636,15 +635,14 @@ class Mobject(object):
         result.non_time_updaters = list(self.non_time_updaters)
         result.time_based_updaters = list(self.time_based_updaters)
         result._data_has_changed = True
+        result._shaders_initialized = False
 
         family = self.get_family()
         for attr, value in self.__dict__.items():
             if isinstance(value, Mobject) and value is not self:
                 if value in family:
                     setattr(result, attr, result.family[self.family.index(value)])
-            if isinstance(value, np.ndarray):
-                setattr(result, attr, value.copy())
-            if isinstance(value, ShaderWrapper):
+            elif isinstance(value, np.ndarray):
                 setattr(result, attr, value.copy())
         return result
 
@@ -695,6 +693,7 @@ class Mobject(object):
             sm1.texture_paths = sm2.texture_paths
             sm1.depth_test = sm2.depth_test
             sm1.render_primitive = sm2.render_primitive
+            sm1.needs_new_bounding_box = sm2.needs_new_bounding_box
         # Make sure named family members carry over
         for attr, value in list(mobject.__dict__.items()):
             if isinstance(value, Mobject) and value in family2:
@@ -1326,7 +1325,7 @@ class Mobject(object):
             data = mob.data if mob.has_points() > 0 else mob._data_defaults
             if color is not None:
                 rgbs = np.array(list(map(color_to_rgb, listify(color))))
-                if 1 < len(rgbs) < len(data):
+                if 1 < len(rgbs):
                     rgbs = resize_with_interpolation(rgbs, len(data))
                 data[name][:, :3] = rgbs
             if opacity is not None:
@@ -1437,11 +1436,9 @@ class Mobject(object):
     def add_background_rectangle(
         self,
         color: ManimColor | None = None,
-        opacity: float = 0.75,
+        opacity: float = 1.0,
         **kwargs
     ) -> Self:
-        # TODO, this does not behave well when the mobject has points,
-        # since it gets displayed on top
         from manimlib.mobject.shape_matchers import BackgroundRectangle
         self.background_rectangle = BackgroundRectangle(
             self, color=color,

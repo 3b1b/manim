@@ -251,8 +251,6 @@ class Laptop(VGroup):
         self.axis = axis
 
         self.add(body, screen_plate, axis)
-        self.rotate(5 * np.pi / 12, LEFT, about_point=ORIGIN)
-        self.rotate(np.pi / 6, DOWN, about_point=ORIGIN)
 
 
 class VideoIcon(SVGMobject):

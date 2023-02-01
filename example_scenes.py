@@ -26,12 +26,12 @@ class OpeningManimExample(Scene):
         matrix = [[1, 1], [0, 1]]
         linear_transform_words = VGroup(
             Text("This is what the matrix"),
-            IntegerMatrix(matrix, include_background_rectangle=True),
+            IntegerMatrix(matrix, include_background_rectangle=True, h_buff=1.0),
             Text("looks like")
         )
         linear_transform_words.arrange(RIGHT)
         linear_transform_words.to_edge(UP)
-        linear_transform_words.set_stroke(BLACK, 10, background=True)
+        linear_transform_words.set_backstroke(width=5)
 
         self.play(
             ShowCreation(grid),
@@ -52,7 +52,7 @@ class OpeningManimExample(Scene):
             this is the map $z \\rightarrow z^2$
         """)
         complex_map_words.to_corner(UR)
-        complex_map_words.set_stroke(BLACK, 5, background=True)
+        complex_map_words.set_backstroke(width=5)
 
         self.play(
             FadeOut(grid),
@@ -268,16 +268,8 @@ class UpdatersExample(Scene):
         # that of the newly constructed object
         brace = always_redraw(Brace, square, UP)
 
-        text, number = label = VGroup(
-            Text("Width = "),
-            DecimalNumber(
-                0,
-                show_ellipsis=True,
-                num_decimal_places=2,
-                include_sign=True,
-            )
-        )
-        label.arrange(RIGHT)
+        label = TexText("Width = 0.00")
+        number = label.make_number_changable("0.00")
 
         # This ensures that the method deicmal.next_to(square)
         # is called on every frame

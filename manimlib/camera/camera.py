@@ -133,20 +133,11 @@ class Camera(object):
         gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, dst_fbo.glo)
         gl.glBlitFramebuffer(
             *src_fbo.viewport,
-            *src_fbo.viewport,
+            *dst_fbo.viewport,
             gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR
         )
 
     def get_raw_fbo_data(self, dtype: str = 'f1') -> bytes:
-        # # Copy blocks from fbo into draw_fbo using Blit
-        # gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo.glo)
-        # gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, self.draw_fbo.glo)
-        # src_viewport = self.fbo.viewport
-        # gl.glBlitFramebuffer(
-        #     *src_viewport,
-        #     *self.draw_fbo.viewport,
-        #     gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR
-        # )
         self.blit(self.fbo, self.draw_fbo)
         return self.draw_fbo.read(
             viewport=self.draw_fbo.viewport,

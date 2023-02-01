@@ -280,12 +280,10 @@ class FillShaderWrapper(ShaderWrapper):
         self.fill_canvas = get_fill_canvas(self.ctx)
 
     def render(self):
-        vao = self.vao
-        assert(vao is not None)
         winding = (len(self.vert_indices) == 0)
-        vao.program['winding'].value = winding
+        self.program['winding'].value = winding
         if not winding:
-            vao.render()
+            super().render()
             return
 
         original_fbo = self.ctx.fbo
@@ -301,14 +299,13 @@ class FillShaderWrapper(ShaderWrapper):
             gl.GL_ONE, gl.GL_ONE,
         )
         gl.glBlendEquationSeparate(gl.GL_FUNC_ADD, gl.GL_MAX)
-        self.ctx.blend_equation = moderngl.FUNC_ADD, moderngl.MAX
 
-        vao.render()
+        super().render()
 
         original_fbo.use()
         gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
         gl.glBlendEquation(gl.GL_FUNC_ADD)
 
-        texture_vao.render(moderngl.TRIANGLE_STRIP)
+        texture_vao.render()
 
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)

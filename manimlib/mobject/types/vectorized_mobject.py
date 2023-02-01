@@ -890,6 +890,11 @@ class VMobject(Mobject):
         # Figure out what the subpaths are, and align
         subpaths1 = self.get_subpaths()
         subpaths2 = vmobject.get_subpaths()
+        for subpaths in [subpaths1, subpaths2]:
+            subpaths.sort(key=lambda sp: -sum(
+                get_norm(p2 - p1)
+                for p1, p2 in zip(sp, sp[1:])
+            ))
         n_subpaths = max(len(subpaths1), len(subpaths2))
 
         # Start building new ones
@@ -898,7 +903,7 @@ class VMobject(Mobject):
 
         def get_nth_subpath(path_list, n):
             if n >= len(path_list):
-                return [path_list[-1][-1]]
+                return np.vstack([path_list[0][:-1], path_list[0][::-1]])
             return path_list[n]
 
         for n in range(n_subpaths):
@@ -921,14 +926,6 @@ class VMobject(Mobject):
             mob.set_points(new_points)
             mob.get_joint_products()
         return self
-
-    def invisible_copy(self) -> Self:
-        result = self.copy()
-        if not result.has_fill() or result.get_num_points() == 0:
-            return result
-        result.append_vectorized_mobject(self.copy().reverse_points())
-        result.set_opacity(0)
-        return result
 
     def insert_n_curves(self, n: int, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):
@@ -1223,6 +1220,15 @@ class VMobject(Mobject):
         self.refresh_joint_products()
         return self
 
+    def set_animating_status(self, is_animating: bool, recurse: bool = True):
+        super().set_animating_status(is_animating, recurse)
+        if is_animating:
+            for submob in self.get_family(recurse):
+                submob.get_joint_products(refresh=True)
+                if not submob._use_winding_fill:
+                    submob.get_triangulation()
+        return self
+
     # For shaders
     def init_shader_data(self, ctx: Context):
         dtype = self.shader_dtype
@@ -1276,27 +1282,29 @@ class VMobject(Mobject):
 
         # Build up data lists
         fill_datas = []
-        fill_border_datas = []
         fill_indices = []
+        fill_border_datas = []
         stroke_datas = []
         back_stroke_datas = []
         for submob in family:
             submob.get_joint_products()
+            indices = submob.get_outer_vert_indices()
             has_fill = submob.has_fill()
             has_stroke = submob.has_stroke()
-            indices = submob.get_outer_vert_indices()
-            if has_stroke:
-                lst = back_stroke_datas if submob.stroke_behind else stroke_datas
-                lst.append(submob.data[stroke_names][indices])
-            if has_fill:
+            back_stroke = has_stroke and submob.stroke_behind
+            front_stroke = has_stroke and not submob.stroke_behind
+            if back_stroke:
+                back_stroke_datas.append(submob.data[stroke_names][indices])
+            if front_stroke:
+                stroke_datas.append(submob.data[stroke_names][indices])
+            if has_fill and self._use_winding_fill:
                 data = submob.data[fill_names]
                 data["base_point"][:] = data["point"][0]
-                if self._use_winding_fill:
-                    fill_datas.append(data[indices])
-                else:
-                    fill_datas.append(data)
-                    fill_indices.append(submob.get_triangulation())
-            if not has_stroke and has_fill:
+                fill_datas.append(data[indices])
+            if has_fill and not self._use_winding_fill:
+                fill_datas.append(submob.data[fill_names])
+                fill_indices.append(submob.get_triangulation())
+            if has_fill and not front_stroke:
                 # Add fill border
                 names = list(stroke_names)
                 names[names.index('stroke_rgba')] = 'fill_rgba'
@@ -1307,11 +1315,9 @@ class VMobject(Mobject):
                 fill_border_datas.append(border_stroke_data[indices])
 
         shader_wrappers = [
-            self.back_stroke_shader_wrapper.read_in(
-                [*back_stroke_datas, *fill_border_datas]
-            ),
+            self.back_stroke_shader_wrapper.read_in(back_stroke_datas),
             self.fill_shader_wrapper.read_in(fill_datas, fill_indices or None),
-            self.stroke_shader_wrapper.read_in(stroke_datas),
+            self.stroke_shader_wrapper.read_in([*fill_border_datas, *stroke_datas]),
         ]
         # TODO, account for submob uniforms separately?
         self.uniforms.update(family[0].uniforms)
