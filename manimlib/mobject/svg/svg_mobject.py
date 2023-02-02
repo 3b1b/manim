@@ -309,6 +309,8 @@ class VMobjectFromSVGPath(VMobject):
         path_string = self.path_obj.d()
         if path_string not in PATH_TO_POINTS:
             self.handle_commands()
+            if not self._use_winding_fill:
+                self.subdivide_intersections()
             # Save for future use
             PATH_TO_POINTS[path_string] = self.get_points().copy()
         else:

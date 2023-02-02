@@ -867,8 +867,10 @@ class VMobject(Mobject):
     # Alignment
     def align_points(self, vmobject: VMobject) -> Self:
         winding = self._use_winding_fill and vmobject._use_winding_fill
-        self.use_winding_fill(winding)
-        vmobject.use_winding_fill(winding)
+        if winding != self._use_winding_fill:
+            self.use_winding_fill(winding)
+        if winding != vmobject._use_winding_fill:
+            vmobject.use_winding_fill(winding)
         if self.get_num_points() == len(vmobject.get_points()):
             # If both have fill, and they have the same shape, just
             # give them the same triangulation so that it's not recalculated
