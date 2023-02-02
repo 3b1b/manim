@@ -103,7 +103,7 @@ def get_colormap_code(rgb_list: Sequence[float]) -> str:
 
 
 @lru_cache()
-def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Tuple[float, float, float]]:
+def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray]:
     """
     Because VMobjects with fill are rendered in a funny way, using
     alpha blending to effectively compute the winding number around
@@ -123,26 +123,16 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Tu
     depth_texture = ctx.depth_texture(size=size)
     texture_fbo = ctx.framebuffer(texture, depth_texture)
 
-    # We'll paint onto a canvas with initially negative rgbs, and
-    # discard any pixels remaining close to this value. This is
-    # because alphas are effectively being used for another purpose,
-    # and we don't want to overlap with any colors one might actually
-    # use. It should be negative enough to be distinguishable from
-    # ordinary colors with some margin, but the farther it's pulled back
-    # from zero the more it will be true that overlapping filled objects
-    # with transparency have an unnaturally bright composition.
-    null_rgb = (-0.25, -0.25, -0.25)
-
     simple_program = ctx.program(
         vertex_shader='''
             #version 330
 
             in vec2 texcoord;
-            out vec2 v_textcoord;
+            out vec2 uv;
 
             void main() {
                 gl_Position = vec4((2.0 * texcoord - 1.0), 0.0, 1.0);
-                v_textcoord = texcoord;
+                uv = texcoord;
             }
         ''',
         fragment_shader='''
@@ -150,31 +140,24 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Tu
 
             uniform sampler2D Texture;
             uniform sampler2D DepthTexture;
-            uniform vec3 null_rgb;
 
-            in vec2 v_textcoord;
+            in vec2 uv;
             out vec4 color;
 
-            const float MIN_DIST_TO_NULL = 0.2;
-
             void main() {
-                color = texture(Texture, v_textcoord);
+                color = texture(Texture, uv);
                 if(color.a == 0) discard;
-                if(distance(color.rgb, null_rgb) < MIN_DIST_TO_NULL) discard;
 
-                // Un-blend from the null value
-                color.rgb -= (1 - color.a) * null_rgb;
                 // Counteract scaling in fill frag
-                color.a *= 1.01;
+                color.a *= 1.06;
 
-                gl_FragDepth = texture(DepthTexture, v_textcoord)[0];
+                gl_FragDepth = texture(DepthTexture, uv)[0];
             }
         ''',
     )
 
     simple_program['Texture'].value = get_texture_id(texture)
     simple_program['DepthTexture'].value = get_texture_id(depth_texture)
-    simple_program['null_rgb'].value = null_rgb
 
     verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     fill_texture_vao = ctx.simple_vertex_array(
@@ -183,4 +166,4 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Tu
         'texcoord',
         mode=moderngl.TRIANGLE_STRIP
     )
-    return (texture_fbo, fill_texture_vao, null_rgb)
+    return (texture_fbo, fill_texture_vao)
