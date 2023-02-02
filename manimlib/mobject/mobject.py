@@ -1812,13 +1812,14 @@ class Mobject(object):
                 lambda name: arrays_match(sm1.data[name], sm2.data[name]),
                 names,
             ))
-            sm.const_data_keys = set(filter(
-                lambda name: all(
+            sm.const_data_keys = set(
+                name for name in names
+                if name not in sm.locked_data_keys
+                if all(
                     array_is_constant(mob.data[name])
                     for mob in (sm, sm1, sm2)
-                ),
-                names
-            ))
+                )
+            )
 
         return self
 
