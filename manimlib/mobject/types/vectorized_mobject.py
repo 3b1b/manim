@@ -1297,11 +1297,11 @@ class VMobject(Mobject):
                 back_stroke_datas.append(submob.data[stroke_names][indices])
             if front_stroke:
                 stroke_datas.append(submob.data[stroke_names][indices])
-            if has_fill and self._use_winding_fill:
+            if has_fill and submob._use_winding_fill:
                 data = submob.data[fill_names]
                 data["base_point"][:] = data["point"][0]
                 fill_datas.append(data[indices])
-            if has_fill and not self._use_winding_fill:
+            if has_fill and not submob._use_winding_fill:
                 fill_datas.append(submob.data[fill_names])
                 fill_indices.append(submob.get_triangulation())
             if has_fill and not front_stroke:
