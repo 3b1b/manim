@@ -287,24 +287,22 @@ class FillShaderWrapper(ShaderWrapper):
             return
 
         original_fbo = self.ctx.fbo
-        texture_fbo, texture_vao, null_rgb = self.fill_canvas
+        texture_fbo, texture_vao = self.fill_canvas
 
-        texture_fbo.clear(*null_rgb, 0.0)
+        texture_fbo.clear()
         texture_fbo.use()
         gl.glBlendFuncSeparate(
             # Ordinary blending for colors
             gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
-            # Just take the max of the alphas, given the shenanigans
-            # with how alphas are being used to compute winding numbers
-            gl.GL_ONE, gl.GL_ONE,
+            # The effect of blending with -a / (1 - a)
+            # should be to cancel out
+            gl.GL_ONE_MINUS_DST_ALPHA, gl.GL_ONE,
         )
-        gl.glBlendEquationSeparate(gl.GL_FUNC_ADD, gl.GL_MAX)
 
         super().render()
 
         original_fbo.use()
         gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
-        gl.glBlendEquation(gl.GL_FUNC_ADD)
 
         texture_vao.render()
 
