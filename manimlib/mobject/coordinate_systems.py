@@ -32,9 +32,9 @@ from manimlib.utils.space_ops import normalize
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence, Type, TypeVar, Optional, Self
+    from typing import Callable, Iterable, Sequence, Type, TypeVar, Optional
     from manimlib.mobject.mobject import Mobject
-    from manimlib.typing import ManimColor, Vect3, Vect3Array, VectN, RangeSpecifier
+    from manimlib.typing import ManimColor, Vect3, Vect3Array, VectN, RangeSpecifier, Self
 
     T = TypeVar("T", bound=Mobject)
 

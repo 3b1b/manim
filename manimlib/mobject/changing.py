@@ -11,8 +11,8 @@ from manimlib.utils.rate_functions import smooth
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, List, Iterable, Self
-    from manimlib.typing import ManimColor, Vect3
+    from typing import Callable, List, Iterable
+    from manimlib.typing import ManimColor, Vect3, Self
 
 
 class AnimatedBoundary(VGroup):

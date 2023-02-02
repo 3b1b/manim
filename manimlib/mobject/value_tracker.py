@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import numpy as np
-from typing import Self
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.iterables import listify
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from manimlib.typing import Self
 
 
 class ValueTracker(Mobject):

@@ -11,8 +11,8 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import TypeVar, Self
-    from manimlib.typing import ManimColor, Vect3
+    from typing import TypeVar
+    from manimlib.typing import ManimColor, Vect3, Self
 
     T = TypeVar("T", bound=VMobject)
 

@@ -18,10 +18,10 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Sequence, Self
+    from typing import Sequence
     import numpy.typing as npt
     from manimlib.mobject.mobject import Mobject
-    from manimlib.typing import ManimColor, Vect3
+    from manimlib.typing import ManimColor, Vect3, Self
 
 
 VECTOR_LABEL_SCALE_FACTOR = 0.8

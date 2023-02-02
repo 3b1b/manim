@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import numpy.typing as npt
-    from typing import Sequence, Tuple, Self
-    from manimlib.typing import ManimColor, Vect3, Vect3Array
+    from typing import Sequence, Tuple
+    from manimlib.typing import ManimColor, Vect3, Vect3Array, Self
 
 
 DEFAULT_DOT_RADIUS = 0.05
