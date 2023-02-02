@@ -45,8 +45,8 @@ from manimlib.shader_wrapper import FillShaderWrapper
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Tuple, Any, Self
-    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Vect4Array
+    from typing import Callable, Iterable, Tuple, Any
+    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Vect4Array, Self
     from moderngl.context import Context
 
 DEFAULT_STROKE_COLOR = GREY_A

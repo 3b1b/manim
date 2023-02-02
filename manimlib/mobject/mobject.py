@@ -48,9 +48,9 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Iterator, Union, Tuple, Optional, Self
+    from typing import Callable, Iterable, Iterator, Union, Tuple, Optional
     import numpy.typing as npt
-    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict
+    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict, Self
     from moderngl.context import Context
 
     TimeBasedUpdater = Callable[["Mobject", float], "Mobject" | None]

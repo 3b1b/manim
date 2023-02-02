@@ -5,6 +5,11 @@ if TYPE_CHECKING:
     from colour import Color
     import numpy as np
     import re
+    
+    try:
+        from typing import Self
+    except ImportError:
+        from typing_extensions import Self
 
     # Abbreviations for a common types
     ManimColor = Union[str, Color, None]
