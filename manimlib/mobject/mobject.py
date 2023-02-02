@@ -449,7 +449,9 @@ class Mobject(object):
         return self
 
     def set_submobjects(self, submobject_list: list[Mobject]) -> Self:
-        self.remove(*self.submobjects, reassemble=False)
+        if self.submobjects == submobject_list:
+            return self
+        self.clear()
         self.add(*submobject_list)
         return self
 
