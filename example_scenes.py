@@ -26,7 +26,7 @@ class OpeningManimExample(Scene):
         matrix = [[1, 1], [0, 1]]
         linear_transform_words = VGroup(
             Text("This is what the matrix"),
-            IntegerMatrix(matrix, include_background_rectangle=True, h_buff=1.0),
+            IntegerMatrix(matrix, include_background_rectangle=True),
             Text("looks like")
         )
         linear_transform_words.arrange(RIGHT)

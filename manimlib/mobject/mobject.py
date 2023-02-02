@@ -376,7 +376,7 @@ class Mobject(object):
             return [self]
 
     def family_members_with_points(self) -> list[Self]:
-        return [m for m in self.get_family() if m.has_points()]
+        return [m for m in self.family if len(m.data) > 0]
 
     def get_ancestors(self, extended: bool = False) -> list[Mobject]:
         """
@@ -449,7 +449,9 @@ class Mobject(object):
         return self
 
     def set_submobjects(self, submobject_list: list[Mobject]) -> Self:
-        self.remove(*self.submobjects, reassemble=False)
+        if self.submobjects == submobject_list:
+            return self
+        self.clear()
         self.add(*submobject_list)
         return self
 
