@@ -14,9 +14,9 @@ from manimlib.utils.customization import get_customization
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Sequence, Self
+    from typing import Sequence
     from manimlib.mobject.mobject import Mobject
-    from manimlib.typing import ManimColor
+    from manimlib.typing import ManimColor, Self
 
 
 class SurroundingRectangle(Rectangle):

@@ -17,10 +17,10 @@ from manimlib.utils.space_ops import cross
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence, Tuple, Self
+    from typing import Callable, Iterable, Sequence, Tuple
 
     from manimlib.camera.camera import Camera
-    from manimlib.typing import ManimColor, Vect3, Vect3Array
+    from manimlib.typing import ManimColor, Vect3, Vect3Array, Self
 
 
 class Surface(Mobject):
