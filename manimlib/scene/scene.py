@@ -388,18 +388,18 @@ class Scene(object):
         clusters of adjacent VMobjects in the scene's mobject
         list.
         """
-        for group in self.render_groups:
-            group.clear()
-        self.render_groups = []
         batches = batch_by_property(
             self.mobjects,
-            lambda m: "".join([
-                str(m.shader_dtype),
+            lambda m: "|".join([
+                str(m.shader_dtype.names),
                 str(m.is_fixed_in_frame()),
                 str(m.depth_test),
                 str(m.is_changing()),
             ])
         )
+
+        for group in self.render_groups:
+            group.clear()
         self.render_groups = [
             batch[0].get_group_class()(*batch)
             for batch, key in batches
