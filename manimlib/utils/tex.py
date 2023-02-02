@@ -16,7 +16,7 @@ def num_tex_symbols(tex: str) -> int:
     # \begin{array}{cc}, etc.
     pattern = "|".join(
         rf"(\\{s})" + r"(\{\w+\})?(\{\w+\})?(\[\w+\])?"
-        for s in ["begin", "end", "phantom"]
+        for s in ["begin", "end", "phantom", "text"]
     )
     tex = re.sub(pattern, "", tex)
 
