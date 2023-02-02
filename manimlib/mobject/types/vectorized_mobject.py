@@ -111,6 +111,8 @@ class VMobject(Mobject):
         self.anti_alias_width = anti_alias_width
         self.fill_border_width = fill_border_width
         self._use_winding_fill = use_winding_fill
+        self._has_fill = False
+        self._has_stroke = False
 
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
@@ -134,6 +136,16 @@ class VMobject(Mobject):
         return super().add(*vmobjects)
 
     # Colors
+    def note_changed_fill(self) -> Self:
+        for submob in self.get_family():
+            submob._has_fill = submob.has_fill()
+        return self
+
+    def note_changed_stroke(self) -> Self:
+        for submob in self.get_family():
+            submob._has_stroke = submob.has_stroke()
+        return self
+
     def init_colors(self):
         self.set_fill(
             color=self.fill_color,
@@ -164,6 +176,10 @@ class VMobject(Mobject):
 
         for name in names:
             super().set_rgba_array(rgba_array, name, recurse)
+            if name == "fill_rgba":
+                self.note_changed_fill()
+            elif name == "stroke_rgba":
+                self.note_changed_stroke()
         return self
 
     def set_fill(
@@ -177,6 +193,7 @@ class VMobject(Mobject):
         if border_width is not None:
             for mob in self.get_family(recurse):
                 mob.data["fill_border_width"] = border_width
+        self.note_changed_fill()
         return self
 
     def set_stroke(
@@ -202,6 +219,8 @@ class VMobject(Mobject):
         if background is not None:
             for mob in self.get_family(recurse):
                 mob.stroke_behind = background
+
+        self.note_changed_stroke()
         return self
 
     def set_backstroke(
@@ -255,6 +274,8 @@ class VMobject(Mobject):
 
             if shading is not None:
                 mob.set_shading(*shading, recurse=False)
+        self.note_changed_fill()
+        self.note_changed_stroke()
         return self
 
     def get_style(self) -> dict[str, Any]:
@@ -378,10 +399,12 @@ class VMobject(Mobject):
         return self.uniforms["anti_alias_width"]
 
     def has_stroke(self) -> bool:
-        return any(self.data['stroke_width']) and any(self.data['stroke_rgba'][:, 3])
+        data = self.data if len(self.data) > 0 else self._data_defaults
+        return any(data['stroke_width']) and any(data['stroke_rgba'][:, 3])
 
     def has_fill(self) -> bool:
-        return any(self.data['fill_rgba'][:, 3])
+        data = self.data if len(self.data) > 0 else self._data_defaults
+        return any(data['fill_rgba'][:, 3])
 
     def get_opacity(self) -> float:
         if self.has_fill():
@@ -971,6 +994,10 @@ class VMobject(Mobject):
         *args, **kwargs
     ) -> Self:
         super().interpolate(mobject1, mobject2, alpha, *args, **kwargs)
+
+        self._has_stroke = mobject1._has_stroke or mobject2._has_stroke
+        self._has_fill = mobject1._has_fill or mobject2._has_fill
+
         if self.has_fill() and not self._use_winding_fill:
             tri1 = mobject1.get_triangulation()
             tri2 = mobject2.get_triangulation()
@@ -1202,6 +1229,8 @@ class VMobject(Mobject):
     @triggers_refreshed_triangulation
     def set_data(self, data: np.ndarray) -> Self:
         super().set_data(data)
+        self.note_changed_fill()
+        self.note_changed_stroke()
         return self
 
     # TODO, how to be smart about tangents here?
@@ -1291,8 +1320,8 @@ class VMobject(Mobject):
         for submob in family:
             submob.get_joint_products()
             indices = submob.get_outer_vert_indices()
-            has_fill = submob.has_fill()
-            has_stroke = submob.has_stroke()
+            has_fill = submob._has_fill
+            has_stroke = submob._has_stroke
             back_stroke = has_stroke and submob.stroke_behind
             front_stroke = has_stroke and not submob.stroke_behind
             if back_stroke:
