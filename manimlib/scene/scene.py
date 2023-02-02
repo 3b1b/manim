@@ -383,20 +383,11 @@ class Scene(object):
 
     def assemble_render_groups(self):
         """
-        Rendering is more efficient when VMobjects are grouped
-        together, so this function creates VGroups of all
-        clusters of adjacent VMobjects in the scene's mobject
-        list.
+        Rendering can be more efficient when mobjects of the
+        same type are grouped together, so this function creates
+        Groups of all clusters of adjacent Mobjects in the scene
         """
-        batches = batch_by_property(
-            self.mobjects,
-            lambda m: "|".join([
-                str(m.shader_dtype.names),
-                str(m.is_fixed_in_frame()),
-                str(m.depth_test),
-                str(m.is_changing()),
-            ])
-        )
+        batches = batch_by_property(self.mobjects, lambda m: str(type(m)))
 
         for group in self.render_groups:
             group.clear()
