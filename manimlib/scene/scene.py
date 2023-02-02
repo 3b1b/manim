@@ -393,7 +393,12 @@ class Scene(object):
         self.render_groups = []
         batches = batch_by_property(
             self.mobjects,
-            lambda m: str(m.get_uniforms()) + str(m.apply_depth_test)
+            lambda m: "".join([
+                str(m.shader_dtype),
+                str(m.is_fixed_in_frame()),
+                str(m.depth_test),
+                str(m.is_changing()),
+            ])
         )
         self.render_groups = [
             batch[0].get_group_class()(*batch)
@@ -643,6 +648,7 @@ class Scene(object):
         else:
             self.update_mobjects(0)
 
+    @affects_mobject_list
     def play(
         self,
         *proto_animations: Animation | _AnimationBuilder,
