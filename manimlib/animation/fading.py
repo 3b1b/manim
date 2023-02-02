@@ -36,7 +36,7 @@ class Fade(Transform):
 
 class FadeIn(Fade):
     def create_target(self) -> Mobject:
-        return self.mobject
+        return self.mobject.copy()
 
     def create_starting_mobject(self) -> Mobject:
         start = super().create_starting_mobject()

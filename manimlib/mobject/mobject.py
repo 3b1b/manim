@@ -1672,6 +1672,16 @@ class Mobject(object):
 
     # Alignment
 
+    def is_aligned_with(self, mobject: Mobject) -> bool:
+        if len(self.data) != len(mobject.data):
+            return False
+        if len(self.submobjects) != len(mobject.submobjects):
+            return False
+        return all(
+            sm1.is_aligned_with(sm2)
+            for sm1, sm2 in zip(self.submobjects, mobject.submobjects)
+        )
+
     def align_data_and_family(self, mobject: Mobject) -> Self:
         self.align_family(mobject)
         self.align_data(mobject)
