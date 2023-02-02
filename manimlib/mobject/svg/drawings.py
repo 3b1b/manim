@@ -251,8 +251,6 @@ class Laptop(VGroup):
         self.axis = axis
 
         self.add(body, screen_plate, axis)
-        self.rotate(5 * np.pi / 12, LEFT, about_point=ORIGIN)
-        self.rotate(np.pi / 6, DOWN, about_point=ORIGIN)
 
 
 class VideoIcon(SVGMobject):
@@ -383,7 +381,6 @@ class Bubble(SVGMobject):
             self.flip()
 
         self.content = Mobject()
-        self.refresh_triangulation()
 
     def get_tip(self):
         # TODO, find a better way

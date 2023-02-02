@@ -12,11 +12,12 @@ from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.space_ops import normalize_along_axis
+from manimlib.utils.space_ops import cross
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence, Tuple
+    from typing import Callable, Iterable, Sequence, Tuple, Self
 
     from manimlib.camera.camera import Camera
     from manimlib.typing import ManimColor, Vect3, Vect3Array
@@ -27,11 +28,9 @@ class Surface(Mobject):
     shader_folder: str = "surface"
     shader_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
-        ('du_point', np.float32, (3,)),
-        ('dv_point', np.float32, (3,)),
+        ('normal', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ])
-    pointlike_data_keys = ['point', 'du_point', 'dv_point']
 
     def __init__(
         self,
@@ -96,17 +95,24 @@ class Surface(Mobject):
             for grid in (uv_grid, uv_plus_du, uv_plus_dv)
         ]
         self.set_points(points)
-        self.data["du_point"][:] = du_points
-        self.data["dv_point"][:] = dv_points
+        self.data["normal"] = normalize_along_axis(cross(
+            (du_points - points) / self.epsilon,
+            (dv_points - points) / self.epsilon,
+        ), 1)
 
-    def compute_triangle_indices(self):
+    def apply_points_function(self, *args, **kwargs) -> Self:
+        super().apply_points_function(*args, **kwargs)
+        self.get_unit_normals()
+        return self
+
+    def compute_triangle_indices(self) -> np.ndarray:
         # TODO, if there is an event which changes
         # the resolution of the surface, make sure
         # this is called.
         nu, nv = self.resolution
         if nu == 0 or nv == 0:
             self.triangle_indices = np.zeros(0, dtype=int)
-            return
+            return self.triangle_indices
         index_grid = np.arange(nu * nv).reshape((nu, nv))
         indices = np.zeros(6 * (nu - 1) * (nv - 1), dtype=int)
         indices[0::6] = index_grid[:-1, :-1].flatten()  # Top left
@@ -116,20 +122,32 @@ class Surface(Mobject):
         indices[4::6] = index_grid[+1:, :-1].flatten()  # Bottom left
         indices[5::6] = index_grid[+1:, +1:].flatten()  # Bottom right
         self.triangle_indices = indices
+        return self.triangle_indices
 
     def get_triangle_indices(self) -> np.ndarray:
         return self.triangle_indices
 
-    def get_surface_points_and_nudged_points(self) -> tuple[Vect3Array, Vect3Array, Vect3Array]:
-        return (self.data['point'], self.data['du_point'], self.data['dv_point'])
-
     def get_unit_normals(self) -> Vect3Array:
-        s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
-        normals = np.cross(
-            (du_points - s_points) / self.epsilon,
-            (dv_points - s_points) / self.epsilon,
+        nu, nv = self.resolution
+        indices = np.arange(nu * nv)
+
+        left  = indices - 1
+        right = indices + 1
+        up    = indices - nv
+        down  = indices + nv
+
+        left[0] = indices[0]
+        right[-1] = indices[-1]
+        up[:nv] = indices[:nv]
+        down[-nv:] = indices[-nv:]
+
+        points = self.get_points()
+        crosses = cross(
+            points[right] - points[left],
+            points[up] - points[down],
         )
-        return normalize_along_axis(normals, 1)
+        self.data["normal"] = normalize_along_axis(crosses, 1)
+        return self.data["normal"]
 
     @Mobject.affects_data
     def pointwise_become_partial(
@@ -138,7 +156,7 @@ class Surface(Mobject):
         a: float,
         b: float,
         axis: int | None = None
-    ):
+    ) -> Self:
         assert(isinstance(smobject, Surface))
         if axis is None:
             axis = self.prefered_creation_axis
@@ -147,12 +165,11 @@ class Surface(Mobject):
             return self
 
         nu, nv = smobject.resolution
-        for key in ['point', 'du_point', 'dv_point']:
-            self.data[key][:] = self.get_partial_points_array(
-                self.data[key], a, b,
-                (nu, nv, 3),
-                axis=axis
-            )
+        self.data['point'][:] = self.get_partial_points_array(
+            self.data['point'], a, b,
+            (nu, nv, 3),
+            axis=axis
+        )
         return self
 
     def get_partial_points_array(
@@ -196,7 +213,7 @@ class Surface(Mobject):
         return points.reshape((nu * nv, *resolution[2:]))
 
     @Mobject.affects_data
-    def sort_faces_back_to_front(self, vect: Vect3 = OUT):
+    def sort_faces_back_to_front(self, vect: Vect3 = OUT) -> Self:
         tri_is = self.triangle_indices
         points = self.get_points()
 
@@ -206,24 +223,25 @@ class Surface(Mobject):
             tri_is[k::3] = tri_is[k::3][indices]
         return self
 
-    def always_sort_to_camera(self, camera: Camera):
+    def always_sort_to_camera(self, camera: Camera) -> Self:
         def updater(surface: Surface):
             vect = camera.get_location() - surface.get_center()
             surface.sort_faces_back_to_front(vect)
         self.add_updater(updater)
+        return self
 
     def set_clip_plane(
         self,
         vect: Vect3 | None = None,
         threshold: float | None = None
-    ):
+    ) -> Self:
         if vect is not None:
             self.uniforms["clip_plane"][:3] = vect
         if threshold is not None:
             self.uniforms["clip_plane"][3] = threshold
         return self
 
-    def deactivate_clip_plane(self):
+    def deactivate_clip_plane(self) -> Self:
         self.uniforms["clip_plane"][:] = 0
         return self
 
@@ -263,8 +281,7 @@ class TexturedSurface(Surface):
     shader_folder: str = "textured_surface"
     shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
-        ('du_point', np.float32, (3,)),
-        ('dv_point', np.float32, (3,)),
+        ('normal', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ]
@@ -306,8 +323,9 @@ class TexturedSurface(Surface):
         surf = self.uv_surface
         nu, nv = surf.resolution
         self.resize_points(surf.get_num_points())
-        for key in ['point', 'du_point', 'dv_point']:
-            self.data[key][:] = surf.data[key]
+        self.resolution = surf.resolution
+        self.data['point'][:] = surf.data['point']
+        self.data['normal'][:] = surf.data['normal']
         self.data['opacity'][:, 0] = surf.data["rgba"][:, 3]
         self.data["im_coords"] = np.array([
             [u, v]
@@ -320,7 +338,7 @@ class TexturedSurface(Surface):
         self.uniforms["num_textures"] = self.num_textures
 
     @Mobject.affects_data
-    def set_opacity(self, opacity: float | Iterable[float]):
+    def set_opacity(self, opacity: float | Iterable[float]) -> Self:
         op_arr = np.array(listify(opacity))
         self.data["opacity"][:, 0] = resize_with_interpolation(op_arr, len(self.data))
         return self
@@ -330,7 +348,7 @@ class TexturedSurface(Surface):
         color: ManimColor | Iterable[ManimColor] | None,
         opacity: float | Iterable[float] | None = None,
         recurse: bool = True
-    ):
+    ) -> Self:
         if opacity is not None:
             self.set_opacity(opacity)
         return self
@@ -341,7 +359,7 @@ class TexturedSurface(Surface):
         a: float,
         b: float,
         axis: int = 1
-    ):
+    ) -> Self:
         super().pointwise_become_partial(tsmobject, a, b, axis)
         im_coords = self.data["im_coords"]
         im_coords[:] = tsmobject.data["im_coords"]

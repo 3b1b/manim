@@ -11,7 +11,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import TypeVar
+    from typing import TypeVar, Self
     from manimlib.typing import ManimColor, Vect3
 
     T = TypeVar("T", bound=VMobject)
@@ -163,7 +163,7 @@ class DecimalNumber(VMobject):
     def get_tex(self):
         return self.num_string
 
-    def set_value(self, number: float | complex):
+    def set_value(self, number: float | complex) -> Self:
         move_to_point = self.get_edge_center(self.edge_to_fix)
         style = self.family_members_with_points()[0].get_style()
         self.set_submobjects_from_number(number)
@@ -171,14 +171,16 @@ class DecimalNumber(VMobject):
         self.set_style(**style)
         return self
 
-    def _handle_scale_side_effects(self, scale_factor: float) -> None:
+    def _handle_scale_side_effects(self, scale_factor: float) -> Self:
         self.uniforms["font_size"] = scale_factor * self.uniforms["font_size"]
+        return self
 
     def get_value(self) -> float | complex:
         return self.number
 
-    def increment_value(self, delta_t: float | complex = 1) -> None:
+    def increment_value(self, delta_t: float | complex = 1) -> Self:
         self.set_value(self.get_value() + delta_t)
+        return self
 
 
 class Integer(DecimalNumber):

@@ -30,7 +30,7 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable
+    from typing import Iterable, Self, Optional
     from manimlib.typing import ManimColor, Vect3, Vect3Array
 
 
@@ -67,7 +67,7 @@ class TipableVMobject(VMobject):
     )
 
     # Adding, Creating, Modifying tips
-    def add_tip(self, at_start: bool = False, **kwargs):
+    def add_tip(self, at_start: bool = False, **kwargs) -> Self:
         """
         Adds a tip to the TipableVMobject instance, recognising
         that the endpoints might need to be switched if it's
@@ -112,7 +112,7 @@ class TipableVMobject(VMobject):
         tip.shift(anchor - tip.get_tip_point())
         return tip
 
-    def reset_endpoints_based_on_tip(self, tip: ArrowTip, at_start: bool):
+    def reset_endpoints_based_on_tip(self, tip: ArrowTip, at_start: bool) -> Self:
         if self.get_length() == 0:
             # Zero length, put_start_and_end_on wouldn't
             # work
@@ -127,7 +127,7 @@ class TipableVMobject(VMobject):
         self.put_start_and_end_on(start, end)
         return self
 
-    def asign_tip_attr(self, tip: ArrowTip, at_start: bool):
+    def asign_tip_attr(self, tip: ArrowTip, at_start: bool) -> Self:
         if at_start:
             self.start_tip = tip
         else:
@@ -258,7 +258,7 @@ class Arc(TipableVMobject):
         angle = angle_of_vector(self.get_end() - self.get_arc_center())
         return angle % TAU
 
-    def move_arc_center_to(self, point: Vect3):
+    def move_arc_center_to(self, point: Vect3) -> Self:
         self.shift(point - self.get_arc_center())
         return self
 
@@ -318,7 +318,7 @@ class Circle(Arc):
         dim_to_match: int = 0,
         stretch: bool = False,
         buff: float = MED_SMALL_BUFF
-    ):
+    ) -> Self:
         self.replace(mobject, dim_to_match, stretch)
         self.stretch((self.get_width() + 2 * buff) / self.get_width(), 0)
         self.stretch((self.get_height() + 2 * buff) / self.get_height(), 1)
@@ -448,12 +448,8 @@ class Annulus(VMobject):
         )
 
         self.radius = outer_radius
-        # Make sure to add enough components that triangulation doesn't fail
-        kw = dict(
-            n_components=int(max(8, np.ceil(TAU / math.acos(inner_radius / outer_radius))))
-        )
-        outer_path = outer_radius * Arc.create_quadratic_bezier_points(TAU, 0, **kw)
-        inner_path = inner_radius * Arc.create_quadratic_bezier_points(-TAU, 0, **kw)
+        outer_path = outer_radius * Arc.create_quadratic_bezier_points(TAU, 0)
+        inner_path = inner_radius * Arc.create_quadratic_bezier_points(-TAU, 0)
         self.add_subpath(outer_path)
         self.add_subpath(inner_path)
         self.shift(center)
@@ -479,7 +475,7 @@ class Line(TipableVMobject):
         end: Vect3,
         buff: float = 0,
         path_arc: float = 0
-    ):
+    ) -> Self:
         vect = end - start
         dist = get_norm(vect)
         if np.isclose(dist, 0):
@@ -508,9 +504,10 @@ class Line(TipableVMobject):
             self.set_points_as_corners([start, end])
         return self
 
-    def set_path_arc(self, new_value: float) -> None:
+    def set_path_arc(self, new_value: float) -> Self:
         self.path_arc = new_value
         self.init_points()
+        return self
 
     def set_start_and_end_attrs(self, start: Vect3 | Mobject, end: Vect3 | Mobject):
         # If either start or end are Mobjects, this
@@ -545,7 +542,7 @@ class Line(TipableVMobject):
             result[:len(point)] = point
             return result
 
-    def put_start_and_end_on(self, start: Vect3, end: Vect3):
+    def put_start_and_end_on(self, start: Vect3, end: Vect3) -> Self:
         curr_start, curr_end = self.get_start_and_end()
         if np.isclose(curr_start, curr_end).all():
             # Handle null lines more gracefully
@@ -573,7 +570,7 @@ class Line(TipableVMobject):
     def get_slope(self) -> float:
         return np.tan(self.get_angle())
 
-    def set_angle(self, angle: float, about_point: Vect3 | None = None):
+    def set_angle(self, angle: float, about_point: Optional[Vect3] = None) -> Self:
         if about_point is None:
             about_point = self.get_start()
         self.rotate(
@@ -699,13 +696,13 @@ class Arrow(Line):
         end: Vect3,
         buff: float = 0,
         path_arc: float = 0
-    ):
+    ) -> Self:
         super().set_points_by_ends(start, end, buff, path_arc)
         self.insert_tip_anchor()
         self.create_tip_with_stroke_width()
         return self
 
-    def insert_tip_anchor(self):
+    def insert_tip_anchor(self) -> Self:
         prev_end = self.get_end()
         arc_len = self.get_arc_length()
         tip_len = self.get_stroke_width() * self.width_to_tip_len * self.tip_width_ratio
@@ -720,7 +717,7 @@ class Arrow(Line):
         return self
 
     @Mobject.affects_data
-    def create_tip_with_stroke_width(self):
+    def create_tip_with_stroke_width(self) -> Self:
         if self.get_num_points() < 3:
             return self
         tip_width = self.tip_width_ratio * min(
@@ -731,7 +728,7 @@ class Arrow(Line):
         self.data['stroke_width'][-3:, 0] = tip_width * np.linspace(1, 0, 3)
         return self
 
-    def reset_tip(self):
+    def reset_tip(self) -> Self:
         self.set_points_by_ends(
             self.get_start(), self.get_end(),
             path_arc=self.path_arc
@@ -743,13 +740,13 @@ class Arrow(Line):
         color: ManimColor | Iterable[ManimColor] | None = None,
         width: float | Iterable[float] | None = None,
         *args, **kwargs
-    ):
+    ) -> Self:
         super().set_stroke(color=color, width=width, *args, **kwargs)
         if self.has_points():
             self.reset_tip()
         return self
 
-    def _handle_scale_side_effects(self, scale_factor: float):
+    def _handle_scale_side_effects(self, scale_factor: float) -> Self:
         if scale_factor != 1.0:
             self.reset_tip()
         return self
@@ -791,7 +788,7 @@ class FillArrow(Line):
         end: Vect3,
         buff: float = 0,
         path_arc: float = 0
-    ) -> None:
+    ) -> Self:
         # Find the right tip length and thickness
         vect = end - start
         length = max(get_norm(vect), 1e-8)
@@ -852,8 +849,9 @@ class FillArrow(Line):
             axis=rotate_vector(self.get_unit_vector(), -PI / 2),
         )
         self.shift(start - self.get_start())
+        return self
 
-    def reset_points_around_ends(self):
+    def reset_points_around_ends(self) -> Self:
         self.set_points_by_ends(
             self.get_start().copy(),
             self.get_end().copy(),
@@ -868,21 +866,21 @@ class FillArrow(Line):
     def get_end(self) -> Vect3:
         return self.get_points()[self.tip_index]
 
-    def put_start_and_end_on(self, start: Vect3, end: Vect3):
+    def put_start_and_end_on(self, start: Vect3, end: Vect3) -> Self:
         self.set_points_by_ends(start, end, buff=0, path_arc=self.path_arc)
         return self
 
-    def scale(self, *args, **kwargs):
+    def scale(self, *args, **kwargs) -> Self:
         super().scale(*args, **kwargs)
         self.reset_points_around_ends()
         return self
 
-    def set_thickness(self, thickness: float):
+    def set_thickness(self, thickness: float) -> Self:
         self.thickness = thickness
         self.reset_points_around_ends()
         return self
 
-    def set_path_arc(self, path_arc: float):
+    def set_path_arc(self, path_arc: float) -> Self:
         self.path_arc = path_arc
         self.reset_points_around_ends()
         return self
@@ -925,7 +923,7 @@ class Polygon(VMobject):
     def get_vertices(self) -> Vect3Array:
         return self.get_start_anchors()
 
-    def round_corners(self, radius: float | None = None):
+    def round_corners(self, radius: Optional[float] = None) -> Self:
         if radius is None:
             verts = self.get_vertices()
             min_edge_length = min(

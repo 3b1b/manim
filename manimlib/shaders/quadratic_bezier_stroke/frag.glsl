@@ -26,7 +26,7 @@ float dist_to_curve(){
     // Evaluate F(x, y) = y - x^2
     // divide by its gradient's magnitude
     float Fxy = y0 - x0 * x0;
-    float approx_dist = abs(Fxy) / sqrt(1.0 + 4 * x0 * x0);
+    float approx_dist = abs(Fxy) * inversesqrt(1.0 + 4 * x0 * x0);
     if(approx_dist < QUICK_DIST_WIDTH) return approx_dist;
 
     // Otherwise, solve for the minimal distance.

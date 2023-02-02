@@ -31,7 +31,7 @@ class OpeningManimExample(Scene):
         )
         linear_transform_words.arrange(RIGHT)
         linear_transform_words.to_edge(UP)
-        linear_transform_words.set_stroke(BLACK, 10, background=True)
+        linear_transform_words.set_backstroke(width=5)
 
         self.play(
             ShowCreation(grid),
@@ -52,7 +52,7 @@ class OpeningManimExample(Scene):
             this is the map $z \\rightarrow z^2$
         """)
         complex_map_words.to_corner(UR)
-        complex_map_words.set_stroke(BLACK, 5, background=True)
+        complex_map_words.set_backstroke(width=5)
 
         self.play(
             FadeOut(grid),
@@ -268,16 +268,8 @@ class UpdatersExample(Scene):
         # that of the newly constructed object
         brace = always_redraw(Brace, square, UP)
 
-        text, number = label = VGroup(
-            Text("Width = "),
-            DecimalNumber(
-                0,
-                show_ellipsis=True,
-                num_decimal_places=2,
-                include_sign=True,
-            )
-        )
-        label.arrange(RIGHT)
+        label = TexText("Width = 0.00")
+        number = label.make_number_changable("0.00")
 
         # This ensures that the method deicmal.next_to(square)
         # is called on every frame
@@ -554,9 +546,7 @@ class TexAndNumbersExample(Scene):
         )
 
 
-class SurfaceExample(Scene):
-    samples = 4
-
+class SurfaceExample(ThreeDScene):
     def construct(self):
         surface_text = Text("For 3d scenes, try using surfaces")
         surface_text.fix_in_frame()
@@ -588,13 +578,6 @@ class SurfaceExample(Scene):
             mob.mesh = SurfaceMesh(mob)
             mob.mesh.set_stroke(BLUE, 1, opacity=0.5)
 
-        # Set perspective
-        frame = self.camera.frame
-        frame.set_euler_angles(
-            theta=-30 * DEGREES,
-            phi=70 * DEGREES,
-        )
-
         surface = surfaces[0]
 
         self.play(
@@ -616,12 +599,12 @@ class SurfaceExample(Scene):
         self.play(
             Transform(surface, surfaces[2]),
             # Move camera frame during the transition
-            frame.animate.increment_phi(-10 * DEGREES),
-            frame.animate.increment_theta(-20 * DEGREES),
+            self.frame.animate.increment_phi(-10 * DEGREES),
+            self.frame.animate.increment_theta(-20 * DEGREES),
             run_time=3
         )
         # Add ambient rotation
-        frame.add_updater(lambda m, dt: m.increment_theta(-0.1 * dt))
+        self.frame.add_updater(lambda m, dt: m.increment_theta(-0.1 * dt))
 
         # Play around with where the light is
         light_text = Text("You can move around the light source")
@@ -690,6 +673,8 @@ class InteractiveDevelopment(Scene):
 
 
 class ControlsExample(Scene):
+    drag_to_pan = False
+
     def setup(self):
         self.textbox = Textbox()
         self.checkbox = Checkbox()

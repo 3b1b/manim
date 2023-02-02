@@ -20,7 +20,7 @@ from manimlib.constants import MED_SMALL_BUFF
 from manimlib.constants import TAU
 from manimlib.constants import WHITE
 from manimlib.event_handler import EVENT_DISPATCHER
-from manimlib.event_handler.event_listner import EventListner
+from manimlib.event_handler.event_listner import EventListener
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
 from manimlib.shader_wrapper import ShaderWrapper
@@ -48,7 +48,7 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Union, Tuple
+    from typing import Callable, Iterable, Iterator, Union, Tuple, Optional, Self
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict
     from moderngl.context import Context
@@ -143,7 +143,7 @@ class Mobject(object):
         # Typically implemented in subclass, unlpess purposefully left blank
         pass
 
-    def set_uniforms(self, uniforms: dict):
+    def set_uniforms(self, uniforms: dict) -> Self:
         for key, value in uniforms.items():
             if isinstance(value, np.ndarray):
                 value = value.copy()
@@ -151,15 +151,16 @@ class Mobject(object):
         return self
 
     @property
-    def animate(self):
+    def animate(self) -> _AnimationBuilder:
         # Borrowed from https://github.com/ManimCommunity/manim/
         return _AnimationBuilder(self)
 
-    def note_changed_data(self, recurse_up: bool = True):
+    def note_changed_data(self, recurse_up: bool = True) -> Self:
         self._data_has_changed = True
         if recurse_up:
             for mob in self.parents:
                 mob.note_changed_data()
+        return self
 
     def affects_data(func: Callable):
         @wraps(func)
@@ -179,7 +180,7 @@ class Mobject(object):
 
     # Only these methods should directly affect points
     @affects_data
-    def set_data(self, data: np.ndarray):
+    def set_data(self, data: np.ndarray) -> Self:
         assert(data.dtype == self.data.dtype)
         self.data = data.copy()
         return self
@@ -189,7 +190,7 @@ class Mobject(object):
         self,
         new_length: int,
         resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
-    ):
+    ) -> Self:
         if new_length == 0:
             if len(self.data) > 0:
                 self._data_defaults[:1] = self.data[:1]
@@ -201,13 +202,13 @@ class Mobject(object):
         return self
 
     @affects_data
-    def set_points(self, points: Vect3Array):
+    def set_points(self, points: Vect3Array | list[Vect3]) -> Self:
         self.resize_points(len(points), resize_func=resize_preserving_order)
         self.data["point"][:] = points
         return self
 
     @affects_data
-    def append_points(self, new_points: Vect3Array):
+    def append_points(self, new_points: Vect3Array) -> Self:
         n = self.get_num_points()
         self.resize_points(n + len(new_points))
         # Have most data default to the last value
@@ -218,7 +219,7 @@ class Mobject(object):
         return self
 
     @affects_family_data
-    def reverse_points(self):
+    def reverse_points(self) -> Self:
         for mob in self.get_family():
             mob.data = mob.data[::-1]
         return self
@@ -230,7 +231,7 @@ class Mobject(object):
         about_point: Vect3 | None = None,
         about_edge: Vect3 = ORIGIN,
         works_on_bounding_box: bool = False
-    ):
+    ) -> Self:
         if about_point is None and about_edge is not None:
             about_point = self.get_bounding_box_point(about_edge)
 
@@ -257,15 +258,16 @@ class Mobject(object):
 
     # Others related to points
 
-    def match_points(self, mobject: Mobject):
+    def match_points(self, mobject: Mobject) -> Self:
         self.set_points(mobject.get_points())
         return self
 
     def get_points(self) -> Vect3Array:
         return self.data["point"]
 
-    def clear_points(self) -> None:
+    def clear_points(self) -> Self:
         self.resize_points(0)
+        return self
 
     def get_num_points(self) -> int:
         return len(self.get_points())
@@ -307,7 +309,7 @@ class Mobject(object):
         self,
         recurse_down: bool = False,
         recurse_up: bool = True
-    ):
+    ) -> Self:
         for mob in self.get_family(recurse_down):
             mob.needs_new_bounding_box = True
         if recurse_up:
@@ -342,23 +344,23 @@ class Mobject(object):
 
     # Family matters
 
-    def __getitem__(self, value: int | slice) -> Mobject:
+    def __getitem__(self, value: int | slice) -> Self:
         if isinstance(value, slice):
             GroupClass = self.get_group_class()
             return GroupClass(*self.split().__getitem__(value))
         return self.split().__getitem__(value)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Self]:
         return iter(self.split())
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.split())
 
-    def split(self) -> list[Mobject]:
+    def split(self) -> list[Self]:
         return self.submobjects
 
     @affects_data
-    def assemble_family(self):
+    def assemble_family(self) -> Self:
         sub_families = (sm.get_family() for sm in self.submobjects)
         self.family = [self, *it.chain(*sub_families)]
         self.refresh_has_updater_status()
@@ -367,13 +369,13 @@ class Mobject(object):
             parent.assemble_family()
         return self
 
-    def get_family(self, recurse: bool = True) -> list[Mobject]:
+    def get_family(self, recurse: bool = True) -> list[Self]:
         if recurse:
             return self.family
         else:
             return [self]
 
-    def family_members_with_points(self):
+    def family_members_with_points(self) -> list[Self]:
         return [m for m in self.get_family() if m.has_points()]
 
     def get_ancestors(self, extended: bool = False) -> list[Mobject]:
@@ -397,7 +399,7 @@ class Mobject(object):
         # Remove list redundancies while preserving order
         return list(dict.fromkeys(ancestors))
 
-    def add(self, *mobjects: Mobject):
+    def add(self, *mobjects: Mobject) -> Self:
         if self in mobjects:
             raise Exception("Mobject cannot contain self")
         for mobject in mobjects:
@@ -413,7 +415,7 @@ class Mobject(object):
         *to_remove: Mobject,
         reassemble: bool = True,
         recurse: bool = True
-    ):
+    ) -> Self:
         for parent in self.get_family(recurse):
             for child in to_remove:
                 if child in parent.submobjects:
@@ -424,14 +426,15 @@ class Mobject(object):
                 parent.assemble_family()
         return self
 
-    def clear(self):
+    def clear(self) -> Self:
         self.remove(*self.submobjects, recurse=False)
+        return self
 
-    def add_to_back(self, *mobjects: Mobject):
+    def add_to_back(self, *mobjects: Mobject) -> Self:
         self.set_submobjects(list_update(mobjects, self.submobjects))
         return self
 
-    def replace_submobject(self, index: int, new_submob: Mobject):
+    def replace_submobject(self, index: int, new_submob: Mobject) -> Self:
         old_submob = self.submobjects[index]
         if self in old_submob.parents:
             old_submob.parents.remove(self)
@@ -440,17 +443,17 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    def insert_submobject(self, index: int, new_submob: Mobject):
+    def insert_submobject(self, index: int, new_submob: Mobject) -> Self:
         self.submobjects.insert(index, new_submob)
         self.assemble_family()
         return self
 
-    def set_submobjects(self, submobject_list: list[Mobject]):
+    def set_submobjects(self, submobject_list: list[Mobject]) -> Self:
         self.remove(*self.submobjects, reassemble=False)
         self.add(*submobject_list)
         return self
 
-    def digest_mobject_attrs(self):
+    def digest_mobject_attrs(self) -> Self:
         """
         Ensures all attributes which are mobjects are included
         in the submobjects list.
@@ -466,7 +469,7 @@ class Mobject(object):
         direction: Vect3 = RIGHT,
         center: bool = True,
         **kwargs
-    ):
+    ) -> Self:
         for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
             m2.next_to(m1, direction, **kwargs)
         if center:
@@ -485,7 +488,7 @@ class Mobject(object):
         v_buff_ratio: float = 0.5,
         aligned_edge: Vect3 = ORIGIN,
         fill_rows_first: bool = True
-    ):
+    ) -> Self:
         submobs = self.submobjects
         if n_rows is None and n_cols is None:
             n_rows = int(np.sqrt(len(submobs)))
@@ -519,7 +522,7 @@ class Mobject(object):
         self.center()
         return self
 
-    def arrange_to_fit_dim(self, length: float, dim: int, about_edge=ORIGIN):
+    def arrange_to_fit_dim(self, length: float, dim: int, about_edge=ORIGIN) -> Self:
         ref_point = self.get_bounding_box_point(about_edge)
         n_submobs = len(self.submobjects)
         if n_submobs <= 1:
@@ -535,20 +538,20 @@ class Mobject(object):
         self.move_to(ref_point, about_edge)
         return self
 
-    def arrange_to_fit_width(self, width: float, about_edge=ORIGIN):
+    def arrange_to_fit_width(self, width: float, about_edge=ORIGIN) -> Self:
         return self.arrange_to_fit_dim(width, 0, about_edge)
 
-    def arrange_to_fit_height(self, height: float, about_edge=ORIGIN):
+    def arrange_to_fit_height(self, height: float, about_edge=ORIGIN) -> Self:
         return self.arrange_to_fit_dim(height, 1, about_edge)
 
-    def arrange_to_fit_depth(self, depth: float, about_edge=ORIGIN):
+    def arrange_to_fit_depth(self, depth: float, about_edge=ORIGIN) -> Self:
         return self.arrange_to_fit_dim(depth, 2, about_edge)
 
     def sort(
         self,
         point_to_num_func: Callable[[np.ndarray], float] = lambda p: p[0],
         submob_func: Callable[[Mobject]] | None = None
-    ):
+    ) -> Self:
         if submob_func is not None:
             self.submobjects.sort(key=submob_func)
         else:
@@ -556,7 +559,7 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    def shuffle(self, recurse: bool = False):
+    def shuffle(self, recurse: bool = False) -> Self:
         if recurse:
             for submob in self.submobjects:
                 submob.shuffle(recurse=True)
@@ -564,7 +567,7 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    def reverse_submobjects(self):
+    def reverse_submobjects(self) -> Self:
         self.submobjects.reverse()
         self.assemble_family()
         return self
@@ -588,19 +591,20 @@ class Mobject(object):
         return wrapper
 
     @stash_mobject_pointers
-    def serialize(self):
+    def serialize(self) -> bytes:
         return pickle.dumps(self)
 
-    def deserialize(self, data: bytes):
+    def deserialize(self, data: bytes) -> Self:
         self.become(pickle.loads(data))
         return self
 
-    def deepcopy(self):
+    def deepcopy(self) -> Self:
         result = copy.deepcopy(self)
         result._shaders_initialized = False
         result._data_has_changed = True
+        return result
 
-    def copy(self, deep: bool = False):
+    def copy(self, deep: bool = False) -> Self:
         if deep:
             return self.deepcopy()
 
@@ -613,7 +617,6 @@ class Mobject(object):
         # copy.copy is only a shallow copy, so the internal
         # data which are numpy arrays or other mobjects still
         # need to be further copied.
-        result.data = self.data.copy()
         result.uniforms = {
             key: value.copy() if isinstance(value, np.ndarray) else value
             for key, value in self.uniforms.items()
@@ -632,42 +635,41 @@ class Mobject(object):
         result.non_time_updaters = list(self.non_time_updaters)
         result.time_based_updaters = list(self.time_based_updaters)
         result._data_has_changed = True
+        result._shaders_initialized = False
 
         family = self.get_family()
         for attr, value in self.__dict__.items():
             if isinstance(value, Mobject) and value is not self:
                 if value in family:
                     setattr(result, attr, result.family[self.family.index(value)])
-            if isinstance(value, np.ndarray):
-                setattr(result, attr, value.copy())
-            if isinstance(value, ShaderWrapper):
+            elif isinstance(value, np.ndarray):
                 setattr(result, attr, value.copy())
         return result
 
-    def generate_target(self, use_deepcopy: bool = False):
+    def generate_target(self, use_deepcopy: bool = False) -> Self:
         self.target = self.copy(deep=use_deepcopy)
         self.target.saved_state = self.saved_state
         return self.target
 
-    def save_state(self, use_deepcopy: bool = False):
+    def save_state(self, use_deepcopy: bool = False) -> Self:
         self.saved_state = self.copy(deep=use_deepcopy)
         self.saved_state.target = self.target
         return self
 
-    def restore(self):
+    def restore(self) -> Self:
         if not hasattr(self, "saved_state") or self.saved_state is None:
             raise Exception("Trying to restore without having saved")
         self.become(self.saved_state)
         return self
 
-    def save_to_file(self, file_path: str, supress_overwrite_warning: bool = False):
+    def save_to_file(self, file_path: str) -> Self:
         with open(file_path, "wb") as fp:
             fp.write(self.serialize())
         log.info(f"Saved mobject to {file_path}")
         return self
 
     @staticmethod
-    def load(file_path):
+    def load(file_path) -> Mobject:
         if not os.path.exists(file_path):
             log.error(f"No file found at {file_path}")
             sys.exit(2)
@@ -675,7 +677,7 @@ class Mobject(object):
             mobject = pickle.load(fp)
         return mobject
 
-    def become(self, mobject: Mobject, match_updaters=False):
+    def become(self, mobject: Mobject, match_updaters=False) -> Self:
         """
         Edit all data and submobjects to be idential
         to another mobject
@@ -691,6 +693,7 @@ class Mobject(object):
             sm1.texture_paths = sm2.texture_paths
             sm1.depth_test = sm2.depth_test
             sm1.render_primitive = sm2.render_primitive
+            sm1.needs_new_bounding_box = sm2.needs_new_bounding_box
         # Make sure named family members carry over
         for attr, value in list(mobject.__dict__.items()):
             if isinstance(value, Mobject) and value in family2:
@@ -735,18 +738,20 @@ class Mobject(object):
 
     # Creating new Mobjects from this one
 
-    def replicate(self, n: int) -> Group:
+    def replicate(self, n: int) -> Self:
         group_class = self.get_group_class()
         return group_class(*(self.copy() for _ in range(n)))
 
-    def get_grid(self,
-                 n_rows: int,
-                 n_cols: int,
-                 height: float | None = None,
-                 width: float | None = None,
-                 group_by_rows: bool = False,
-                 group_by_cols: bool = False,
-                 **kwargs) -> Group:
+    def get_grid(
+        self,
+        n_rows: int,
+        n_cols: int,
+        height: float | None = None,
+        width: float | None = None,
+        group_by_rows: bool = False,
+        group_by_cols: bool = False,
+        **kwargs
+    ) -> Self:
         """
         Returns a new mobject containing multiple copies of this one
         arranged in a grid
@@ -777,7 +782,7 @@ class Mobject(object):
         self.has_updaters: bool = False
         self.updating_suspended: bool = False
 
-    def update(self, dt: float = 0, recurse: bool = True):
+    def update(self, dt: float = 0, recurse: bool = True) -> Self:
         if not self.has_updaters or self.updating_suspended:
             return self
         for updater in self.time_based_updaters:
@@ -806,7 +811,7 @@ class Mobject(object):
         update_function: Updater,
         index: int | None = None,
         call_updater: bool = True
-    ):
+    ) -> Self:
         if "dt" in get_parameters(update_function):
             updater_list = self.time_based_updaters
         else:
@@ -824,14 +829,14 @@ class Mobject(object):
             self.update(dt=0)
         return self
 
-    def remove_updater(self, update_function: Updater):
+    def remove_updater(self, update_function: Updater) -> Self:
         for updater_list in [self.time_based_updaters, self.non_time_updaters]:
             while update_function in updater_list:
                 updater_list.remove(update_function)
         self.refresh_has_updater_status()
         return self
 
-    def clear_updaters(self, recurse: bool = True):
+    def clear_updaters(self, recurse: bool = True) -> Self:
         self.time_based_updaters = []
         self.non_time_updaters = []
         if recurse:
@@ -840,20 +845,20 @@ class Mobject(object):
         self.refresh_has_updater_status()
         return self
 
-    def match_updaters(self, mobject: Mobject):
+    def match_updaters(self, mobject: Mobject) -> Self:
         self.clear_updaters()
         for updater in mobject.get_updaters():
             self.add_updater(updater)
         return self
 
-    def suspend_updating(self, recurse: bool = True):
+    def suspend_updating(self, recurse: bool = True) -> Self:
         self.updating_suspended = True
         if recurse:
             for submob in self.submobjects:
                 submob.suspend_updating(recurse)
         return self
 
-    def resume_updating(self, recurse: bool = True, call_updater: bool = True):
+    def resume_updating(self, recurse: bool = True, call_updater: bool = True) -> Self:
         self.updating_suspended = False
         if recurse:
             for submob in self.submobjects:
@@ -864,7 +869,7 @@ class Mobject(object):
             self.update(dt=0, recurse=recurse)
         return self
 
-    def refresh_has_updater_status(self):
+    def refresh_has_updater_status(self) -> Self:
         self.has_updaters = any(mob.get_updaters() for mob in self.get_family())
         return self
 
@@ -873,14 +878,14 @@ class Mobject(object):
     def is_changing(self) -> bool:
         return self._is_animating or self.has_updaters
 
-    def set_animating_status(self, is_animating: bool, recurse: bool = True):
+    def set_animating_status(self, is_animating: bool, recurse: bool = True) -> Self:
         for mob in (*self.get_family(recurse), *self.get_ancestors()):
             mob._is_animating = is_animating
         return self
 
     # Transforming operations
 
-    def shift(self, vector: Vect3):
+    def shift(self, vector: Vect3) -> Self:
         self.apply_points_function(
             lambda points: points + vector,
             about_edge=None,
@@ -894,7 +899,7 @@ class Mobject(object):
         min_scale_factor: float = 1e-8,
         about_point: Vect3 | None = None,
         about_edge: Vect3 = ORIGIN
-    ):
+    ) -> Self:
         """
         Default behavior is to scale about the center of the mobject.
         The argument about_edge can be a vector, indicating which side of
@@ -923,14 +928,14 @@ class Mobject(object):
         # any other changes when the size gets altered
         pass
 
-    def stretch(self, factor: float, dim: int, **kwargs):
+    def stretch(self, factor: float, dim: int, **kwargs) -> Self:
         def func(points):
             points[:, dim] *= factor
             return points
         self.apply_points_function(func, works_on_bounding_box=True, **kwargs)
         return self
 
-    def rotate_about_origin(self, angle: float, axis: Vect3 = OUT):
+    def rotate_about_origin(self, angle: float, axis: Vect3 = OUT) -> Self:
         return self.rotate(angle, axis, about_point=ORIGIN)
 
     def rotate(
@@ -939,7 +944,7 @@ class Mobject(object):
         axis: Vect3 = OUT,
         about_point: Vect3 | None = None,
         **kwargs
-    ):
+    ) -> Self:
         rot_matrix_T = rotation_matrix_transpose(angle, axis)
         self.apply_points_function(
             lambda points: np.dot(points, rot_matrix_T),
@@ -948,10 +953,10 @@ class Mobject(object):
         )
         return self
 
-    def flip(self, axis: Vect3 = UP, **kwargs):
+    def flip(self, axis: Vect3 = UP, **kwargs) -> Self:
         return self.rotate(TAU / 2, axis, **kwargs)
 
-    def apply_function(self, function: Callable[[np.ndarray], np.ndarray], **kwargs):
+    def apply_function(self, function: Callable[[np.ndarray], np.ndarray], **kwargs) -> Self:
         # Default to applying matrix about the origin, not mobjects center
         if len(kwargs) == 0:
             kwargs["about_point"] = ORIGIN
@@ -961,19 +966,19 @@ class Mobject(object):
         )
         return self
 
-    def apply_function_to_position(self, function: Callable[[np.ndarray], np.ndarray]):
+    def apply_function_to_position(self, function: Callable[[np.ndarray], np.ndarray]) -> Self:
         self.move_to(function(self.get_center()))
         return self
 
     def apply_function_to_submobject_positions(
         self,
         function: Callable[[np.ndarray], np.ndarray]
-    ):
+    ) -> Self:
         for submob in self.submobjects:
             submob.apply_function_to_position(function)
         return self
 
-    def apply_matrix(self, matrix: npt.ArrayLike, **kwargs):
+    def apply_matrix(self, matrix: npt.ArrayLike, **kwargs) -> Self:
         # Default to applying matrix about the origin, not mobjects center
         if ("about_point" not in kwargs) and ("about_edge" not in kwargs):
             kwargs["about_point"] = ORIGIN
@@ -986,7 +991,7 @@ class Mobject(object):
         )
         return self
 
-    def apply_complex_function(self, function: Callable[[complex], complex], **kwargs):
+    def apply_complex_function(self, function: Callable[[complex], complex], **kwargs) -> Self:
         def R3_func(point):
             x, y, z = point
             xy_complex = function(complex(x, y))
@@ -1002,7 +1007,7 @@ class Mobject(object):
         direction: Vect3 = RIGHT,
         axis: Vect3 = DOWN,
         wag_factor: float = 1.0
-    ):
+    ) -> Self:
         for mob in self.family_members_with_points():
             alphas = np.dot(mob.get_points(), np.transpose(axis))
             alphas -= min(alphas)
@@ -1016,7 +1021,7 @@ class Mobject(object):
 
     # Positioning methods
 
-    def center(self):
+    def center(self) -> Self:
         self.shift(-self.get_center())
         return self
 
@@ -1024,7 +1029,7 @@ class Mobject(object):
         self,
         direction: Vect3,
         buff: float = DEFAULT_MOBJECT_TO_EDGE_BUFFER
-    ):
+    ) -> Self:
         """
         Direction just needs to be a vector pointing towards side or
         corner in the 2d plane.
@@ -1040,14 +1045,14 @@ class Mobject(object):
         self,
         corner: Vect3 = LEFT + DOWN,
         buff: float = DEFAULT_MOBJECT_TO_EDGE_BUFFER
-    ):
+    ) -> Self:
         return self.align_on_border(corner, buff)
 
     def to_edge(
         self,
         edge: Vect3 = LEFT,
         buff: float = DEFAULT_MOBJECT_TO_EDGE_BUFFER
-    ):
+    ) -> Self:
         return self.align_on_border(edge, buff)
 
     def next_to(
@@ -1059,7 +1064,7 @@ class Mobject(object):
         submobject_to_align: Mobject | None = None,
         index_of_submobject_to_align: int | slice | None = None,
         coor_mask: Vect3 = np.array([1, 1, 1]),
-    ):
+    ) -> Self:
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
             if index_of_submobject_to_align is not None:
@@ -1081,7 +1086,7 @@ class Mobject(object):
         self.shift((target_point - point_to_align + buff * direction) * coor_mask)
         return self
 
-    def shift_onto_screen(self, **kwargs):
+    def shift_onto_screen(self, **kwargs) -> Self:
         space_lengths = [FRAME_X_RADIUS, FRAME_Y_RADIUS]
         for vect in UP, DOWN, LEFT, RIGHT:
             dim = np.argmax(np.abs(vect))
@@ -1092,7 +1097,7 @@ class Mobject(object):
                 self.to_edge(vect, **kwargs)
         return self
 
-    def is_off_screen(self):
+    def is_off_screen(self) -> bool:
         if self.get_left()[0] > FRAME_X_RADIUS:
             return True
         if self.get_right()[0] < -FRAME_X_RADIUS:
@@ -1103,14 +1108,14 @@ class Mobject(object):
             return True
         return False
 
-    def stretch_about_point(self, factor: float, dim: int, point: Vect3):
+    def stretch_about_point(self, factor: float, dim: int, point: Vect3) -> Self:
         return self.stretch(factor, dim, about_point=point)
 
-    def stretch_in_place(self, factor: float, dim: int):
+    def stretch_in_place(self, factor: float, dim: int) -> Self:
         # Now redundant with stretch
         return self.stretch(factor, dim)
 
-    def rescale_to_fit(self, length: float, dim: int, stretch: bool = False, **kwargs):
+    def rescale_to_fit(self, length: float, dim: int, stretch: bool = False, **kwargs) -> Self:
         old_length = self.length_over_dim(dim)
         if old_length == 0:
             return self
@@ -1120,71 +1125,86 @@ class Mobject(object):
             self.scale(length / old_length, **kwargs)
         return self
 
-    def stretch_to_fit_width(self, width: float, **kwargs):
+    def stretch_to_fit_width(self, width: float, **kwargs) -> Self:
         return self.rescale_to_fit(width, 0, stretch=True, **kwargs)
 
-    def stretch_to_fit_height(self, height: float, **kwargs):
+    def stretch_to_fit_height(self, height: float, **kwargs) -> Self:
         return self.rescale_to_fit(height, 1, stretch=True, **kwargs)
 
-    def stretch_to_fit_depth(self, depth: float, **kwargs):
+    def stretch_to_fit_depth(self, depth: float, **kwargs) -> Self:
         return self.rescale_to_fit(depth, 2, stretch=True, **kwargs)
 
-    def set_width(self, width: float, stretch: bool = False, **kwargs):
+    def set_width(self, width: float, stretch: bool = False, **kwargs) -> Self:
         return self.rescale_to_fit(width, 0, stretch=stretch, **kwargs)
 
-    def set_height(self, height: float, stretch: bool = False, **kwargs):
+    def set_height(self, height: float, stretch: bool = False, **kwargs) -> Self:
         return self.rescale_to_fit(height, 1, stretch=stretch, **kwargs)
 
-    def set_depth(self, depth: float, stretch: bool = False, **kwargs):
+    def set_depth(self, depth: float, stretch: bool = False, **kwargs) -> Self:
         return self.rescale_to_fit(depth, 2, stretch=stretch, **kwargs)
 
-    def set_max_width(self, max_width: float, **kwargs):
+    def set_max_width(self, max_width: float, **kwargs) -> Self:
         if self.get_width() > max_width:
             self.set_width(max_width, **kwargs)
         return self
 
-    def set_max_height(self, max_height: float, **kwargs):
+    def set_max_height(self, max_height: float, **kwargs) -> Self:
         if self.get_height() > max_height:
             self.set_height(max_height, **kwargs)
         return self
 
-    def set_max_depth(self, max_depth: float, **kwargs):
+    def set_max_depth(self, max_depth: float, **kwargs) -> Self:
         if self.get_depth() > max_depth:
             self.set_depth(max_depth, **kwargs)
         return self
 
-    def set_min_width(self, min_width: float, **kwargs):
+    def set_min_width(self, min_width: float, **kwargs) -> Self:
         if self.get_width() < min_width:
             self.set_width(min_width, **kwargs)
         return self
 
-    def set_min_height(self, min_height: float, **kwargs):
+    def set_min_height(self, min_height: float, **kwargs) -> Self:
         if self.get_height() < min_height:
             self.set_height(min_height, **kwargs)
         return self
 
-    def set_min_depth(self, min_depth: float, **kwargs):
+    def set_min_depth(self, min_depth: float, **kwargs) -> Self:
         if self.get_depth() < min_depth:
             self.set_depth(min_depth, **kwargs)
         return self
 
-    def set_coord(self, value: float, dim: int, direction: Vect3 = ORIGIN):
+    def set_shape(
+        self,
+        width: Optional[float] = None,
+        height: Optional[float] = None,
+        depth: Optional[float] = None,
+        **kwargs
+    ) -> Self:
+        if width is not None:
+            self.set_width(width, stretch=True, **kwargs)
+        if height is not None:
+            self.set_height(height, stretch=True, **kwargs)
+        if depth is not None:
+            self.set_depth(depth, stretch=True, **kwargs)
+        return self
+
+    def set_coord(self, value: float, dim: int, direction: Vect3 = ORIGIN) -> Self:
         curr = self.get_coord(dim, direction)
         shift_vect = np.zeros(self.dim)
         shift_vect[dim] = value - curr
         self.shift(shift_vect)
         return self
 
-    def set_x(self, x: float, direction: Vect3 = ORIGIN):
+    def set_x(self, x: float, direction: Vect3 = ORIGIN) -> Self:
         return self.set_coord(x, 0, direction)
 
-    def set_y(self, y: float, direction: Vect3 = ORIGIN):
+    def set_y(self, y: float, direction: Vect3 = ORIGIN) -> Self:
         return self.set_coord(y, 1, direction)
 
-    def set_z(self, z: float, direction: Vect3 = ORIGIN):
+    def set_z(self, z: float, direction: Vect3 = ORIGIN) -> Self:
         return self.set_coord(z, 2, direction)
 
-    def space_out_submobjects(self, factor: float = 1.5, **kwargs):
+    def space_out_submobjects(self, factor: float = 1.5, **kwargs) -> Self:
         self.scale(factor, **kwargs)
         for submob in self.submobjects:
             submob.scale(1. / factor)
@@ -1195,7 +1215,7 @@ class Mobject(object):
         point_or_mobject: Mobject | Vect3,
         aligned_edge: Vect3 = ORIGIN,
         coor_mask: Vect3 = np.array([1, 1, 1])
-    ):
+    ) -> Self:
         if isinstance(point_or_mobject, Mobject):
             target = point_or_mobject.get_bounding_box_point(aligned_edge)
         else:
@@ -1204,7 +1224,7 @@ class Mobject(object):
         self.shift((target - point_to_align) * coor_mask)
         return self
 
-    def replace(self, mobject: Mobject, dim_to_match: int = 0, stretch: bool = False):
+    def replace(self, mobject: Mobject, dim_to_match: int = 0, stretch: bool = False) -> Self:
         if not mobject.get_num_points() and not mobject.submobjects:
             self.scale(0)
             return self
@@ -1226,13 +1246,13 @@ class Mobject(object):
         dim_to_match: int = 0,
         stretch: bool = False,
         buff: float = MED_SMALL_BUFF
-    ):
+    ) -> Self:
         self.replace(mobject, dim_to_match, stretch)
         length = mobject.length_over_dim(dim_to_match)
         self.scale((length + buff) / length)
         return self
 
-    def put_start_and_end_on(self, start: Vect3, end: Vect3):
+    def put_start_and_end_on(self, start: Vect3, end: Vect3) -> Self:
         curr_start, curr_end = self.get_start_and_end()
         curr_vect = curr_end - curr_start
         if np.all(curr_vect == 0):
@@ -1260,7 +1280,7 @@ class Mobject(object):
         rgba_array: npt.ArrayLike,
         name: str = "rgba",
         recurse: bool = False
-    ):
+    ) -> Self:
         for mob in self.get_family(recurse):
             data = mob.data if mob.get_num_points() > 0 else mob._data_defaults
             data[name][:] = rgba_array
@@ -1270,7 +1290,7 @@ class Mobject(object):
         self,
         func: Callable[[Vect3], Vect4],
         recurse: bool = True
-    ):
+    ) -> Self:
         """
         Func should take in a point in R3 and output an rgba value
         """
@@ -1284,7 +1304,7 @@ class Mobject(object):
         func: Callable[[Vect3], Vect3],
         opacity: float = 1,
         recurse: bool = True
-    ):
+    ) -> Self:
         """
         Func should take in a point in R3 and output an rgb value
         """
@@ -1300,15 +1320,13 @@ class Mobject(object):
         opacity: float | Iterable[float] | None = None,
         name: str = "rgba",
         recurse: bool = True
-    ):
+    ) -> Self:
         for mob in self.get_family(recurse):
             data = mob.data if mob.has_points() > 0 else mob._data_defaults
             if color is not None:
-                if isinstance(color, list):
-                    rgbs = np.array(list(map(color_to_rgb, color)))
+                rgbs = np.array(list(map(color_to_rgb, listify(color))))
+                if 1 < len(rgbs):
                     rgbs = resize_with_interpolation(rgbs, len(data))
-                else:
-                    rgbs = color_to_rgb(color)
                 data[name][:, :3] = rgbs
             if opacity is not None:
                 if isinstance(opacity, list):
@@ -1321,7 +1339,7 @@ class Mobject(object):
         color: ManimColor | Iterable[ManimColor] | None,
         opacity: float | Iterable[float] | None = None,
         recurse: bool = True
-    ):
+    ) -> Self:
         self.set_rgba_array_by_color(color, opacity, recurse=False)
         # Recurse to submobjects differently from how set_rgba_array_by_color
         # in case they implement set_color differently
@@ -1334,7 +1352,7 @@ class Mobject(object):
         self,
         opacity: float | Iterable[float] | None,
         recurse: bool = True
-    ):
+    ) -> Self:
         self.set_rgba_array_by_color(color=None, opacity=opacity, recurse=False)
         if recurse:
             for submob in self.submobjects:
@@ -1347,14 +1365,14 @@ class Mobject(object):
     def get_opacity(self) -> float:
         return self.data["rgba"][0, 3]
 
-    def set_color_by_gradient(self, *colors: ManimColor):
+    def set_color_by_gradient(self, *colors: ManimColor) -> Self:
         if self.has_points():
             self.set_color(colors)
         else:
             self.set_submobject_colors_by_gradient(*colors)
         return self
 
-    def set_submobject_colors_by_gradient(self, *colors: ManimColor):
+    def set_submobject_colors_by_gradient(self, *colors: ManimColor) -> Self:
         if len(colors) == 0:
             raise Exception("Need at least one color")
         elif len(colors) == 1:
@@ -1368,7 +1386,7 @@ class Mobject(object):
             mob.set_color(color)
         return self
 
-    def fade(self, darkness: float = 0.5, recurse: bool = True):
+    def fade(self, darkness: float = 0.5, recurse: bool = True) -> Self:
         self.set_opacity(1.0 - darkness, recurse=recurse)
 
     def get_shading(self) -> np.ndarray:
@@ -1380,7 +1398,7 @@ class Mobject(object):
         gloss: float | None = None,
         shadow: float | None = None,
         recurse: bool = True
-    ):
+    ) -> Self:
         """
         Larger reflectiveness makes things brighter when facing the light
         Larger shadow makes faces opposite the light darker
@@ -1401,15 +1419,15 @@ class Mobject(object):
     def get_shadow(self) -> float:
         return self.get_shading()[2]
 
-    def set_reflectiveness(self, reflectiveness: float, recurse: bool = True):
+    def set_reflectiveness(self, reflectiveness: float, recurse: bool = True) -> Self:
         self.set_shading(reflectiveness=reflectiveness, recurse=recurse)
         return self
 
-    def set_gloss(self, gloss: float, recurse: bool = True):
+    def set_gloss(self, gloss: float, recurse: bool = True) -> Self:
         self.set_shading(gloss=gloss, recurse=recurse)
         return self
 
-    def set_shadow(self, shadow: float, recurse: bool = True):
+    def set_shadow(self, shadow: float, recurse: bool = True) -> Self:
         self.set_shading(shadow=shadow, recurse=recurse)
         return self
 
@@ -1418,11 +1436,9 @@ class Mobject(object):
     def add_background_rectangle(
         self,
         color: ManimColor | None = None,
-        opacity: float = 0.75,
+        opacity: float = 1.0,
         **kwargs
-    ):
-        # TODO, this does not behave well when the mobject has points,
-        # since it gets displayed on top
+    ) -> Self:
         from manimlib.mobject.shape_matchers import BackgroundRectangle
         self.background_rectangle = BackgroundRectangle(
             self, color=color,
@@ -1432,12 +1448,12 @@ class Mobject(object):
         self.add_to_back(self.background_rectangle)
         return self
 
-    def add_background_rectangle_to_submobjects(self, **kwargs):
+    def add_background_rectangle_to_submobjects(self, **kwargs) -> Self:
         for submobject in self.submobjects:
             submobject.add_background_rectangle(**kwargs)
         return self
 
-    def add_background_rectangle_to_family_members_with_points(self, **kwargs):
+    def add_background_rectangle_to_family_members_with_points(self, **kwargs) -> Self:
         for mob in self.family_members_with_points():
             mob.add_background_rectangle(**kwargs)
         return self
@@ -1567,29 +1583,29 @@ class Mobject(object):
             for a1, a2 in zip(alphas[:-1], alphas[1:])
         ])
 
-    def get_z_index_reference_point(self):
+    def get_z_index_reference_point(self) -> Vect3:
         # TODO, better place to define default z_index_group?
         z_index_group = getattr(self, "z_index_group", self)
         return z_index_group.get_center()
 
     # Match other mobject properties
 
-    def match_color(self, mobject: Mobject):
+    def match_color(self, mobject: Mobject) -> Self:
         return self.set_color(mobject.get_color())
 
-    def match_dim_size(self, mobject: Mobject, dim: int, **kwargs):
+    def match_dim_size(self, mobject: Mobject, dim: int, **kwargs) -> Self:
         return self.rescale_to_fit(
             mobject.length_over_dim(dim), dim,
             **kwargs
         )
 
-    def match_width(self, mobject: Mobject, **kwargs):
+    def match_width(self, mobject: Mobject, **kwargs) -> Self:
         return self.match_dim_size(mobject, 0, **kwargs)
 
-    def match_height(self, mobject: Mobject, **kwargs):
+    def match_height(self, mobject: Mobject, **kwargs) -> Self:
         return self.match_dim_size(mobject, 1, **kwargs)
 
-    def match_depth(self, mobject: Mobject, **kwargs):
+    def match_depth(self, mobject: Mobject, **kwargs) -> Self:
         return self.match_dim_size(mobject, 2, **kwargs)
 
     def match_coord(
@@ -1597,7 +1613,7 @@ class Mobject(object):
         mobject_or_point: Mobject | Vect3,
         dim: int,
         direction: Vect3 = ORIGIN
-    ):
+    ) -> Self:
         if isinstance(mobject_or_point, Mobject):
             coord = mobject_or_point.get_coord(dim, direction)
         else:
@@ -1608,28 +1624,28 @@ class Mobject(object):
         self,
         mobject_or_point: Mobject | Vect3,
         direction: Vect3 = ORIGIN
-    ):
+    ) -> Self:
         return self.match_coord(mobject_or_point, 0, direction)
 
     def match_y(
         self,
         mobject_or_point: Mobject | Vect3,
         direction: Vect3 = ORIGIN
-    ):
+    ) -> Self:
         return self.match_coord(mobject_or_point, 1, direction)
 
     def match_z(
         self,
         mobject_or_point: Mobject | Vect3,
         direction: Vect3 = ORIGIN
-    ):
+    ) -> Self:
         return self.match_coord(mobject_or_point, 2, direction)
 
     def align_to(
         self,
         mobject_or_point: Mobject | Vect3,
         direction: Vect3 = ORIGIN
-    ):
+    ) -> Self:
         """
         Examples:
         mob1.align_to(mob2, UP) moves mob1 vertically so that its
@@ -1654,21 +1670,23 @@ class Mobject(object):
 
     # Alignment
 
-    def align_data_and_family(self, mobject: Mobject) -> None:
+    def align_data_and_family(self, mobject: Mobject) -> Self:
         self.align_family(mobject)
         self.align_data(mobject)
+        return self
 
-    def align_data(self, mobject: Mobject) -> None:
+    def align_data(self, mobject: Mobject) -> Self:
         for mob1, mob2 in zip(self.get_family(), mobject.get_family()):
             mob1.align_points(mob2)
+        return self
 
-    def align_points(self, mobject: Mobject):
+    def align_points(self, mobject: Mobject) -> Self:
         max_len = max(self.get_num_points(), mobject.get_num_points())
         for mob in (self, mobject):
             mob.resize_points(max_len, resize_func=resize_preserving_order)
         return self
 
-    def align_family(self, mobject: Mobject):
+    def align_family(self, mobject: Mobject) -> Self:
         mob1 = self
         mob2 = mobject
         n1 = len(mob1)
@@ -1681,14 +1699,14 @@ class Mobject(object):
             sm1.align_family(sm2)
         return self
 
-    def push_self_into_submobjects(self):
+    def push_self_into_submobjects(self) -> Self:
         copy = self.copy()
         copy.set_submobjects([])
         self.resize_points(0)
         self.add(copy)
         return self
 
-    def add_n_more_submobjects(self, n: int):
+    def add_n_more_submobjects(self, n: int) -> Self:
         if n == 0:
             return self
 
@@ -1716,7 +1734,7 @@ class Mobject(object):
         self.set_submobjects(new_submobs)
         return self
 
-    def invisible_copy(self):
+    def invisible_copy(self) -> Self:
         return self.copy().set_opacity(0)
 
     # Interpolate
@@ -1727,7 +1745,7 @@ class Mobject(object):
         mobject2: Mobject,
         alpha: float,
         path_func: Callable[[np.ndarray, np.ndarray, float], np.ndarray] = straight_path
-    ):
+    ) -> Self:
         keys = [k for k in self.data.dtype.names if k not in self.locked_data_keys]
         if keys:
             self.note_changed_data()
@@ -1753,18 +1771,19 @@ class Mobject(object):
         )
         return self
 
-    def pointwise_become_partial(self, mobject, a, b):
+    def pointwise_become_partial(self, mobject, a, b) -> Self:
         """
         Set points in such a way as to become only
         part of mobject.
         Inputs 0 <= a < b <= 1 determine what portion
         of mobject to become.
         """
-        pass  # To implement in subclass
+        # To be implemented in subclass
+        return self
 
     # Locking data
 
-    def lock_data(self, keys: Iterable[str]):
+    def lock_data(self, keys: Iterable[str]) -> Self:
         """
         To speed up some animations, particularly transformations,
         it can be handy to acknowledge which pieces of data
@@ -1775,8 +1794,9 @@ class Mobject(object):
         if self.has_updaters:
             return
         self.locked_data_keys = set(keys)
+        return self
 
-    def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject):
+    def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject) -> Self:
         tuples = zip(
             self.get_family(),
             mobject1.get_family(),
@@ -1800,49 +1820,56 @@ class Mobject(object):
 
         return self
 
-    def unlock_data(self):
+    def unlock_data(self) -> Self:
         for mob in self.get_family():
             mob.locked_data_keys = set()
             mob.const_data_keys = set()
+        return self
 
     # Operations touching shader uniforms
 
     def affects_shader_info_id(func: Callable):
         @wraps(func)
-        def wrapper(self):
-            for mob in self.get_family():
-                func(mob)
-                mob.refresh_shader_wrapper_id()
-            return self
+        def wrapper(self, *args, **kwargs):
+            result = func(self, *args, **kwargs)
+            self.refresh_shader_wrapper_id()
+            return result
         return wrapper
 
     @affects_shader_info_id
-    def fix_in_frame(self, recurse: bool = True):
+    def set_uniform(self, recurse: bool = True, **new_uniforms) -> Self:
         for mob in self.get_family(recurse):
-            mob.uniforms["is_fixed_in_frame"] = 1.0
+            mob.uniforms.update(new_uniforms)
         return self
 
     @affects_shader_info_id
-    def unfix_from_frame(self):
-        self.uniforms["is_fixed_in_frame"] = 0.0
+    def fix_in_frame(self, recurse: bool = True) -> Self:
+        self.set_uniform(recurse, is_fixed_in_frame=1.0)
+        return self
+
+    @affects_shader_info_id
+    def unfix_from_frame(self, recurse: bool = True) -> Self:
+        self.set_uniform(recurse, is_fixed_in_frame=0.0)
         return self
 
     def is_fixed_in_frame(self) -> bool:
         return bool(self.uniforms["is_fixed_in_frame"])
 
     @affects_shader_info_id
-    def apply_depth_test(self):
-        self.depth_test = True
+    def apply_depth_test(self, recurse: bool = True) -> Self:
+        for mob in self.get_family(recurse):
+            mob.depth_test = True
         return self
 
     @affects_shader_info_id
-    def deactivate_depth_test(self):
-        self.depth_test = False
+    def deactivate_depth_test(self, recurse: bool = True) -> Self:
+        for mob in self.get_family(recurse):
+            mob.depth_test = False
         return self
 
     # Shader code manipulation
 
-    def replace_shader_code(self, old: str, new: str):
+    def replace_shader_code(self, old: str, new: str) -> Self:
         # TODO, will this work with VMobject structure, given
         # that it does not simpler return shader_wrappers of
         # family?
@@ -1850,7 +1877,7 @@ class Mobject(object):
             wrapper.replace_code(old, new)
         return self
 
-    def set_color_by_code(self, glsl_code: str):
+    def set_color_by_code(self, glsl_code: str) -> Self:
         """
         Takes a snippet of code and inserts it into a
         context which has the following variables:
@@ -1869,7 +1896,7 @@ class Mobject(object):
         min_value: float = -5.0,
         max_value: float = 5.0,
         colormap: str = "viridis"
-    ):
+    ) -> Self:
         """
         Pass in a glsl expression in terms of x, y and z which returns
         a float.
@@ -1969,14 +1996,14 @@ class Mobject(object):
     """
 
     def init_event_listners(self):
-        self.event_listners: list[EventListner] = []
+        self.event_listners: list[EventListener] = []
 
     def add_event_listner(
         self,
         event_type: EventType,
         event_callback: Callable[[Mobject, dict[str]]]
     ):
-        event_listner = EventListner(self, event_type, event_callback)
+        event_listner = EventListener(self, event_type, event_callback)
         self.event_listners.append(event_listner)
         EVENT_DISPATCHER.add_listner(event_listner)
         return self
@@ -1986,7 +2013,7 @@ class Mobject(object):
         event_type: EventType,
         event_callback: Callable[[Mobject, dict[str]]]
     ):
-        event_listner = EventListner(self, event_type, event_callback)
+        event_listner = EventListener(self, event_type, event_callback)
         while event_listner in self.event_listners:
             self.event_listners.remove(event_listner)
         EVENT_DISPATCHER.remove_listner(event_listner)
@@ -2072,7 +2099,7 @@ class Group(Mobject):
         if any(m.is_fixed_in_frame() for m in mobjects):
             self.fix_in_frame()
 
-    def __add__(self, other: Mobject | Group):
+    def __add__(self, other: Mobject | Group) -> Self:
         assert(isinstance(other, Mobject))
         return self.add(other)
 
@@ -2102,8 +2129,9 @@ class Point(Mobject):
     def get_bounding_box_point(self, *args, **kwargs) -> Vect3:
         return self.get_location()
 
-    def set_location(self, new_loc: npt.ArrayLike):
+    def set_location(self, new_loc: npt.ArrayLike) -> Self:
         self.set_points(np.array(new_loc, ndmin=2, dtype=float))
+        return self
 
 
 class _AnimationBuilder:

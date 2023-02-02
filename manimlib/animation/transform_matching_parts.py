@@ -131,9 +131,10 @@ class TransformMatchingStrings(TransformMatchingParts):
         target: StringMobject,
         matched_keys: Iterable[str] = [],
         key_map: dict[str, str] = dict(),
+        matched_pairs: Iterable[tuple[Mobject, Mobject]] = [],
         **kwargs,
     ):
-        matched_pairs = [
+        matched_pairs = list(matched_pairs) + [
             *[(source[key], target[key]) for key in matched_keys],
             *[(source[key1], target[key2]) for key1, key2 in key_map.items()],
             *[

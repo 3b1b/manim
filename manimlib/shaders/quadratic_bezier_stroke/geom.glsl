@@ -13,7 +13,6 @@ in vec3 verts[3];
 in vec4 v_joint_product[3];
 in float v_stroke_width[3];
 in vec4 v_color[3];
-in float v_vert_index[3];
 
 out vec4 color;
 out float uv_stroke_width;
@@ -36,7 +35,7 @@ const float COS_THRESHOLD = 0.99;
 
 vec3 unit_normal = vec3(0.0, 0.0, 1.0);
 
-#INSERT get_gl_Position.glsl
+#INSERT emit_gl_Position.glsl
 #INSERT get_xyz_to_uv.glsl
 #INSERT finalize_color.glsl
 
@@ -90,7 +89,7 @@ vec3 get_perp(int index, vec4 joint_product, vec3 point, vec3 tangent, float aaw
     */
     float buff = 0.5 * v_stroke_width[index] + aaw;
     // Add correction for sharp angles to prevent weird bevel effects
-    if(joint_product.w < -0.9) buff *= 10 * (joint_product.w + 1.0);
+    if(joint_product.w < -0.75) buff *= 4 * (joint_product.w + 1.0);
     vec3 normal = get_joint_unit_normal(joint_product);
     // Set global unit normal
     unit_normal = normal;
@@ -154,10 +153,6 @@ void get_corners(
 }
 
 void main() {
-    // We use the triangle strip primative, but
-    // actually only need every other strip element
-    if (int(v_vert_index[0]) % 2 == 1) return;
-
     // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
@@ -207,7 +202,7 @@ void main() {
         }
 
         color = finalize_color(v_color[i / 2], corners[i], unit_normal);
-        gl_Position = get_gl_Position(corners[i]);
+        emit_gl_Position(corners[i]);
         EmitVertex();
     }
     EndPrimitive();

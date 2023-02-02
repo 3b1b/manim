@@ -7,6 +7,7 @@ from moderngl_window.context.pyglet.window import Window as PygletWindow
 from moderngl_window.timers.clock import Timer
 from screeninfo import get_monitors
 
+from manimlib.constants import FRAME_SHAPE
 from manimlib.utils.customization import get_customization
 
 from typing import TYPE_CHECKING
@@ -77,17 +78,18 @@ class Window(PygletWindow):
         py: int,
         relative: bool = False
     ) -> np.ndarray:
-        pw, ph = self.size
-        fw, fh = self.scene.camera.get_frame_shape()
-        fc = self.scene.camera.get_frame_center()
-        if relative:
-            return np.array([px / pw, py / ph, 0])
-        else:
-            return np.array([
-                fc[0] + px * fw / pw - fw / 2,
-                fc[1] + py * fh / ph - fh / 2,
-                0
-            ])
+        if not hasattr(self.scene, "frame"):
+            return np.zeros(3)
+
+        pixel_shape = np.array(self.size)
+        fixed_frame_shape = np.array(FRAME_SHAPE)
+        frame = self.scene.frame
+
+        coords = np.zeros(3)
+        coords[:2] = (fixed_frame_shape / pixel_shape) * np.array([px, py])
+        if not relative:
+            coords[:2] -= 0.5 * fixed_frame_shape
+        return frame.from_fixed_frame_point(coords, relative)
 
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int) -> None:
         super().on_mouse_motion(x, y, dx, dy)
@@ -115,7 +117,7 @@ class Window(PygletWindow):
         super().on_mouse_scroll(x, y, x_offset, y_offset)
         point = self.pixel_coords_to_space_coords(x, y)
         offset = self.pixel_coords_to_space_coords(x_offset, y_offset, relative=True)
-        self.scene.on_mouse_scroll(point, offset)
+        self.scene.on_mouse_scroll(point, offset, x_offset, y_offset)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         self.pressed_keys.add(symbol)  # Modifiers?

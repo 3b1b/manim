@@ -11,7 +11,7 @@ from manimlib.utils.rate_functions import smooth
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, List, Iterable
+    from typing import Callable, List, Iterable, Self
     from manimlib.typing import ManimColor, Vect3
 
 
@@ -49,7 +49,7 @@ class AnimatedBoundary(VGroup):
             lambda m, dt: self.update_boundary_copies(dt)
         )
 
-    def update_boundary_copies(self, dt: float) -> None:
+    def update_boundary_copies(self, dt: float) -> Self:
         # Not actual time, but something which passes at
         # an altered rate to make the implementation below
         # cleaner
@@ -79,6 +79,7 @@ class AnimatedBoundary(VGroup):
             )
 
         self.total_time += dt
+        return self
 
     def full_family_become_partial(
         self,
@@ -86,7 +87,7 @@ class AnimatedBoundary(VGroup):
         mob2: VMobject,
         a: float,
         b: float
-    ):
+    ) -> Self:
         family1 = mob1.family_members_with_points()
         family2 = mob2.family_members_with_points()
         for sm1, sm2 in zip(family1, family2):
@@ -118,7 +119,7 @@ class TracedPath(VMobject):
         self.traced_points: list[np.ndarray] = []
         self.add_updater(lambda m, dt: m.update_path(dt))
 
-    def update_path(self, dt: float):
+    def update_path(self, dt: float) -> Self:
         if dt == 0:
             return self
         point = self.traced_point_func().copy()

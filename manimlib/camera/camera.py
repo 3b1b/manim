@@ -72,9 +72,9 @@ class Camera(object):
 
     def init_context(self) -> None:
         if self.window is None:
-            self.ctx = moderngl.create_standalone_context()
+            self.ctx: moderngl.Context = moderngl.create_standalone_context()
         else:
-            self.ctx = self.window.ctx
+            self.ctx: moderngl.Context = self.window.ctx
 
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
         self.ctx.enable(moderngl.BLEND)
@@ -125,16 +125,20 @@ class Camera(object):
     def clear(self) -> None:
         self.fbo.clear(*self.background_rgba)
 
-    def get_raw_fbo_data(self, dtype: str = 'f1') -> bytes:
-        # Copy blocks from fbo into draw_fbo using Blit
-        gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo.glo)
-        gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, self.draw_fbo.glo)
-        src_viewport = self.fbo.viewport
+    def blit(self, src_fbo, dst_fbo):
+        """
+        Copy blocks between fbo's using Blit
+        """
+        gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, src_fbo.glo)
+        gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, dst_fbo.glo)
         gl.glBlitFramebuffer(
-            *src_viewport,
-            *self.draw_fbo.viewport,
+            *src_fbo.viewport,
+            *dst_fbo.viewport,
             gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR
         )
+
+    def get_raw_fbo_data(self, dtype: str = 'f1') -> bytes:
+        self.blit(self.fbo, self.draw_fbo)
         return self.draw_fbo.read(
             viewport=self.draw_fbo.viewport,
             components=self.n_channels,
@@ -169,10 +173,10 @@ class Camera(object):
 
     # Getting camera attributes
     def get_pixel_size(self) -> float:
-        return self.frame.get_shape()[0] / self.get_pixel_shape()[0]
+        return self.frame.get_width() / self.get_pixel_shape()[0]
 
     def get_pixel_shape(self) -> tuple[int, int]:
-        return self.draw_fbo.size
+        return self.fbo.size
 
     def get_pixel_width(self) -> int:
         return self.get_pixel_shape()[0]
@@ -223,6 +227,8 @@ class Camera(object):
         self.fbo.use()
         for mobject in mobjects:
             mobject.render(self.ctx, self.uniforms)
+        if self.window is not None and self.fbo is not self.window_fbo:
+            self.blit(self.fbo, self.window_fbo)
 
     def refresh_uniforms(self) -> None:
         frame = self.frame
@@ -231,12 +237,12 @@ class Camera(object):
         cam_pos = self.frame.get_implied_camera_location()
 
         self.uniforms.update(
-            frame_shape=frame.get_shape(),
-            pixel_size=self.get_pixel_size(),
             view=tuple(view_matrix.T.flatten()),
+            focal_distance=frame.get_focal_distance() / frame.get_scale(),
+            frame_scale=frame.get_scale(),
+            pixel_size=self.get_pixel_size(),
             camera_position=tuple(cam_pos),
             light_position=tuple(light_pos),
-            focal_distance=frame.get_focal_distance(),
         )
 
 

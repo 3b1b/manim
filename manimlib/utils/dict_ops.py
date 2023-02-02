@@ -1,4 +1,5 @@
 import itertools as it
+import numpy as np
 
 
 def merge_dicts_recursively(*dicts):
@@ -29,3 +30,19 @@ def soft_dict_update(d1, d2):
     for key, value in list(d2.items()):
         if key not in d1:
             d1[key] = value
+
+
+def dict_eq(d1, d2):
+    if len(d1) != len(d2):
+        return False
+    for key in d1:
+        value1 = d1[key]
+        value2 = d2[key]
+        if type(value1) != type(value2):
+            return False
+        if type(d1[key]) == np.ndarray:
+            if any(d1[key] != d2[key]):
+                return False
+        elif d1[key] != d2[key]:
+            return False
+    return True
