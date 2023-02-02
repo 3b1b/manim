@@ -78,6 +78,9 @@ class Window(PygletWindow):
         py: int,
         relative: bool = False
     ) -> np.ndarray:
+        if not hasattr(self.scene, "frame"):
+            return np.zeros(3)
+
         pixel_shape = np.array(self.size)
         fixed_frame_shape = np.array(FRAME_SHAPE)
         frame = self.scene.frame
