@@ -182,7 +182,8 @@ class Mobject(object):
     @affects_data
     def set_data(self, data: np.ndarray) -> Self:
         assert(data.dtype == self.data.dtype)
-        self.data = data.copy()
+        self.resize_points(len(data))
+        self.data[:] = data
         return self
 
     @affects_data
