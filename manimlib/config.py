@@ -94,6 +94,14 @@ def parse_cli():
             help="Render to a movie file with an alpha channel",
         )
         parser.add_argument(
+            "--vcodec",
+            help="Video codec to use with ffmpeg",
+        )
+        parser.add_argument(
+            "--pix_fmt",
+            help="Pixel format to use for the output of ffmpeg, defaults to `yuv420p`",
+        )
+        parser.add_argument(
             "-q", "--quiet",
             action="store_true",
             help="",
@@ -392,7 +400,7 @@ def get_output_directory(args: Namespace, custom_config: dict) -> str:
 
 
 def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
-    return {
+    result = {
         "write_to_movie": not args.skip_animations and args.write_file,
         "break_into_partial_movies": custom_config["break_into_partial_movies"],
         "save_last_frame": args.skip_animations and args.write_file,
@@ -407,6 +415,18 @@ def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
         "show_file_location_upon_completion": args.finder,
         "quiet": args.quiet,
     }
+
+    if args.vcodec:
+        result["video_codec"] = args.vcodec
+    elif args.transparent:
+        result["video_codec"] = 'prores_ks'
+    elif args.gif:
+        result["video_codec"] = ''
+
+    if args.pix_fmt:
+        result["pix_fmt"] = args.pix_fmt
+
+    return result
 
 
 def get_window_config(args: Namespace, custom_config: dict, camera_config: dict) -> dict:
