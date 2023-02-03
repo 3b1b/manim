@@ -15,6 +15,7 @@ from manimlib.utils.shaders import image_path_to_texture
 from manimlib.utils.shaders import get_texture_id
 from manimlib.utils.shaders import get_fill_canvas
 from manimlib.utils.shaders import release_texture
+from manimlib.utils.shaders import set_program_uniform
 
 from typing import TYPE_CHECKING
 
@@ -224,14 +225,7 @@ class ShaderWrapper(object):
         if self.program is None:
             return
         for name, value in (*self.mobject_uniforms.items(), *camera_uniforms.items()):
-            if name not in self.program:
-                continue
-            if isinstance(value, np.ndarray) and value.ndim > 0:
-                value = tuple(value)
-            if name in camera_uniforms and self.program_uniform_mirror.get(name, None) == value:
-                continue
-            self.program[name].value = value
-            self.program_uniform_mirror[name] = value
+            set_program_uniform(self.program, name, value)
 
     def get_vertex_buffer_object(self, refresh: bool = True):
         if refresh:
