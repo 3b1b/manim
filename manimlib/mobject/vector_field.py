@@ -13,6 +13,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.color import get_colormap_list
+from manimlib.utils.color import rgb_to_color
 from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.simple_functions import sigmoid
@@ -173,7 +174,10 @@ class VectorField(VGroup):
             **vector_config
         )
         vect.shift(_input - origin)
-        vect.set_rgba_array([[*self.value_to_rgb(norm), self.opacity]])
+        vect.set_color(
+            rgb_to_color(self.value_to_rgb(norm)),
+            opacity=self.opacity,
+        )
         return vect
 
 
