@@ -126,31 +126,25 @@ class ShaderWrapper(object):
     def get_id(self) -> str:
         return self.id
 
-    def get_program_id(self) -> int:
-        return self.program_id
-
     def create_id(self) -> str:
         # A unique id for a shader
+        program_id = hash("".join(
+            self.program_code[f"{name}_shader"] or ""
+            for name in ("vertex", "geometry", "fragment")
+        ))
         return "|".join(map(str, [
-            self.program_id,
+            program_id,
             self.mobject_uniforms,
             self.depth_test,
             self.render_primitive,
         ]))
 
     def refresh_id(self) -> None:
-        self.program_id = self.create_program_id()
         self.id = self.create_id()
-
-    def create_program_id(self) -> int:
-        return hash("".join((
-            self.program_code[f"{name}_shader"] or ""
-            for name in ("vertex", "geometry", "fragment")
-        )))
 
     def replace_code(self, old: str, new: str) -> None:
         code_map = self.program_code
-        for (name, code) in code_map.items():
+        for name in code_map:
             if code_map[name] is None:
                 continue
             code_map[name] = re.sub(old, new, code_map[name])
