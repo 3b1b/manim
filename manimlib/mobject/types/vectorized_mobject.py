@@ -1262,11 +1262,10 @@ class VMobject(Mobject):
 
     def set_animating_status(self, is_animating: bool, recurse: bool = True):
         super().set_animating_status(is_animating, recurse)
-        if is_animating:
-            for submob in self.get_family(recurse):
-                submob.get_joint_products(refresh=True)
-                if not submob._use_winding_fill:
-                    submob.get_triangulation()
+        for submob in self.get_family(recurse):
+            submob.get_joint_products(refresh=True)
+            if not submob._use_winding_fill:
+                submob.get_triangulation()
         return self
 
     # For shaders
