@@ -998,7 +998,7 @@ class VMobject(Mobject):
         self._has_stroke = mobject1._has_stroke or mobject2._has_stroke
         self._has_fill = mobject1._has_fill or mobject2._has_fill
 
-        if self.has_fill() and not self._use_winding_fill:
+        if self._has_fill and not self._use_winding_fill:
             tri1 = mobject1.get_triangulation()
             tri2 = mobject2.get_triangulation()
             if not arrays_match(tri1, tri2):
@@ -1309,6 +1309,11 @@ class VMobject(Mobject):
             wrapper.refresh_id()
         return self
 
+    def get_uniforms(self):
+        # TODO, account for submob uniforms separately?
+        self.uniforms.update(self.family_members_with_points()[0].uniforms)
+        return self.uniforms
+
     def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
         if not self._shaders_initialized:
             self.init_shader_data(ctx)
@@ -1359,8 +1364,6 @@ class VMobject(Mobject):
             self.fill_shader_wrapper.read_in(fill_datas, fill_indices or None),
             self.stroke_shader_wrapper.read_in(stroke_datas),
         ]
-        # TODO, account for submob uniforms separately?
-        self.uniforms.update(family[0].uniforms)
         return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
 
 

@@ -54,12 +54,16 @@ class Transform(Animation):
     def begin(self) -> None:
         self.target_mobject = self.create_target()
         self.check_target_mobject_validity()
-        # Use a copy of target_mobject for the align_data_and_family
-        # call so that the actual target_mobject stays
-        # preserved, since calling allign_data will potentially
-        # change the structure of both arguments
-        self.target_copy = self.target_mobject.copy()
-        self.mobject.align_data_and_family(self.target_copy)
+
+        if self.mobject.is_aligned_with(self.target_mobject):
+            self.target_copy = self.target_mobject
+        else:
+            # Use a copy of target_mobject for the align_data_and_family
+            # call so that the actual target_mobject stays
+            # preserved, since calling align_data will potentially
+            # change the structure of both arguments
+            self.target_copy = self.target_mobject.copy()
+            self.mobject.align_data_and_family(self.target_copy)
         super().begin()
         if not self.mobject.has_updaters:
             self.mobject.lock_matching_data(

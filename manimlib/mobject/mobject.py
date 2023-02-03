@@ -97,6 +97,7 @@ class Mobject(object):
         self.family: list[Mobject] = [self]
         self.locked_data_keys: set[str] = set()
         self.const_data_keys: set[str] = set()
+        self.locked_uniform_keys: set[str] = set()
         self.needs_new_bounding_box: bool = True
         self._is_animating: bool = False
         self.saved_state = None
@@ -182,7 +183,8 @@ class Mobject(object):
     @affects_data
     def set_data(self, data: np.ndarray) -> Self:
         assert(data.dtype == self.data.dtype)
-        self.data = data.copy()
+        self.resize_points(len(data))
+        self.data[:] = data
         return self
 
     @affects_data
@@ -1672,6 +1674,16 @@ class Mobject(object):
 
     # Alignment
 
+    def is_aligned_with(self, mobject: Mobject) -> bool:
+        if len(self.data) != len(mobject.data):
+            return False
+        if len(self.submobjects) != len(mobject.submobjects):
+            return False
+        return all(
+            sm1.is_aligned_with(sm2)
+            for sm1, sm2 in zip(self.submobjects, mobject.submobjects)
+        )
+
     def align_data_and_family(self, mobject: Mobject) -> Self:
         self.align_family(mobject)
         self.align_data(mobject)
@@ -1760,7 +1772,8 @@ class Mobject(object):
                 md2 = md2[0]
             self.data[key] = func(md1, md2, alpha)
 
-        for key in self.uniforms:
+        keys = [k for k in self.uniforms if k not in self.locked_uniform_keys]
+        for key in keys:
             if key not in mobject1.uniforms or key not in mobject2.uniforms:
                 continue
             self.uniforms[key] = interpolate(
@@ -1794,8 +1807,14 @@ class Mobject(object):
         read into the shader_wrapper objects needlessly
         """
         if self.has_updaters:
-            return
+            return self
         self.locked_data_keys = set(keys)
+        return self
+
+    def lock_uniforms(self, keys: Iterable[str]) -> Self:
+        if self.has_updaters:
+            return self
+        self.locked_uniform_keys = set(keys)
         return self
 
     def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject) -> Self:
@@ -1807,18 +1826,22 @@ class Mobject(object):
         for sm, sm1, sm2 in tuples:
             if not sm.data.dtype == sm1.data.dtype == sm2.data.dtype:
                 continue
-            names = sm.data.dtype.names
-            sm.lock_data(filter(
-                lambda name: arrays_match(sm1.data[name], sm2.data[name]),
-                names,
-            ))
-            sm.const_data_keys = set(filter(
-                lambda name: all(
-                    array_is_constant(mob.data[name])
+            sm.lock_data(
+                key for key in sm.data.dtype.names
+                if arrays_match(sm1.data[key], sm2.data[key])
+            )
+            sm.lock_uniforms(
+                key for key in self.uniforms
+                if all(listify(mobject1.uniforms.get(key, 0) == mobject2.uniforms.get(key, 0)))
+            )
+            sm.const_data_keys = set(
+                key for key in sm.data.dtype.names
+                if key not in sm.locked_data_keys
+                if all(
+                    array_is_constant(mob.data[key])
                     for mob in (sm, sm1, sm2)
-                ),
-                names
-            ))
+                )
+            )
 
         return self
 
@@ -1826,6 +1849,7 @@ class Mobject(object):
         for mob in self.get_family():
             mob.locked_data_keys = set()
             mob.const_data_keys = set()
+            mob.locked_uniform_keys = set()
         return self
 
     # Operations touching shader uniforms
