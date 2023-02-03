@@ -77,18 +77,22 @@ def set_program_uniform(
     
     Returns True if changed the program, False if it left it as is.
     """
-    if name not in program:
-        return False
+
     pid = id(program)
     if pid not in PROGRAM_UNIFORM_MIRRORS:
         PROGRAM_UNIFORM_MIRRORS[pid] = dict()
     uniform_mirror = PROGRAM_UNIFORM_MIRRORS[pid]
-    if isinstance(value, np.ndarray) and value.ndim > 0:
+
+    if type(value) is np.ndarray and value.ndim > 0:
         value = tuple(value)
     if uniform_mirror.get(name, None) == value:
         return False
+
+    try:
+        program[name].value = value
+    except KeyError:
+        return False
     uniform_mirror[name] = value
-    program[name].value = value
     return True
 
 
