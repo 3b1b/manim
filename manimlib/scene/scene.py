@@ -387,7 +387,10 @@ class Scene(object):
         same type are grouped together, so this function creates
         Groups of all clusters of adjacent Mobjects in the scene
         """
-        batches = batch_by_property(self.mobjects, lambda m: str(type(m)))
+        batches = batch_by_property(
+            self.mobjects,
+            lambda m: str(type(m)) + str(m.get_uniforms())
+        )
 
         for group in self.render_groups:
             group.clear()

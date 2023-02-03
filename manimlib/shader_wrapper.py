@@ -37,7 +37,7 @@ class ShaderWrapper(object):
         vert_data: np.ndarray,
         vert_indices: Optional[np.ndarray] = None,
         shader_folder: Optional[str] = None,
-        uniforms: Optional[UniformDict] = None,  # A dictionary mapping names of uniform variables
+        mobject_uniforms: Optional[UniformDict] = None,  # A dictionary mapping names of uniform variables
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
         render_primitive: int = moderngl.TRIANGLE_STRIP,
@@ -47,13 +47,14 @@ class ShaderWrapper(object):
         self.vert_indices = (vert_indices or np.zeros(0)).astype(int)
         self.vert_attributes = vert_data.dtype.names
         self.shader_folder = shader_folder
-        self.uniforms: UniformDict = dict()
         self.depth_test = depth_test
         self.render_primitive = render_primitive
 
+        self.program_uniform_mirror: UniformDict = dict()
+        self.bind_to_mobject_uniforms(mobject_uniforms)
+
         self.init_program_code()
         self.init_program()
-        self.update_program_uniforms(uniforms or dict())
         if texture_paths is not None:
             self.init_textures(texture_paths)
         self.init_vao()
@@ -91,14 +92,17 @@ class ShaderWrapper(object):
         self.ibo = None
         self.vao = None
 
+    def bind_to_mobject_uniforms(self, mobject_uniforms: UniformDict):
+        self.mobject_uniforms = mobject_uniforms
+
     def __eq__(self, shader_wrapper: ShaderWrapper):
         return all((
             np.all(self.vert_data == shader_wrapper.vert_data),
             np.all(self.vert_indices == shader_wrapper.vert_indices),
             self.shader_folder == shader_wrapper.shader_folder,
             all(
-                self.uniforms[key] == shader_wrapper.uniforms[key]
-                for key in self.uniforms
+                self.mobject_uniforms[key] == shader_wrapper.mobject_uniforms[key]
+                for key in self.mobject_uniforms
             ),
             self.depth_test == shader_wrapper.depth_test,
             self.render_primitive == shader_wrapper.render_primitive,
@@ -129,7 +133,7 @@ class ShaderWrapper(object):
         # A unique id for a shader
         return "|".join(map(str, [
             self.program_id,
-            self.uniforms,
+            self.mobject_uniforms,
             self.depth_test,
             self.render_primitive,
         ]))
@@ -155,9 +159,9 @@ class ShaderWrapper(object):
 
     # Changing context
     def use_clip_plane(self):
-        if "clip_plane" not in self.uniforms:
+        if "clip_plane" not in self.mobject_uniforms:
             return False
-        return any(self.uniforms["clip_plane"])
+        return any(self.mobject_uniforms["clip_plane"])
 
     def set_ctx_depth_test(self, enable: bool = True) -> None:
         if enable:
@@ -222,18 +226,18 @@ class ShaderWrapper(object):
         assert(self.vao is not None)
         self.vao.render()
 
-    def update_program_uniforms(self, uniforms: UniformDict, universal: bool = False):
+    def update_program_uniforms(self, camera_uniforms: UniformDict):
         if self.program is None:
             return
-        for name, value in uniforms.items():
+        for name, value in (*self.mobject_uniforms.items(), *camera_uniforms.items()):
             if name not in self.program:
                 continue
             if isinstance(value, np.ndarray) and value.ndim > 0:
                 value = tuple(value)
-            if universal and self.uniforms.get(name, None) == value:
+            if name in camera_uniforms and self.program_uniform_mirror.get(name, None) == value:
                 continue
             self.program[name].value = value
-            self.uniforms[name] = value
+            self.program_uniform_mirror[name] = value
 
     def get_vertex_buffer_object(self, refresh: bool = True):
         if refresh:

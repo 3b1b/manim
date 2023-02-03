@@ -1284,14 +1284,14 @@ class VMobject(Mobject):
         self.fill_shader_wrapper = FillShaderWrapper(
             ctx=ctx,
             vert_data=fill_data,
-            uniforms=self.uniforms,
+            mobject_uniforms=self.uniforms,
             shader_folder=self.fill_shader_folder,
             render_primitive=self.fill_render_primitive,
         )
         self.stroke_shader_wrapper = ShaderWrapper(
             ctx=ctx,
             vert_data=stroke_data,
-            uniforms=self.uniforms,
+            mobject_uniforms=self.uniforms,
             shader_folder=self.stroke_shader_folder,
             render_primitive=self.stroke_render_primitive,
         )
@@ -1309,11 +1309,6 @@ class VMobject(Mobject):
             wrapper.refresh_id()
         return self
 
-    def get_uniforms(self):
-        # TODO, account for submob uniforms separately?
-        self.uniforms.update(self.family_members_with_points()[0].uniforms)
-        return self.uniforms
-
     def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
         if not self._shaders_initialized:
             self.init_shader_data(ctx)
@@ -1325,32 +1320,25 @@ class VMobject(Mobject):
         fill_names = self.fill_data_names
         stroke_names = self.stroke_data_names
 
-        # Build up data lists
+        fill_family = (sm for sm in family if sm._has_fill)
+        stroke_family = (sm for sm in family if sm._has_stroke)
+
+        # Build up fill data lists
         fill_datas = []
         fill_indices = []
         fill_border_datas = []
-        stroke_datas = []
-        back_stroke_datas = []
-        for submob in family:
-            submob.get_joint_products()
+        for submob in fill_family:
             indices = submob.get_outer_vert_indices()
-            has_fill = submob._has_fill
-            has_stroke = submob._has_stroke
-            back_stroke = has_stroke and submob.stroke_behind
-            front_stroke = has_stroke and not submob.stroke_behind
-            if back_stroke:
-                back_stroke_datas.append(submob.data[stroke_names][indices])
-            if front_stroke:
-                stroke_datas.append(submob.data[stroke_names][indices])
-            if has_fill and submob._use_winding_fill:
+            if submob._use_winding_fill:
                 data = submob.data[fill_names]
                 data["base_point"][:] = data["point"][0]
                 fill_datas.append(data[indices])
-            if has_fill and not submob._use_winding_fill:
+            else:
                 fill_datas.append(submob.data[fill_names])
                 fill_indices.append(submob.get_triangulation())
-            if has_fill and not front_stroke:
+            if (not submob._has_stroke) or submob.stroke_behind:
                 # Add fill border
+                submob.get_joint_products()
                 names = list(stroke_names)
                 names[names.index('stroke_rgba')] = 'fill_rgba'
                 names[names.index('stroke_width')] = 'fill_border_width'
@@ -1359,11 +1347,25 @@ class VMobject(Mobject):
                 )
                 fill_border_datas.append(border_stroke_data[indices])
 
+        # Build up stroke data lists
+        stroke_datas = []
+        back_stroke_datas = []
+        for submob in stroke_family:
+            submob.get_joint_products()
+            indices = submob.get_outer_vert_indices()
+            if submob.stroke_behind:
+                back_stroke_datas.append(submob.data[stroke_names][indices])
+            else:
+                stroke_datas.append(submob.data[stroke_names][indices])
+
         shader_wrappers = [
             self.back_stroke_shader_wrapper.read_in([*back_stroke_datas, *fill_border_datas]),
             self.fill_shader_wrapper.read_in(fill_datas, fill_indices or None),
             self.stroke_shader_wrapper.read_in(stroke_datas),
         ]
+        for sw in shader_wrappers:
+            sw.bind_to_mobject_uniforms(family[0].get_uniforms())
+            sw.depth_test = family[0].depth_test
         return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
 
 
@@ -1371,6 +1373,8 @@ class VGroup(VMobject):
     def __init__(self, *vmobjects: VMobject, **kwargs):
         super().__init__(**kwargs)
         self.add(*vmobjects)
+        if vmobjects:
+            self.uniforms.update(vmobjects[0].uniforms)
 
     def __add__(self, other: VMobject) -> Self:
         assert(isinstance(other, VMobject))

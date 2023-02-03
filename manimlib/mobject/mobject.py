@@ -1967,7 +1967,7 @@ class Mobject(object):
 
         self.shader_wrapper.vert_data = self.get_shader_data()
         self.shader_wrapper.vert_indices = self.get_shader_vert_indices()
-        self.shader_wrapper.update_program_uniforms(self.get_uniforms())
+        self.shader_wrapper.bind_to_mobject_uniforms(self.get_uniforms())
         self.shader_wrapper.depth_test = self.depth_test
         return self.shader_wrapper
 
@@ -2004,9 +2004,7 @@ class Mobject(object):
                 shader_wrapper.generate_vao()
             self._data_has_changed = False
         for shader_wrapper in self.shader_wrappers:
-            shader_wrapper.depth_test = self.depth_test
-            shader_wrapper.update_program_uniforms(self.get_uniforms())
-            shader_wrapper.update_program_uniforms(camera_uniforms, universal=True)
+            shader_wrapper.update_program_uniforms(camera_uniforms)
             shader_wrapper.pre_render()
             shader_wrapper.render()
 
