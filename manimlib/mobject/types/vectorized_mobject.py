@@ -1292,6 +1292,10 @@ class VMobject(Mobject):
             self.fill_shader_wrapper,
             self.stroke_shader_wrapper,
         ]
+        for sw in self.shader_wrappers:
+            rep = self.family_members_with_points()[0]
+            for old, new in rep.shader_code_replacements.items():
+                sw.replace_code(old, new)
 
     def refresh_shader_wrapper_id(self) -> Self:
         if not self._shaders_initialized:
@@ -1355,8 +1359,9 @@ class VMobject(Mobject):
             self.stroke_shader_wrapper.read_in(stroke_datas),
         ]
         for sw in shader_wrappers:
-            sw.bind_to_mobject_uniforms(family[0].get_uniforms())
-            sw.depth_test = family[0].depth_test
+            rep = family[0]  # Representative family member
+            sw.bind_to_mobject_uniforms(rep.get_uniforms())
+            sw.depth_test = rep.depth_test
         return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
 
 
