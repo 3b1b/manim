@@ -48,7 +48,7 @@ class SceneFileWriter(object):
         total_frames: int = 0,
         progress_description_len: int = 40,
         video_codec: str = "libx264",
-        pixel_format: str = "yuvj422p",
+        pixel_format: str = "yuv420p",
     ):
         self.scene: Scene = scene
         self.write_to_movie = write_to_movie
