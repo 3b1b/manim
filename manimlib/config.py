@@ -161,6 +161,12 @@ def parse_cli():
             help="Show progress bar for each animation",
         )
         parser.add_argument(
+            "--prerun",
+            action="store_true",
+            help="Calculate total framecount, to display in a progress bar, by doing " + \
+                 "an initial run of the scene which skips animations."
+        )
+        parser.add_argument(
             "--video_dir",
             help="Directory to write video",
         )
@@ -489,6 +495,7 @@ def get_configuration(args: Namespace) -> dict:
         "presenter_mode": args.presenter_mode,
         "leave_progress_bars": args.leave_progress_bars,
         "show_animation_progress": args.show_animation_progress,
+        "prerun": args.prerun,
         "embed_exception_mode": custom_config["embed_exception_mode"],
         "embed_error_sound": custom_config["embed_error_sound"],
     }

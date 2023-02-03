@@ -61,13 +61,15 @@ def get_scene_config(config):
     }
 
 
-def compute_total_frames(scene_class, scene_config):
+def compute_total_frames(scene_class, scene_config, config):
     """
     When a scene is being written to file, a copy of the scene is run with
     skip_animations set to true so as to count how many frames it will require.
     This allows for a total progress bar on rendering, and also allows runtime
     errors to be exposed preemptively for long running scenes.
     """
+    if not config["prerun"]:
+        return -1
     pre_config = copy.deepcopy(scene_config)
     pre_config["file_writer_config"]["write_to_movie"] = False
     pre_config["file_writer_config"]["save_last_frame"] = False
@@ -90,7 +92,7 @@ def get_scenes_to_render(scene_classes, scene_config, config):
             if scene_class.__name__ == scene_name:
                 fw_config = scene_config["file_writer_config"]
                 if fw_config["write_to_movie"]:
-                    fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
+                    fw_config["total_frames"] = compute_total_frames(scene_class, scene_config, config)
                 scene = scene_class(**scene_config)
                 result.append(scene)
                 found = True
@@ -109,7 +111,7 @@ def get_scenes_to_render(scene_classes, scene_config, config):
     for scene_class in scene_classes:
         fw_config = scene_config["file_writer_config"]
         if fw_config["write_to_movie"]:
-            fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
+            fw_config["total_frames"] = compute_total_frames(scene_class, scene_config, config)
         scene = scene_class(**scene_config)
         result.append(scene)
     return result
