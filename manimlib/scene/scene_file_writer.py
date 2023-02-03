@@ -46,7 +46,7 @@ class SceneFileWriter(object):
         show_file_location_upon_completion: bool = False,
         quiet: bool = False,
         total_frames: int = 0,
-        progress_description_len: int | None = None,
+        progress_description_len: int = 40,
     ):
         self.scene: Scene = scene
         self.write_to_movie = write_to_movie
@@ -62,8 +62,7 @@ class SceneFileWriter(object):
         self.show_file_location_upon_completion = show_file_location_upon_completion
         self.quiet = quiet
         self.total_frames = total_frames
-        self.progress_description_len = progress_description_len or \
-            40 if total_frames > 0 else 80
+        self.progress_description_len = progress_description_len
 
         # State during file writing
         self.writing_process: sp.Popen | None = None
