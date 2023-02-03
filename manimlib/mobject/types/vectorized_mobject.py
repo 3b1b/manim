@@ -1293,7 +1293,8 @@ class VMobject(Mobject):
             self.stroke_shader_wrapper,
         ]
         for sw in self.shader_wrappers:
-            rep = self.family_members_with_points()[0]
+            family = self.family_members_with_points()
+            rep = family[0] if family else self
             for old, new in rep.shader_code_replacements.items():
                 sw.replace_code(old, new)
 
