@@ -166,20 +166,12 @@ class VMobject(Mobject):
     def set_rgba_array(
         self,
         rgba_array: Vect4Array,
-        name: str | None = None,
+        name: str = "stroke_rgba",
         recurse: bool = False
     ) -> Self:
-        if name is None:
-            names = ["fill_rgba", "stroke_rgba"]
-        else:
-            names = [name]
-
-        for name in names:
-            super().set_rgba_array(rgba_array, name, recurse)
-            if name == "fill_rgba":
-                self.note_changed_fill()
-            elif name == "stroke_rgba":
-                self.note_changed_stroke()
+        super().set_rgba_array(rgba_array, name, recurse)
+        self.note_changed_fill()
+        self.note_changed_stroke()
         return self
 
     def set_fill(
