@@ -557,6 +557,7 @@ class Scene(object):
                 leave=self.leave_progress_bars,
                 ascii=True if platform.system() == 'Windows' else None,
                 desc=desc,
+                bar_format="{l_bar} {n_fmt:3}/{total_fmt:3} {rate_fmt}{postfix}",
             )
         else:
             return times
