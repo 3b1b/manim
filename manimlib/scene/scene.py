@@ -726,6 +726,7 @@ class Scene(object):
     def get_state(self) -> SceneState:
         return SceneState(self)
 
+    @affects_mobject_list
     def restore_state(self, scene_state: SceneState):
         scene_state.restore_scene(self)
 
