@@ -739,7 +739,7 @@ class Mobject(object):
         )
         if len(points1) != len(points2):
             return False
-        return bool(np.isclose(points1, points2).all())
+        return bool(np.isclose(points1, points2, atol=self.get_width() * 1e-2).all())
 
     # Creating new Mobjects from this one
 
