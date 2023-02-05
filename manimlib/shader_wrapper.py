@@ -52,7 +52,7 @@ class ShaderWrapper(object):
         self.render_primitive = render_primitive
 
         self.program_uniform_mirror: UniformDict = dict()
-        self.bind_to_mobject_uniforms(mobject_uniforms)
+        self.bind_to_mobject_uniforms(mobject_uniforms or dict())
 
         self.init_program_code()
         self.init_program()
