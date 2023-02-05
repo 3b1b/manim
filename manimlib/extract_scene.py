@@ -79,40 +79,35 @@ def compute_total_frames(scene_class, scene_config):
     return int(total_time * scene_config["camera_config"]["fps"])
 
 
-def get_scenes_to_render(scene_classes, scene_config, config):
-    if config["write_all"]:
-        return [sc(**scene_config) for sc in scene_classes]
+def scene_from_class(scene_class, scene_config, config):
+    fw_config = scene_config["file_writer_config"]
+    if fw_config["write_to_movie"] and config["prerun"]:
+        fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
+    return scene_class(**scene_config)
 
-    result = []
-    for scene_name in config["scene_names"]:
-        found = False
-        for scene_class in scene_classes:
-            if scene_class.__name__ == scene_name:
-                fw_config = scene_config["file_writer_config"]
-                if fw_config["write_to_movie"]:
-                    fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
-                scene = scene_class(**scene_config)
-                result.append(scene)
-                found = True
-                break
-        if not found and (scene_name != ""):
-            log.error(f"No scene named {scene_name} found")
-    if result:
-        return result
-    
-    # another case
-    result=[]
-    if len(scene_classes) == 1:
-        scene_classes = [scene_classes[0]]
+
+def get_scenes_to_render(all_scene_classes, scene_config, config):
+    if config["write_all"]:
+        return [sc(**scene_config) for sc in all_scene_classes]
+
+    names_to_classes = {sc.__name__ : sc for sc in all_scene_classes}
+    scene_names = config["scene_names"]
+
+    for name in set.difference(set(scene_names), names_to_classes):
+        log.error(f"No scene named {name} found")
+        scene_names.remove(name)
+
+    if scene_names:
+        classes_to_run = [names_to_classes[name] for name in scene_names]
+    elif len(all_scene_classes) == 1:
+        classes_to_run = [all_scene_classes[0]]
     else:
-        scene_classes = prompt_user_for_choice(scene_classes)
-    for scene_class in scene_classes:
-        fw_config = scene_config["file_writer_config"]
-        if fw_config["write_to_movie"]:
-            fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
-        scene = scene_class(**scene_config)
-        result.append(scene)
-    return result
+        classes_to_run = prompt_user_for_choice(all_scene_classes)
+
+    return [
+        scene_from_class(scene_class, scene_config, config)
+        for scene_class in classes_to_run
+    ]
 
 
 def get_scene_classes_from_module(module):

@@ -9,7 +9,6 @@ import numpy as np
 
 from manimlib.config import parse_cli
 from manimlib.config import get_configuration
-from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
 
@@ -17,11 +16,13 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Sequence, Optional, Tuple
+    from manimlib.typing import UniformDict
     from moderngl.vertex_array import VertexArray
     from moderngl.framebuffer import Framebuffer
 
 
 ID_TO_TEXTURE: dict[int, moderngl.Texture] = dict()
+PROGRAM_UNIFORM_MIRRORS: dict[int, dict[str, float | tuple]] = dict()
 
 
 @lru_cache()
@@ -61,6 +62,38 @@ def get_shader_program(
         fragment_shader=fragment_shader,
         geometry_shader=geometry_shader,
     )
+
+
+def set_program_uniform(
+    program: moderngl.Program,
+    name: str,
+    value: float | tuple | np.ndarray
+) -> bool:
+    """
+    Sets a program uniform, and also keeps track of a dictionary
+    of previously set uniforms for that program so that it
+    doesn't needlessly reset it, requiring an exchange with gpu
+    memory, if it sees the same value again.
+    
+    Returns True if changed the program, False if it left it as is.
+    """
+
+    pid = id(program)
+    if pid not in PROGRAM_UNIFORM_MIRRORS:
+        PROGRAM_UNIFORM_MIRRORS[pid] = dict()
+    uniform_mirror = PROGRAM_UNIFORM_MIRRORS[pid]
+
+    if type(value) is np.ndarray and value.ndim > 0:
+        value = tuple(value)
+    if uniform_mirror.get(name, None) == value:
+        return False
+
+    try:
+        program[name].value = value
+    except KeyError:
+        return False
+    uniform_mirror[name] = value
+    return True
 
 
 @lru_cache()

@@ -41,11 +41,6 @@ class CameraFrame(Mobject):
         self.set_height(frame_shape[1], stretch=True)
         self.move_to(center_point)
 
-    def note_changed_data(self, recurse_up: bool = True):
-        super().note_changed_data(recurse_up)
-        self.get_view_matrix(refresh=True)
-        self.get_implied_camera_location(refresh=True)
-
     def set_orientation(self, rotation: Rotation):
         self.uniforms["orientation"][:] = rotation.as_quat()
         return self
@@ -89,7 +84,7 @@ class CameraFrame(Mobject):
         Returns a 4x4 for the affine transformation mapping a point
         into the camera's internal coordinate system
         """
-        if refresh:
+        if self._data_has_changed:
             shift = np.identity(4)
             rotation = np.identity(4)
             scale_mat = np.identity(4)
@@ -169,10 +164,12 @@ class CameraFrame(Mobject):
         self.rotate(dgamma, self.get_inverse_camera_rotation_matrix()[2])
         return self
 
+    @Mobject.affects_data
     def set_focal_distance(self, focal_distance: float):
         self.uniforms["fovy"] = 2 * math.atan(0.5 * self.get_height() / focal_distance)
         return self
 
+    @Mobject.affects_data
     def set_field_of_view(self, field_of_view: float):
         self.uniforms["fovy"] = field_of_view
         return self
@@ -202,8 +199,8 @@ class CameraFrame(Mobject):
     def get_field_of_view(self) -> float:
         return self.uniforms["fovy"]
 
-    def get_implied_camera_location(self, refresh=False) -> np.ndarray:
-        if refresh:
+    def get_implied_camera_location(self) -> np.ndarray:
+        if self._data_has_changed:
             to_camera = self.get_inverse_camera_rotation_matrix()[2]
             dist = self.get_focal_distance()
             self.camera_location = self.get_center() + dist * to_camera

@@ -47,6 +47,8 @@ class SceneFileWriter(object):
         quiet: bool = False,
         total_frames: int = 0,
         progress_description_len: int = 40,
+        video_codec: str = "libx264",
+        pixel_format: str = "yuv420p",
     ):
         self.scene: Scene = scene
         self.write_to_movie = write_to_movie
@@ -63,6 +65,8 @@ class SceneFileWriter(object):
         self.quiet = quiet
         self.total_frames = total_frames
         self.progress_description_len = progress_description_len
+        self.video_codec = video_codec
+        self.pixel_format = pixel_format
 
         # State during file writing
         self.writing_process: sp.Popen | None = None
@@ -262,31 +266,25 @@ class SceneFileWriter(object):
             '-an',  # Tells FFMPEG not to expect any audio
             '-loglevel', 'error',
         ]
-        if self.movie_file_extension == ".mov":
-            # This is if the background of the exported
-            # video should be transparent.
-            command += [
-                '-vcodec', 'prores_ks',
-            ]
-        elif self.movie_file_extension == ".gif":
-            command += []
-        else:
-            command += [
-                '-vcodec', 'libx264',
-                '-pix_fmt', 'yuv420p',
-            ]
+        if self.video_codec:
+            command += ['-vcodec', self.video_codec]
+        if self.pixel_format:
+            command += ['-pix_fmt', self.pixel_format]
         command += [self.temp_file_path]
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
 
-        if self.total_frames > 0 and not self.quiet:
+        if not self.quiet:
             self.progress_display = ProgressDisplay(
                 range(self.total_frames),
-                # bar_format="{l_bar}{bar}|{n_fmt}/{total_fmt}",
                 leave=False,
                 ascii=True if platform.system() == 'Windows' else None,
                 dynamic_ncols=True,
             )
             self.set_progress_display_description()
+
+    def use_fast_encoding(self):
+        self.video_codec = "libx264rgb"
+        self.pixel_format = "rgb32"
 
     def begin_insert(self):
         # Begin writing process

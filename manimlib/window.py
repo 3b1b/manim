@@ -29,6 +29,7 @@ class Window(PygletWindow):
         size: tuple[int, int] = (1280, 720),
         samples = 0
     ):
+        scene.window = self
         super().__init__(size=size, samples=samples)
 
         self.default_size = size

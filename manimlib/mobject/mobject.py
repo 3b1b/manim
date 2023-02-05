@@ -105,6 +105,7 @@ class Mobject(object):
         self.bounding_box: Vect3Array = np.zeros((3, 3))
         self._shaders_initialized: bool = False
         self._data_has_changed: bool = True
+        self.shader_code_replacements: dict[str, str] = dict()
 
         self.init_data()
         self._data_defaults = np.ones(1, dtype=self.data.dtype)
@@ -738,7 +739,7 @@ class Mobject(object):
         )
         if len(points1) != len(points2):
             return False
-        return bool(np.isclose(points1, points2).all())
+        return bool(np.isclose(points1, points2, atol=self.get_width() * 1e-2).all())
 
     # Creating new Mobjects from this one
 
@@ -1895,12 +1896,12 @@ class Mobject(object):
 
     # Shader code manipulation
 
+    @affects_data
     def replace_shader_code(self, old: str, new: str) -> Self:
-        # TODO, will this work with VMobject structure, given
-        # that it does not simpler return shader_wrappers of
-        # family?
-        for wrapper in self.get_shader_wrapper_list():
-            wrapper.replace_code(old, new)
+        self.shader_code_replacements[old] = new
+        self._shaders_initialized = False
+        for mob in self.get_ancestors():
+            mob._shaders_initialized = False
         return self
 
     def set_color_by_code(self, glsl_code: str) -> Self:
@@ -1967,8 +1968,10 @@ class Mobject(object):
 
         self.shader_wrapper.vert_data = self.get_shader_data()
         self.shader_wrapper.vert_indices = self.get_shader_vert_indices()
-        self.shader_wrapper.update_program_uniforms(self.get_uniforms())
+        self.shader_wrapper.bind_to_mobject_uniforms(self.get_uniforms())
         self.shader_wrapper.depth_test = self.depth_test
+        for old, new in self.shader_code_replacements.items():
+            self.shader_wrapper.replace_code(old, new)
         return self.shader_wrapper
 
     def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
@@ -2004,9 +2007,7 @@ class Mobject(object):
                 shader_wrapper.generate_vao()
             self._data_has_changed = False
         for shader_wrapper in self.shader_wrappers:
-            shader_wrapper.depth_test = self.depth_test
-            shader_wrapper.update_program_uniforms(self.get_uniforms())
-            shader_wrapper.update_program_uniforms(camera_uniforms, universal=True)
+            shader_wrapper.update_program_uniforms(camera_uniforms)
             shader_wrapper.pre_render()
             shader_wrapper.render()
 

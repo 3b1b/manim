@@ -387,7 +387,10 @@ class Scene(object):
         same type are grouped together, so this function creates
         Groups of all clusters of adjacent Mobjects in the scene
         """
-        batches = batch_by_property(self.mobjects, lambda m: str(type(m)))
+        batches = batch_by_property(
+            self.mobjects,
+            lambda m: str(type(m)) + str(m.get_uniforms())
+        )
 
         for group in self.render_groups:
             group.clear()
@@ -554,6 +557,7 @@ class Scene(object):
                 leave=self.leave_progress_bars,
                 ascii=True if platform.system() == 'Windows' else None,
                 desc=desc,
+                bar_format="{l_bar} {n_fmt:3}/{total_fmt:3} {rate_fmt}{postfix}",
             )
         else:
             return times
@@ -723,6 +727,7 @@ class Scene(object):
     def get_state(self) -> SceneState:
         return SceneState(self)
 
+    @affects_mobject_list
     def restore_state(self, scene_state: SceneState):
         scene_state.restore_scene(self)
 
