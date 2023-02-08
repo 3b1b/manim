@@ -544,7 +544,9 @@ class VMobject(Mobject):
 
     def has_new_path_started(self) -> bool:
         points = self.get_points()
-        if len(points) == 1:
+        if len(points) == 0:
+            return False
+        elif len(points) == 1:
             return True
         return self.consider_points_equal(points[-3], points[-2])
 
