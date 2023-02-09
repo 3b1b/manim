@@ -508,7 +508,6 @@ class ThreeDAxes(Axes):
         z_axis_config: dict = dict(),
         z_normal: Vect3 = DOWN,
         depth: float = 6.0,
-        num_axis_pieces: int = 20,
         **kwargs
     ):
         Axes.__init__(self, x_range, y_range, **kwargs)
@@ -533,8 +532,6 @@ class ThreeDAxes(Axes):
         self.axes.add(self.z_axis)
         self.add(self.z_axis)
 
-        for axis in self.axes:
-            axis.insert_n_curves(num_axis_pieces - 1)
 
     def get_all_ranges(self) -> list[Sequence[float]]:
         return [self.x_range, self.y_range, self.z_range]
