@@ -49,6 +49,7 @@ class SceneFileWriter(object):
         progress_description_len: int = 40,
         video_codec: str = "libx264",
         pixel_format: str = "yuv420p",
+        saturation: float = 1.7
     ):
         self.scene: Scene = scene
         self.write_to_movie = write_to_movie
@@ -67,6 +68,7 @@ class SceneFileWriter(object):
         self.progress_description_len = progress_description_len
         self.video_codec = video_codec
         self.pixel_format = pixel_format
+        self.saturation = saturation
 
         # State during file writing
         self.writing_process: sp.Popen | None = None
@@ -262,7 +264,7 @@ class SceneFileWriter(object):
             '-pix_fmt', 'rgba',
             '-r', str(fps),  # frames per second
             '-i', '-',  # The input comes from a pipe
-            '-vf', 'vflip',
+            '-vf', f'eq=saturation={self.saturation},vflip',
             '-an',  # Tells FFMPEG not to expect any audio
             '-loglevel', 'error',
         ]
