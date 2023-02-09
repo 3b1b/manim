@@ -508,6 +508,7 @@ class ThreeDAxes(Axes):
         z_axis_config: dict = dict(),
         z_normal: Vect3 = DOWN,
         depth: float = 6.0,
+        flat_stroke: bool = False,
         **kwargs
     ):
         Axes.__init__(self, x_range, y_range, **kwargs)
@@ -532,6 +533,7 @@ class ThreeDAxes(Axes):
         self.axes.add(self.z_axis)
         self.add(self.z_axis)
 
+        self.set_flat_stroke(flat_stroke)
 
     def get_all_ranges(self) -> list[Sequence[float]]:
         return [self.x_range, self.y_range, self.z_range]
