@@ -63,7 +63,7 @@ class Transform(Animation):
             # preserved, since calling align_data will potentially
             # change the structure of both arguments
             self.target_copy = self.target_mobject.copy()
-            self.mobject.align_data_and_family(self.target_copy)
+        self.mobject.align_data_and_family(self.target_copy)
         super().begin()
         if not self.mobject.has_updaters:
             self.mobject.lock_matching_data(

@@ -899,6 +899,8 @@ class VMobject(Mobject):
                          self.has_same_shape_as(vmobject)
             if match_tris:
                 vmobject.triangulation = self.triangulation
+            for mob in [self, vmobject]:
+                mob.get_joint_products()
             return self
 
         for mob in self, vmobject:
