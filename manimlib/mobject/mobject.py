@@ -2178,7 +2178,7 @@ class _AnimationBuilder:
 
         if (self.is_chaining and has_overridden_animation) or self.overridden_animation:
             raise NotImplementedError(
-                "Method chaining is currently not supported for "
+                "Method chaining is currently not supported for " + \
                 "overridden animations"
             )
 
@@ -2213,7 +2213,7 @@ class _AnimationBuilder:
 
         if not self.can_pass_args:
             raise ValueError(
-                "Animation arguments can only be passed by calling ``animate`` "
+                "Animation arguments can only be passed by calling ``animate`` " + \
                 "or ``set_anim_args`` and can only be passed once",
             )
 

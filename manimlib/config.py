@@ -420,11 +420,12 @@ def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
         result["video_codec"] = args.vcodec
     elif args.transparent:
         result["video_codec"] = 'prores_ks'
+        result["pixel_format"] = ''
     elif args.gif:
         result["video_codec"] = ''
 
     if args.pix_fmt:
-        result["pix_fmt"] = args.pix_fmt
+        result["pixel_format"] = args.pix_fmt
 
     return result
 

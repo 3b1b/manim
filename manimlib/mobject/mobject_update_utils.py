@@ -93,7 +93,7 @@ def turn_animation_into_updater(
     the updater will be popped uplon completion
     """
     mobject = animation.mobject
-    animation.update_config(**kwargs)
+    animation.update_rate_info(**kwargs)
     animation.suspend_mobject_updating = False
     animation.begin()
     animation.total_time = 0

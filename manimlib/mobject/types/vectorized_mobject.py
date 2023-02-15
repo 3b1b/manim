@@ -541,6 +541,7 @@ class VMobject(Mobject):
         else:
             new_handle = self.get_reflection_of_last_handle()
         self.add_cubic_bezier_curve_to(new_handle, handle, point)
+        return self
 
     def has_new_path_started(self) -> bool:
         points = self.get_points()
@@ -898,6 +899,8 @@ class VMobject(Mobject):
                          self.has_same_shape_as(vmobject)
             if match_tris:
                 vmobject.triangulation = self.triangulation
+            for mob in [self, vmobject]:
+                mob.get_joint_products()
             return self
 
         for mob in self, vmobject:
