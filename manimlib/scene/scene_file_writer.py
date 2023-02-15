@@ -258,6 +258,10 @@ class SceneFileWriter(object):
         fps = self.scene.camera.fps
         width, height = self.scene.camera.get_pixel_shape()
 
+        vf_arg = 'vflip'
+        if self.pixel_format.startswith("yuv"):
+            vf_arg += f',eq=saturation={self.saturation}:gamma={self.gamma}'
+
         command = [
             FFMPEG_BIN,
             '-y',  # overwrite output file if it exists
@@ -266,7 +270,7 @@ class SceneFileWriter(object):
             '-pix_fmt', 'rgba',
             '-r', str(fps),  # frames per second
             '-i', '-',  # The input comes from a pipe
-            '-vf', f'vflip,eq=saturation={self.saturation}:gamma={self.gamma}',
+            '-vf', vf_arg,
             '-an',  # Tells FFMPEG not to expect any audio
             '-loglevel', 'error',
         ]
