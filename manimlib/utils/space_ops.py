@@ -61,6 +61,13 @@ def normalize(
         return np.zeros(len(vect))
 
 
+def poly_line_length(points):
+    """
+    Return the sum of the lengths between adjacent points
+    """
+    diffs = points[1:] - points[:-1]
+    return np.sqrt((diffs**2).sum(1)).sum()
+
 # Operations related to rotation
 
 
