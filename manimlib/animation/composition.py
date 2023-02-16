@@ -167,7 +167,6 @@ class LaggedStartMap(LaggedStart):
         self,
         anim_func: Callable[[Mobject], Animation],
         group: Mobject,
-        arg_creator: Callable[[Mobject], tuple] | None = None,
         run_time: float = 2.0,
         lag_ratio: float = DEFAULT_LAGGED_START_LAG_RATIO,
         **kwargs
