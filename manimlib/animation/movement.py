@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     import numpy as np
 
     from manimlib.mobject.mobject import Mobject
+    from manimlib.mobject.types.vectorized_mobject import VMobject
 
 
 class Homotopy(Animation):
@@ -105,7 +106,7 @@ class MoveAlongPath(Animation):
     def __init__(
         self,
         mobject: Mobject,
-        path: Mobject,
+        path: VMobject,
         suspend_mobject_updating: bool = False,
         **kwargs
     ):
@@ -113,5 +114,5 @@ class MoveAlongPath(Animation):
         super().__init__(mobject, suspend_mobject_updating=suspend_mobject_updating, **kwargs)
 
     def interpolate_mobject(self, alpha: float) -> None:
-        point = self.path.point_from_proportion(alpha)
+        point = self.path.quick_point_from_proportion(alpha)
         self.mobject.move_to(point)
