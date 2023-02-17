@@ -5,7 +5,11 @@ uniform mat4 perspective;
 
 in vec4 color;
 in float scaled_aaw;
-in vec3 v_point;
+in vec3 point;
+in vec3 to_cam;
+in vec3 center;
+in float radius;
+in vec2 uv_coords;
 
 out vec4 frag_color;
 
@@ -13,9 +17,8 @@ out vec4 frag_color;
 #INSERT finalize_color.glsl
 
 void main() {
-    vec2 vect = 2.0 * gl_PointCoord.xy - vec2(1.0);
-    float r = length(vect);
-    if(r > 1.0 + scaled_aaw) discard;
+    float r = length(uv_coords.xy);
+    if(r > 1.0) discard;
 
     frag_color = color;
 
@@ -24,9 +27,9 @@ void main() {
     }
 
     if(shading != vec3(0.0)){
-        vec3 normal = vec3(vect, sqrt(1 - r * r));
-        normal = (perspective * vec4(normal, 0.0)).xyz;
-        frag_color = finalize_color(frag_color, v_point, normal);
+        vec3 point_3d = point + radius * sqrt(1 - r * r) * to_cam;
+        vec3 normal = normalize(point_3d - center);
+        frag_color = finalize_color(frag_color, point_3d, normal);
     }
 
     frag_color.a *= smoothstep(1.0, 1.0 - scaled_aaw, r);
