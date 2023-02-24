@@ -622,5 +622,6 @@ class DieFace(VGroup):
         arrangement.space_out_submobjects(dot_coalesce_factor)
 
         super().__init__(square, arrangement)
+        self.dots = arrangement
         self.value = value
         self.index = value
