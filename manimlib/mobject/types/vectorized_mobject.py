@@ -236,7 +236,7 @@ class VMobject(Mobject):
         stroke_opacity: float | Iterable[float] | None = None,
         stroke_rgba: Vect4 | None = None,
         stroke_width: float | Iterable[float] | None = None,
-        stroke_background: bool = True,
+        stroke_background: bool = False,
         shading: Tuple[float, float, float] | None = None,
         recurse: bool = True
     ) -> Self:
