@@ -239,7 +239,7 @@ class CoordinateSystem(ABC):
     def bind_graph_to_func(
         self,
         graph: VMobject,
-        func: Callable[[Vect3], Vect3],
+        func: Callable[[VectN], VectN],
         jagged: bool = False,
         get_discontinuities: Optional[Callable[[], Vect3]] = None
     ) -> VMobject:
