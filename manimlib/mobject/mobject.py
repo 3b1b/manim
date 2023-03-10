@@ -790,13 +790,13 @@ class Mobject(object):
     def update(self, dt: float = 0, recurse: bool = True) -> Self:
         if not self.has_updaters or self.updating_suspended:
             return self
+        if recurse:
+            for submob in self.submobjects:
+                submob.update(dt, recurse)
         for updater in self.time_based_updaters:
             updater(self, dt)
         for updater in self.non_time_updaters:
             updater(self)
-        if recurse:
-            for submob in self.submobjects:
-                submob.update(dt, recurse)
         return self
 
     def get_time_based_updaters(self) -> list[TimeBasedUpdater]:
