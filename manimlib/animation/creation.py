@@ -12,6 +12,7 @@ from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import double_smooth
 from manimlib.utils.rate_functions import smooth
+from manimlib.utils.simple_functions import clip
 
 from typing import TYPE_CHECKING
 
@@ -206,7 +207,7 @@ class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
         super().__init__(group, int_func=int_func, **kwargs)
 
     def update_submobject_list(self, index: int) -> None:
-        # N = len(self.all_submobs)
+        index = int(clip(index, 0, len(self.all_submobs) - 1))
         if index == 0:
             self.mobject.set_submobjects([])
         else:
