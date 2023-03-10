@@ -160,6 +160,7 @@ TEX_TO_SYMBOL_COUNT = {
     R"\sup": 3,
     R"\tan": 3,
     R"\tanh": 4,
+    R"\text": 0,
     R"\textbf": 0,
     R"\textfraction": 2,
     R"\textstyle": 0,
