@@ -110,6 +110,7 @@ class Underline(Line):
         buff: float = SMALL_BUFF,
         stroke_color=WHITE,
         stroke_width: float | Sequence[float] = [0, 3, 3, 0],
+        stretch_factor=1.2,
         **kwargs
     ):
         super().__init__(
@@ -119,5 +120,6 @@ class Underline(Line):
             **kwargs
         )
         self.insert_n_curves(30)
-        self.match_width(mobject)
+        self.set_stroke(stroke_color, stroke_width)
+        self.set_width(mobject.get_width() * stretch_factor)
         self.next_to(mobject, DOWN, buff=buff)
