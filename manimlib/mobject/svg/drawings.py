@@ -358,7 +358,7 @@ class Bubble(SVGMobject):
         stroke_width: float = 3.0,
         **kwargs
     ):
-        self.direction = direction
+        self.direction = LEFT  # Possibly updated below by self.flip()
         self.bubble_center_adjustment_factor = bubble_center_adjustment_factor
         self.content_scale_factor = content_scale_factor
 
@@ -380,7 +380,7 @@ class Bubble(SVGMobject):
         if direction[0] > 0:
             self.flip()
 
-        self.content = Mobject()
+        self.content = VMobject()
 
     def get_tip(self):
         # TODO, find a better way
@@ -403,10 +403,10 @@ class Bubble(SVGMobject):
             self.direction = -np.array(self.direction)
         return self
 
-    def pin_to(self, mobject):
+    def pin_to(self, mobject, auto_flip=False):
         mob_center = mobject.get_center()
         want_to_flip = np.sign(mob_center[0]) != np.sign(self.direction[0])
-        if want_to_flip:
+        if want_to_flip and auto_flip:
             self.flip()
         boundary_point = mobject.get_bounding_box_point(UP - self.direction)
         vector_from_center = 1.0 * (boundary_point - mob_center)
