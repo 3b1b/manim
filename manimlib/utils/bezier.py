@@ -213,7 +213,7 @@ def smooth_quadratic_path(anchors: Vect3Array) -> Vect3Array:
     if len(anchors) < 2:
         return anchors
     elif len(anchors) == 2:
-        return np.array([anchors[0], anchors.mean(1), anchors[2]])
+        return np.array([anchors[0], anchors.mean(0), anchors[1]])
 
     is_flat = (anchors[:, 2] == 0).all()
     if not is_flat:
