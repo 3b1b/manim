@@ -425,7 +425,7 @@ class VMobject(Mobject):
         self,
         anti_alias_width: float = 0,
         fill_border_width: float = 0,
-        recurse: bool=True
+        recurse: bool = True
     ) -> Self:
         super().apply_depth_test(recurse)
         self.set_anti_alias_width(anti_alias_width)
@@ -436,7 +436,7 @@ class VMobject(Mobject):
         self,
         anti_alias_width: float = 1.0,
         fill_border_width: float = 0.5,
-        recurse: bool=True
+        recurse: bool = True
     ) -> Self:
         super().apply_depth_test(recurse)
         self.set_anti_alias_width(anti_alias_width)
