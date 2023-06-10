@@ -50,8 +50,8 @@ class SceneFileWriter(object):
         progress_description_len: int = 40,
         video_codec: str = "libx264",
         pixel_format: str = "yuv420p",
-        saturation: float = 1.7,
-        gamma: float = 1.2,
+        saturation: float = 1.0,
+        gamma: float = 1.0,
     ):
         self.scene: Scene = scene
         self.write_to_movie = write_to_movie
