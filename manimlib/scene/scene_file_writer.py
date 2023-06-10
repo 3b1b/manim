@@ -42,6 +42,7 @@ class SceneFileWriter(object):
         # Where should this be written
         output_directory: str | None = None,
         file_name: str | None = None,
+        subdirectory_for_videos: bool = False,
         open_file_upon_completion: bool = False,
         show_file_location_upon_completion: bool = False,
         quiet: bool = False,
@@ -63,6 +64,7 @@ class SceneFileWriter(object):
         self.output_directory = output_directory
         self.file_name = file_name
         self.open_file_upon_completion = open_file_upon_completion
+        self.subdirectory_for_videos = subdirectory_for_videos
         self.show_file_location_upon_completion = show_file_location_upon_completion
         self.quiet = quiet
         self.total_frames = total_frames
@@ -88,7 +90,10 @@ class SceneFileWriter(object):
             image_file = add_extension_if_not_present(scene_name, ".png")
             self.image_file_path = os.path.join(image_dir, image_file)
         if self.write_to_movie:
-            movie_dir = guarantee_existence(os.path.join(out_dir, "videos"))
+            if self.subdirectory_for_videos:
+                movie_dir = guarantee_existence(os.path.join(out_dir, "videos"))
+            else:
+                movie_dir = guarantee_existence(out_dir)
             movie_file = add_extension_if_not_present(scene_name, self.movie_file_extension)
             self.movie_file_path = os.path.join(movie_dir, movie_file)
             if self.break_into_partial_movies:
