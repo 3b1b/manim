@@ -278,7 +278,7 @@ class FlashAround(VShowPassingFlash):
 
 class FlashUnder(FlashAround):
     def get_path(self, mobject: Mobject, buff: float) -> Underline:
-        return Underline(mobject, buff=buff)
+        return Underline(mobject, buff=buff, stretch_factor=1.0)
 
 
 class ShowCreationThenDestruction(ShowPassingFlash):
