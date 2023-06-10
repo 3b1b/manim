@@ -56,6 +56,7 @@ class ShaderWrapper(object):
 
         self.init_program_code()
         self.init_program()
+        self.texture_names_to_ids = dict()
         if texture_paths is not None:
             self.init_textures(texture_paths)
         self.init_vao()
@@ -82,11 +83,10 @@ class ShaderWrapper(object):
         self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
 
     def init_textures(self, texture_paths: dict[str, str]):
-        names_to_ids = {
+        self.texture_names_to_ids = {
             name: get_texture_id(image_path_to_texture(path, self.ctx))
             for name, path in texture_paths.items()
         }
-        self.update_program_uniforms(names_to_ids)
 
     def init_vao(self):
         self.vbo = None
@@ -224,8 +224,9 @@ class ShaderWrapper(object):
     def update_program_uniforms(self, camera_uniforms: UniformDict):
         if self.program is None:
             return
-        for name, value in (*self.mobject_uniforms.items(), *camera_uniforms.items()):
-            set_program_uniform(self.program, name, value)
+        for uniforms in [self.mobject_uniforms, camera_uniforms, self.texture_names_to_ids]:
+            for name, value in uniforms.items():
+                set_program_uniform(self.program, name, value)
 
     def get_vertex_buffer_object(self, refresh: bool = True):
         if refresh:
