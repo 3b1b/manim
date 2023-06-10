@@ -130,11 +130,13 @@ class Surface(Mobject):
     def get_unit_normals(self) -> Vect3Array:
         nu, nv = self.resolution
         indices = np.arange(nu * nv)
+        if len(indices) == 0:
+            return np.zeros((3, 0))
 
-        left  = indices - 1
+        left = indices - 1
         right = indices + 1
-        up    = indices - nv
-        down  = indices + nv
+        up = indices - nv
+        down = indices + nv
 
         left[0] = indices[0]
         right[-1] = indices[-1]
@@ -166,7 +168,7 @@ class Surface(Mobject):
 
         nu, nv = smobject.resolution
         self.data['point'][:] = self.get_partial_points_array(
-            self.data['point'], a, b,
+            smobject.data['point'], a, b,
             (nu, nv, 3),
             axis=axis
         )
@@ -183,7 +185,7 @@ class Surface(Mobject):
         if len(points) == 0:
             return points
         nu, nv = resolution[:2]
-        points = points.reshape(resolution)
+        points = points.reshape(resolution).copy()
         max_index = resolution[axis] - 1
         lower_index, lower_residue = integer_interpolate(0, max_index, a)
         upper_index, upper_residue = integer_interpolate(0, max_index, b)
