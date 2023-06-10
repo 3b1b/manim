@@ -22,6 +22,7 @@ from manimlib.mobject.types.dot_cloud import DotCloud
 from manimlib.mobject.types.surface import ParametricSurface
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import binary_search
 from manimlib.utils.space_ops import angle_of_vector
@@ -398,9 +399,24 @@ class CoordinateSystem(ABC):
                 rect.set_fill(negative_color)
         return result
 
-    def get_area_under_graph(self, graph, x_range, fill_color=BLUE, fill_opacity=1):
-        # TODO
-        pass
+    def get_area_under_graph(self, graph, x_range, fill_color=BLUE, fill_opacity=0.5):
+        if not hasattr(graph, "x_range"):
+            raise Exception("Argument `graph` must have attribute `x_range`")
+
+        alpha_bounds = [
+            inverse_interpolate(*graph.x_range, x)
+            for x in x_range
+        ]
+        sub_graph = graph.copy()
+        sub_graph.pointwise_become_partial(graph, *alpha_bounds)
+        sub_graph.add_line_to(self.c2p(x_range[1], 0))
+        sub_graph.add_line_to(self.c2p(x_range[0], 0))
+        sub_graph.add_line_to(sub_graph.get_start())
+
+        sub_graph.set_stroke(width=0)
+        sub_graph.set_fill(fill_color, fill_opacity)
+
+        return sub_graph
 
 
 class Axes(VGroup, CoordinateSystem):
