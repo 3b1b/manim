@@ -224,7 +224,7 @@ class Mobject(object):
     @affects_family_data
     def reverse_points(self) -> Self:
         for mob in self.get_family():
-            mob.data = mob.data[::-1]
+            mob.data[:] = mob.data[::-1]
         return self
 
     @affects_family_data
