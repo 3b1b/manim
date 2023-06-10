@@ -1598,6 +1598,12 @@ class Mobject(object):
     def match_color(self, mobject: Mobject) -> Self:
         return self.set_color(mobject.get_color())
 
+    def match_style(self, mobject: Mobject) -> Self:
+        self.set_color(mobject.get_color())
+        self.set_opacity(mobject.get_opacity())
+        self.set_shading(*mobject.get_shading())
+        return self
+
     def match_dim_size(self, mobject: Mobject, dim: int, **kwargs) -> Self:
         return self.rescale_to_fit(
             mobject.length_over_dim(dim), dim,
