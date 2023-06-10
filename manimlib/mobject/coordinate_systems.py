@@ -565,19 +565,46 @@ class ThreeDAxes(Axes):
             axis.add(label)
         self.axis_labels = labels
 
-    def get_graph(self, func, color=BLUE_E, opacity=0.9, **kwargs):
+    def get_graph(
+        self,
+        func,
+        color=BLUE_E,
+        opacity=0.9,
+        u_range=None,
+        v_range=None,
+        **kwargs
+    ) -> ParametricSurface:
         xu = self.x_axis.get_unit_size()
         yu = self.y_axis.get_unit_size()
         zu = self.z_axis.get_unit_size()
         x0, y0, z0 = self.get_origin()
+        u_range = u_range or self.x_range[:2]
+        v_range = v_range or self.y_range[:2]
         return ParametricSurface(
             lambda u, v: [xu * u + x0, yu * v + y0, zu * func(u, v) + z0],
-            u_range=self.x_range[:2],
-            v_range=self.y_range[:2],
+            u_range=u_range,
+            v_range=v_range,
             color=color,
             opacity=opacity,
             **kwargs
         )
+
+    def get_parametric_surface(
+        self,
+        func,
+        color=BLUE_E,
+        opacity=0.9,
+        **kwargs
+    ) -> ParametricSurface:
+        surface = ParametricSurface(func, color=color, opacity=opacity, **kwargs)
+        xu = self.x_axis.get_unit_size()
+        yu = self.y_axis.get_unit_size()
+        zu = self.z_axis.get_unit_size()
+        axes = [self.x_axis, self.y_axis, self.z_axis]
+        for dim, axis in zip(range(3), axes):
+            surface.stretch(axis.get_unit_size(), dim, about_point=ORIGIN)
+        surface.shift(self.get_origin())
+        return surface
 
 
 class NumberPlane(Axes):
