@@ -56,7 +56,7 @@ def get_shader_program(
         vertex_shader: str,
         fragment_shader: Optional[str] = None,
         geometry_shader: Optional[str] = None,
-    ) -> moderngl.Program:
+) -> moderngl.Program:
     return ctx.program(
         vertex_shader=vertex_shader,
         fragment_shader=fragment_shader,
@@ -74,7 +74,7 @@ def set_program_uniform(
     of previously set uniforms for that program so that it
     doesn't needlessly reset it, requiring an exchange with gpu
     memory, if it sees the same value again.
-    
+
     Returns True if changed the program, False if it left it as is.
     """
 
@@ -132,7 +132,6 @@ def get_colormap_code(rgb_list: Sequence[float]) -> str:
         for rgb in rgb_list
     )
     return f"vec3[{len(rgb_list)}]({data})"
-
 
 
 @lru_cache()
