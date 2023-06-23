@@ -171,6 +171,7 @@ class DecimalNumber(VMobject):
         self.set_submobjects_from_number(number)
         self.move_to(move_to_point, self.edge_to_fix)
         self.set_style(**style)
+        self.fix_in_frame(self._is_fixed_in_frame)
         return self
 
     def _handle_scale_side_effects(self, scale_factor: float) -> Self:
