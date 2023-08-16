@@ -206,7 +206,7 @@ def normalize_along_axis(
 ) -> np.ndarray:
     norms = np.sqrt((array * array).sum(axis))
     norms[norms == 0] = 1
-    return (array.T / norms).T
+    return array / norms[:, np.newaxis]
 
 
 def get_unit_normal(
