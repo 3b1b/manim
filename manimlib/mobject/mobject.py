@@ -1334,7 +1334,7 @@ class Mobject(object):
                     rgbs = resize_with_interpolation(rgbs, len(data))
                 data[name][:, :3] = rgbs
             if opacity is not None:
-                if isinstance(opacity, list):
+                if not isinstance(opacity, (float, int)):
                     opacity = resize_with_interpolation(np.array(opacity), len(data))
                 data[name][:, 3] = opacity
         return self
