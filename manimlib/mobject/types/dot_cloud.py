@@ -22,6 +22,7 @@ DEFAULT_GLOW_DOT_RADIUS = 0.2
 DEFAULT_GRID_HEIGHT = 6
 DEFAULT_BUFF_RATIO = 0.5
 
+
 class DotCloud(PMobject):
     shader_folder: str = "true_dot"
     render_primitive: int = moderngl.POINTS
