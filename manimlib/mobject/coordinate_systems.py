@@ -536,7 +536,7 @@ class ThreeDAxes(Axes):
             axis_config=merge_dicts_recursively(
                 self.default_axis_config,
                 self.default_z_axis_config,
-                kwargs.get("axes_config", {}),
+                kwargs.get("axis_config", {}),
                 z_axis_config
             ),
             length=depth,
