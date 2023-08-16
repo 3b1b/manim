@@ -457,6 +457,9 @@ class VMobject(Mobject):
         anchors: Vect3Array,
         handles: Vect3Array,
     ) -> Self:
+        if len(anchors) == 0:
+            self.clear_points()
+            return self
         assert(len(anchors) == len(handles) + 1)
         points = resize_array(self.get_points(), 2 * len(anchors) - 1)
         points[0::2] = anchors
@@ -644,6 +647,8 @@ class VMobject(Mobject):
 
     def change_anchor_mode(self, mode: str) -> Self:
         assert(mode in ("jagged", "approx_smooth", "true_smooth"))
+        if self.get_num_points() == 0:
+            return self
         subpaths = self.get_subpaths()
         self.clear_points()
         for subpath in subpaths:
