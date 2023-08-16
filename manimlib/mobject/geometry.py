@@ -705,8 +705,8 @@ class Arrow(Line):
     def insert_tip_anchor(self) -> Self:
         prev_end = self.get_end()
         arc_len = self.get_arc_length()
-        if tip_len >= self.max_tip_length_to_length_ratio * arc_len:
         tip_len = self.get_stroke_width() * self.tip_width_ratio * self.tip_len_to_width
+        if tip_len >= self.max_tip_length_to_length_ratio * arc_len or arc_len == 0:
             alpha = self.max_tip_length_to_length_ratio
         else:
             alpha = tip_len / arc_len
