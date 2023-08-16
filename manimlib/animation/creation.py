@@ -190,6 +190,7 @@ class ShowIncreasingSubsets(Animation):
 
     def interpolate_mobject(self, alpha: float) -> None:
         n_submobs = len(self.all_submobs)
+        alpha = self.rate_func(alpha)
         index = int(self.int_func(alpha * n_submobs))
         self.update_submobject_list(index)
 
