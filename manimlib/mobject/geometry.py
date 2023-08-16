@@ -673,13 +673,13 @@ class Arrow(Line):
         stroke_width: float = 5,
         buff: float = 0.25,
         tip_width_ratio: float = 5,
-        width_to_tip_len: float = 0.0075,
+        tip_len_to_width: float = 0.0075,
         max_tip_length_to_length_ratio: float = 0.3,
         max_width_to_length_ratio: float = 8.0,
         **kwargs,
     ):
         self.tip_width_ratio = tip_width_ratio
-        self.width_to_tip_len = width_to_tip_len
+        self.tip_len_to_width = tip_len_to_width
         self.max_tip_length_to_length_ratio = max_tip_length_to_length_ratio
         self.max_width_to_length_ratio = max_width_to_length_ratio
         super().__init__(
@@ -705,8 +705,8 @@ class Arrow(Line):
     def insert_tip_anchor(self) -> Self:
         prev_end = self.get_end()
         arc_len = self.get_arc_length()
-        tip_len = self.get_stroke_width() * self.width_to_tip_len * self.tip_width_ratio
         if tip_len >= self.max_tip_length_to_length_ratio * arc_len:
+        tip_len = self.get_stroke_width() * self.tip_width_ratio * self.tip_len_to_width
             alpha = self.max_tip_length_to_length_ratio
         else:
             alpha = tip_len / arc_len
