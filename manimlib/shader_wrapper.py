@@ -50,6 +50,8 @@ class ShaderWrapper(object):
         self.shader_folder = shader_folder
         self.depth_test = depth_test
         self.render_primitive = render_primitive
+        
+        self.texture_paths = texture_paths
 
         self.program_uniform_mirror: UniformDict = dict()
         self.bind_to_mobject_uniforms(mobject_uniforms or dict())
@@ -63,9 +65,20 @@ class ShaderWrapper(object):
 
     def init_program_code(self) -> None:
         def get_code(name: str) -> str | None:
-            return get_shader_code_from_file(
+            code = get_shader_code_from_file(
                 os.path.join(self.shader_folder, f"{name}.glsl")
             )
+            
+            if self.texture_paths is not None:
+                for k in self.texture_paths:
+                    if k.startswith("L"):
+                        code = code.replace("LightTexture","k")
+                    elif k.startswith("D"):
+                        code = code.replace("DarkTexture","k")
+                    elif k.startswith("T"):
+                        code = code.replace("Texture","k")
+            
+            return code
 
         self.program_code: dict[str, str | None] = {
             "vertex_shader": get_code("vert"),

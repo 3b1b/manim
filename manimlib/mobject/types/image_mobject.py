@@ -34,7 +34,9 @@ class ImageMobject(Mobject):
         self.height = height
         self.image_path = get_full_raster_image_path(filename)
         self.image = Image.open(self.image_path)
-        super().__init__(texture_paths={"Texture": self.image_path}, **kwargs)
+        _id = id(self)
+        key = "T%d" % (_id)
+        super().__init__(texture_paths={key: self.image_path}, **kwargs)
 
     def init_data(self) -> None:
         super().init_data(length=4)

@@ -302,9 +302,12 @@ class TexturedSurface(Surface):
         else:
             self.num_textures = 2
 
+        _id = id(self)
+        key_light = "L%d"%(_id)
+        key_dark = "D%d"%(_id)
         texture_paths = {
-            "LightTexture": get_full_raster_image_path(image_file),
-            "DarkTexture": get_full_raster_image_path(dark_image_file),
+            key_light: get_full_raster_image_path(image_file),
+            key_dark: get_full_raster_image_path(dark_image_file),
         }
 
         self.uv_surface = uv_surface
