@@ -69,14 +69,14 @@ class ShaderWrapper(object):
                 os.path.join(self.shader_folder, f"{name}.glsl")
             )
             
-            if self.texture_paths is not None:
+            if code is not None and self.texture_paths is not None:
                 for k in self.texture_paths:
                     if k.startswith("L"):
-                        code = code.replace("LightTexture","k")
+                        code = code.replace("LightTexture",k)
                     elif k.startswith("D"):
-                        code = code.replace("DarkTexture","k")
+                        code = code.replace("DarkTexture",k)
                     elif k.startswith("T"):
-                        code = code.replace("Texture","k")
+                        code = code.replace("Texture",k)
             
             return code
 
