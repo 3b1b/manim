@@ -83,6 +83,7 @@ class Mobject(object):
         # If true, the mobject will not get rotated according to camera position
         is_fixed_in_frame: bool = False,
         depth_test: bool = False,
+        zorder: int = 0,
     ):
         self.color = color
         self.opacity = opacity
@@ -90,6 +91,8 @@ class Mobject(object):
         self.texture_paths = texture_paths
         self._is_fixed_in_frame = is_fixed_in_frame
         self.depth_test = depth_test
+        self.zorder = zorder
+        self._scene_order = 0
 
         # Internal state
         self.submobjects: list[Mobject] = []
