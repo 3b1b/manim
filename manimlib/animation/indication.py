@@ -244,7 +244,8 @@ class VShowPassingFlash(Animation):
         gaussian = np.exp(-0.5 * zs * zs)
         gaussian[abs(xs - mu) > 3 * sigma] = 0
 
-        submobject.set_stroke(width=widths * gaussian)
+        if len(widths * gaussian) !=0:
+            submobject.set_stroke(width=widths * gaussian)
 
 
     def finish(self) -> None:
