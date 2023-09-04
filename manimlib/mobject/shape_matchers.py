@@ -27,13 +27,20 @@ class SurroundingRectangle(Rectangle):
         color: ManimColor = YELLOW,
         **kwargs
     ):
-        super().__init__(
-            width=mobject.get_width() + 2 * buff,
-            height=mobject.get_height() + 2 * buff,
-            color=color,
-            **kwargs
-        )
-        self.move_to(mobject)
+        super().__init__(color=color, **kwargs)
+        self.buff = buff
+        self.surround(mobject)
+
+    def surround(self, mobject, buff=None) -> Self:
+        self.mobject = mobject
+        self.buff = buff if buff is not None else self.buff
+        super().surround(mobject, self.buff)
+        return self
+
+    def set_buff(self, buff) -> Self:
+        self.buff = buff
+        self.surround(self.mobject)
+        return self
 
 
 class BackgroundRectangle(SurroundingRectangle):

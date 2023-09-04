@@ -7,7 +7,7 @@ import numpy as np
 
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, OUT, RIGHT, UL, UP, UR
 from manimlib.constants import GREY_A, RED, WHITE, BLACK
-from manimlib.constants import MED_SMALL_BUFF
+from manimlib.constants import MED_SMALL_BUFF, SMALL_BUFF
 from manimlib.constants import DEGREES, PI, TAU
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import DashedVMobject
@@ -1045,6 +1045,12 @@ class Rectangle(Polygon):
         super().__init__(UR, UL, DL, DR, **kwargs)
         self.set_width(width, stretch=True)
         self.set_height(height, stretch=True)
+
+    def surround(self, mobject, buff=SMALL_BUFF) -> Self:
+        target_shape = np.array(mobject.get_shape()) + 2 * buff
+        self.set_shape(*target_shape)
+        self.move_to(mobject)
+        return self
 
 
 class Square(Rectangle):

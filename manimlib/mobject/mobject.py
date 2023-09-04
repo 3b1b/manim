@@ -1540,6 +1540,9 @@ class Mobject(object):
     def get_depth(self) -> float:
         return self.length_over_dim(2)
 
+    def get_shape(self) -> Tuple[float]:
+        return tuple(self.length_over_dim(dim) for dim in range(3))
+
     def get_coord(self, dim: int, direction: Vect3 = ORIGIN) -> float:
         """
         Meant to generalize get_x, get_y, get_z
