@@ -117,6 +117,10 @@ class DotCloud(PMobject):
     def get_radius(self) -> float:
         return self.get_radii().max()
 
+    def scale_radii(self, scale_factor: float) -> Self:
+        self.set_radius(scale_factor * self.get_radii())
+        return self
+
     def set_glow_factor(self, glow_factor: float) -> Self:
         self.uniforms["glow_factor"] = glow_factor
         return self
