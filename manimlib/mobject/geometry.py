@@ -13,6 +13,7 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import DashedVMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.utils.bezier import quadratic_bezier_points_for_arc
 from manimlib.utils.iterables import adjacent_n_tuples
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.simple_functions import clip
@@ -26,6 +27,7 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotate_vector
 from manimlib.utils.space_ops import rotation_matrix_transpose
+from manimlib.utils.space_ops import rotation_about_z
 
 from typing import TYPE_CHECKING
 
@@ -213,27 +215,10 @@ class Arc(TipableVMobject):
     ):
         super().__init__(**kwargs)
 
-        self.set_points(Arc.create_quadratic_bezier_points(
-            angle=angle,
-            start_angle=start_angle,
-            n_components=n_components
-        ))
+        self.set_points(quadratic_bezier_points_for_arc(angle, n_components))
+        self.rotate(start_angle, about_point=ORIGIN)
         self.scale(radius, about_point=ORIGIN)
         self.shift(arc_center)
-
-    @staticmethod
-    def create_quadratic_bezier_points(
-        angle: float,
-        start_angle: float = 0,
-        n_components: int = 8
-    ) -> Vect3Array:
-        n_points = 2 * n_components + 1
-        angles = np.linspace(start_angle, start_angle + angle, n_points)
-        points = np.array([np.cos(angles), np.sin(angles), np.zeros(n_points)]).T
-        # Adjust handles
-        theta = angle / n_components
-        points[1::2] /= np.cos(theta / 2)
-        return points
 
     def get_arc_center(self) -> Vect3:
         """
@@ -448,8 +433,8 @@ class Annulus(VMobject):
         )
 
         self.radius = outer_radius
-        outer_path = outer_radius * Arc.create_quadratic_bezier_points(TAU, 0)
-        inner_path = inner_radius * Arc.create_quadratic_bezier_points(-TAU, 0)
+        outer_path = outer_radius * quadratic_bezier_points_for_arc(TAU)
+        inner_path = inner_radius * quadratic_bezier_points_for_arc(-TAU)
         self.add_subpath(outer_path)
         self.add_subpath(inner_path)
         self.shift(center)
@@ -490,10 +475,9 @@ class Line(TipableVMobject):
             alpha = (PI - path_arc) / 2
             center = start + radius * normalize(rotate_vector(end - start, alpha))
 
-            raw_arc_points = Arc.create_quadratic_bezier_points(
-                angle=path_arc - 2 * buff / radius,
-                start_angle=angle_of_vector(start - center) + buff / radius,
-            )
+            raw_arc_points = quadratic_bezier_points_for_arc(path_arc - 2 * buff / radius)
+            rot_matrix = rotation_about_z(angle_of_vector(start - center) + buff / radius)
+            raw_arc_points = raw_arc_points @ rot_matrix.T
             if neg:
                 raw_arc_points = raw_arc_points[::-1]
             self.set_points(center + radius * raw_arc_points)
@@ -817,7 +801,7 @@ class FillArrow(Line):
             R = (-b + np.sqrt(b**2 - 4 * a * c)) / (2 * a)
 
             # Find arc points
-            points1 = Arc.create_quadratic_bezier_points(path_arc)
+            points1 = quadratic_bezier_points_for_arc(path_arc)
             points2 = np.array(points1[::-1])
             points1 *= (R + thickness / 2)
             points2 *= (R - thickness / 2)

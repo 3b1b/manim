@@ -171,6 +171,16 @@ def match_interpolate(
     )
 
 
+def quadratic_bezier_points_for_arc(angle: float, n_components: int = 8):
+    n_points = 2 * n_components + 1
+    angles = np.linspace(0, angle, n_points)
+    points = np.array([np.cos(angles), np.sin(angles), np.zeros(n_points)]).T
+    # Adjust handles
+    theta = angle / n_components
+    points[1::2] /= np.cos(theta / 2)
+    return points
+
+
 def approx_smooth_quadratic_bezier_handles(
     points: FloatArray
 ) -> FloatArray:
