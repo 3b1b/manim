@@ -21,8 +21,9 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.bezier import find_intersection
-from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.bezier import outer_interpolate
+from manimlib.utils.bezier import partial_quadratic_bezier_points
+from manimlib.utils.bezier import quadratic_bezier_points_for_arc
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.iterables import make_even
@@ -39,6 +40,7 @@ from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import line_intersects_path
 from manimlib.utils.space_ops import midpoint
 from manimlib.utils.space_ops import normalize_along_axis
+from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import poly_line_length
 from manimlib.utils.space_ops import z_to_vector
 from manimlib.shader_wrapper import ShaderWrapper
@@ -546,6 +548,18 @@ class VMobject(Mobject):
         else:
             new_handle = self.get_reflection_of_last_handle()
         self.add_cubic_bezier_curve_to(new_handle, handle, point)
+        return self
+
+    def add_arc_to(self, point: Vect3, angle: float, n_components: int = 8) -> Self:
+        self.throw_error_if_no_points()
+        arc_points = quadratic_bezier_points_for_arc(angle, n_components)
+        target_vect = point - self.get_end()
+        curr_vect = arc_points[-1] - arc_points[0]
+
+        arc_points = arc_points @ rotation_between_vectors(curr_vect, target_vect).T
+        arc_points *= get_norm(target_vect) / get_norm(curr_vect)
+        arc_points += (self.get_end() - arc_points[0])
+        self.append_points(arc_points[1:])
         return self
 
     def has_new_path_started(self) -> bool:
