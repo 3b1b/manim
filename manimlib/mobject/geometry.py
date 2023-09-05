@@ -13,7 +13,9 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import DashedVMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.utils.bezier import bezier
 from manimlib.utils.bezier import quadratic_bezier_points_for_arc
+from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.iterables import adjacent_n_tuples
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.simple_functions import clip
@@ -684,7 +686,7 @@ class Arrow(Line):
         if self.path_arc > 0 and self.buff > 0:
             self.insert_n_curves(10)  # Is this needed?
         self.pointwise_become_partial(self, 0.0, 1.0 - alpha)
-        self.append_points([self.get_end(), self.get_end()])
+        self.add_line_to(self.get_end())
         self.add_line_to(prev_end)
         self.n_tip_points = 3
         return self
