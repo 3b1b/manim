@@ -791,12 +791,14 @@ class VMobject(Mobject):
         curve_func = self.get_nth_curve_function(n)
         return curve_func(residue)
 
-    def point_from_proportion(self, alpha: float) -> Vect3:
-        if alpha <= 0:
-            return self.get_start()
-        elif alpha >= 1:
-            return self.get_end()
-
+    def curve_and_prop_of_partial_point(self, alpha) -> Tuple[int, float]:
+        """
+        If you want a point a proportion alpha along the curve, this
+        gives you the index of the appropriate bezier curve, together
+        with the proportion along that curve you'd need to travel
+        """
+        if alpha == 0:
+            return (0, 0.0)
         partials: list[float] = [0]
         for tup in self.get_bezier_tuples():
             if self.consider_points_equal(tup[0], tup[1]):
@@ -808,14 +810,24 @@ class VMobject(Mobject):
             partials.append(partials[-1] + arclen)
         full = partials[-1]
         if full == 0:
-            return self.get_start()
+            return len(partials), 1.0
         # First index where the partial length is more than alpha times the full length
-        i = next(
+        index = next(
             (i for i, x in enumerate(partials) if x >= full * alpha),
-            len(partials)  # Default
+            len(partials) - 1  # Default
         )
-        residue = float(inverse_interpolate(partials[i - 1] / full, partials[i] / full, alpha))
-        return self.get_nth_curve_function(i - 1)(residue)
+        residue = float(inverse_interpolate(
+            partials[index - 1] / full, partials[index] / full, alpha
+        ))
+        return index - 1, residue
+
+    def point_from_proportion(self, alpha: float) -> Vect3:
+        if alpha <= 0:
+            return self.get_start()
+        elif alpha >= 1:
+            return self.get_end()
+        index, residue = self.curve_and_prop_of_partial_point(alpha)
+        return self.get_nth_curve_function(index)(residue)
 
     def get_anchors_and_handles(self) -> list[Vect3]:
         """
