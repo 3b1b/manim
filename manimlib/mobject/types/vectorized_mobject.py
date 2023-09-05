@@ -559,7 +559,7 @@ class VMobject(Mobject):
 
         # Assign default value for n_components
         if n_components is None:
-            n_components = int(np.ceil(8 * angle / TAU))
+            n_components = int(np.ceil(8 * abs(angle) / TAU))
 
         arc_points = quadratic_bezier_points_for_arc(angle, n_components)
         target_vect = point - self.get_end()
