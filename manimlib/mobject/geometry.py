@@ -451,6 +451,7 @@ class Line(TipableVMobject):
     ):
         super().__init__(**kwargs)
         self.path_arc = path_arc
+        self.buff = buff
         self.set_start_and_end_attrs(start, end)
         self.set_points_by_ends(self.start, self.end, buff, path_arc)
 
@@ -461,31 +462,15 @@ class Line(TipableVMobject):
         buff: float = 0,
         path_arc: float = 0
     ) -> Self:
-        vect = end - start
-        dist = get_norm(vect)
-        if np.isclose(dist, 0):
-            self.set_points_as_corners([start, end])
-            return self
-        if path_arc:
-            neg = path_arc < 0
-            if neg:
-                path_arc = -path_arc
-                start, end = end, start
-            radius = (dist / 2) / math.sin(path_arc / 2)
-            alpha = (PI - path_arc) / 2
-            center = start + radius * normalize(rotate_vector(end - start, alpha))
+        self.clear_points()
+        self.start_new_path(start)
+        self.add_arc_to(end, path_arc)
 
-            raw_arc_points = quadratic_bezier_points_for_arc(path_arc - 2 * buff / radius)
-            rot_matrix = rotation_about_z(angle_of_vector(start - center) + buff / radius)
-            raw_arc_points = raw_arc_points @ rot_matrix.T
-            if neg:
-                raw_arc_points = raw_arc_points[::-1]
-            self.set_points(center + radius * raw_arc_points)
-        else:
-            if buff > 0 and dist > 0:
-                start = start + vect * (buff / dist)
-                end = end - vect * (buff / dist)
-            self.set_points_as_corners([start, end])
+        # Apply buffer
+        if buff > 0:
+            length = self.get_arc_length()
+            alpha = min(buff / length, 0.5)
+            self.pointwise_become_partial(self, alpha, 1 - alpha)
         return self
 
     def set_path_arc(self, new_value: float) -> Self:
@@ -666,6 +651,7 @@ class Arrow(Line):
         self.tip_len_to_width = tip_len_to_width
         self.max_tip_length_to_length_ratio = max_tip_length_to_length_ratio
         self.max_width_to_length_ratio = max_width_to_length_ratio
+        self.n_tip_points = 3
         super().__init__(
             start, end,
             stroke_color=stroke_color,
@@ -694,10 +680,13 @@ class Arrow(Line):
             alpha = self.max_tip_length_to_length_ratio
         else:
             alpha = tip_len / arc_len
-        self.pointwise_become_partial(self, 0, 1 - alpha)
-        # Dumb that this is needed
-        self.start_new_path(self.point_from_proportion(1 - 1e-5))
+
+        if self.path_arc > 0 and self.buff > 0:
+            self.insert_n_curves(10)  # Is this needed?
+        self.pointwise_become_partial(self, 0.0, 1.0 - alpha)
+        self.append_points([self.get_end(), self.get_end()])
         self.add_line_to(prev_end)
+        self.n_tip_points = 3
         return self
 
     @Mobject.affects_data
@@ -708,8 +697,9 @@ class Arrow(Line):
             float(self.get_stroke_width()),
             self.max_width_to_length_ratio * self.get_length(),
         )
-        self.data['stroke_width'][:-3] = self.data['stroke_width'][0]
-        self.data['stroke_width'][-3:, 0] = tip_width * np.linspace(1, 0, 3)
+        ntp = self.n_tip_points
+        self.data['stroke_width'][:-ntp] = self.data['stroke_width'][0]
+        self.data['stroke_width'][-ntp:, 0] = tip_width * np.linspace(1, 0, ntp)
         return self
 
     def reset_tip(self) -> Self:
