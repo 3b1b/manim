@@ -775,8 +775,8 @@ class VMobject(Mobject):
         return self.get_subpaths_from_points(self.get_points())
 
     def get_nth_curve_points(self, n: int) -> Vect3Array:
-        assert(n < self.get_num_curves())
-        return self.get_points()[2 * n : 2 * n + 3]
+        assert n < self.get_num_curves()
+        return self.get_points()[2 * n:2 * n + 3]
 
     def get_nth_curve_function(self, n: int) -> Callable[[float], Vect3]:
         return bezier(self.get_nth_curve_points(n))
