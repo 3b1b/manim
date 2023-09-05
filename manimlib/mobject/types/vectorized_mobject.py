@@ -11,6 +11,7 @@ from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import DEGREES
 from manimlib.constants import JOINT_TYPE_MAP
 from manimlib.constants import ORIGIN, OUT
+from manimlib.constants import TAU
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.bezier import bezier
@@ -378,7 +379,7 @@ class VMobject(Mobject):
         data = self.data if self.has_points() else self._data_defaults
         return rgb_to_hex(data["stroke_rgba"][0, :3])
 
-    def get_stroke_width(self) -> float | np.ndarray:
+    def get_stroke_width(self) -> float:
         data = self.data if self.has_points() else self._data_defaults
         return data["stroke_width"][0, 0]
 
@@ -550,8 +551,16 @@ class VMobject(Mobject):
         self.add_cubic_bezier_curve_to(new_handle, handle, point)
         return self
 
-    def add_arc_to(self, point: Vect3, angle: float, n_components: int = 8) -> Self:
+    def add_arc_to(self, point: Vect3, angle: float, n_components: int | None = None, threshold: float = 1e-3) -> Self:
         self.throw_error_if_no_points()
+        if abs(angle) < threshold:
+            self.add_line_to(point)
+            return self
+
+        # Assign default value for n_components
+        if n_components is None:
+            n_components = int(np.ceil(8 * angle / TAU))
+
         arc_points = quadratic_bezier_points_for_arc(angle, n_components)
         target_vect = point - self.get_end()
         curr_vect = arc_points[-1] - arc_points[0]
