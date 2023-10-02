@@ -1,2 +1,0 @@
-graft manimlib
-recursive-exclude manimlib *.pyc *.DS_Store
