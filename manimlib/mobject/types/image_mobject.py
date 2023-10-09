@@ -25,7 +25,7 @@ class ImageMobject(Mobject):
         ('opacity', np.float32, (1,)),
     ]
 
-    def __init__(        
+    def __init__(
         self,
         filename: str,
         height: float = 4.0,
