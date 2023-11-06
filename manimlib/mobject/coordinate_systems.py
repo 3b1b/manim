@@ -175,6 +175,7 @@ class CoordinateSystem(ABC):
         self,
         function: Callable[[float], float],
         x_range: Sequence[float] | None = None,
+        bind: bool = False,
         **kwargs
     ) -> ParametricCurve:
         x_range = x_range or self.x_range
@@ -195,6 +196,10 @@ class CoordinateSystem(ABC):
         )
         graph.underlying_function = function
         graph.x_range = x_range
+
+        if bind:
+            self.bind_graph_to_func(graph, function)
+
         return graph
 
     def get_parametric_curve(
