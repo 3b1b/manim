@@ -27,7 +27,7 @@ class Window(PygletWindow):
         self,
         scene: Scene,
         size: tuple[int, int] = (1280, 720),
-        samples = 0
+        samples: int = 0
     ):
         scene.window = self
         super().__init__(size=size, samples=samples)
@@ -47,9 +47,12 @@ class Window(PygletWindow):
         self.to_default_position()
 
     def to_default_position(self):
-        self.size = self.default_size
         self.position = self.default_position
-        self.swap_buffers()
+        # Hack. Sometimes, namely when configured to open in a separate window,
+        # the window needs to be resized to display correctly.
+        w, h = self.default_size
+        self.size = (w - 1, h - 1)
+        self.size = (w, h)
 
     def find_initial_position(self, size: tuple[int, int]) -> tuple[int, int]:
         custom_position = get_customization()["window_position"]
