@@ -529,7 +529,7 @@ class ThreeDAxes(Axes):
         z_range: RangeSpecifier = (-4.0, 4.0, 1.0),
         z_axis_config: dict = dict(),
         z_normal: Vect3 = DOWN,
-        depth: float = 6.0,
+        depth: float | None = None,
         flat_stroke: bool = False,
         **kwargs
     ):
