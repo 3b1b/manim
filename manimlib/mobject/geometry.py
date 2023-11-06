@@ -654,6 +654,7 @@ class Arrow(Line):
         self.max_tip_length_to_length_ratio = max_tip_length_to_length_ratio
         self.max_width_to_length_ratio = max_width_to_length_ratio
         self.n_tip_points = 3
+        self.original_stroke_width = stroke_width
         super().__init__(
             start, end,
             stroke_color=stroke_color,
@@ -695,10 +696,11 @@ class Arrow(Line):
     def create_tip_with_stroke_width(self) -> Self:
         if self.get_num_points() < 3:
             return self
-        tip_width = self.tip_width_ratio * min(
-            float(self.get_stroke_width()),
+        stroke_width = min(
+            self.original_stroke_width,
             self.max_width_to_length_ratio * self.get_length(),
         )
+        tip_width = self.tip_width_ratio * stroke_width
         ntp = self.n_tip_points
         self.data['stroke_width'][:-ntp] = self.data['stroke_width'][0]
         self.data['stroke_width'][-ntp:, 0] = tip_width * np.linspace(1, 0, ntp)
@@ -718,6 +720,7 @@ class Arrow(Line):
         *args, **kwargs
     ) -> Self:
         super().set_stroke(color=color, width=width, *args, **kwargs)
+        self.original_stroke_width = self.get_stroke_width()
         if self.has_points():
             self.reset_tip()
         return self
