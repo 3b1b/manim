@@ -139,6 +139,8 @@ class DrawBorderThenFill(Animation):
             submob.pointwise_become_partial(outline, 0, subalpha)
         else:
             submob.interpolate(outline, start, subalpha)
+        submob.note_changed_stroke()
+        submob.note_changed_fill()
 
 
 class Write(DrawBorderThenFill):
