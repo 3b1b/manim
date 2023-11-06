@@ -74,6 +74,7 @@ class Animation(object):
             # It is, however, okay and desirable to call
             # the internal updaters of self.starting_mobject,
             # or any others among self.get_all_mobjects()
+            self.mobject_was_updating = not self.mobject.updating_suspended
             self.mobject.suspend_updating()
         self.families = list(self.get_all_families_zipped())
         self.interpolate(0)
@@ -81,7 +82,7 @@ class Animation(object):
     def finish(self) -> None:
         self.interpolate(self.final_alpha_value)
         self.mobject.set_animating_status(False)
-        if self.suspend_mobject_updating:
+        if self.suspend_mobject_updating and self.mobject_was_updating:
             self.mobject.resume_updating()
 
     def clean_up_from_scene(self, scene: Scene) -> None:
