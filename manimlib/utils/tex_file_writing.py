@@ -17,15 +17,13 @@ SAVED_TEX_CONFIG = {}
 
 def get_tex_template_config(template_name: str) -> dict[str, str]:
     name = template_name.replace(" ", "_").lower()
-    with open(os.path.join(
+    template_path = get_custom_config()["tex"]["template_file"] or os.path.join(
         get_manim_dir(), "manimlib", "tex_templates.yml"
-    ), encoding="utf-8") as tex_templates_file:
+    )
+    with open(template_path, encoding="utf-8") as tex_templates_file:
         templates_dict = yaml.safe_load(tex_templates_file)
     if name not in templates_dict:
-        log.warning(
-            "Cannot recognize template '%s', falling back to 'default'.",
-            name
-        )
+        log.warning("Cannot recognize template '%s', falling back to 'default'.", name)
         name = "default"
     return templates_dict[name]
 
@@ -43,17 +41,18 @@ def get_tex_config() -> dict[str, str]:
     if not SAVED_TEX_CONFIG:
         template_name = get_custom_config()["style"]["tex_template"]
         template_config = get_tex_template_config(template_name)
-        SAVED_TEX_CONFIG.update({
-            "template": template_name,
-            "compiler": template_config["compiler"],
-            "preamble": template_config["preamble"]
-        })
+        SAVED_TEX_CONFIG.update(
+            {
+                "template": template_name,
+                "compiler": template_config["compiler"],
+                "preamble": template_config["preamble"],
+            }
+        )
     return SAVED_TEX_CONFIG
 
 
 def tex_content_to_svg_file(
-    content: str, template: str, additional_preamble: str,
-    short_tex: str
+    content: str, template: str, additional_preamble: str, short_tex: str
 ) -> str:
     tex_config = get_tex_config()
     if not template or template == tex_config["template"]:
@@ -66,17 +65,20 @@ def tex_content_to_svg_file(
 
     if additional_preamble:
         preamble += "\n" + additional_preamble
-    full_tex = "\n\n".join((
-        "\\documentclass[preview]{standalone}",
-        preamble,
-        "\\begin{document}",
-        content,
-        "\\end{document}"
-    )) + "\n"
-
-    svg_file = os.path.join(
-        get_tex_dir(), hash_string(full_tex) + ".svg"
+    full_tex = (
+        "\n\n".join(
+            (
+                "\\documentclass[preview]{standalone}",
+                preamble,
+                "\\begin{document}",
+                content,
+                "\\end{document}",
+            )
+        )
+        + "\n"
     )
+
+    svg_file = os.path.join(get_tex_dir(), hash_string(full_tex) + ".svg")
     if not os.path.exists(svg_file):
         # If svg doesn't exist, create it
         with display_during_execution("Writing " + short_tex):
@@ -92,9 +94,7 @@ def create_tex_svg(full_tex: str, svg_file: str, compiler: str) -> None:
         program = "xelatex -no-pdf"
         dvi_ext = ".xdv"
     else:
-        raise NotImplementedError(
-            f"Compiler '{compiler}' is not implemented"
-        )
+        raise NotImplementedError(f"Compiler '{compiler}' is not implemented")
 
     # Write tex file
     root, _ = os.path.splitext(svg_file)
@@ -102,18 +102,20 @@ def create_tex_svg(full_tex: str, svg_file: str, compiler: str) -> None:
         tex_file.write(full_tex)
 
     # tex to dvi
-    if os.system(" ".join((
-        program,
-        "-interaction=batchmode",
-        "-halt-on-error",
-        f"-output-directory=\"{os.path.dirname(svg_file)}\"",
-        f"\"{root}.tex\"",
-        ">",
-        os.devnull
-    ))):
-        log.error(
-            "LaTeX Error!  Not a worry, it happens to the best of us."
+    if os.system(
+        " ".join(
+            (
+                program,
+                "-interaction=batchmode",
+                "-halt-on-error",
+                f'-output-directory="{os.path.dirname(svg_file)}"',
+                f'"{root}.tex"',
+                ">",
+                os.devnull,
+            )
         )
+    ):
+        log.error("LaTeX Error!  Not a worry, it happens to the best of us.")
         error_str = ""
         with open(root + ".log", "r", encoding="utf-8") as log_file:
             error_match_obj = re.search(r"(?<=\n! ).*\n.*\n", log_file.read())
@@ -125,17 +127,21 @@ def create_tex_svg(full_tex: str, svg_file: str, compiler: str) -> None:
         raise LatexError(error_str)
 
     # dvi to svg
-    os.system(" ".join((
-        "dvisvgm",
-        f"\"{root}{dvi_ext}\"",
-        "-n",
-        "-v",
-        "0",
-        "-o",
-        f"\"{svg_file}\"",
-        ">",
-        os.devnull
-    )))
+    os.system(
+        " ".join(
+            (
+                "dvisvgm",
+                f'"{root}{dvi_ext}"',
+                "-n",
+                "-v",
+                "0",
+                "-o",
+                f'"{svg_file}"',
+                ">",
+                os.devnull,
+            )
+        )
+    )
 
     # Cleanup superfluous documents
     for ext in (".tex", dvi_ext, ".log", ".aux"):
@@ -152,7 +158,7 @@ def display_during_execution(message: str):
     to_print = message.replace("\n", " ")
     max_characters = os.get_terminal_size().columns - 1
     if len(to_print) > max_characters:
-        to_print = to_print[:max_characters - 3] + "..."
+        to_print = to_print[: max_characters - 3] + "..."
     try:
         print(to_print, end="\r")
         yield
