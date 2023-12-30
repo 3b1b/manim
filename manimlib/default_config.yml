@@ -17,6 +17,8 @@ directories:
   # specify them elsewhere,
   temporary_storage: ""
 universal_import_line: "from manimlib import *"
+tex:
+  template_file: ""
 style:
   tex_template: "default"
   font: "Consolas"
