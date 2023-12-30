@@ -17,9 +17,10 @@ SAVED_TEX_CONFIG = {}
 
 def get_tex_template_config(template_name: str) -> dict[str, str]:
     name = template_name.replace(" ", "_").lower()
-    with open(os.path.join(
+    template_file = get_custom_config()["tex"]["template_file"] or os.path.join(
         get_manim_dir(), "manimlib", "tex_templates.yml"
-    ), encoding="utf-8") as tex_templates_file:
+    )
+    with open(template_file, encoding="utf-8") as tex_templates_file:
         templates_dict = yaml.safe_load(tex_templates_file)
     if name not in templates_dict:
         log.warning(
