@@ -1,7 +1,7 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Quick Start" href="quickstart.html" /><link rel="prev" title="Manim’s documentation" href="../index.html" />
 
     <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.0.3, furo 2020.10.05.beta9"/>
@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?d64d3d3d50045e2d97ce9313">
-    <link rel="stylesheet" href="../_static/pygments.css?d64d3d3d50045e2d97ce9313">
+    <link rel="stylesheet" href="../_static/styles/default.css?df490c9fc5acaea8aac7fd06">
+    <link rel="stylesheet" href="../_static/pygments.css?df490c9fc5acaea8aac7fd06">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?d64d3d3d50045e2d97ce9313"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?df490c9fc5acaea8aac7fd06"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -130,10 +130,33 @@
 <li><p><a class="reference external" href="https://www.latex-project.org">LaTeX</a> (optional, if you want to use LaTeX)</p></li>
 <li><p><a class="reference external" href="https://pango.org">Pango</a> (only for Linux)</p></li>
 </ul>
+<section id="install-ffmpeg">
+<h2>Install FFmpeg<a class="headerlink" href="#install-ffmpeg" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="install-ffmpeg-windows">
+<h2>Install FFmpeg Windows<a class="headerlink" href="#install-ffmpeg-windows" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-cmd notranslate"><div class="highlight"><pre><span></span>choco install ffmpeg
+</pre></div>
+</div>
+</section>
+<section id="install-ffmepeg-linux">
+<h2># Install FFmepeg Linux<a class="headerlink" href="#install-ffmepeg-linux" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>update
+$<span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ffmpeg
+$<span class="w"> </span>ffmpeg<span class="w"> </span>-version
+</pre></div>
+</div>
+</section>
+<section id="install-ffmpeg-macos">
+<h2># Install FFmpeg MacOS<a class="headerlink" href="#install-ffmpeg-macos" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Download This ZIP file <a href="#system-message-1"><span class="problematic" id="problematic-1">`</span></a><a class="reference external" href="https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full">https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full</a>.7z`(if the link is not working download this zip file from there original website)</p></li>
+</ul>
+</section>
 <section id="directly">
 <h2>Directly<a class="headerlink" href="#directly" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install manimgl</span>
-pip install manimgl
+pip<span class="w"> </span>install<span class="w"> </span>manimgl
 
 <span class="c1"># Try it out</span>
 manimgl
@@ -142,12 +165,12 @@ manimgl
 <p>If you want to hack on manimlib itself, clone this repository and in
 that directory execute:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install python requirements</span>
-pip install -e .
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 
 <span class="c1"># Try it out</span>
-manimgl example_scenes.py OpeningManimExample
+manimgl<span class="w"> </span>example_scenes.py<span class="w"> </span>OpeningManimExample
 <span class="c1"># or</span>
-manim-render example_scenes.py OpeningManimExample
+manim-render<span class="w"> </span>example_scenes.py<span class="w"> </span>OpeningManimExample
 </pre></div>
 </div>
 <p>If you run the above command and no error message appears,
@@ -162,10 +185,10 @@ FFmpeg</a>, and make sure that its path is in the PATH environment variable.</p>
 <a class="reference external" href="http://tug.org/texlive/">TeXLive-full</a> is recommended.</p></li>
 <li><p>Install the remaining Python packages.</p></li>
 </ol>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/3b1b/manim.git
-<span class="nb">cd</span> manim
-pip install -e .
-manimgl example_scenes.py OpeningManimExample
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/3b1b/manim.git
+<span class="nb">cd</span><span class="w"> </span>manim
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+manimgl<span class="w"> </span>example_scenes.py<span class="w"> </span>OpeningManimExample
 </pre></div>
 </div>
 </section>
@@ -175,11 +198,11 @@ manimgl example_scenes.py OpeningManimExample
 <li><p>Install FFmpeg and LaTeX as above.</p></li>
 <li><p>Create a conda environment using</p></li>
 </ul>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/3b1b/manim.git
-<span class="nb">cd</span> manim
-conda create -n manim <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.8
-conda activate manim
-pip install -e .
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/3b1b/manim.git
+<span class="nb">cd</span><span class="w"> </span>manim
+conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>manim<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.8
+conda<span class="w"> </span>activate<span class="w"> </span>manim
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 </pre></div>
 </div>
 </section>
@@ -232,6 +255,10 @@ pip install -e .
         <div class="toc-tree">
           <ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#install-ffmpeg">Install FFmpeg</a></li>
+<li><a class="reference internal" href="#install-ffmpeg-windows">Install FFmpeg Windows</a></li>
+<li><a class="reference internal" href="#install-ffmepeg-linux"># Install FFmepeg Linux</a></li>
+<li><a class="reference internal" href="#install-ffmpeg-macos"># Install FFmpeg MacOS</a></li>
 <li><a class="reference internal" href="#directly">Directly</a></li>
 <li><a class="reference internal" href="#directly-windows">Directly (Windows)</a></li>
 <li><a class="reference internal" href="#for-anaconda">For Anaconda</a></li>
