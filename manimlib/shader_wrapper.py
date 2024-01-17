@@ -138,6 +138,7 @@ class ShaderWrapper(object):
             self.mobject_uniforms,
             self.depth_test,
             self.render_primitive,
+            self.texture_names_to_ids,
         ]))
 
     def refresh_id(self) -> None:
