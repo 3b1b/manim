@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from moderngl.framebuffer import Framebuffer
 
 
+# Global maps updated as textures are allocated
 ID_TO_TEXTURE: dict[int, moderngl.Texture] = dict()
 PROGRAM_UNIFORM_MIRRORS: dict[int, dict[str, float | tuple]] = dict()
 
