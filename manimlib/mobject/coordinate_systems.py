@@ -22,6 +22,7 @@ from manimlib.mobject.types.dot_cloud import DotCloud
 from manimlib.mobject.types.surface import ParametricSurface
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import binary_search
 from manimlib.utils.space_ops import angle_of_vector
@@ -174,6 +175,7 @@ class CoordinateSystem(ABC):
         self,
         function: Callable[[float], float],
         x_range: Sequence[float] | None = None,
+        bind: bool = False,
         **kwargs
     ) -> ParametricCurve:
         x_range = x_range or self.x_range
@@ -194,6 +196,10 @@ class CoordinateSystem(ABC):
         )
         graph.underlying_function = function
         graph.x_range = x_range
+
+        if bind:
+            self.bind_graph_to_func(graph, function)
+
         return graph
 
     def get_parametric_curve(
@@ -239,7 +245,7 @@ class CoordinateSystem(ABC):
     def bind_graph_to_func(
         self,
         graph: VMobject,
-        func: Callable[[Vect3], Vect3],
+        func: Callable[[VectN], VectN],
         jagged: bool = False,
         get_discontinuities: Optional[Callable[[], Vect3]] = None
     ) -> VMobject:
@@ -398,9 +404,24 @@ class CoordinateSystem(ABC):
                 rect.set_fill(negative_color)
         return result
 
-    def get_area_under_graph(self, graph, x_range, fill_color=BLUE, fill_opacity=1):
-        # TODO
-        pass
+    def get_area_under_graph(self, graph, x_range, fill_color=BLUE, fill_opacity=0.5):
+        if not hasattr(graph, "x_range"):
+            raise Exception("Argument `graph` must have attribute `x_range`")
+
+        alpha_bounds = [
+            inverse_interpolate(*graph.x_range, x)
+            for x in x_range
+        ]
+        sub_graph = graph.copy()
+        sub_graph.pointwise_become_partial(graph, *alpha_bounds)
+        sub_graph.add_line_to(self.c2p(x_range[1], 0))
+        sub_graph.add_line_to(self.c2p(x_range[0], 0))
+        sub_graph.add_line_to(sub_graph.get_start())
+
+        sub_graph.set_stroke(width=0)
+        sub_graph.set_fill(fill_color, fill_opacity)
+
+        return sub_graph
 
 
 class Axes(VGroup, CoordinateSystem):
@@ -421,6 +442,7 @@ class Axes(VGroup, CoordinateSystem):
         **kwargs
     ):
         CoordinateSystem.__init__(self, x_range, y_range, **kwargs)
+        kwargs.pop("num_sampled_graph_points_per_tick", None)
         VGroup.__init__(self, **kwargs)
 
         axis_config = dict(**axis_config, unit_size=unit_size)
@@ -507,7 +529,7 @@ class ThreeDAxes(Axes):
         z_range: RangeSpecifier = (-4.0, 4.0, 1.0),
         z_axis_config: dict = dict(),
         z_normal: Vect3 = DOWN,
-        depth: float = 6.0,
+        depth: float | None = None,
         flat_stroke: bool = False,
         **kwargs
     ):
@@ -519,7 +541,7 @@ class ThreeDAxes(Axes):
             axis_config=merge_dicts_recursively(
                 self.default_axis_config,
                 self.default_z_axis_config,
-                kwargs.get("axes_config", {}),
+                kwargs.get("axis_config", {}),
                 z_axis_config
             ),
             length=depth,
@@ -549,19 +571,46 @@ class ThreeDAxes(Axes):
             axis.add(label)
         self.axis_labels = labels
 
-    def get_graph(self, func, color=BLUE_E, opacity=0.9, **kwargs):
+    def get_graph(
+        self,
+        func,
+        color=BLUE_E,
+        opacity=0.9,
+        u_range=None,
+        v_range=None,
+        **kwargs
+    ) -> ParametricSurface:
         xu = self.x_axis.get_unit_size()
         yu = self.y_axis.get_unit_size()
         zu = self.z_axis.get_unit_size()
         x0, y0, z0 = self.get_origin()
+        u_range = u_range or self.x_range[:2]
+        v_range = v_range or self.y_range[:2]
         return ParametricSurface(
             lambda u, v: [xu * u + x0, yu * v + y0, zu * func(u, v) + z0],
-            u_range=self.x_range[:2],
-            v_range=self.y_range[:2],
+            u_range=u_range,
+            v_range=v_range,
             color=color,
             opacity=opacity,
             **kwargs
         )
+
+    def get_parametric_surface(
+        self,
+        func,
+        color=BLUE_E,
+        opacity=0.9,
+        **kwargs
+    ) -> ParametricSurface:
+        surface = ParametricSurface(func, color=color, opacity=opacity, **kwargs)
+        xu = self.x_axis.get_unit_size()
+        yu = self.y_axis.get_unit_size()
+        zu = self.z_axis.get_unit_size()
+        axes = [self.x_axis, self.y_axis, self.z_axis]
+        for dim, axis in zip(range(3), axes):
+            surface.stretch(axis.get_unit_size(), dim, about_point=ORIGIN)
+        surface.shift(self.get_origin())
+        return surface
 
 
 class NumberPlane(Axes):

@@ -11,17 +11,20 @@ from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import DEGREES
 from manimlib.constants import JOINT_TYPE_MAP
 from manimlib.constants import ORIGIN, OUT
+from manimlib.constants import TAU
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.bezier import bezier
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 from manimlib.utils.bezier import approx_smooth_quadratic_bezier_handles
 from manimlib.utils.bezier import smooth_quadratic_path
+from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.bezier import find_intersection
-from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.bezier import outer_interpolate
+from manimlib.utils.bezier import partial_quadratic_bezier_points
+from manimlib.utils.bezier import quadratic_bezier_points_for_arc
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.iterables import make_even
@@ -38,6 +41,8 @@ from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import line_intersects_path
 from manimlib.utils.space_ops import midpoint
 from manimlib.utils.space_ops import normalize_along_axis
+from manimlib.utils.space_ops import rotation_between_vectors
+from manimlib.utils.space_ops import poly_line_length
 from manimlib.utils.space_ops import z_to_vector
 from manimlib.shader_wrapper import ShaderWrapper
 from manimlib.shader_wrapper import FillShaderWrapper
@@ -234,7 +239,7 @@ class VMobject(Mobject):
         stroke_opacity: float | Iterable[float] | None = None,
         stroke_rgba: Vect4 | None = None,
         stroke_width: float | Iterable[float] | None = None,
-        stroke_background: bool = True,
+        stroke_background: bool = False,
         shading: Tuple[float, float, float] | None = None,
         recurse: bool = True
     ) -> Self:
@@ -374,7 +379,7 @@ class VMobject(Mobject):
         data = self.data if self.has_points() else self._data_defaults
         return rgb_to_hex(data["stroke_rgba"][0, :3])
 
-    def get_stroke_width(self) -> float | np.ndarray:
+    def get_stroke_width(self) -> float:
         data = self.data if self.has_points() else self._data_defaults
         return data["stroke_width"][0, 0]
 
@@ -423,7 +428,7 @@ class VMobject(Mobject):
         self,
         anti_alias_width: float = 0,
         fill_border_width: float = 0,
-        recurse: bool=True
+        recurse: bool = True
     ) -> Self:
         super().apply_depth_test(recurse)
         self.set_anti_alias_width(anti_alias_width)
@@ -434,9 +439,9 @@ class VMobject(Mobject):
         self,
         anti_alias_width: float = 1.0,
         fill_border_width: float = 0.5,
-        recurse: bool=True
+        recurse: bool = True
     ) -> Self:
-        super().apply_depth_test(recurse)
+        super().deactivate_depth_test(recurse)
         self.set_anti_alias_width(anti_alias_width)
         self.set_fill(border_width=fill_border_width)
         return self
@@ -455,6 +460,9 @@ class VMobject(Mobject):
         anchors: Vect3Array,
         handles: Vect3Array,
     ) -> Self:
+        if len(anchors) == 0:
+            self.clear_points()
+            return self
         assert(len(anchors) == len(handles) + 1)
         points = resize_array(self.get_points(), 2 * len(anchors) - 1)
         points[0::2] = anchors
@@ -541,6 +549,26 @@ class VMobject(Mobject):
         else:
             new_handle = self.get_reflection_of_last_handle()
         self.add_cubic_bezier_curve_to(new_handle, handle, point)
+        return self
+
+    def add_arc_to(self, point: Vect3, angle: float, n_components: int | None = None, threshold: float = 1e-3) -> Self:
+        self.throw_error_if_no_points()
+        if abs(angle) < threshold:
+            self.add_line_to(point)
+            return self
+
+        # Assign default value for n_components
+        if n_components is None:
+            n_components = int(np.ceil(8 * abs(angle) / TAU))
+
+        arc_points = quadratic_bezier_points_for_arc(angle, n_components)
+        target_vect = point - self.get_end()
+        curr_vect = arc_points[-1] - arc_points[0]
+
+        arc_points = arc_points @ rotation_between_vectors(curr_vect, target_vect).T
+        arc_points *= get_norm(target_vect) / get_norm(curr_vect)
+        arc_points += (self.get_end() - arc_points[0])
+        self.append_points(arc_points[1:])
         return self
 
     def has_new_path_started(self) -> bool:
@@ -642,6 +670,8 @@ class VMobject(Mobject):
 
     def change_anchor_mode(self, mode: str) -> Self:
         assert(mode in ("jagged", "approx_smooth", "true_smooth"))
+        if self.get_num_points() == 0:
+            return self
         subpaths = self.get_subpaths()
         self.clear_points()
         for subpath in subpaths:
@@ -745,8 +775,8 @@ class VMobject(Mobject):
         return self.get_subpaths_from_points(self.get_points())
 
     def get_nth_curve_points(self, n: int) -> Vect3Array:
-        assert(n < self.get_num_curves())
-        return self.get_points()[2 * n : 2 * n + 3]
+        assert n < self.get_num_curves()
+        return self.get_points()[2 * n:2 * n + 3]
 
     def get_nth_curve_function(self, n: int) -> Callable[[float], Vect3]:
         return bezier(self.get_nth_curve_points(n))
@@ -761,12 +791,14 @@ class VMobject(Mobject):
         curve_func = self.get_nth_curve_function(n)
         return curve_func(residue)
 
-    def point_from_proportion(self, alpha: float) -> Vect3:
-        if alpha <= 0:
-            return self.get_start()
-        elif alpha >= 1:
-            return self.get_end()
-
+    def curve_and_prop_of_partial_point(self, alpha) -> Tuple[int, float]:
+        """
+        If you want a point a proportion alpha along the curve, this
+        gives you the index of the appropriate bezier curve, together
+        with the proportion along that curve you'd need to travel
+        """
+        if alpha == 0:
+            return (0, 0.0)
         partials: list[float] = [0]
         for tup in self.get_bezier_tuples():
             if self.consider_points_equal(tup[0], tup[1]):
@@ -778,14 +810,24 @@ class VMobject(Mobject):
             partials.append(partials[-1] + arclen)
         full = partials[-1]
         if full == 0:
-            return self.get_start()
+            return len(partials), 1.0
         # First index where the partial length is more than alpha times the full length
-        i = next(
+        index = next(
             (i for i, x in enumerate(partials) if x >= full * alpha),
-            len(partials)  # Default
+            len(partials) - 1  # Default
         )
-        residue = float(inverse_interpolate(partials[i - 1] / full, partials[i] / full, alpha))
-        return self.get_nth_curve_function(i - 1)(residue)
+        residue = float(inverse_interpolate(
+            partials[index - 1] / full, partials[index] / full, alpha
+        ))
+        return index - 1, residue
+
+    def point_from_proportion(self, alpha: float) -> Vect3:
+        if alpha <= 0:
+            return self.get_start()
+        elif alpha >= 1:
+            return self.get_end()
+        index, residue = self.curve_and_prop_of_partial_point(alpha)
+        return self.get_nth_curve_function(index)(residue)
 
     def get_anchors_and_handles(self) -> list[Vect3]:
         """
@@ -814,14 +856,16 @@ class VMobject(Mobject):
         return np.vstack(new_points)
 
     def get_arc_length(self, n_sample_points: int | None = None) -> float:
-        if n_sample_points is None:
-            n_sample_points = 4 * self.get_num_curves() + 1
-        points = np.array([
-            self.point_from_proportion(a)
-            for a in np.linspace(0, 1, n_sample_points)
-        ])
-        diffs = points[1:] - points[:-1]
-        return sum(map(get_norm, diffs))
+        if n_sample_points is not None:
+            points = np.array([
+                self.quick_point_from_proportion(a)
+                for a in np.linspace(0, 1, n_sample_points)
+            ])
+            return poly_line_length(points)
+        points = self.get_points()
+        inner_len = poly_line_length(points[::2])
+        outer_len = poly_line_length(points)
+        return interpolate(inner_len, outer_len, 1 / 3)
 
     def get_area_vector(self) -> Vect3:
         # Returns a vector whose length is the area bound by

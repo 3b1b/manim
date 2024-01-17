@@ -98,6 +98,8 @@ class DecimalNumber(VMobject):
             formatter = self.get_complex_formatter()
         else:
             formatter = self.get_formatter()
+        if self.num_decimal_places == 0 and isinstance(number, float):
+            number = int(number)
         num_string = formatter.format(number)
 
         rounded_num = np.round(number, self.num_decimal_places)
@@ -149,7 +151,7 @@ class DecimalNumber(VMobject):
             ":",
             "+" if config["include_sign"] else "",
             "," if config["group_with_commas"] else "",
-            f".{ndp}f",
+            f".{ndp}f" if ndp > 0 else "d",
             "}",
         ])
 
@@ -169,6 +171,7 @@ class DecimalNumber(VMobject):
         self.set_submobjects_from_number(number)
         self.move_to(move_to_point, self.edge_to_fix)
         self.set_style(**style)
+        self.fix_in_frame(self._is_fixed_in_frame)
         return self
 
     def _handle_scale_side_effects(self, scale_factor: float) -> Self:

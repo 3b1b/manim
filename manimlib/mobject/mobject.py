@@ -224,7 +224,7 @@ class Mobject(object):
     @affects_family_data
     def reverse_points(self) -> Self:
         for mob in self.get_family():
-            mob.data = mob.data[::-1]
+            mob.data[:] = mob.data[::-1]
         return self
 
     @affects_family_data
@@ -790,13 +790,13 @@ class Mobject(object):
     def update(self, dt: float = 0, recurse: bool = True) -> Self:
         if not self.has_updaters or self.updating_suspended:
             return self
+        if recurse:
+            for submob in self.submobjects:
+                submob.update(dt, recurse)
         for updater in self.time_based_updaters:
             updater(self, dt)
         for updater in self.non_time_updaters:
             updater(self)
-        if recurse:
-            for submob in self.submobjects:
-                submob.update(dt, recurse)
         return self
 
     def get_time_based_updaters(self) -> list[TimeBasedUpdater]:
@@ -1334,7 +1334,7 @@ class Mobject(object):
                     rgbs = resize_with_interpolation(rgbs, len(data))
                 data[name][:, :3] = rgbs
             if opacity is not None:
-                if isinstance(opacity, list):
+                if not isinstance(opacity, (float, int)):
                     opacity = resize_with_interpolation(np.array(opacity), len(data))
                 data[name][:, 3] = opacity
         return self
@@ -1540,6 +1540,9 @@ class Mobject(object):
     def get_depth(self) -> float:
         return self.length_over_dim(2)
 
+    def get_shape(self) -> Tuple[float]:
+        return tuple(self.length_over_dim(dim) for dim in range(3))
+
     def get_coord(self, dim: int, direction: Vect3 = ORIGIN) -> float:
         """
         Meant to generalize get_x, get_y, get_z
@@ -1597,6 +1600,12 @@ class Mobject(object):
 
     def match_color(self, mobject: Mobject) -> Self:
         return self.set_color(mobject.get_color())
+
+    def match_style(self, mobject: Mobject) -> Self:
+        self.set_color(mobject.get_color())
+        self.set_opacity(mobject.get_opacity())
+        self.set_shading(*mobject.get_shading())
+        return self
 
     def match_dim_size(self, mobject: Mobject, dim: int, **kwargs) -> Self:
         return self.rescale_to_fit(

@@ -7,12 +7,15 @@ import numpy as np
 
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, OUT, RIGHT, UL, UP, UR
 from manimlib.constants import GREY_A, RED, WHITE, BLACK
-from manimlib.constants import MED_SMALL_BUFF
+from manimlib.constants import MED_SMALL_BUFF, SMALL_BUFF
 from manimlib.constants import DEGREES, PI, TAU
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import DashedVMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.utils.bezier import bezier
+from manimlib.utils.bezier import quadratic_bezier_points_for_arc
+from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.iterables import adjacent_n_tuples
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.simple_functions import clip
@@ -26,6 +29,7 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotate_vector
 from manimlib.utils.space_ops import rotation_matrix_transpose
+from manimlib.utils.space_ops import rotation_about_z
 
 from typing import TYPE_CHECKING
 
@@ -213,27 +217,10 @@ class Arc(TipableVMobject):
     ):
         super().__init__(**kwargs)
 
-        self.set_points(Arc.create_quadratic_bezier_points(
-            angle=angle,
-            start_angle=start_angle,
-            n_components=n_components
-        ))
+        self.set_points(quadratic_bezier_points_for_arc(angle, n_components))
+        self.rotate(start_angle, about_point=ORIGIN)
         self.scale(radius, about_point=ORIGIN)
         self.shift(arc_center)
-
-    @staticmethod
-    def create_quadratic_bezier_points(
-        angle: float,
-        start_angle: float = 0,
-        n_components: int = 8
-    ) -> Vect3Array:
-        n_points = 2 * n_components + 1
-        angles = np.linspace(start_angle, start_angle + angle, n_points)
-        points = np.array([np.cos(angles), np.sin(angles), np.zeros(n_points)]).T
-        # Adjust handles
-        theta = angle / n_components
-        points[1::2] /= np.cos(theta / 2)
-        return points
 
     def get_arc_center(self) -> Vect3:
         """
@@ -448,8 +435,8 @@ class Annulus(VMobject):
         )
 
         self.radius = outer_radius
-        outer_path = outer_radius * Arc.create_quadratic_bezier_points(TAU, 0)
-        inner_path = inner_radius * Arc.create_quadratic_bezier_points(-TAU, 0)
+        outer_path = outer_radius * quadratic_bezier_points_for_arc(TAU)
+        inner_path = inner_radius * quadratic_bezier_points_for_arc(-TAU)
         self.add_subpath(outer_path)
         self.add_subpath(inner_path)
         self.shift(center)
@@ -466,6 +453,7 @@ class Line(TipableVMobject):
     ):
         super().__init__(**kwargs)
         self.path_arc = path_arc
+        self.buff = buff
         self.set_start_and_end_attrs(start, end)
         self.set_points_by_ends(self.start, self.end, buff, path_arc)
 
@@ -476,32 +464,15 @@ class Line(TipableVMobject):
         buff: float = 0,
         path_arc: float = 0
     ) -> Self:
-        vect = end - start
-        dist = get_norm(vect)
-        if np.isclose(dist, 0):
-            self.set_points_as_corners([start, end])
-            return self
-        if path_arc:
-            neg = path_arc < 0
-            if neg:
-                path_arc = -path_arc
-                start, end = end, start
-            radius = (dist / 2) / math.sin(path_arc / 2)
-            alpha = (PI - path_arc) / 2
-            center = start + radius * normalize(rotate_vector(end - start, alpha))
+        self.clear_points()
+        self.start_new_path(start)
+        self.add_arc_to(end, path_arc)
 
-            raw_arc_points = Arc.create_quadratic_bezier_points(
-                angle=path_arc - 2 * buff / radius,
-                start_angle=angle_of_vector(start - center) + buff / radius,
-            )
-            if neg:
-                raw_arc_points = raw_arc_points[::-1]
-            self.set_points(center + radius * raw_arc_points)
-        else:
-            if buff > 0 and dist > 0:
-                start = start + vect * (buff / dist)
-                end = end - vect * (buff / dist)
-            self.set_points_as_corners([start, end])
+        # Apply buffer
+        if buff > 0:
+            length = self.get_arc_length()
+            alpha = min(buff / length, 0.5)
+            self.pointwise_become_partial(self, alpha, 1 - alpha)
         return self
 
     def set_path_arc(self, new_value: float) -> Self:
@@ -673,15 +644,17 @@ class Arrow(Line):
         stroke_width: float = 5,
         buff: float = 0.25,
         tip_width_ratio: float = 5,
-        width_to_tip_len: float = 0.0075,
+        tip_len_to_width: float = 0.0075,
         max_tip_length_to_length_ratio: float = 0.3,
         max_width_to_length_ratio: float = 8.0,
         **kwargs,
     ):
         self.tip_width_ratio = tip_width_ratio
-        self.width_to_tip_len = width_to_tip_len
+        self.tip_len_to_width = tip_len_to_width
         self.max_tip_length_to_length_ratio = max_tip_length_to_length_ratio
         self.max_width_to_length_ratio = max_width_to_length_ratio
+        self.n_tip_points = 3
+        self.original_stroke_width = stroke_width
         super().__init__(
             start, end,
             stroke_color=stroke_color,
@@ -705,27 +678,32 @@ class Arrow(Line):
     def insert_tip_anchor(self) -> Self:
         prev_end = self.get_end()
         arc_len = self.get_arc_length()
-        tip_len = self.get_stroke_width() * self.width_to_tip_len * self.tip_width_ratio
-        if tip_len >= self.max_tip_length_to_length_ratio * arc_len:
+        tip_len = self.get_stroke_width() * self.tip_width_ratio * self.tip_len_to_width
+        if tip_len >= self.max_tip_length_to_length_ratio * arc_len or arc_len == 0:
             alpha = self.max_tip_length_to_length_ratio
         else:
             alpha = tip_len / arc_len
-        self.pointwise_become_partial(self, 0, 1 - alpha)
-        # Dumb that this is needed
-        self.start_new_path(self.point_from_proportion(1 - 1e-5))
+
+        if self.path_arc > 0 and self.buff > 0:
+            self.insert_n_curves(10)  # Is this needed?
+        self.pointwise_become_partial(self, 0.0, 1.0 - alpha)
+        self.add_line_to(self.get_end())
         self.add_line_to(prev_end)
+        self.n_tip_points = 3
         return self
 
     @Mobject.affects_data
     def create_tip_with_stroke_width(self) -> Self:
         if self.get_num_points() < 3:
             return self
-        tip_width = self.tip_width_ratio * min(
-            float(self.get_stroke_width()),
+        stroke_width = min(
+            self.original_stroke_width,
             self.max_width_to_length_ratio * self.get_length(),
         )
-        self.data['stroke_width'][:-3] = self.data['stroke_width'][0]
-        self.data['stroke_width'][-3:, 0] = tip_width * np.linspace(1, 0, 3)
+        tip_width = self.tip_width_ratio * stroke_width
+        ntp = self.n_tip_points
+        self.data['stroke_width'][:-ntp] = self.data['stroke_width'][0]
+        self.data['stroke_width'][-ntp:, 0] = tip_width * np.linspace(1, 0, ntp)
         return self
 
     def reset_tip(self) -> Self:
@@ -742,6 +720,7 @@ class Arrow(Line):
         *args, **kwargs
     ) -> Self:
         super().set_stroke(color=color, width=width, *args, **kwargs)
+        self.original_stroke_width = self.get_stroke_width()
         if self.has_points():
             self.reset_tip()
         return self
@@ -817,7 +796,7 @@ class FillArrow(Line):
             R = (-b + np.sqrt(b**2 - 4 * a * c)) / (2 * a)
 
             # Find arc points
-            points1 = Arc.create_quadratic_bezier_points(path_arc)
+            points1 = quadratic_bezier_points_for_arc(path_arc)
             points2 = np.array(points1[::-1])
             points1 *= (R + thickness / 2)
             points2 *= (R - thickness / 2)
@@ -1045,6 +1024,12 @@ class Rectangle(Polygon):
         super().__init__(UR, UL, DL, DR, **kwargs)
         self.set_width(width, stretch=True)
         self.set_height(height, stretch=True)
+
+    def surround(self, mobject, buff=SMALL_BUFF) -> Self:
+        target_shape = np.array(mobject.get_shape()) + 2 * buff
+        self.set_shape(*target_shape)
+        self.move_to(mobject)
+        return self
 
 
 class Square(Rectangle):
