@@ -495,12 +495,11 @@ class Mobject(object):
         fill_rows_first: bool = True
     ) -> Self:
         submobs = self.submobjects
-        if n_rows is None and n_cols is None:
-            n_rows = int(np.sqrt(len(submobs)))
+        n_submobs = len(submobs)
         if n_rows is None:
-            n_rows = len(submobs) // n_cols
+            n_rows = int(np.sqrt(n_submobs)) if n_cols is None else n_submobs // n_cols
         if n_cols is None:
-            n_cols = len(submobs) // n_rows
+            n_cols = n_submobs // n_rows
 
         if buff is not None:
             h_buff = buff
