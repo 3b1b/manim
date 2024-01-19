@@ -9,9 +9,8 @@ const float Y_SCALE = 2.0 / DEFAULT_FRAME_HEIGHT;
 
 void emit_gl_Position(vec3 point){
     vec4 result = vec4(point, 1.0);
-    if(!bool(is_fixed_in_frame)){
-        result = view * result;
-    }
+    // This allow for smooth transitions between objects fixed and unfixed from frame
+    result = mix(view * result, result, is_fixed_in_frame);
     // Essentially a projection matrix
     result.x *= X_SCALE;
     result.y *= Y_SCALE;
