@@ -1423,7 +1423,7 @@ class VGroup(VMobject):
             self.uniforms.update(vmobjects[0].uniforms)
 
     def __add__(self, other: VMobject) -> Self:
-        assert(isinstance(other, VMobject))
+        assert isinstance(other, VMobject)
         return self.add(other)
 
 
