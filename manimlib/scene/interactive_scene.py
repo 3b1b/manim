@@ -505,7 +505,7 @@ class InteractiveScene(Scene):
         elif char == "s" and modifiers == COMMAND_MODIFIER:
             self.save_selection_to_file()
         elif char == PAN_3D_KEY and modifiers == COMMAND_MODIFIER:
-            self.copy_frame_anim_call()
+            self.copy_frame_positioning()
         elif symbol in ARROW_SYMBOLS:
             self.nudge_selection(
                 vect=[LEFT, UP, RIGHT, DOWN][ARROW_SYMBOLS.index(symbol)],
@@ -615,16 +615,18 @@ class InteractiveScene(Scene):
             self.clear_selection()
 
     # Copying code to recreate state
-    def copy_frame_anim_call(self):
+    def copy_frame_positioning(self):
         frame = self.frame
         center = frame.get_center()
         height = frame.get_height()
         angles = frame.get_euler_angles()
 
-        call = f"self.frame.animate.reorient"
-        call += str(tuple((angles / DEGREES).astype(int)))
+        call = f"reorient("
+        theta, phi, gamma = (angles / DEGREES).astype(int)
+        call += f"{theta}, {phi}, {gamma}"
         if any(center != 0):
-            call += f".move_to({list(np.round(center, 2))})"
+            call += f", {tuple(np.round(center, 2))}"
         if height != FRAME_HEIGHT:
-            call += ".set_height({:.2f})".format(height)
+            call += ", {:.2f}".format(height)
+        call += ")"
         pyperclip.copy(call)
