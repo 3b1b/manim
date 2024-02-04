@@ -170,6 +170,10 @@ class CameraFrame(Mobject):
         self.rotate(dgamma, self.get_inverse_camera_rotation_matrix()[2])
         return self
 
+    def add_ambient_rotation(self, angular_speed=1 * DEGREES):
+        self.add_updater(lambda m, dt: m.increment_theta(angular_speed * dt))
+        return self
+
     @Mobject.affects_data
     def set_focal_distance(self, focal_distance: float):
         self.uniforms["fovy"] = 2 * math.atan(0.5 * self.get_height() / focal_distance)
