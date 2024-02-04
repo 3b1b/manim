@@ -26,7 +26,8 @@ DEFAULT_LAGGED_START_LAG_RATIO = 0.05
 
 
 class AnimationGroup(Animation):
-    def __init__(self,
+    def __init__(
+        self,
         *animations: Animation | _AnimationBuilder,
         run_time: float = -1,  # If negative, default to sum of inputed animation runtimes
         lag_ratio: float = 0.0,
