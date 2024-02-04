@@ -48,7 +48,7 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Iterator, Union, Tuple, Optional, TypeVar, Any
+    from typing import Callable, Iterable, Iterator, Union, Tuple, Optional, TypeVar
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict, Self
     from moderngl.context import Context
@@ -89,7 +89,6 @@ class Mobject(object):
         self.opacity = opacity
         self.shading = shading
         self.texture_paths = texture_paths
-        self._is_fixed_in_frame = is_fixed_in_frame
         self.depth_test = depth_test
 
         # Internal state
@@ -118,6 +117,8 @@ class Mobject(object):
 
         if self.depth_test:
             self.apply_depth_test()
+        if is_fixed_in_frame:
+            self.fix_in_frame()
 
     def __str__(self):
         return self.__class__.__name__
@@ -135,7 +136,7 @@ class Mobject(object):
 
     def init_uniforms(self):
         self.uniforms: UniformDict = {
-            "is_fixed_in_frame": float(self._is_fixed_in_frame),
+            "is_fixed_in_frame": 0.0,
             "shading": np.array(self.shading, dtype=float),
         }
 
@@ -2135,14 +2136,13 @@ class Group(Mobject):
     def __init__(self, *mobjects: Mobject, **kwargs):
         if not all([isinstance(m, Mobject) for m in mobjects]):
             raise Exception("All submobjects must be of type Mobject")
-        Mobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.add(*mobjects)
-        if any(m.is_fixed_in_frame() for m in mobjects):
-            self.fix_in_frame()
 
     def __add__(self, other: Mobject | Group) -> Self:
-        assert(isinstance(other, Mobject))
+        assert isinstance(other, Mobject)
         return self.add(other)
+
 
 
 class Point(Mobject):
