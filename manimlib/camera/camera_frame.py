@@ -135,12 +135,18 @@ class CameraFrame(Mobject):
         theta_degrees: float | None = None,
         phi_degrees: float | None = None,
         gamma_degrees: float | None = None,
+        center: Vect3 | tuple[float, float, float] | None = None,
+        height: float | None = None
     ):
         """
         Shortcut for set_euler_angles, defaulting to taking
         in angles in degrees
         """
         self.set_euler_angles(theta_degrees, phi_degrees, gamma_degrees, units=DEGREES)
+        if center is not None:
+            self.move_to(np.array(center))
+        if height is not None:
+            self.set_height(height)
         return self
 
     def set_theta(self, theta: float):
