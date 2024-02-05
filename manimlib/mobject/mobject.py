@@ -48,7 +48,7 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Iterator, Union, Tuple, Optional, TypeVar
+    from typing import Callable, Iterable, Iterator, Union, Tuple, Optional, TypeVar, Generic, List
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict, Self
     from moderngl.context import Context
@@ -57,6 +57,7 @@ if TYPE_CHECKING:
     TimeBasedUpdater = Callable[["Mobject", float], "Mobject" | None]
     NonTimeUpdater = Callable[["Mobject"], "Mobject" | None]
     Updater = Union[TimeBasedUpdater, NonTimeUpdater]
+    SubmobjectType = TypeVar('SubmobjectType', bound='Mobject')
 
 
 class Mobject(object):
@@ -352,7 +353,7 @@ class Mobject(object):
 
     # Family matters
 
-    def __getitem__(self, value: int | slice) -> Self:
+    def __getitem__(self, value: int | slice) -> Mobject:
         if isinstance(value, slice):
             GroupClass = self.get_group_class()
             return GroupClass(*self.split().__getitem__(value))
@@ -2132,8 +2133,8 @@ class Mobject(object):
             raise Exception(message.format(caller_name))
 
 
-class Group(Mobject):
-    def __init__(self, *mobjects: Mobject, **kwargs):
+class Group(Mobject, Generic[SubmobjectType]):
+    def __init__(self, *mobjects: SubmobjectType, **kwargs):
         if not all([isinstance(m, Mobject) for m in mobjects]):
             raise Exception("All submobjects must be of type Mobject")
         super().__init__(**kwargs)
@@ -2143,6 +2144,9 @@ class Group(Mobject):
         assert isinstance(other, Mobject)
         return self.add(other)
 
+    # This is just here to make linters happy with references to things like Group(...)[0]
+    def __getitem__(self, index) -> SubmobjectType:
+        return super().__getitem__(index)
 
 
 class Point(Mobject):

@@ -50,12 +50,14 @@ from manimlib.shader_wrapper import FillShaderWrapper
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Tuple, Any
+    from typing import Callable, Iterable, Tuple, Any, Generic, TypeVar
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Vect4Array, Self
     from moderngl.context import Context
+    SubVmobjectType = TypeVar('SubVmobjectType', bound='VMobject')
 
 DEFAULT_STROKE_COLOR = GREY_A
 DEFAULT_FILL_COLOR = GREY_C
+
 
 class VMobject(Mobject):
     fill_shader_folder: str = "quadratic_bezier_fill"
@@ -1415,8 +1417,8 @@ class VMobject(Mobject):
         return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
 
 
-class VGroup(VMobject):
-    def __init__(self, *vmobjects: VMobject, **kwargs):
+class VGroup(VMobject, Generic[SubVmobjectType]):
+    def __init__(self, *vmobjects: SubVmobjectType, **kwargs):
         super().__init__(**kwargs)
         self.add(*vmobjects)
         if vmobjects:
@@ -1425,6 +1427,10 @@ class VGroup(VMobject):
     def __add__(self, other: VMobject) -> Self:
         assert isinstance(other, VMobject)
         return self.add(other)
+
+    # This is just here to make linters happy with references to things like VGroup(...)[0]
+    def __getitem__(self, index) -> SubVmobjectType:
+        return super().__getitem__(index)
 
 
 class VectorizedPoint(Point, VMobject):
