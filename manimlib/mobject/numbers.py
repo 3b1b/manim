@@ -52,7 +52,6 @@ class DecimalNumber(VMobject):
         self.edge_to_fix = edge_to_fix
         self.font_size = font_size
         self.text_config = dict(text_config)
-        self.text_config["font_size"] = font_size
 
         super().__init__(
             color=color,
@@ -80,15 +79,18 @@ class DecimalNumber(VMobject):
             submob_templates.append(self.char_to_mob(self.unit))
 
         # Set internals
+        font_size = self.get_font_size()
         if len(submob_templates) == len(self.submobjects):
             for sm, smt in zip(self.submobjects, submob_templates):
                 sm.become(smt)
+                sm.scale(font_size / smt.font_size)
         else:
-            self.set_submobjects([smt.copy() for smt in submob_templates])
+            self.set_submobjects([
+                smt.copy().scale(font_size / smt.font_size)
+                for smt in submob_templates
+            ])
 
-        font_size = self.get_font_size()
         digit_buff = self.digit_buff_per_font_unit * font_size
-        self.scale(font_size / self.text_config["font_size"])
         self.arrange(RIGHT, buff=digit_buff, aligned_edge=DOWN)
 
         # Handle alignment of special characters
