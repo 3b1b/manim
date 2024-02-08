@@ -102,6 +102,16 @@ def interpolate_color(
     return rgb_to_color(rgb)
 
 
+def interpolate_color_by_hsl(
+    color1: ManimColor,
+    color2: ManimColor,
+    alpha: float
+) -> Color:
+    hsl1 = np.array(Color(color1).get_hsl())
+    hsl2 = np.array(Color(color2).get_hsl())
+    return Color(hsl=interpolate(hsl1, hsl2, alpha))
+
+
 def average_color(*colors: ManimColor) -> Color:
     rgbs = np.array(list(map(color_to_rgb, colors)))
     return rgb_to_color(np.sqrt((rgbs**2).mean(0)))
