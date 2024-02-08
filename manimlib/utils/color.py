@@ -121,9 +121,16 @@ def random_color() -> Color:
     return Color(rgb=tuple(np.random.random(3)))
 
 
-def random_bright_color() -> Color:
-    color = random_color()
-    return average_color(color, Color(WHITE))
+def random_bright_color(
+    hue_range: tuple[float, float] = (0.0, 1.0),
+    saturation_range: tuple[float, float] = (0.5, 0.8),
+    luminance_range: tuple[float, float] = (0.5, 1.0),
+) -> Color:
+    return Color(hsl=(
+        interpolate(*hue_range, random.random()),
+        interpolate(*saturation_range, random.random()),
+        interpolate(*luminance_range, random.random()),
+    ))
 
 
 def get_colormap_list(
