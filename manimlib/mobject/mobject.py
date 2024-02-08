@@ -46,9 +46,12 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
 
 from typing import TYPE_CHECKING
+from typing import TypeVar, Generic
+SubmobjectType = TypeVar('SubmobjectType', bound='Mobject')
+
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Iterator, Union, Tuple, Optional, TypeVar, Generic, List
+    from typing import Callable, Iterable, Iterator, Union, Tuple, Optional
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict, Self
     from moderngl.context import Context
@@ -57,7 +60,6 @@ if TYPE_CHECKING:
     TimeBasedUpdater = Callable[["Mobject", float], "Mobject" | None]
     NonTimeUpdater = Callable[["Mobject"], "Mobject" | None]
     Updater = Union[TimeBasedUpdater, NonTimeUpdater]
-    SubmobjectType = TypeVar('SubmobjectType', bound='Mobject')
 
 
 class Mobject(object):

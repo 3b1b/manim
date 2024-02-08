@@ -40,7 +40,6 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import line_intersects_path
 from manimlib.utils.space_ops import midpoint
-from manimlib.utils.space_ops import normalize_along_axis
 from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import poly_line_length
 from manimlib.utils.space_ops import z_to_vector
@@ -48,12 +47,13 @@ from manimlib.shader_wrapper import ShaderWrapper
 from manimlib.shader_wrapper import FillShaderWrapper
 
 from typing import TYPE_CHECKING
+from typing import Generic, TypeVar
+SubVmobjectType = TypeVar('SubVmobjectType', bound='VMobject')
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Tuple, Any, Generic, TypeVar
+    from typing import Callable, Iterable, Tuple, Any
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Vect4Array, Self
     from moderngl.context import Context
-    SubVmobjectType = TypeVar('SubVmobjectType', bound='VMobject')
 
 DEFAULT_STROKE_COLOR = GREY_A
 DEFAULT_FILL_COLOR = GREY_C
