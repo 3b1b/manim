@@ -1,4 +1,5 @@
 from __future__ import annotations
+from functools import lru_cache
 
 import numpy as np
 
@@ -15,6 +16,11 @@ if TYPE_CHECKING:
     from manimlib.typing import ManimColor, Vect3, Self
 
     T = TypeVar("T", bound=VMobject)
+
+
+@lru_cache()
+def char_to_cahced_mob(char: str, **text_config):
+    return Text(char, **text_config)
 
 
 class DecimalNumber(VMobject):
@@ -46,7 +52,7 @@ class DecimalNumber(VMobject):
         self.edge_to_fix = edge_to_fix
         self.font_size = font_size
         self.text_config = dict(text_config)
-        self.char_to_mob_map = dict()
+        self.text_config["font_size"] = font_size
 
         super().__init__(
             color=color,
@@ -59,36 +65,41 @@ class DecimalNumber(VMobject):
         self.init_colors()
 
     def set_submobjects_from_number(self, number: float | complex) -> None:
+        # Create the submobject list
         self.number = number
-        self.set_submobjects([])
-        self.text_config["font_size"] = self.get_font_size()
-        num_string = self.num_string = self.get_num_string(number)
-        self.add(*map(self.char_to_mob, num_string))
+        self.num_string = self.get_num_string(number)
 
-        # Add non-numerical bits
+        # Submob_templates will be a list of cached Tex and Text mobjects,
+        # with the intent of calling .copy or .become on them
+        submob_templates = list(map(self.char_to_mob, self.num_string))
         if self.show_ellipsis:
             dots = self.char_to_mob("...")
             dots.arrange(RIGHT, buff=2 * dots[0].get_width())
-            self.add(dots)
+            submob_templates.append(dots)
         if self.unit is not None:
-            self.unit_sign = Tex(self.unit, font_size=self.get_font_size())
-            self.add(self.unit_sign)
+            submob_templates.append(self.char_to_mob(self.unit))
 
-        self.arrange(
-            buff=self.digit_buff_per_font_unit * self.get_font_size(),
-            aligned_edge=DOWN
-        )
+        # Set internals
+        if len(submob_templates) == len(self.submobjects):
+            for sm, smt in zip(self.submobjects, submob_templates):
+                sm.become(smt)
+        else:
+            self.set_submobjects([smt.copy() for smt in submob_templates])
 
-        # Handle alignment of parts that should be aligned
-        # to the bottom
-        for i, c in enumerate(num_string):
-            if c == "–" and len(num_string) > i + 1:
+        font_size = self.get_font_size()
+        digit_buff = self.digit_buff_per_font_unit * font_size
+        self.scale(font_size / self.text_config["font_size"])
+        self.arrange(RIGHT, buff=digit_buff, aligned_edge=DOWN)
+
+        # Handle alignment of special characters
+        for i, c in enumerate(self.num_string):
+            if c == "–" and len(self.num_string) > i + 1:
                 self[i].align_to(self[i + 1], UP)
                 self[i].shift(self[i + 1].get_height() * DOWN / 2)
             elif c == ",":
                 self[i].shift(self[i].get_height() * DOWN / 2)
         if self.unit and self.unit.startswith("^"):
-            self.unit_sign.align_to(self, UP)
+            self[-1].align_to(self, UP)
 
         if self.include_background_rectangle:
             self.add_background_rectangle()
@@ -111,12 +122,8 @@ class DecimalNumber(VMobject):
         num_string = num_string.replace("-", "–")
         return num_string
 
-    def char_to_mob(self, char: str) -> Tex | Text:
-        if char not in self.char_to_mob_map:
-            self.char_to_mob_map[char] = Text(char, **self.text_config)
-        result = self.char_to_mob_map[char].copy()
-        result.scale(self.get_font_size() / result.font_size)
-        return result
+    def char_to_mob(self, char: str) -> Text:
+        return char_to_cahced_mob(char, **self.text_config)
 
     def init_uniforms(self) -> None:
         super().init_uniforms()
