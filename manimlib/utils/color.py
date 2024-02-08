@@ -4,6 +4,7 @@ from colour import Color
 from colour import hex2rgb
 from colour import rgb2hex
 import numpy as np
+import random
 
 from manimlib.constants import COLORMAP_3B1B
 from manimlib.constants import WHITE
