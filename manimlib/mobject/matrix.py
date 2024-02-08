@@ -22,7 +22,6 @@ if TYPE_CHECKING:
     GenericMatrixType = Union[FloatMatrixType, StringMatrixType, VMobjectMatrixType]
 
 
-
 class Matrix(VMobject):
     def __init__(
         self,
@@ -167,7 +166,7 @@ class DecimalMatrix(Matrix):
             **config
         )
 
-    def element_to_mobject(self, element, **decimal_config) -> VMobject:
+    def element_to_mobject(self, element, **decimal_config) -> DecimalNumber:
         return DecimalNumber(element, **decimal_config)
 
 
