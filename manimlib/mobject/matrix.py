@@ -5,6 +5,7 @@ import itertools as it
 import numpy as np
 
 from manimlib.constants import DOWN, LEFT, RIGHT, ORIGIN
+from manimlib.constants import DEGREES
 from manimlib.mobject.numbers import DecimalNumber
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -13,7 +14,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Sequence, Union, Tuple
+    from typing import Sequence, Union, Tuple, Optional
     from manimlib.typing import ManimColor, Vect3, VectNArray, Self
 
     StringMatrixType = Union[Sequence[Sequence[str]], np.ndarray[int, np.dtype[np.str_]]]
@@ -33,6 +34,8 @@ class Matrix(VMobject):
         height: float | None = None,
         element_config: dict = dict(),
         element_alignment_corner: Vect3 = DOWN,
+        ellipses_row: Optional[int] = None,
+        ellipses_col: Optional[int] = None,
     ):
         """
         Matrix can either include numbers, tex_strings,
@@ -52,13 +55,21 @@ class Matrix(VMobject):
             for i in range(n_cols)
         ))
         self.rows = VGroup(*(VGroup(*row) for row in self.mob_matrix))
+        self.ellipses = VGroup()
 
         # Add elements and brackets
+        self.elements.center()
         self.add(self.elements)
         if height is not None:
             self.set_height(height - 2 * bracket_v_buff)
         self.add_brackets(bracket_v_buff, bracket_h_buff)
-        self.center()
+        self.add(self.ellipses)
+
+        # Potentially add ellipses
+        self.swap_entries_for_ellipses(
+            ellipses_row,
+            ellipses_col,
+        )
 
     def create_mobject_matrix(
         self,
@@ -137,6 +148,47 @@ class Matrix(VMobject):
     def add_background_to_entries(self) -> Self:
         for mob in self.get_entries():
             mob.add_background_rectangle()
+        return self
+
+    def swap_entries_for_ellipses(
+        self,
+        row_index: Optional[int] = None,
+        col_index: Optional[int] = None,
+        height_ratio: float = 0.65,
+        width_ratio: float = 0.4
+    ):
+        rows = self.get_rows()
+        cols = self.get_columns()
+
+        avg_row_height = rows.get_height() / len(rows)
+        vdots_height = height_ratio * avg_row_height
+
+        avg_col_width = cols.get_width() / len(cols)
+        hdots_width = width_ratio * avg_col_width
+
+        use_vdots = row_index is not None and -len(rows) <= row_index < len(rows)
+        use_hdots = col_index is not None and -len(cols) <= col_index < len(cols)
+
+        def swap_entry_for_dots(entry, dots):
+            dots.move_to(entry)
+            entry.become(dots)
+            self.elements.remove(entry)
+            self.ellipses.add(entry)
+
+        if use_vdots:
+            for column in cols:
+                # Add vdots
+                dots = Tex(R"\vdots")
+                dots.set_height(vdots_height)
+                swap_entry_for_dots(column[row_index], dots)
+        if use_hdots:
+            for row in rows:
+                # Add hdots
+                dots = Tex(R"\hdots")
+                dots.set_width(hdots_width)
+                swap_entry_for_dots(row[col_index], dots)
+        if use_vdots and use_hdots:
+            rows[row_index][col_index].rotate(-45 * DEGREES)
         return self
 
     def get_mob_matrix(self) -> VMobjectMatrixType:
