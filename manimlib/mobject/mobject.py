@@ -1376,7 +1376,7 @@ class Mobject(object):
         return rgb_to_hex(self.data["rgba"][0, :3])
 
     def get_opacity(self) -> float:
-        return self.data["rgba"][0, 3]
+        return float(self.data["rgba"][0, 3])
 
     def set_color_by_gradient(self, *colors: ManimColor) -> Self:
         if self.has_points():
