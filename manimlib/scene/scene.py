@@ -836,6 +836,13 @@ class Scene(object):
         return self.window and (self.window.is_closing or self.quit_interaction)
 
     # Event handling
+    def set_floor_plane(self, plane: str = "xy"):
+        if plane == "xy":
+            self.frame.set_euler_axes("zxz")
+        elif plane == "xz":
+            self.frame.set_euler_axes("zxy")
+        else:
+            raise Exception("Only `xz` and `xy` are valid floor planes")
 
     def on_mouse_motion(
         self,
