@@ -35,7 +35,7 @@ class NumberLine(Line):
         tick_offset: float = 0.0,
         # Change name
         big_tick_spacing: Optional[float] = None,
-        numbers_with_elongated_ticks: list[float] = [],
+        big_tick_numbers: list[float] = [],
         include_numbers: bool = False,
         line_to_number_direction: Vect3 = DOWN,
         line_to_number_buff: float = MED_SMALL_BUFF,
@@ -56,13 +56,13 @@ class NumberLine(Line):
         self.longer_tick_multiple = longer_tick_multiple
         self.tick_offset = tick_offset
         if big_tick_spacing is not None:
-            self.numbers_with_elongated_ticks = np.arange(
+            self.big_tick_numbers = np.arange(
                 x_range[0],
                 x_range[1] + big_tick_spacing,
                 big_tick_spacing,
             )
         else:
-            self.numbers_with_elongated_ticks = list(numbers_with_elongated_ticks)
+            self.big_tick_numbers = list(big_tick_numbers)
         self.line_to_number_direction = line_to_number_direction
         self.line_to_number_buff = line_to_number_buff
         self.include_tip = include_tip
@@ -109,7 +109,7 @@ class NumberLine(Line):
         ticks = VGroup()
         for x in self.get_tick_range():
             size = self.tick_size
-            if np.isclose(self.numbers_with_elongated_ticks, x).any():
+            if np.isclose(self.big_tick_numbers, x).any():
                 size *= self.longer_tick_multiple
             ticks.add(self.get_tick(x, size))
         self.add(ticks)
@@ -218,7 +218,7 @@ class UnitInterval(NumberLine):
         self,
         x_range: RangeSpecifier = (0, 1, 0.1),
         unit_size: float = 10,
-        numbers_with_elongated_ticks: list[float] = [0, 1],
+        big_tick_numbers: list[float] = [0, 1],
         decimal_number_config: dict = dict(
             num_decimal_places=1,
         )
@@ -226,6 +226,6 @@ class UnitInterval(NumberLine):
         super().__init__(
             x_range=x_range,
             unit_size=unit_size,
-            numbers_with_elongated_ticks=numbers_with_elongated_ticks,
+            big_tick_numbers=big_tick_numbers,
             decimal_number_config=decimal_number_config,
         )

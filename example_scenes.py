@@ -359,7 +359,7 @@ class CoordinateSystemExample(Scene):
             # Alternatively, you can specify configuration for just one
             # of them, like this.
             y_axis_config=dict(
-                numbers_with_elongated_ticks=[-2, 2],
+                big_tick_numbers=[-2, 2],
             )
         )
         # Keyword arguments of add_coordinate_labels can be used to
