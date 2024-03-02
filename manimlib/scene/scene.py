@@ -7,6 +7,7 @@ import platform
 import pyperclip
 import random
 import time
+import re
 from functools import wraps
 
 from IPython.terminal import pt_inputhooks
@@ -777,13 +778,31 @@ class Scene(object):
             )
 
         pasted = pyperclip.paste()
-        line0 = pasted.lstrip().split("\n")[0]
-        if line0.startswith("#"):
-            if line0 not in self.checkpoint_states:
-                self.checkpoint(line0)
-            else:
-                self.revert_to_checkpoint(line0)
+        lines = pasted.split("\n")
 
+        # Commented lines trigger saved checkpoints
+        if lines[0].lstrip().startswith("#"):
+            if lines[0] not in self.checkpoint_states:
+                self.checkpoint(lines[0])
+            else:
+                self.revert_to_checkpoint(lines[0])
+
+        # Copied methods of a scene are handled specially
+        # A bit hacky, yes, but convenient
+        method_pattern = r"^def\s+([a-zA-Z_]\w*)\s*\(self.*\):"
+        method_names = re.findall(method_pattern ,lines[0].strip())
+        if method_names:
+            method_name = method_names[0]
+            indent = " " * lines[0].index(lines[0].strip())
+            pasted = "\n".join([
+                # Remove self from function signature
+                re.sub(r"self(,\s*)?", "", lines[0]), 
+                *lines[1:],
+                # Attach to scene via self.func_name = func_name
+                f"{indent}self.{method_name} = {method_name}"
+            ])
+
+        # Keep track of skipping and progress bar status
         prev_skipping = self.skip_animations
         self.skip_animations = skip
 
