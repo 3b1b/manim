@@ -44,8 +44,10 @@ from manimlib.utils.iterables import batch_by_property
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable
+    from typing import Callable, Iterable, TypeVar
     from manimlib.typing import Vect3
+
+    T = TypeVar('T')
 
     from PIL.Image import Image
 
@@ -399,7 +401,8 @@ class Scene(object):
             for batch, key in batches
         ]
 
-    def affects_mobject_list(func: Callable):
+    @staticmethod
+    def affects_mobject_list(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             func(self, *args, **kwargs)
