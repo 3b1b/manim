@@ -9,7 +9,7 @@ import numpy as np
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from typing import Callable, TypeVar
+    from typing import Callable, TypeVar, Iterable
     from manimlib.typing import FloatArray
 
     Scalable = TypeVar("Scalable", float, FloatArray)
@@ -30,11 +30,11 @@ def gen_choose(n: int, r: int) -> int:
 
 
 def get_num_args(function: Callable) -> int:
-    return len(get_parameters(function))
+    return len(list(get_parameters(function)))
 
 
-def get_parameters(function: Callable) -> list:
-    return list(inspect.signature(function).parameters.keys())
+def get_parameters(function: Callable) -> Iterable[str]:
+    return inspect.signature(function).parameters.keys()
 
 # Just to have a less heavyweight name for this extremely common operation
 #
