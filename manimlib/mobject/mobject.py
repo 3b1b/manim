@@ -159,7 +159,13 @@ class Mobject(object):
 
     @property
     def animate(self) -> _AnimationBuilder:
-        # Borrowed from https://github.com/ManimCommunity/manim/
+        """
+        Methods called with Mobject.animate.method() can be passed
+        into a Scene.play call, as if you were calling 
+        ApplyMethod(mobject.method)
+
+        Borrowed from https://github.com/ManimCommunity/manim/
+        """
         return _AnimationBuilder(self)
 
     @property
