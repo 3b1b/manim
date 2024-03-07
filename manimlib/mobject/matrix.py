@@ -246,7 +246,6 @@ class IntegerMatrix(DecimalMatrix):
         super().__init__(matrix, num_decimal_places, decimal_config, **config)
 
 
-
 class TexMatrix(Matrix):
     def __init__(
         self,
@@ -259,7 +258,6 @@ class TexMatrix(Matrix):
             element_config=tex_config,
             **config
         )
-
 
 
 class MobjectMatrix(Matrix):
