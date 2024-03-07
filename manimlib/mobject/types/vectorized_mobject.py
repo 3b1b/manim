@@ -13,6 +13,7 @@ from manimlib.constants import JOINT_TYPE_MAP
 from manimlib.constants import ORIGIN, OUT
 from manimlib.constants import TAU
 from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Point
 from manimlib.utils.bezier import bezier
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
@@ -47,11 +48,11 @@ from manimlib.shader_wrapper import ShaderWrapper
 from manimlib.shader_wrapper import FillShaderWrapper
 
 from typing import TYPE_CHECKING
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Iterable
 SubVmobjectType = TypeVar('SubVmobjectType', bound='VMobject')
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Tuple, Any
+    from typing import Callable, Tuple, Any
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Vect4Array, Self
     from moderngl.context import Context
 
@@ -1417,12 +1418,14 @@ class VMobject(Mobject):
         return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
 
 
-class VGroup(VMobject, Generic[SubVmobjectType]):
-    def __init__(self, *vmobjects: SubVmobjectType, **kwargs):
+class VGroup(Group, VMobject, Generic[SubVmobjectType]):
+    def __init__(self, *vmobjects: SubVmobjectType | Iterable[SubVmobjectType], **kwargs):
         super().__init__(**kwargs)
-        self.add(*vmobjects)
-        if vmobjects:
-            self.uniforms.update(vmobjects[0].uniforms)
+        if any(isinstance(vmob, Mobject) and not isinstance(vmob, VMobject) for vmob in vmobjects):
+            raise Exception("Only VMobjects can be passed into VGroup")
+        self._ingest_args(*vmobjects)
+        if self.submobjects:
+            self.uniforms.update(self.submobjects[0].uniforms)
 
     def __add__(self, other: VMobject) -> Self:
         assert isinstance(other, VMobject)

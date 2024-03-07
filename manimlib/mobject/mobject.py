@@ -46,12 +46,12 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
 
 from typing import TYPE_CHECKING
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Iterable
 SubmobjectType = TypeVar('SubmobjectType', bound='Mobject')
 
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Iterator, Union, Tuple, Optional
+    from typing import Callable, Iterator, Union, Tuple, Optional
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict, Self
     from moderngl.context import Context
@@ -2136,11 +2136,19 @@ class Mobject(object):
 
 
 class Group(Mobject, Generic[SubmobjectType]):
-    def __init__(self, *mobjects: SubmobjectType, **kwargs):
-        if not all([isinstance(m, Mobject) for m in mobjects]):
-            raise Exception("All submobjects must be of type Mobject")
+    def __init__(self, *mobjects: SubmobjectType | Iterable[SubmobjectType], **kwargs):
         super().__init__(**kwargs)
-        self.add(*mobjects)
+        self._ingest_args(*mobjects)
+
+    def _ingest_args(self, *args: Mobject | Iterable[Mobject]):
+        if len(args) == 0:
+            return
+        if all(isinstance(mob, Mobject) for mob in args):
+            self.add(*args)
+        elif isinstance(args[0], Iterable):
+            self.add(*args[0])
+        else:
+            raise Exception(f"Invalid argument to Group of type {type(args[0])}")
 
     def __add__(self, other: Mobject | Group) -> Self:
         assert isinstance(other, Mobject)
