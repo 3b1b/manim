@@ -101,11 +101,11 @@ class Mobject(object):
         self.locked_data_keys: set[str] = set()
         self.const_data_keys: set[str] = set()
         self.locked_uniform_keys: set[str] = set()
-        self.needs_new_bounding_box: bool = True
-        self._is_animating: bool = False
         self.saved_state = None
         self.target = None
         self.bounding_box: Vect3Array = np.zeros((3, 3))
+        self._is_animating: bool = False
+        self._needs_new_bounding_box: bool = True
         self._shaders_initialized: bool = False
         self._data_has_changed: bool = True
         self.shader_code_replacements: dict[str, str] = dict()
@@ -331,9 +331,9 @@ class Mobject(object):
         return len(self.get_points()) > 0
 
     def get_bounding_box(self) -> Vect3Array:
-        if self.needs_new_bounding_box:
+        if self._needs_new_bounding_box:
             self.bounding_box[:] = self.compute_bounding_box()
-            self.needs_new_bounding_box = False
+            self._needs_new_bounding_box = False
         return self.bounding_box
 
     def compute_bounding_box(self) -> Vect3Array:
@@ -360,7 +360,7 @@ class Mobject(object):
         recurse_up: bool = True
     ) -> Self:
         for mob in self.get_family(recurse_down):
-            mob.needs_new_bounding_box = True
+            mob._needs_new_bounding_box = True
         if recurse_up:
             for parent in self.parents:
                 parent.refresh_bounding_box()
@@ -418,7 +418,7 @@ class Mobject(object):
             parent.assemble_family()
         return self
 
-    def get_family(self, recurse: bool = True) -> list[Self]:
+    def get_family(self, recurse: bool = True) -> list[Mobject]:
         if recurse:
             return self.family
         else:
@@ -744,7 +744,7 @@ class Mobject(object):
             sm1.texture_paths = sm2.texture_paths
             sm1.depth_test = sm2.depth_test
             sm1.render_primitive = sm2.render_primitive
-            sm1.needs_new_bounding_box = sm2.needs_new_bounding_box
+            sm1._needs_new_bounding_box = sm2._needs_new_bounding_box
         # Make sure named family members carry over
         for attr, value in list(mobject.__dict__.items()):
             if isinstance(value, Mobject) and value in family2:
