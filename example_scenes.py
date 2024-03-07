@@ -293,7 +293,7 @@ class UpdatersExample(Scene):
 
         # This ensures that the method deicmal.next_to(square)
         # is called on every frame
-        always(label.next_to, brace, UP)
+        label.always.next_to(brace, UP)
         # You could also write the following equivalent line
         # label.add_updater(lambda m: m.next_to(brace, UP))
 
@@ -302,7 +302,7 @@ class UpdatersExample(Scene):
         # should be functions returning arguments to that method.
         # The following line ensures thst decimal.set_value(square.get_y())
         # is called every frame
-        f_always(number.set_value, square.get_width)
+        number.f_always.set_value(square.get_width)
         # You could also write the following equivalent line
         # number.add_updater(lambda m: m.set_value(square.get_width()))
 
