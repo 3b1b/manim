@@ -97,7 +97,7 @@ class Mobject(object):
         # Internal state
         self.submobjects: list[Mobject] = []
         self.parents: list[Mobject] = []
-        self.family: list[Mobject] = [self]
+        self.family: list[Mobject] | None = [self]
         self.locked_data_keys: set[str] = set()
         self.const_data_keys: set[str] = set()
         self.locked_uniform_keys: set[str] = set()
@@ -409,23 +409,26 @@ class Mobject(object):
         return self.submobjects
 
     @affects_data
-    def assemble_family(self) -> Self:
-        sub_families = (sm.get_family() for sm in self.submobjects)
-        self.family = [self, *it.chain(*sub_families)]
-        self.refresh_has_updater_status()
-        self.refresh_bounding_box()
+    def note_updated_family(self, only_changed_order=False) -> Self:
+        self.family = None
+        if not only_changed_order:
+            self.refresh_has_updater_status()
+            self.refresh_bounding_box()
         for parent in self.parents:
-            parent.assemble_family()
+            parent.note_updated_family()
         return self
 
     def get_family(self, recurse: bool = True) -> list[Mobject]:
-        if recurse:
-            return self.family
-        else:
+        if not recurse:
             return [self]
+        if self.family is None:
+            # Reconstruct and save
+            sub_families = (sm.get_family() for sm in self.submobjects)
+            self.family = [self, *it.chain(*sub_families)]
+        return self.family
 
-    def family_members_with_points(self) -> list[Self]:
-        return [m for m in self.family if len(m.data) > 0]
+    def family_members_with_points(self) -> list[Mobject]:
+        return [m for m in self.get_family() if len(m.data) > 0]
 
     def get_ancestors(self, extended: bool = False) -> list[Mobject]:
         """
@@ -456,7 +459,7 @@ class Mobject(object):
                 self.submobjects.append(mobject)
             if self not in mobject.parents:
                 mobject.parents.append(self)
-        self.assemble_family()
+        self.note_updated_family()
         return self
 
     def remove(
@@ -472,7 +475,7 @@ class Mobject(object):
                 if parent in child.parents:
                     child.parents.remove(parent)
             if reassemble:
-                parent.assemble_family()
+                parent.note_updated_family()
         return self
 
     def clear(self) -> Self:
@@ -489,12 +492,12 @@ class Mobject(object):
             old_submob.parents.remove(self)
         self.submobjects[index] = new_submob
         new_submob.parents.append(self)
-        self.assemble_family()
+        self.note_updated_family()
         return self
 
     def insert_submobject(self, index: int, new_submob: Mobject) -> Self:
         self.submobjects.insert(index, new_submob)
-        self.assemble_family()
+        self.note_updated_family()
         return self
 
     def set_submobjects(self, submobject_list: list[Mobject]) -> Self:
@@ -606,7 +609,7 @@ class Mobject(object):
             self.submobjects.sort(key=submob_func)
         else:
             self.submobjects.sort(key=lambda m: point_to_num_func(m.get_center()))
-        self.assemble_family()
+        self.note_updated_family(only_changed_order=True)
         return self
 
     def shuffle(self, recurse: bool = False) -> Self:
@@ -614,12 +617,12 @@ class Mobject(object):
             for submob in self.submobjects:
                 submob.shuffle(recurse=True)
         random.shuffle(self.submobjects)
-        self.assemble_family()
+        self.note_updated_family(only_changed_order=True)
         return self
 
     def reverse_submobjects(self) -> Self:
         self.submobjects.reverse()
-        self.assemble_family()
+        self.note_updated_family(only_changed_order=True)
         return self
 
     # Copying and serialization
@@ -692,7 +695,7 @@ class Mobject(object):
         for attr, value in self.__dict__.items():
             if isinstance(value, Mobject) and value is not self:
                 if value in family:
-                    setattr(result, attr, result.family[self.family.index(value)])
+                    setattr(result, attr, result.family[family.index(value)])
             elif isinstance(value, np.ndarray):
                 setattr(result, attr, value.copy())
         return result
