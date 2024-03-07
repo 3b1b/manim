@@ -21,9 +21,7 @@ const float STROKE_WIDTH_CONVERSION = 0.01;
 void main(){
     verts = point;
     v_stroke_width = STROKE_WIDTH_CONVERSION * stroke_width;
-    if(!bool(is_fixed_in_frame)){
-        v_stroke_width *= frame_scale;
-    }
+    v_stroke_width *= mix(frame_scale, 1, is_fixed_in_frame);
     v_joint_product = joint_product;
     v_color = stroke_rgba;
 }
