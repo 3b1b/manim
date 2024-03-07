@@ -30,7 +30,7 @@ def gen_choose(n: int, r: int) -> int:
 
 
 def get_num_args(function: Callable) -> int:
-    return len(list(get_parameters(function)))
+    return function.__code__.co_argcount
 
 
 def get_parameters(function: Callable) -> Iterable[str]:
