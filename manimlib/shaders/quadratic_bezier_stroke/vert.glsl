@@ -6,7 +6,6 @@ uniform float is_fixed_in_frame;
 in vec3 point;
 in vec4 stroke_rgba;
 in float stroke_width;
-in vec3 joint_normal;
 in vec4 joint_product;
 
 // Bezier control point
