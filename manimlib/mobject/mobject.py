@@ -162,6 +162,38 @@ class Mobject(object):
         # Borrowed from https://github.com/ManimCommunity/manim/
         return _AnimationBuilder(self)
 
+    @property
+    def always(self) -> _UpdaterBuilder:
+        """
+        Methods called with mobject.always.method(*args, **kwargs)
+        will result in the call mobject.method(*args, **kwargs)
+        on every frame
+        """
+        return _UpdaterBuilder(self)
+
+    @property
+    def f_always(self) -> _FunctionalUpdaterBuilder:
+        """
+        Similar to Mobject.always, but with the intent that arguments
+        are functions returning the corresponding type fit for the method
+        Methods called with
+        mobject.f_always.method(
+            func1, func2, ...,
+            kwarg1=kw_func1,
+            kwarg2=kw_func2,
+            ...
+        )
+        will result in the call
+        mobject.method(
+            func1(), func2(), ...,
+            kwarg1=kw_func1(),
+            kwarg2=kw_func2(),
+            ...
+        )
+        on every frame
+        """
+        return _FunctionalUpdaterBuilder(self)
+
     def note_changed_data(self, recurse_up: bool = True) -> Self:
         self._data_has_changed = True
         if recurse_up:
@@ -2264,3 +2296,35 @@ def override_animate(method):
         return animation_method
 
     return decorator
+
+
+class _UpdaterBuilder:
+    def __init__(self, mobject: Mobject):
+        self.mobject = mobject
+
+    def __getattr__(self, method_name: str):
+        def add_updater(*method_args, **method_kwargs):
+            self.mobject.add_updater(
+                lambda m: getattr(m, method_name)(*method_args, **method_kwargs)
+            )
+            return self
+        return add_updater
+
+
+class _FunctionalUpdaterBuilder:
+    def __init__(self, mobject: Mobject):
+        self.mobject = mobject
+
+    def __getattr__(self, method_name: str):
+        def add_updater(*method_args, **method_kwargs):
+            self.mobject.add_updater(
+                lambda m: getattr(m, method_name)(
+                    *(arg() for arg in method_args),
+                    **{
+                        key: value()
+                        for key, value in method_kwargs.items()
+                    }
+                )
+            )
+            return self
+        return add_updater
