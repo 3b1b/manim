@@ -30,6 +30,8 @@ class SurroundingRectangle(Rectangle):
         super().__init__(color=color, **kwargs)
         self.buff = buff
         self.surround(mobject)
+        if mobject.is_fixed_in_frame():
+            self.fix_in_frame()
 
     def surround(self, mobject, buff=None) -> Self:
         self.mobject = mobject

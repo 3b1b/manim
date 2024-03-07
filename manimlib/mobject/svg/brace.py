@@ -91,8 +91,9 @@ class Brace(Tex):
         return text_mob
 
     def get_tex(self, *tex: str, **kwargs) -> Tex:
-        tex_mob = Tex(*tex)
-        self.put_at_tip(tex_mob, **kwargs)
+        buff = kwargs.pop("buff", SMALL_BUFF)
+        tex_mob = Tex(*tex, **kwargs)
+        self.put_at_tip(tex_mob, buff=buff)
         return tex_mob
 
     def get_tip(self) -> np.ndarray:
