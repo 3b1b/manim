@@ -837,7 +837,7 @@ class Mobject(object):
         self.updating_suspended: bool = False
 
     def update(self, dt: float = 0, recurse: bool = True) -> Self:
-        if not self.has_updaters or self.updating_suspended:
+        if not self.has_updaters() or self.updating_suspended:
             return self
         if recurse:
             for submob in self.submobjects:
@@ -862,31 +862,33 @@ class Mobject(object):
 
     def add_updater(
         self,
-        update_function: Updater,
-        index: int | None = None,
+        update_func: Updater,
         call_updater: bool = True
     ) -> Self:
-        if "dt" in get_parameters(update_function):
-            updater_list = self.time_based_updaters
+        if "dt" in get_parameters(update_func):
+            self.time_based_updaters.append(update_func)
         else:
-            updater_list = self.non_time_updaters
+            self.non_time_updaters.append(update_func)
 
-        if index is None:
-            updater_list.append(update_function)
-        else:
-            updater_list.insert(index, update_function)
-
-        self.refresh_has_updater_status()
-        for parent in self.parents:
-            parent.has_updaters = True
         if call_updater:
             self.update(dt=0)
+
+        self.refresh_has_updater_status()
         return self
 
-    def remove_updater(self, update_function: Updater) -> Self:
+    def insert_updater(self, update_func: Updater, index=0):
+        if "dt" in get_parameters(update_func):
+            self.time_based_updaters.insert(index, update_func)
+        else:
+            self.non_time_updaters.insert(index, update_func)
+
+        self.refresh_has_updater_status()
+        return self
+
+    def remove_updater(self, update_func: Updater) -> Self:
         for updater_list in [self.time_based_updaters, self.non_time_updaters]:
-            while update_function in updater_list:
-                updater_list.remove(update_function)
+            while update_func in updater_list:
+                updater_list.remove(update_func)
         self.refresh_has_updater_status()
         return self
 
@@ -923,14 +925,22 @@ class Mobject(object):
             self.update(dt=0, recurse=recurse)
         return self
 
+    def has_updaters(self) -> bool:
+        if self._has_updaters_in_family is None:
+            # Recompute and save
+            res = bool(self.time_based_updaters or self.non_time_updaters)
+            self._has_updaters_in_family = res or any(sm.has_updaters() for sm in self.submobjects)
+        return self._has_updaters_in_family
+
     def refresh_has_updater_status(self) -> Self:
-        self.has_updaters = any(mob.get_updaters() for mob in self.get_family())
+        for mob in (self, *self.parents):
+            mob._has_updaters_in_family = None
         return self
 
     # Check if mark as static or not for camera
 
     def is_changing(self) -> bool:
-        return self._is_animating or self.has_updaters
+        return self._is_animating or self.has_updaters()
 
     def set_animating_status(self, is_animating: bool, recurse: bool = True) -> Self:
         for mob in (*self.get_family(recurse), *self.get_ancestors()):
@@ -1865,13 +1875,13 @@ class Mobject(object):
         interpolate can skip this, and so that it's not
         read into the shader_wrapper objects needlessly
         """
-        if self.has_updaters:
+        if self.has_updaters():
             return self
         self.locked_data_keys = set(keys)
         return self
 
     def lock_uniforms(self, keys: Iterable[str]) -> Self:
-        if self.has_updaters:
+        if self.has_updaters():
             return self
         self.locked_uniform_keys = set(keys)
         return self
