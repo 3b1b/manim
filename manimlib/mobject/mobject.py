@@ -409,13 +409,13 @@ class Mobject(object):
         return self.submobjects
 
     @affects_data
-    def note_updated_family(self, only_changed_order=False) -> Self:
+    def note_changed_family(self, only_changed_order=False) -> Self:
         self.family = None
         if not only_changed_order:
             self.refresh_has_updater_status()
             self.refresh_bounding_box()
         for parent in self.parents:
-            parent.note_updated_family()
+            parent.note_changed_family()
         return self
 
     def get_family(self, recurse: bool = True) -> list[Mobject]:
@@ -459,7 +459,7 @@ class Mobject(object):
                 self.submobjects.append(mobject)
             if self not in mobject.parents:
                 mobject.parents.append(self)
-        self.note_updated_family()
+        self.note_changed_family()
         return self
 
     def remove(
@@ -475,7 +475,7 @@ class Mobject(object):
                 if parent in child.parents:
                     child.parents.remove(parent)
             if reassemble:
-                parent.note_updated_family()
+                parent.note_changed_family()
         return self
 
     def clear(self) -> Self:
@@ -492,12 +492,12 @@ class Mobject(object):
             old_submob.parents.remove(self)
         self.submobjects[index] = new_submob
         new_submob.parents.append(self)
-        self.note_updated_family()
+        self.note_changed_family()
         return self
 
     def insert_submobject(self, index: int, new_submob: Mobject) -> Self:
         self.submobjects.insert(index, new_submob)
-        self.note_updated_family()
+        self.note_changed_family()
         return self
 
     def set_submobjects(self, submobject_list: list[Mobject]) -> Self:
@@ -609,7 +609,7 @@ class Mobject(object):
             self.submobjects.sort(key=submob_func)
         else:
             self.submobjects.sort(key=lambda m: point_to_num_func(m.get_center()))
-        self.note_updated_family(only_changed_order=True)
+        self.note_changed_family(only_changed_order=True)
         return self
 
     def shuffle(self, recurse: bool = False) -> Self:
@@ -617,12 +617,12 @@ class Mobject(object):
             for submob in self.submobjects:
                 submob.shuffle(recurse=True)
         random.shuffle(self.submobjects)
-        self.note_updated_family(only_changed_order=True)
+        self.note_changed_family(only_changed_order=True)
         return self
 
     def reverse_submobjects(self) -> Self:
         self.submobjects.reverse()
-        self.note_updated_family(only_changed_order=True)
+        self.note_changed_family(only_changed_order=True)
         return self
 
     # Copying and serialization
