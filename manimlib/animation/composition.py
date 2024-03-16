@@ -168,7 +168,7 @@ class LaggedStart(AnimationGroup):
 class LaggedStartMap(LaggedStart):
     def __init__(
         self,
-        anim_func: Callable[[Mobject], Animation],
+        anim_func: Callable[[Mobject], Animation] | Animation,
         group: Mobject,
         run_time: float = 2.0,
         lag_ratio: float = DEFAULT_LAGGED_START_LAG_RATIO,
