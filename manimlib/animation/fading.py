@@ -134,7 +134,8 @@ class FadeTransform(Transform):
         Animation.clean_up_from_scene(self, scene)
         scene.remove(self.mobject)
         self.mobject[0].restore()
-        scene.add(self.to_add_on_completion)
+        if not self.remover:
+            scene.add(self.to_add_on_completion)
 
 
 class FadeTransformPieces(FadeTransform):
