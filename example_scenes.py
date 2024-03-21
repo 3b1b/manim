@@ -289,7 +289,7 @@ class UpdatersExample(Scene):
         brace = always_redraw(Brace, square, UP)
 
         label = TexText("Width = 0.00")
-        number = label.make_number_changable("0.00")
+        number = label.make_number_changeable("0.00")
 
         # This ensures that the method deicmal.next_to(square)
         # is called on every frame
@@ -515,7 +515,7 @@ class TexAndNumbersExample(Scene):
         # on them.
         tex = Tex("x^2 + y^2 = 4.00")
         tex.next_to(axes, UP, buff=0.5)
-        value = tex.make_number_changable("4.00")
+        value = tex.make_number_changeable("4.00")
 
 
         # This will tie the right hand side of our equation to
@@ -537,10 +537,10 @@ class TexAndNumbersExample(Scene):
             rate_func=there_and_back,
         )
 
-        # By default, tex.make_number_changable replaces the first occurance
+        # By default, tex.make_number_changeable replaces the first occurance
         # of the number,but by passing replace_all=True it replaces all and
         # returns a group of the results
-        exponents = tex.make_number_changable("2", replace_all=True)
+        exponents = tex.make_number_changeable("2", replace_all=True)
         self.play(
             LaggedStartMap(
                 FlashAround, exponents,
