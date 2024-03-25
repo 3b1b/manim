@@ -118,7 +118,7 @@ class Underline(Line):
         mobject: Mobject,
         buff: float = SMALL_BUFF,
         stroke_color=WHITE,
-        stroke_width: float | Sequence[float] = [0, 2, 3, 3, 2, 0],
+        stroke_width: float | Sequence[float] = [0, 3, 3, 0],
         stretch_factor=1.2,
         **kwargs
     ):
