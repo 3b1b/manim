@@ -418,10 +418,10 @@ class Bubble(VGroup):
         return self
 
     def flip(self, axis=UP, only_body=True, **kwargs):
+        super().flip(axis=axis, **kwargs)
         if only_body:
-            self.body.flip(axis=axis, **kwargs)
-        else:
-            super().flip(axis=axis, **kwargs)
+            # Flip in place, don't use kwargs
+            self.content.flip(axis=axis)  
         if abs(axis[1]) > 0:
             self.direction = -np.array(self.direction)
         return self
