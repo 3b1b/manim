@@ -222,6 +222,7 @@ class DecimalMatrix(Matrix):
         decimal_config: dict = dict(),
         **config
     ):
+        self.float_matrix = matrix
         super().__init__(
             matrix,
             element_config=dict(
