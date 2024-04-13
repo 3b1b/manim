@@ -118,6 +118,7 @@ class FadeTransform(Transform):
 
     def ghost_to(self, source: Mobject, target: Mobject) -> None:
         source.replace(target, stretch=self.stretch, dim_to_match=self.dim_to_match)
+        source.set_uniform(**target.get_uniforms())
         source.set_opacity(0)
 
     def get_all_mobjects(self) -> list[Mobject]:
