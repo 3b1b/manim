@@ -300,6 +300,7 @@ class VMobjectFromSVGPath(VMobject):
         # Get rid of arcs
         path_obj.approximate_arcs_with_quads()
         self.path_obj = path_obj
+        # kwargs["use_simple_quadratic_approx"]=True
         super().__init__(**kwargs)
 
     def init_points(self) -> None:

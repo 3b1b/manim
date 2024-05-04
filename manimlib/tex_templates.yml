@@ -3,6 +3,7 @@
 default:
   description: ""
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage[english]{babel}
     \usepackage[utf8]{inputenc}
@@ -28,8 +29,31 @@ default:
 ctex:
   description: ""
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage[UTF8]{ctex}
+    \usepackage[english]{babel}
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{dsfont}
+    \usepackage{setspace}
+    \usepackage{tipa}
+    \usepackage{relsize}
+    \usepackage{textcomp}
+    \usepackage{mathrsfs}
+    \usepackage{calligra}
+    \usepackage{wasysym}
+    \usepackage{ragged2e}
+    \usepackage{physics}
+    \usepackage{xcolor}
+    \usepackage{microtype}
+    \linespread{1}
+  
+lualatex:
+  description: ""
+  compiler: lualatex
+  documentclass: \documentclass[preview]{standalone}
+  preamble: |-
     \usepackage[english]{babel}
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -52,6 +76,7 @@ ctex:
 basic:
   description: ""
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage[english]{babel}
     \usepackage{amsmath}
@@ -61,6 +86,7 @@ basic:
 basic_ctex:
   description: ""
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage[UTF8]{ctex}
     \usepackage{amsmath}
@@ -70,11 +96,13 @@ basic_ctex:
 empty:
   description: ""
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: ""
 
 empty_ctex:
   description: ""
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: ""
 
 # A collection of TeX templates for the fonts described at
@@ -83,6 +111,7 @@ empty_ctex:
 american_typewriter:
   description: American Typewriter
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -94,6 +123,7 @@ american_typewriter:
 antykwa:
   description: Antykwa Poltawskiego (TX Fonts for Greek and math symbols)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -107,6 +137,7 @@ antykwa:
 apple_chancery:
   description: Apple Chancery
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -118,6 +149,7 @@ apple_chancery:
 auriocus_kalligraphicus:
   description: Auriocus Kalligraphicus (Symbol Greek)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -130,6 +162,7 @@ auriocus_kalligraphicus:
 baskervald_adf_fourier:
   description: Baskervald ADF with Fourier
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -141,6 +174,7 @@ baskervald_adf_fourier:
 baskerville_it:
   description: Baskerville (Italic)
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -152,6 +186,7 @@ baskerville_it:
 biolinum:
   description: Biolinum
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -168,6 +203,7 @@ biolinum:
 brushscriptx:
   description: BrushScriptX-Italic (PX math and Greek)
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -183,6 +219,7 @@ brushscriptx:
 chalkboard_se:
   description: Chalkboard SE
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -194,6 +231,7 @@ chalkboard_se:
 chalkduster:
   description: Chalkduster
   compiler: lualatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -205,6 +243,7 @@ chalkduster:
 comfortaa:
   description: Comfortaa
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -217,6 +256,7 @@ comfortaa:
 comic_sans:
   description: Comic Sans MS
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -228,6 +268,7 @@ comic_sans:
 droid_sans:
   description: Droid Sans
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -240,6 +281,7 @@ droid_sans:
 droid_sans_it:
   description: Droid Sans (Italic)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -252,6 +294,7 @@ droid_sans_it:
 droid_serif:
   description: Droid Serif
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -264,6 +307,7 @@ droid_serif:
 droid_serif_px_it:
   description: Droid Serif (PX math symbols) (Italic)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -277,6 +321,7 @@ droid_serif_px_it:
 ecf_augie:
   description: ECF Augie (Euler Greek)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -287,6 +332,7 @@ ecf_augie:
 ecf_jd:
   description: ECF JD (with TX fonts)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -300,6 +346,7 @@ ecf_jd:
 ecf_skeetch:
   description: ECF Skeetch (CM Greek)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -313,6 +360,7 @@ ecf_skeetch:
 ecf_tall_paul:
   description: ECF Tall Paul (with Symbol font)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -326,6 +374,7 @@ ecf_tall_paul:
 ecf_webster:
   description: ECF Webster (with TX fonts)
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -341,6 +390,7 @@ ecf_webster:
 electrum_adf:
   description: Electrum ADF (CM Greek)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -354,6 +404,7 @@ electrum_adf:
 epigrafica:
   description: Epigrafica
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -367,6 +418,7 @@ epigrafica:
 fourier_utopia:
   description: Fourier Utopia (Fourier upright Greek)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -378,6 +430,7 @@ fourier_utopia:
 french_cursive:
   description: French Cursive (Euler Greek)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -389,6 +442,7 @@ french_cursive:
 gfs_bodoni:
   description: GFS Bodoni
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -402,6 +456,7 @@ gfs_bodoni:
 gfs_didot:
   description: GFS Didot (Italic)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -414,6 +469,7 @@ gfs_didot:
 gfs_neohellenic:
   description: GFS NeoHellenic
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -427,6 +483,7 @@ gfs_neohellenic:
 gnu_freesans_tx:
   description: GNU FreeSerif (and TX fonts symbols)
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -439,6 +496,7 @@ gnu_freesans_tx:
 gnu_freeserif_freesans:
   description: GNU FreeSerif and FreeSans
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -456,6 +514,7 @@ gnu_freeserif_freesans:
 helvetica_fourier_it:
   description: Helvetica with Fourier (Italic)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -469,6 +528,7 @@ helvetica_fourier_it:
 latin_modern_tw:
   description: Latin Modern Typewriter Proportional
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -484,6 +544,7 @@ latin_modern_tw:
 latin_modern_tw_it:
   description: Latin Modern Typewriter Proportional (CM Greek) (Italic)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -497,6 +558,7 @@ latin_modern_tw_it:
 libertine:
   description: Libertine
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -509,6 +571,7 @@ libertine:
 libris_adf_fourier:
   description: Libris ADF with Fourier
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -522,6 +585,7 @@ libris_adf_fourier:
 minion_pro_myriad_pro:
   description: Minion Pro and Myriad Pro (and TX fonts symbols)
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -534,6 +598,7 @@ minion_pro_myriad_pro:
 minion_pro_tx:
   description: Minion Pro (and TX fonts symbols)
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -546,6 +611,7 @@ minion_pro_tx:
 new_century_schoolbook:
   description: New Century Schoolbook (Symbol Greek)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -558,6 +624,7 @@ new_century_schoolbook:
 new_century_schoolbook_px:
   description: New Century Schoolbook (Symbol Greek, PX math symbols)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -571,6 +638,7 @@ new_century_schoolbook_px:
 noteworthy_light:
   description: Noteworthy Light
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -582,6 +650,7 @@ noteworthy_light:
 palatino:
   description: Palatino (Symbol Greek)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -593,6 +662,7 @@ palatino:
 papyrus:
   description: Papyrus
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -604,6 +674,7 @@ papyrus:
 romande_adf_fourier_it:
   description: Romande ADF with Fourier (Italic)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -617,6 +688,7 @@ romande_adf_fourier_it:
 slitex:
   description: SliTeX (Euler Greek)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -630,6 +702,7 @@ slitex:
 times_fourier_it:
   description: Times with Fourier (Italic)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -641,6 +714,7 @@ times_fourier_it:
 urw_avant_garde:
   description: URW Avant Garde (Symbol Greek)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -653,6 +727,7 @@ urw_avant_garde:
 urw_zapf_chancery:
   description: URW Zapf Chancery (CM Greek)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -672,6 +747,7 @@ urw_zapf_chancery:
 venturis_adf_fourier_it:
   description: Venturis ADF with Fourier (Italic)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -683,6 +759,7 @@ venturis_adf_fourier_it:
 verdana_it:
   description: Verdana (Italic)
   compiler: xelatex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -694,6 +771,7 @@ verdana_it:
 vollkorn:
   description: Vollkorn (TX fonts for Greek and math symbols)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -707,6 +785,7 @@ vollkorn:
 vollkorn_fourier_it:
   description: Vollkorn with Fourier (Italic)
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
@@ -718,6 +797,7 @@ vollkorn_fourier_it:
 zapf_chancery:
   description: Zapf Chancery
   compiler: latex
+  documentclass: \documentclass[preview]{standalone}
   preamble: |-
     \usepackage{amsmath}
     \usepackage{amssymb}
