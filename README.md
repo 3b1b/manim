@@ -1,26 +1,20 @@
-Problem:
-Many kids find math a dull subject leading to disengagement.
-Finding a good education in math is getting harder every day as most students fail to grasp the concept they are trying to learn.
-Today’s math classes move at a fixed pace, which may not suit every student.
+## Problem:
+> Many kids find math a dull subject leading to disengagement.
+> Finding a good education in math is getting harder every day as most students fail to grasp the concept they are trying to learn.
+> Today’s math classes move at a fixed pace, which may not suit every student.
 
 
-Impact:
-Our app animates the math experience leading to more engagement.
-Our course is accessible any time and can be easily accessed. Students can move at their own pace because they don’t have a class making them hurry up.
+## Impact:
+> Our app animates the math experience leading to more engagement.
+> Our course is accessible any time and can be easily accessed. Students can move at their own pace because they don’t have a class making them hurry up.
 
-Future Implementations:
-SQL:
-	Structured Query Language to store a huge database of videos.
-Camera Algorithm:
-	To take pictures of the current assignment and help the student.
-More Courses:
-	More Courses so students can learn from.
-Mobile Application:
-	So students can access the course anywhere.
-Web Scraping:
-To gather further information on the topic.
-Narration:
-	Improve engagement
+## Future Implementations:
+> SQL: Structured Query Language to store a huge database of videos.
+> Camera Algorithm: To take pictures of the current assignment and help the student.
+> More Courses: More Courses so students can learn from.
+> Mobile Application: So students can access the course anywhere.
+> Web Scraping: To gather further information on the topic.
+> Narration: Improve engagement
 
 
 
