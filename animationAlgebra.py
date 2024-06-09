@@ -4,21 +4,24 @@ Date: June 8th, 2024 Time: 10:50 PM PST
 Program Name: MathQuest Animations
 Purpose: KTHack 2024
 '''
-
-import numpy as np
-from manimlib import *
+from manim import *
 
 
-class Test(Scene):
+class quadraticQuarticFunction(Scene):
     def construct(self):
-        c = Circle(2, color = RED, fill_opacity = 0.1)
-        self.play(DrawBorderThenFill(c), run_time = 0.5)
-        title = Text("Manim", font_size = 72, slant="ITALIC").shift(UP * 0.3)
-        subtitle = Text("Basics", slant = "ITALIC").shift(DOWN *0.5)
-        self.play(Write(title), Write(subtitle))
+        axes = Axes(
+            x_range=[-5, 5],
+            y_range=[-5, 5],
+            axis_config={"color": ORANGE},
+        )
 
-        a = Arc(2.2, TAU * 1/4, -TAU *2.6 / 4, color = BLUE, stroke_width=15)
+        quadraticGraph = axes.plot(lambda x: x**2, color=DARK_BLUE)
+        quadraticLabel = axes.get_graph_label(quadraticGraph, label='x^{2}')
 
-        self.play(Create(a))
+        quarticGraph = axes.plot(lambda x: x**3, color=DARK_BLUE)
+        quarticLabel = axes.get_graph_label(quarticGraph, label='x^{4}')
 
-        self.wait(3)
+        self.play(Create(axes), Create(quadraticGraph), Write(quadraticLabel))
+        self.wait(1)
+        self.play(Transform(quadraticGraph, quarticGraph), Transform(quadraticLabel, quarticLabel))
+        self.wait(1)
