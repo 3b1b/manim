@@ -5,8 +5,8 @@
 
 
 ## Impact:
-> Our app animates the math experience leading to more engagement.
-> Our course is accessible any time and can be easily accessed. Students can move at their own pace because they don’t have a class making them hurry up.
+> My app animates the math experience leading to more engagement.
+> My course is accessible any time and can be easily accessed. Students can move at their own pace because they don’t have a class making them hurry up.
 
 ## Future Implementations:
 > SQL: Structured Query Language to store a huge database of videos.
