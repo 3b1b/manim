@@ -1,3 +1,5 @@
+<!--
+
 <p align="center">
     <a href="https://github.com/3b1b/manim">
         <img src="https://raw.githubusercontent.com/3b1b/manim/master/logo/cropped.png">
@@ -115,3 +117,4 @@ Is always welcome.  As mentioned above, the [community edition](https://github.c
 
 ## License
 This project falls under the MIT license.
+-->
