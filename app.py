@@ -75,7 +75,7 @@ class EnteringPage(FloatLayout):
             size_hint= (0.2, 0.1),
             pos_hint= {'center_x': 0.5, 'center_y':0.1},
             #bold = True,
-            #background_color = '#c0d9d9',
+            background_color = '#c0d9d9',
             #disabled = True
         )
         self.switch_button.bind(on_press=self.switch)
@@ -139,7 +139,7 @@ class TutorialPage(FloatLayout):
             size_hint= (0.2, 0.1),
             pos_hint= {'center_x': 0.25, 'center_y':0.1},
             #bold = True,
-            #background_color = '#c0d9d9'
+            background_color = '#c0d9d9'
         )
         self.switchBackButton.bind(on_press=self.switchBack)
         self.add_widget(self.switchBackButton)
@@ -150,13 +150,16 @@ class TutorialPage(FloatLayout):
             size_hint= (0.2, 0.1),
             pos_hint= {'center_x': 0.75, 'center_y':0.1},
             #bold = True,
-            #background_color = '#c0d9d9'
+            background_color = '#c0d9d9'
         )
         self.switchToCurriculumButton.bind(on_press=self.switchCourses)
         self.add_widget(self.switchToCurriculumButton)
 
         # Animation Video Player Thing
-        self.video = VideoPlayer(source='quadraticQuarticFunction.mp4', state='play')
+        self.video = VideoPlayer(source='quadraticQuarticFunction.mp4', 
+                                state='play',
+                                size_hint = (0.8, 0.8),
+                                pos_hint={'center_x': 0.5, 'center_y':0.6})
         #self.video.bind(state=self.playVideo)
         #self.video.allow_fullscreen = False
         self.add_widget(self.video)
@@ -200,10 +203,12 @@ class CoursesTabs(TabbedPanel):
         self.calculusTab = TabbedPanelItem(text='Calculus')
 
         # Animated Vidoe Lessons for Each Tab
-        self.trigonometryVideo = VideoPlayer(source='quadraticQuarticFunction.mp4',
+        self.trigonometryVideo = VideoPlayer(source='trigFunctionProofs.mp4',
                                             state='pause',
-                                            options={'eos': 'pause'})
-        self.algebraVideo = VideoPlayer(source='trigFunctionProofs.mp4',
+                                            options={'eos': 'pause'},
+                                            size_hint = (0.8, 0.8),
+                                            pos_hint={'center_x': 0.5, 'center_y':0.6})
+        self.algebraVideo = VideoPlayer(source='quadraticQuarticFunction.mp4',
                                             state='pause',
                                             options={'eos': 'pause'})
         '''
@@ -229,7 +234,7 @@ class CoursesTabs(TabbedPanel):
             size_hint= (0.2, 0.1),
             pos_hint= {'center_x': 0.5, 'center_y':0.1},
             #bold = True,
-            #background_color = '#c0d9d9'
+            background_color = '#c0d9d9'
         )
         self.switchBackButton.bind(on_press=self.switchBack)
         self.add_widget(self.switchBackButton)
