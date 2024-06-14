@@ -111,7 +111,7 @@ def get_shader_code_from_file(filename: str) -> str | None:
     except IOError:
         return None
 
-    with open(filepath, "r") as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         result = f.read()
 
     # To share functionality between shaders, some functions are read in

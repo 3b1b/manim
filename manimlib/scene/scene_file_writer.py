@@ -376,7 +376,7 @@ class SceneFileWriter(object):
             self.partial_movie_directory,
             "partial_movie_file_list.txt"
         )
-        with open(file_list, 'w') as fp:
+        with open(file_list, 'w', encoding='utf-8') as fp:
             for pf_path in partial_movie_files:
                 if os.name == 'nt':
                     pf_path = pf_path.replace('\\', '/')
@@ -448,7 +448,7 @@ class SceneFileWriter(object):
     def open_file(self) -> None:
         if self.quiet:
             curr_stdout = sys.stdout
-            sys.stdout = open(os.devnull, "w")
+            sys.stdout = open(os.devnull, "w", encoding="utf-8")
 
         current_os = platform.system()
         file_paths = []
@@ -475,9 +475,8 @@ class SceneFileWriter(object):
 
                 commands.append(file_path)
 
-                FNULL = open(os.devnull, 'w')
-                sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
-                FNULL.close()
+                with open(os.devnull, 'w', encoding="utf-8") as FNULL:
+                    sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
 
         if self.quiet:
             sys.stdout.close()

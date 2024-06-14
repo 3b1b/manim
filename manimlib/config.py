@@ -228,7 +228,7 @@ def get_module_with_inserted_embed_line(
     construct method. If there is an argument passed in, it will insert the line after
     the last line in the sourcefile which includes that string.
     """
-    with open(file_name, 'r') as fp:
+    with open(file_name, 'r', encoding='utf-8') as fp:
         lines = fp.readlines()
 
     try:
@@ -279,7 +279,7 @@ def get_module_with_inserted_embed_line(
     new_lines.insert(prev_line_num + 1, inserted_line)
     new_file = file_name.replace(".py", "_insert_embed.py")
 
-    with open(new_file, 'w') as fp:
+    with open(new_file, 'w', encoding='utf-8') as fp:
         fp.writelines(new_lines)
 
     module = get_module(new_file)
@@ -307,11 +307,11 @@ def get_custom_config():
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
 
     if os.path.exists(global_defaults_file):
-        with open(global_defaults_file, "r") as file:
+        with open(global_defaults_file, "r", encoding="utf-8") as file:
             custom_config = yaml.safe_load(file)
 
         if os.path.exists(__config_file__):
-            with open(__config_file__, "r") as file:
+            with open(__config_file__, "r", encoding="utf-8") as file:
                 local_defaults = yaml.safe_load(file)
             if local_defaults:
                 custom_config = merge_dicts_recursively(
@@ -319,7 +319,7 @@ def get_custom_config():
                     local_defaults,
                 )
     else:
-        with open(__config_file__, "r") as file:
+        with open(__config_file__, "r", encoding="utf-8") as file:
             custom_config = yaml.safe_load(file)
 
     # Check temporary storage(custom_config)
