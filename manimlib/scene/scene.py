@@ -240,6 +240,8 @@ class Scene(object):
             i2g=self.i2g,
             i2m=self.i2m,
             checkpoint_paste=self.checkpoint_paste,
+            touch=lambda: shell.enable_gui("manim"),
+            notouch=lambda: shell.enable_gui(None),
         )
 
         # Enables gui interactions during the embed
