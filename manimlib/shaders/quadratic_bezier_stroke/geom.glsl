@@ -34,7 +34,6 @@ const int MAX_STEPS = 16;
 vec3 unit_normal = vec3(0.0, 0.0, 1.0);
 
 #INSERT emit_gl_Position.glsl
-#INSERT get_xyz_to_uv.glsl
 #INSERT finalize_color.glsl
 
 
@@ -49,6 +48,47 @@ vec3 get_joint_unit_normal(vec4 joint_product){
 vec4 normalized_joint_product(vec4 joint_product){
     float norm = length(joint_product);
     return (norm > 1e-10) ? joint_product / norm : vec4(0.0, 0.0, 0.0, 1.0);
+}
+
+
+vec3 point_on_curve(float t){
+    return verts[0] + 2 * (verts[1] - verts[0]) * t + (verts[0] - 2 * verts[1] + verts[2]) * t * t;
+}
+
+
+vec3 tangent_on_curve(float t){
+    return 2 * (verts[1] + -verts[0]) + 2 * (verts[0] - 2 * verts[1] + verts[2]) * t;
+}
+
+
+void map_to_basic(out float x0, out float x2, out float scale_factor){
+    /* Find the coordinates and scale factor such that the bezier curve
+    defined by verts[] is congruent to a section of the parabola y = x^2
+    between x0 and x2, with scale_factor
+    */
+}
+
+
+void compute_subdivision(out int n_steps, out float subdivision[MAX_STEPS]){
+    /*
+    Based on https://raphlinus.github.io/graphics/curves/2019/12/23/flatten-quadbez.html
+    */
+    float x0;
+    float x2;
+    float scale_factor;
+    map_to_basic(x0, x2, scale_factor);
+
+    if (normalized_joint_product(v_joint_product[1]).w > COS_THRESHOLD){
+        // Linear
+        n_steps = 2;
+    }else{
+        n_steps = MAX_STEPS;  // TODO
+    }
+
+    for(int i = 0; i < MAX_STEPS; i++){
+        if (i >= n_steps) break;
+        subdivision[i] = float(i) / (n_steps - 1);
+    }
 }
 
 
@@ -81,7 +121,8 @@ void create_joint(
     changing_c1 = static_c1 + shift * unit_tan;
 }
 
-vec3 get_perp(vec4 joint_product, vec3 point, vec3 tangent){
+
+vec3 get_perp(vec3 point, vec3 tangent, vec4 joint_product){
     /*
     Perpendicular vectors to the left of the curve
     */
@@ -101,16 +142,6 @@ vec3 get_perp(vec4 joint_product, vec3 point, vec3 tangent){
 }
 
 
-vec3 point_on_curve(float t){
-    return verts[0] + 2 * (verts[1] - verts[0]) * t + (verts[0] - 2 * verts[1] + verts[2]) * t * t;
-}
-
-
-vec3 tangent_on_curve(float t){
-    return 2 * (verts[1] + -verts[0]) + 2 * (verts[0] - 2 * verts[1] + verts[2]) * t;
-}
-
-
 void emit_point_with_width(
     vec3 point,
     vec3 tangent,
@@ -122,7 +153,7 @@ void emit_point_with_width(
     vec3 unit_tan = normalize(tangent);
     vec4 njp = normalized_joint_product(joint_product);
     float buff = 0.5 * width + aaw;
-    vec3 perp = buff * get_perp(njp, point, unit_tan);
+    vec3 perp = buff * get_perp(point, unit_tan, njp);
 
     vec3 corners[2] = vec3[2](point + perp, point - perp);  
     create_joint(
@@ -142,7 +173,6 @@ void emit_point_with_width(
         emit_gl_Position(corners[i]);
         EmitVertex();
     }
-
 }
 
 void main() {
@@ -150,27 +180,18 @@ void main() {
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
 
-    vec4 jp1 = normalized_joint_product(v_joint_product[1]);
-    bool is_linear = jp1.w > COS_THRESHOLD; // TODO, something with this
-
     // Compute subdivision
     int n_steps;
-    if (is_linear){
-        n_steps = 2;
-    }else{
-        n_steps = MAX_STEPS;  // TODO
-    }
-
     float subdivision[MAX_STEPS];
-    vec3 points[MAX_STEPS];
-    for(int i = 0; i < MAX_STEPS; i++){
-        if (i >= n_steps) break;
-        subdivision[i] = float(i) / (n_steps - 1);
-        points[i] = point_on_curve(subdivision[i]);
-    }
+    compute_subdivision(n_steps, subdivision);
 
     // Compute joint products
+    vec3 points[MAX_STEPS];
     vec4 joint_products[MAX_STEPS];
+    for (int i = 0; i < MAX_STEPS; i++){
+        if (i >= n_steps) break;
+        points[i] = point_on_curve(subdivision[i]);
+    }
     joint_products[0] = v_joint_product[0];
     joint_products[0].xyz *= -1;
     joint_products[n_steps - 1] = v_joint_product[2];
@@ -182,7 +203,7 @@ void main() {
         joint_products[i].w = dot(v1, v2);
     }
 
-    // Intermediate points
+    // Emit vertex pairs aroudn subdivided points
     float scaled_aaw = anti_alias_width * pixel_size;
     for (int i = 0; i < MAX_STEPS; i++){
         if (i >= n_steps) break;
@@ -190,7 +211,7 @@ void main() {
         emit_point_with_width(
             points[i],
             tangent_on_curve(t),
-            joint_products[i],  // TODO
+            joint_products[i],
             mix(v_stroke_width[0], v_stroke_width[2], t),
             mix(v_color[0], v_color[2], t),
             scaled_aaw
