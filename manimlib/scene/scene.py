@@ -270,7 +270,6 @@ class Scene(object):
         def post_cell_func(*args, **kwargs):
             if not self.is_window_closing():
                 self.update_frame(dt=0, ignore_skipping=True)
-            self.save_state()
 
         shell.events.register("post_run_cell", post_cell_func)
 
