@@ -26,7 +26,7 @@ class OpeningManimExample(Scene):
         matrix = [[1, 1], [0, 1]]
         linear_transform_words = VGroup(
             Text("This is what the matrix"),
-            IntegerMatrix(matrix, include_background_rectangle=True),
+            IntegerMatrix(matrix),
             Text("looks like")
         )
         linear_transform_words.arrange(RIGHT)
@@ -251,7 +251,7 @@ class TexIndexing(Scene):
             self.play(FlashAround(part))
         self.wait()
         self.play(FadeOut(equation))
-
+        
         # Indexing by substrings like this may not work when
         # the order in which Latex draws symbols does not match
         # the order in which they show up in the string.
