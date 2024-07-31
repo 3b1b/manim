@@ -6,7 +6,7 @@ import colour
 import importlib
 import inspect
 import os
-from screeninfo import get_monitors
+import screeninfo
 import sys
 import yaml
 
@@ -433,7 +433,10 @@ def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
 def get_window_config(args: Namespace, custom_config: dict, camera_config: dict) -> dict:
     # Default to making window half the screen size
     # but make it full screen if -f is passed in
-    monitors = get_monitors()
+    try:
+        monitors = screeninfo.get_monitors()
+    except screeninfo.ScreenInfoError:
+        pass
     mon_index = custom_config["window_monitor"]
     monitor = monitors[min(mon_index, len(monitors) - 1)]
     aspect_ratio = camera_config["pixel_width"] / camera_config["pixel_height"]
