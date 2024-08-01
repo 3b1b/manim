@@ -100,7 +100,7 @@ class VMobject(Mobject):
         flat_stroke: bool = True,
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
-        anti_alias_width: float = 1.0,
+        anti_alias_width: float = 1.5,
         fill_border_width: float = 0.5,
         use_winding_fill: bool = True,
         **kwargs
