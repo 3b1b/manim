@@ -30,6 +30,8 @@ class SurroundingRectangle(Rectangle):
         super().__init__(color=color, **kwargs)
         self.buff = buff
         self.surround(mobject)
+        if mobject.is_fixed_in_frame():
+            self.fix_in_frame()
 
     def surround(self, mobject, buff=None) -> Self:
         self.mobject = mobject
@@ -120,13 +122,9 @@ class Underline(Line):
         stretch_factor=1.2,
         **kwargs
     ):
-        super().__init__(
-            LEFT, RIGHT,
-            stroke_color=stroke_color,
-            stroke_width=stroke_width,
-            **kwargs
-        )
-        self.insert_n_curves(30)
+        super().__init__(LEFT, RIGHT, **kwargs)
+        if not isinstance(stroke_width, (float, int)):
+            self.insert_n_curves(len(stroke_width) - 2)
         self.set_stroke(stroke_color, stroke_width)
         self.set_width(mobject.get_width() * stretch_factor)
         self.next_to(mobject, DOWN, buff=buff)

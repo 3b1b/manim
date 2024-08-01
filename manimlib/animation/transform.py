@@ -65,7 +65,7 @@ class Transform(Animation):
             self.target_copy = self.target_mobject.copy()
         self.mobject.align_data_and_family(self.target_copy)
         super().begin()
-        if not self.mobject.has_updaters:
+        if not self.mobject.has_updaters():
             self.mobject.lock_matching_data(
                 self.starting_mobject,
                 self.target_copy,

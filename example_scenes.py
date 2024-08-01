@@ -26,7 +26,7 @@ class OpeningManimExample(Scene):
         matrix = [[1, 1], [0, 1]]
         linear_transform_words = VGroup(
             Text("This is what the matrix"),
-            IntegerMatrix(matrix, include_background_rectangle=True),
+            IntegerMatrix(matrix),
             Text("looks like")
         )
         linear_transform_words.arrange(RIGHT)
@@ -251,7 +251,7 @@ class TexIndexing(Scene):
             self.play(FlashAround(part))
         self.wait()
         self.play(FadeOut(equation))
-
+        
         # Indexing by substrings like this may not work when
         # the order in which Latex draws symbols does not match
         # the order in which they show up in the string.
@@ -289,11 +289,11 @@ class UpdatersExample(Scene):
         brace = always_redraw(Brace, square, UP)
 
         label = TexText("Width = 0.00")
-        number = label.make_number_changable("0.00")
+        number = label.make_number_changeable("0.00")
 
         # This ensures that the method deicmal.next_to(square)
         # is called on every frame
-        always(label.next_to, brace, UP)
+        label.always.next_to(brace, UP)
         # You could also write the following equivalent line
         # label.add_updater(lambda m: m.next_to(brace, UP))
 
@@ -302,7 +302,7 @@ class UpdatersExample(Scene):
         # should be functions returning arguments to that method.
         # The following line ensures thst decimal.set_value(square.get_y())
         # is called every frame
-        f_always(number.set_value, square.get_width)
+        number.f_always.set_value(square.get_width)
         # You could also write the following equivalent line
         # number.add_updater(lambda m: m.set_value(square.get_width()))
 
@@ -359,7 +359,7 @@ class CoordinateSystemExample(Scene):
             # Alternatively, you can specify configuration for just one
             # of them, like this.
             y_axis_config=dict(
-                numbers_with_elongated_ticks=[-2, 2],
+                big_tick_numbers=[-2, 2],
             )
         )
         # Keyword arguments of add_coordinate_labels can be used to
@@ -515,7 +515,7 @@ class TexAndNumbersExample(Scene):
         # on them.
         tex = Tex("x^2 + y^2 = 4.00")
         tex.next_to(axes, UP, buff=0.5)
-        value = tex.make_number_changable("4.00")
+        value = tex.make_number_changeable("4.00")
 
 
         # This will tie the right hand side of our equation to
@@ -537,10 +537,10 @@ class TexAndNumbersExample(Scene):
             rate_func=there_and_back,
         )
 
-        # By default, tex.make_number_changable replaces the first occurance
+        # By default, tex.make_number_changeable replaces the first occurance
         # of the number,but by passing replace_all=True it replaces all and
         # returns a group of the results
-        exponents = tex.make_number_changable("2", replace_all=True)
+        exponents = tex.make_number_changeable("2", replace_all=True)
         self.play(
             LaggedStartMap(
                 FlashAround, exponents,

@@ -25,6 +25,7 @@ class CameraFrame(Mobject):
         center_point: Vect3 = ORIGIN,
         # Field of view in the y direction
         fovy: float = 45 * DEGREES,
+        euler_axes: str = "zxz",
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -35,6 +36,7 @@ class CameraFrame(Mobject):
         self.default_orientation = Rotation.identity()
         self.view_matrix = np.identity(4)
         self.camera_location = OUT  # This will be updated by set_points
+        self.euler_axes = euler_axes
 
         self.set_points(np.array([ORIGIN, LEFT, RIGHT, DOWN, UP]))
         self.set_width(frame_shape[0], stretch=True)
@@ -62,7 +64,7 @@ class CameraFrame(Mobject):
         orientation = self.get_orientation()
         if all(orientation.as_quat() == [0, 0, 0, 1]):
             return np.zeros(3)
-        return orientation.as_euler("zxz")[::-1]
+        return orientation.as_euler(self.euler_axes)[::-1]
 
     def get_theta(self):
         return self.get_euler_angles()[0]
@@ -126,21 +128,44 @@ class CameraFrame(Mobject):
         if all(eulers == 0):
             rot = Rotation.identity()
         else:
-            rot = Rotation.from_euler("zxz", eulers[::-1])
+            rot = Rotation.from_euler(self.euler_axes, eulers[::-1])
         self.set_orientation(rot)
         return self
+
+    def increment_euler_angles(
+        self,
+        dtheta: float | None = None,
+        dphi: float | None = None,
+        dgamma: float | None = None,
+        units: float = RADIANS
+    ):
+        angles = self.get_euler_angles()
+        for i, value in enumerate([dtheta, dphi, dgamma]):
+            if value is not None:
+                angles[i] += value * units
+        self.set_euler_angles(*angles)
+        return self
+
+    def set_euler_axes(self, seq: str):
+        self.euler_axes = seq
 
     def reorient(
         self,
         theta_degrees: float | None = None,
         phi_degrees: float | None = None,
         gamma_degrees: float | None = None,
+        center: Vect3 | tuple[float, float, float] | None = None,
+        height: float | None = None
     ):
         """
         Shortcut for set_euler_angles, defaulting to taking
         in angles in degrees
         """
         self.set_euler_angles(theta_degrees, phi_degrees, gamma_degrees, units=DEGREES)
+        if center is not None:
+            self.move_to(np.array(center))
+        if height is not None:
+            self.set_height(height)
         return self
 
     def set_theta(self, theta: float):
@@ -152,16 +177,20 @@ class CameraFrame(Mobject):
     def set_gamma(self, gamma: float):
         return self.set_euler_angles(gamma=gamma)
 
-    def increment_theta(self, dtheta: float):
-        self.rotate(dtheta, OUT)
+    def increment_theta(self, dtheta: float, units=RADIANS):
+        self.increment_euler_angles(dtheta=dtheta, units=units)
         return self
 
-    def increment_phi(self, dphi: float):
-        self.rotate(dphi, self.get_inverse_camera_rotation_matrix()[0])
+    def increment_phi(self, dphi: float, units=RADIANS):
+        self.increment_euler_angles(dphi=dphi, units=units)
         return self
 
-    def increment_gamma(self, dgamma: float):
-        self.rotate(dgamma, self.get_inverse_camera_rotation_matrix()[2])
+    def increment_gamma(self, dgamma: float, units=RADIANS):
+        self.increment_euler_angles(dgamma=dgamma, units=units)
+        return self
+
+    def add_ambient_rotation(self, angular_speed=1 * DEGREES):
+        self.add_updater(lambda m, dt: m.increment_theta(angular_speed * dt))
         return self
 
     @Mobject.affects_data

@@ -7,6 +7,7 @@ import platform
 import pyperclip
 import random
 import time
+import re
 from functools import wraps
 
 from IPython.terminal import pt_inputhooks
@@ -44,8 +45,10 @@ from manimlib.utils.iterables import batch_by_property
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable
+    from typing import Callable, Iterable, TypeVar
     from manimlib.typing import Vect3
+
+    T = TypeVar('T')
 
     from PIL.Image import Image
 
@@ -210,7 +213,8 @@ class Scene(object):
         show_animation_progress: bool = False,
     ) -> None:
         if not self.preview:
-            return  # Embed is only relevant with a preview
+            # Embed is only relevant with a preview
+            return  
         self.stop_skipping()
         self.update_frame()
         self.save_state()
@@ -236,6 +240,8 @@ class Scene(object):
             i2g=self.i2g,
             i2m=self.i2m,
             checkpoint_paste=self.checkpoint_paste,
+            touch=lambda: shell.enable_gui("manim"),
+            notouch=lambda: shell.enable_gui(None),
         )
 
         # Enables gui interactions during the embed
@@ -257,20 +263,19 @@ class Scene(object):
         # namespace, since this is just a shell session anyway.
         shell.events.register(
             "pre_run_cell",
-            lambda: shell.user_global_ns.update(shell.user_ns)
+            lambda *args, **kwargs: shell.user_global_ns.update(shell.user_ns)
         )
 
         # Operation to run after each ipython command
-        def post_cell_func():
+        def post_cell_func(*args, **kwargs):
             if not self.is_window_closing():
                 self.update_frame(dt=0, ignore_skipping=True)
-            self.save_state()
 
         shell.events.register("post_run_cell", post_cell_func)
 
         # Flash border, and potentially play sound, on exceptions
         def custom_exc(shell, etype, evalue, tb, tb_offset=None):
-            # still show the error don't just swallow it
+            # Show the error don't just swallow it
             shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
             if self.embed_error_sound:
                 os.system("printf '\a'")
@@ -342,17 +347,9 @@ class Scene(object):
             mobject.update(dt)
 
     def should_update_mobjects(self) -> bool:
-        return self.always_update_mobjects or any([
-            len(mob.get_family_updaters()) > 0
-            for mob in self.mobjects
-        ])
-
-    def has_time_based_updaters(self) -> bool:
-        return any([
-            sm.has_time_based_updater()
-            for mob in self.mobjects()
-            for sm in mob.get_family()
-        ])
+        return self.always_update_mobjects or any(
+            mob.has_updaters() for mob in self.mobjects
+        )
 
     # Related to time
 
@@ -399,7 +396,8 @@ class Scene(object):
             for batch, key in batches
         ]
 
-    def affects_mobject_list(func: Callable):
+    @staticmethod
+    def affects_mobject_list(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             func(self, *args, **kwargs)
@@ -774,13 +772,31 @@ class Scene(object):
             )
 
         pasted = pyperclip.paste()
-        line0 = pasted.lstrip().split("\n")[0]
-        if line0.startswith("#"):
-            if line0 not in self.checkpoint_states:
-                self.checkpoint(line0)
-            else:
-                self.revert_to_checkpoint(line0)
+        lines = pasted.split("\n")
 
+        # Commented lines trigger saved checkpoints
+        if lines[0].lstrip().startswith("#"):
+            if lines[0] not in self.checkpoint_states:
+                self.checkpoint(lines[0])
+            else:
+                self.revert_to_checkpoint(lines[0])
+
+        # Copied methods of a scene are handled specially
+        # A bit hacky, yes, but convenient
+        method_pattern = r"^def\s+([a-zA-Z_]\w*)\s*\(self.*\):"
+        method_names = re.findall(method_pattern ,lines[0].strip())
+        if method_names:
+            method_name = method_names[0]
+            indent = " " * lines[0].index(lines[0].strip())
+            pasted = "\n".join([
+                # Remove self from function signature
+                re.sub(r"self(,\s*)?", "", lines[0]), 
+                *lines[1:],
+                # Attach to scene via self.func_name = func_name
+                f"{indent}self.{method_name} = {method_name}"
+            ])
+
+        # Keep track of skipping and progress bar status
         prev_skipping = self.skip_animations
         self.skip_animations = skip
 
@@ -836,6 +852,13 @@ class Scene(object):
         return self.window and (self.window.is_closing or self.quit_interaction)
 
     # Event handling
+    def set_floor_plane(self, plane: str = "xy"):
+        if plane == "xy":
+            self.frame.set_euler_axes("zxz")
+        elif plane == "xz":
+            self.frame.set_euler_axes("zxy")
+        else:
+            raise Exception("Only `xz` and `xy` are valid floor planes")
 
     def on_mouse_motion(
         self,
@@ -1023,7 +1046,7 @@ class ThreeDScene(Scene):
     default_frame_orientation = (-30, 70)
     always_depth_test = True
 
-    def add(self, *mobjects, set_depth_test: bool = True):
+    def add(self, *mobjects: Mobject, set_depth_test: bool = True):
         for mob in mobjects:
             if set_depth_test and not mob.is_fixed_in_frame() and self.always_depth_test:
                 mob.apply_depth_test()

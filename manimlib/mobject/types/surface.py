@@ -133,20 +133,28 @@ class Surface(Mobject):
         if len(indices) == 0:
             return np.zeros((3, 0))
 
-        left = indices - 1
-        right = indices + 1
-        up = indices - nv
-        down = indices + nv
+        # For each point, find two adjacent points at indices
+        # step1 and step2, such that crossing points[step1] - points
+        # with points[step1] - points gives a normal vector
+        step1 = indices + 1
+        step2 = indices + nu
 
-        left[0] = indices[0]
-        right[-1] = indices[-1]
-        up[:nv] = indices[:nv]
-        down[-nv:] = indices[-nv:]
+        # Right edge
+        step1[nu - 1::nu] = indices[nu - 1::nu] + nu
+        step2[nu - 1::nu] = indices[nu - 1::nu] - 1
+
+        # Bottom edge
+        step1[-nu:] = indices[-nu:] - nu
+        step2[-nu:] = indices[-nu:] + 1
+
+        # Lower right point
+        step1[-1] = indices[-1] - 1
+        step2[-1] = indices[-1] - nu
 
         points = self.get_points()
         crosses = cross(
-            points[right] - points[left],
-            points[up] - points[down],
+            points[step1] - points,
+            points[step2] - points,
         )
         self.data["normal"] = normalize_along_axis(crosses, 1)
         return self.data["normal"]

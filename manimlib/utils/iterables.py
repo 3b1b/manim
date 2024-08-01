@@ -3,6 +3,7 @@ from __future__ import annotations
 from colour import Color
 
 import numpy as np
+import random
 
 from typing import TYPE_CHECKING
 
@@ -81,6 +82,12 @@ def listify(obj: object) -> list:
         return list(obj)
     except TypeError:
         return [obj]
+
+
+def shuffled(iterable: Iterable) -> list:
+    as_list = list(iterable)
+    random.shuffle(as_list)
+    return as_list
 
 
 def resize_array(nparray: np.ndarray, length: int) -> np.ndarray:

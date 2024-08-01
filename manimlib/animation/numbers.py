@@ -3,6 +3,7 @@ from __future__ import annotations
 from manimlib.animation.animation import Animation
 from manimlib.mobject.numbers import DecimalNumber
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.simple_functions import clip
 
 from typing import TYPE_CHECKING
 
@@ -55,9 +56,9 @@ class CountInFrom(ChangingDecimal):
         source_number: float | complex = 0,
         **kwargs
     ):
-        start_number = decimal_mob.number
+        start_number = decimal_mob.get_value()
         super().__init__(
             decimal_mob,
-            lambda a: interpolate(source_number, start_number, a),
+            lambda a: interpolate(source_number, start_number, clip(a, 0, 1)),
             **kwargs
         )

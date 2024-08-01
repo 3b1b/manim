@@ -167,3 +167,4 @@ class TracingTail(TracedPath):
             stroke_color=stroke_color,
             **kwargs
         )
+        self.add_updater(lambda m: m.set_stroke(width=stroke_width, opacity=stroke_opacity))

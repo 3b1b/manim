@@ -1,12 +1,13 @@
 #version 330
 
 layout (triangles) in;
-layout (triangle_strip, max_vertices = 6) out;
+layout (triangle_strip, max_vertices = 64) out;  // Related to MAX_STEPS below
 
 uniform float anti_alias_width;
 uniform float flat_stroke;
 uniform float pixel_size;
 uniform float joint_type;
+uniform float frame_scale;
 
 in vec3 verts[3];
 
@@ -15,12 +16,8 @@ in float v_stroke_width[3];
 in vec4 v_color[3];
 
 out vec4 color;
-out float uv_stroke_width;
-out float uv_anti_alias_width;
-
-out float is_linear;
-
-out vec2 uv_coords;
+out float scaled_anti_alias_width;
+out float scaled_signed_dist_to_curve;
 
 // Codes for joint types
 const int NO_JOINT = 0;
@@ -32,11 +29,13 @@ const int MITER_JOINT = 3;
 // two vectors is larger than this, we
 // consider them aligned
 const float COS_THRESHOLD = 0.99;
+// Used to determine how many lines to break the curve into
+const float POLYLINE_FACTOR = 30;
+const int MAX_STEPS = 32;
 
 vec3 unit_normal = vec3(0.0, 0.0, 1.0);
 
 #INSERT emit_gl_Position.glsl
-#INSERT get_xyz_to_uv.glsl
 #INSERT finalize_color.glsl
 
 
@@ -51,6 +50,30 @@ vec3 get_joint_unit_normal(vec4 joint_product){
 vec4 normalized_joint_product(vec4 joint_product){
     float norm = length(joint_product);
     return (norm > 1e-10) ? joint_product / norm : vec4(0.0, 0.0, 0.0, 1.0);
+}
+
+
+vec3 point_on_curve(float t){
+    return verts[0] + 2 * (verts[1] - verts[0]) * t + (verts[0] - 2 * verts[1] + verts[2]) * t * t;
+}
+
+
+vec3 tangent_on_curve(float t){
+    return 2 * (verts[1] - verts[0]) + 2 * (verts[0] - 2 * verts[1] + verts[2]) * t;
+}
+
+
+void compute_subdivision(out int n_steps, out float subdivision[MAX_STEPS]){
+    // Crude estimate for the number of polyline segments to use, based
+    // on the area spanned by the control points
+    float area = 0.5 * length(v_joint_product[1].xzy);
+    int count = 2 + int(round(POLYLINE_FACTOR * sqrt(area) / frame_scale));
+
+    n_steps = min(count, MAX_STEPS);
+    for(int i = 0; i < MAX_STEPS; i++){
+        if (i >= n_steps) break;
+        subdivision[i] = float(i) / (n_steps - 1);
+    }
 }
 
 
@@ -83,73 +106,58 @@ void create_joint(
     changing_c1 = static_c1 + shift * unit_tan;
 }
 
-vec3 get_perp(int index, vec4 joint_product, vec3 point, vec3 tangent, float aaw){
+
+vec3 left_step(vec3 point, vec3 tangent, vec4 joint_product){
     /*
     Perpendicular vectors to the left of the curve
     */
-    float buff = 0.5 * v_stroke_width[index] + aaw;
     // Add correction for sharp angles to prevent weird bevel effects
-    if(joint_product.w < -0.75) buff *= 4 * (joint_product.w + 1.0);
+    float mult = 1.0;
+    if(joint_product.w < -0.75) mult *= 4 * (joint_product.w + 1.0);
     vec3 normal = get_joint_unit_normal(joint_product);
     // Set global unit normal
     unit_normal = normal;
     // Choose the "outward" normal direction
     if(normal.z < 0) normal *= -1;
     if(bool(flat_stroke)){
-        return buff * normalize(cross(normal, tangent));
+        return mult * normalize(cross(normal, tangent));
     }else{
-        return buff * normalize(cross(camera_position - point, tangent));
+        return mult * normalize(cross(camera_position - point, tangent));
     }
 }
 
-// This function is responsible for finding the corners of
-// a bounding region around the bezier curve, which can be
-// emitted as a triangle fan, with vertices vaguely close
-// to control points so that the passage of vert data to
-// frag shaders is most natural.
-void get_corners(
-    // Control points for a bezier curve
-    vec3 p0,
-    vec3 p1,
-    vec3 p2,
-    // Unit tangent vectors at p0 and p2
-    vec3 v01,
-    vec3 v12,
-    // Anti-alias width
-    float aaw,
-    out vec3 corners[6]
+
+void emit_point_with_width(
+    vec3 point,
+    vec3 tangent,
+    vec4 joint_product,
+    float width,
+    vec4 joint_color
 ){
-    bool linear = bool(is_linear);
-    vec4 jp0 = normalized_joint_product(v_joint_product[0]);
-    vec4 jp2 = normalized_joint_product(v_joint_product[2]);
-    vec3 p0_perp = get_perp(0, jp0, p0, v01, aaw);
-    vec3 p2_perp = get_perp(2, jp2, p2, v12, aaw);
-    vec3 p1_perp = 0.5 * (p0_perp + p2_perp);
-    if(linear){
-        p1_perp *= (0.5 * v_stroke_width[1] + aaw) / length(p1_perp);
-    }
+    vec3 unit_tan = normalize(tangent);
+    vec4 normed_join_product = normalized_joint_product(joint_product);
+    vec3 perp = 0.5 * width * left_step(point, unit_tan, normed_join_product);
 
-    // The order of corners should be for a triangle_strip.
-    vec3 c0 = p0 + p0_perp;
-    vec3 c1 = p0 - p0_perp;
-    vec3 c2 = p1 + p1_perp;
-    vec3 c3 = p1 - p1_perp;
-    vec3 c4 = p2 + p2_perp;
-    vec3 c5 = p2 - p2_perp;
-    // Move the inner middle control point to make
-    // room for the curve
-    // float orientation = dot(unit_normal, v_joint_product[1].xyz);
-    float orientation = v_joint_product[1].z;
-    if(!linear && orientation >= 0.0)     c2 = 0.5 * (c0 + c4);
-    else if(!linear && orientation < 0.0) c3 = 0.5 * (c1 + c5);
+    vec3 corners[2] = vec3[2](point + perp, point - perp);
+    create_joint(
+        normed_join_product, unit_tan, length(perp),
+        corners[0], corners[0],
+        corners[1], corners[1]
+    );
 
-    // Account for previous and next control points
-    if(bool(flat_stroke)){
-        create_joint(jp0, v01, length(p0_perp), c1, c1, c0, c0);
-        create_joint(jp2, -v12, length(p2_perp), c5, c5, c4, c4);
-    }
+    color = finalize_color(joint_color, point, unit_normal);
+    if (width == 0) scaled_anti_alias_width = -1.0;  // Signal to discard in frag
+    else scaled_anti_alias_width = 2.0 * anti_alias_width * pixel_size / width;
 
-    corners = vec3[6](c0, c1, c2, c3, c4, c5);
+    // Emit two corners
+    // The frag shader will receive a value from -1 to 1,
+    // reflecting where in the stroke that point is
+    scaled_signed_dist_to_curve = -1.0;
+    emit_gl_Position(corners[0]);
+    EmitVertex();
+    scaled_signed_dist_to_curve = +1.0;
+    emit_gl_Position(corners[1]);
+    EmitVertex();
 }
 
 void main() {
@@ -157,53 +165,40 @@ void main() {
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
 
-    vec3 p0 = verts[0];
-    vec3 p1 = verts[1];
-    vec3 p2 = verts[2];
-    vec3 v01 = normalize(p1 - p0);
-    vec3 v12 = normalize(p2 - p1);
-
-
-    vec4 jp1 = normalized_joint_product(v_joint_product[1]);
-    is_linear = float(jp1.w > COS_THRESHOLD);
-
-    // We want to change the coordinates to a space where the curve
-    // coincides with y = x^2, between some values x0 and x2. Or, in
-    // the case of a linear curve just put it on the x-axis
-    mat4 xyz_to_uv;
-    float uv_scale_factor;
-    if(!bool(is_linear)){
-        bool too_steep;
-        xyz_to_uv = get_xyz_to_uv(p0, p1, p2, 2.0, too_steep);
-        is_linear = float(too_steep);
-        uv_scale_factor = length(xyz_to_uv[0].xyz);
+    // Compute subdivision
+    int n_steps;
+    float subdivision[MAX_STEPS];
+    compute_subdivision(n_steps, subdivision);
+    vec3 points[MAX_STEPS];
+    for (int i = 0; i < MAX_STEPS; i++){
+        if (i >= n_steps) break;
+        points[i] = point_on_curve(subdivision[i]);
     }
 
-    float scaled_aaw = anti_alias_width * pixel_size;
-    vec3 corners[6];
-    get_corners(p0, p1, p2, v01, v12, scaled_aaw, corners);
+    // Compute joint products
+    vec4 joint_products[MAX_STEPS];
+    joint_products[0] = v_joint_product[0];
+    joint_products[0].xyz *= -1;
+    joint_products[n_steps - 1] = v_joint_product[2];
+    for (int i = 1; i < MAX_STEPS; i++){
+        if (i >= n_steps - 1) break;
+        vec3 v1 = points[i] - points[i - 1];
+        vec3 v2 = points[i + 1] - points[i];
+        joint_products[i].xyz = cross(v1, v2);
+        joint_products[i].w = dot(v1, v2);
+    }
 
-    // Emit each corner
-    float max_sw = max(v_stroke_width[0], v_stroke_width[2]);
-    for(int i = 0; i < 6; i++){
-        float stroke_width = v_stroke_width[i / 2];
-
-        if(bool(is_linear)){
-            float sign = vec2(-1, 1)[i % 2];
-            // In this case, we only really care about
-            // the v coordinate
-            uv_coords = vec2(0, sign * (0.5 * stroke_width + scaled_aaw));
-            uv_anti_alias_width = scaled_aaw;
-            uv_stroke_width = stroke_width;
-        }else{
-            uv_coords = (xyz_to_uv * vec4(corners[i], 1.0)).xy;
-            uv_stroke_width = uv_scale_factor * stroke_width;
-            uv_anti_alias_width = uv_scale_factor * scaled_aaw;
-        }
-
-        color = finalize_color(v_color[i / 2], corners[i], unit_normal);
-        emit_gl_Position(corners[i]);
-        EmitVertex();
+    // Emit vertex pairs aroudn subdivided points
+    for (int i = 0; i < MAX_STEPS; i++){
+        if (i >= n_steps) break;
+        float t = subdivision[i];
+        emit_point_with_width(
+            points[i],
+            tangent_on_curve(t),
+            joint_products[i],
+            mix(v_stroke_width[0], v_stroke_width[2], t),
+            mix(v_color[0], v_color[2], t)
+        );
     }
     EndPrimitive();
 }
