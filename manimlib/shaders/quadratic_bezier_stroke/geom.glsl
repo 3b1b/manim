@@ -16,9 +16,8 @@ in float v_stroke_width[3];
 in vec4 v_color[3];
 
 out vec4 color;
-out float uv_stroke_width;
-out float uv_anti_alias_width;
-out float signed_dist_to_curve;
+out float scaled_anti_alias_width;
+out float scaled_signed_dist_to_curve;
 out float flag;
 
 // Codes for joint types
@@ -142,7 +141,7 @@ void emit_point_with_width(
     float buff = 0.5 * width + aaw;
     vec3 perp = buff * get_perp(point, unit_tan, njp);
 
-    vec3 corners[2] = vec3[2](point + perp, point - perp);  
+    vec3 corners[2] = vec3[2](point + perp, point - perp);
     create_joint(
         njp, unit_tan, length(perp),
         corners[0], corners[0],
@@ -150,16 +149,19 @@ void emit_point_with_width(
     );
 
     color = finalize_color(joint_color, point, unit_normal);
-    uv_anti_alias_width = aaw;
-    uv_stroke_width = width;
+    if (width == 0) scaled_anti_alias_width = 0;
+    else scaled_anti_alias_width = 2.0 * aaw / width;
 
     // Emit two corners
-    for(int i = 0; i < 2; i++){
-        float sign = i % 2 == 0 ? -1 : 1;
-        signed_dist_to_curve = sign * buff;
-        emit_gl_Position(corners[i]);
-        EmitVertex();
-    }
+    // The frag shader will just receive a value from -1 to 1, reflecting where in the
+    // stroke that point is
+    scaled_signed_dist_to_curve = -1.0;
+    emit_gl_Position(corners[0]);
+    EmitVertex();
+
+    scaled_signed_dist_to_curve = +1.0;
+    emit_gl_Position(corners[1]);
+    EmitVertex();
 }
 
 void main() {
