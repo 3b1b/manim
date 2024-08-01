@@ -1,12 +1,13 @@
 #version 330
 
 layout (triangles) in;
-layout (triangle_strip, max_vertices = 32) out;  // Related to MAX_STEPS below
+layout (triangle_strip, max_vertices = 64) out;  // Related to MAX_STEPS below
 
 uniform float anti_alias_width;
 uniform float flat_stroke;
 uniform float pixel_size;
 uniform float joint_type;
+uniform float frame_scale;
 
 in vec3 verts[3];
 
@@ -18,6 +19,7 @@ out vec4 color;
 out float uv_stroke_width;
 out float uv_anti_alias_width;
 out float signed_dist_to_curve;
+out float flag;
 
 // Codes for joint types
 const int NO_JOINT = 0;
@@ -28,8 +30,10 @@ const int MITER_JOINT = 3;
 // When the cosine of the angle between
 // two vectors is larger than this, we
 // consider them aligned
-const float COS_THRESHOLD = 0.999;
-const int MAX_STEPS = 16;
+const float COS_THRESHOLD = 0.99;
+// Used to determine how many lines to break the curve into
+const float POLYLINE_FACTOR = 20;
+const int MAX_STEPS = 32;
 
 vec3 unit_normal = vec3(0.0, 0.0, 1.0);
 
@@ -57,34 +61,17 @@ vec3 point_on_curve(float t){
 
 
 vec3 tangent_on_curve(float t){
-    return 2 * (verts[1] + -verts[0]) + 2 * (verts[0] - 2 * verts[1] + verts[2]) * t;
-}
-
-
-void map_to_basic(out float x0, out float x2, out float scale_factor){
-    /* Find the coordinates and scale factor such that the bezier curve
-    defined by verts[] is congruent to a section of the parabola y = x^2
-    between x0 and x2, with scale_factor
-    */
+    return 2 * (verts[1] - verts[0]) + 2 * (verts[0] - 2 * verts[1] + verts[2]) * t;
 }
 
 
 void compute_subdivision(out int n_steps, out float subdivision[MAX_STEPS]){
-    /*
-    Based on https://raphlinus.github.io/graphics/curves/2019/12/23/flatten-quadbez.html
-    */
-    float x0;
-    float x2;
-    float scale_factor;
-    map_to_basic(x0, x2, scale_factor);
+    // Crude estimate for the number of polyline segments to use, based
+    // on the area spanned by the control points
+    float area = 0.5 * length(v_joint_product[1].xzy);
+    int count = 2 + int(round(POLYLINE_FACTOR * sqrt(area) / frame_scale));
 
-    if (normalized_joint_product(v_joint_product[1]).w > COS_THRESHOLD){
-        // Linear
-        n_steps = 2;
-    }else{
-        n_steps = MAX_STEPS;  // TODO
-    }
-
+    n_steps = min(count, MAX_STEPS);
     for(int i = 0; i < MAX_STEPS; i++){
         if (i >= n_steps) break;
         subdivision[i] = float(i) / (n_steps - 1);
@@ -176,6 +163,7 @@ void emit_point_with_width(
 }
 
 void main() {
+    flag = 0.0;
     // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
