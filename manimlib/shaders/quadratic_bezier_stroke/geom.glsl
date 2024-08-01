@@ -18,7 +18,6 @@ in vec4 v_color[3];
 out vec4 color;
 out float scaled_anti_alias_width;
 out float scaled_signed_dist_to_curve;
-out float flag;
 
 // Codes for joint types
 const int NO_JOINT = 0;
@@ -31,7 +30,7 @@ const int MITER_JOINT = 3;
 // consider them aligned
 const float COS_THRESHOLD = 0.99;
 // Used to determine how many lines to break the curve into
-const float POLYLINE_FACTOR = 20;
+const float POLYLINE_FACTOR = 30;
 const int MAX_STEPS = 32;
 
 vec3 unit_normal = vec3(0.0, 0.0, 1.0);
@@ -108,7 +107,7 @@ void create_joint(
 }
 
 
-vec3 get_perp(vec3 point, vec3 tangent, vec4 joint_product){
+vec3 left_step(vec3 point, vec3 tangent, vec4 joint_product){
     /*
     Perpendicular vectors to the left of the curve
     */
@@ -133,39 +132,35 @@ void emit_point_with_width(
     vec3 tangent,
     vec4 joint_product,
     float width,
-    vec4 joint_color,
-    float aaw
+    vec4 joint_color
 ){
     vec3 unit_tan = normalize(tangent);
-    vec4 njp = normalized_joint_product(joint_product);
-    float buff = 0.5 * width + aaw;
-    vec3 perp = buff * get_perp(point, unit_tan, njp);
+    vec4 normed_join_product = normalized_joint_product(joint_product);
+    vec3 perp = 0.5 * width * left_step(point, unit_tan, normed_join_product);
 
     vec3 corners[2] = vec3[2](point + perp, point - perp);
     create_joint(
-        njp, unit_tan, length(perp),
+        normed_join_product, unit_tan, length(perp),
         corners[0], corners[0],
         corners[1], corners[1]
     );
 
     color = finalize_color(joint_color, point, unit_normal);
-    if (width == 0) scaled_anti_alias_width = 0;
-    else scaled_anti_alias_width = 2.0 * aaw / width;
+    if (width == 0) scaled_anti_alias_width = -1.0;  // Signal to discard in frag
+    else scaled_anti_alias_width = 2.0 * anti_alias_width * pixel_size / width;
 
     // Emit two corners
-    // The frag shader will just receive a value from -1 to 1, reflecting where in the
-    // stroke that point is
+    // The frag shader will receive a value from -1 to 1,
+    // reflecting where in the stroke that point is
     scaled_signed_dist_to_curve = -1.0;
     emit_gl_Position(corners[0]);
     EmitVertex();
-
     scaled_signed_dist_to_curve = +1.0;
     emit_gl_Position(corners[1]);
     EmitVertex();
 }
 
 void main() {
-    flag = 0.0;
     // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
@@ -174,14 +169,14 @@ void main() {
     int n_steps;
     float subdivision[MAX_STEPS];
     compute_subdivision(n_steps, subdivision);
-
-    // Compute joint products
     vec3 points[MAX_STEPS];
-    vec4 joint_products[MAX_STEPS];
     for (int i = 0; i < MAX_STEPS; i++){
         if (i >= n_steps) break;
         points[i] = point_on_curve(subdivision[i]);
     }
+
+    // Compute joint products
+    vec4 joint_products[MAX_STEPS];
     joint_products[0] = v_joint_product[0];
     joint_products[0].xyz *= -1;
     joint_products[n_steps - 1] = v_joint_product[2];
@@ -194,7 +189,6 @@ void main() {
     }
 
     // Emit vertex pairs aroudn subdivided points
-    float scaled_aaw = anti_alias_width * pixel_size;
     for (int i = 0; i < MAX_STEPS; i++){
         if (i >= n_steps) break;
         float t = subdivision[i];
@@ -203,8 +197,7 @@ void main() {
             tangent_on_curve(t),
             joint_products[i],
             mix(v_stroke_width[0], v_stroke_width[2], t),
-            mix(v_color[0], v_color[2], t),
-            scaled_aaw
+            mix(v_color[0], v_color[2], t)
         );
     }
     EndPrimitive();
