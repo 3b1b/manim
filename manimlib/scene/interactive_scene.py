@@ -48,6 +48,7 @@ RESIZE_KEY = 't'
 COLOR_KEY = 'c'
 INFORMATION_KEY = 'i'
 CURSOR_KEY = 'k'
+COPY_FRAME_POSITION_KEY = 'p'
 
 
 # Note, a lot of the functionality here is still buggy and very much a work in progress.
@@ -504,7 +505,7 @@ class InteractiveScene(Scene):
             self.toggle_selection_mode()
         elif char == "s" and modifiers == COMMAND_MODIFIER:
             self.save_selection_to_file()
-        elif char == PAN_3D_KEY and modifiers == COMMAND_MODIFIER:
+        elif char == "d" and modifiers == SHIFT_MODIFIER:
             self.copy_frame_positioning()
         elif symbol in ARROW_SYMBOLS:
             self.nudge_selection(

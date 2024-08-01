@@ -231,7 +231,7 @@ class Tex(StringMobject):
         ))
         return re.findall(pattern, self.string)
 
-    def make_number_changable(
+    def make_number_changeable(
         self,
         value: float | int | str,
         index: int = 0,
@@ -241,7 +241,7 @@ class Tex(StringMobject):
         substr = str(value)
         parts = self.select_parts(substr)
         if len(parts) == 0:
-            log.warning(f"{value} not found in Tex.make_number_changable call")
+            log.warning(f"{value} not found in Tex.make_number_changeable call")
             return VMobject()
         if index > len(parts) - 1:
             log.warning(f"Requested {index}th occurance of {value}, but only {len(parts)} exist")

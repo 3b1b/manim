@@ -190,9 +190,10 @@ class VMobject(Mobject):
         recurse: bool = True
     ) -> Self:
         self.set_rgba_array_by_color(color, opacity, 'fill_rgba', recurse)
-        if border_width is not None:
-            for mob in self.get_family(recurse):
-                mob.data["fill_border_width"] = border_width
+        if border_width is None:
+            border_width = 0 if self.get_fill_opacity() < 1 else 0.5
+        for mob in self.get_family(recurse):
+            mob.data["fill_border_width"] = border_width
         self.note_changed_fill()
         return self
 

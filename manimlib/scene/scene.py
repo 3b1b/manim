@@ -213,7 +213,8 @@ class Scene(object):
         show_animation_progress: bool = False,
     ) -> None:
         if not self.preview:
-            return  # Embed is only relevant with a preview
+            # Embed is only relevant with a preview
+            return  
         self.stop_skipping()
         self.update_frame()
         self.save_state()
@@ -239,6 +240,8 @@ class Scene(object):
             i2g=self.i2g,
             i2m=self.i2m,
             checkpoint_paste=self.checkpoint_paste,
+            touch=lambda: shell.enable_gui("manim"),
+            notouch=lambda: shell.enable_gui(None),
         )
 
         # Enables gui interactions during the embed
@@ -260,20 +263,19 @@ class Scene(object):
         # namespace, since this is just a shell session anyway.
         shell.events.register(
             "pre_run_cell",
-            lambda: shell.user_global_ns.update(shell.user_ns)
+            lambda *args, **kwargs: shell.user_global_ns.update(shell.user_ns)
         )
 
         # Operation to run after each ipython command
-        def post_cell_func():
+        def post_cell_func(*args, **kwargs):
             if not self.is_window_closing():
                 self.update_frame(dt=0, ignore_skipping=True)
-            self.save_state()
 
         shell.events.register("post_run_cell", post_cell_func)
 
         # Flash border, and potentially play sound, on exceptions
         def custom_exc(shell, etype, evalue, tb, tb_offset=None):
-            # still show the error don't just swallow it
+            # Show the error don't just swallow it
             shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
             if self.embed_error_sound:
                 os.system("printf '\a'")

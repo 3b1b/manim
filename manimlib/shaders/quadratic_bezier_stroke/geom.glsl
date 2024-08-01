@@ -163,7 +163,6 @@ void main() {
     vec3 v01 = normalize(p1 - p0);
     vec3 v12 = normalize(p2 - p1);
 
-
     vec4 jp1 = normalized_joint_product(v_joint_product[1]);
     is_linear = float(jp1.w > COS_THRESHOLD);
 
@@ -189,7 +188,7 @@ void main() {
         float stroke_width = v_stroke_width[i / 2];
 
         if(bool(is_linear)){
-            float sign = vec2(-1, 1)[i % 2];
+            float sign = (i % 2 == 0 ? -1 : 1);
             // In this case, we only really care about
             // the v coordinate
             uv_coords = vec2(0, sign * (0.5 * stroke_width + scaled_aaw));

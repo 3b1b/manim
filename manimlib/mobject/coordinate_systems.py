@@ -603,9 +603,6 @@ class ThreeDAxes(Axes):
         **kwargs
     ) -> ParametricSurface:
         surface = ParametricSurface(func, color=color, opacity=opacity, **kwargs)
-        xu = self.x_axis.get_unit_size()
-        yu = self.y_axis.get_unit_size()
-        zu = self.z_axis.get_unit_size()
         axes = [self.x_axis, self.y_axis, self.z_axis]
         for dim, axis in zip(range(3), axes):
             surface.stretch(axis.get_unit_size(), dim, about_point=ORIGIN)
