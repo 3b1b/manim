@@ -53,27 +53,13 @@ vec4 normalized_joint_product(vec4 joint_product){
 }
 
 
-vec3 point_on_curve(float t){
-    return verts[0] + 2 * (verts[1] - verts[0]) * t + (verts[0] - 2 * verts[1] + verts[2]) * t * t;
+vec3 point_on_quadratic(float t, vec3 c0, vec3 c1, vec3 c2){
+    return c0 + c1 * t + c2 * t * t;
 }
 
 
-vec3 tangent_on_curve(float t){
-    return 2 * (verts[1] - verts[0]) + 2 * (verts[0] - 2 * verts[1] + verts[2]) * t;
-}
-
-
-void compute_subdivision(out int n_steps, out float subdivision[MAX_STEPS]){
-    // Crude estimate for the number of polyline segments to use, based
-    // on the area spanned by the control points
-    float area = 0.5 * length(v_joint_product[1].xzy);
-    int count = 2 + int(round(POLYLINE_FACTOR * sqrt(area) / frame_scale));
-
-    n_steps = min(count, MAX_STEPS);
-    for(int i = 0; i < MAX_STEPS; i++){
-        if (i >= n_steps) break;
-        subdivision[i] = float(i) / (n_steps - 1);
-    }
+vec3 tangent_on_quadratic(float t, vec3 c1, vec3 c2){
+    return c1 + 2 * c2 * t;
 }
 
 
@@ -111,18 +97,13 @@ vec3 left_step(vec3 point, vec3 tangent, vec4 joint_product){
     /*
     Perpendicular vectors to the left of the curve
     */
-    // Add correction for sharp angles to prevent weird bevel effects
-    float mult = 1.0;
-    if(joint_product.w < -0.75) mult *= 4 * (joint_product.w + 1.0);
     vec3 normal = get_joint_unit_normal(joint_product);
-    // Set global unit normal
-    unit_normal = normal;
-    // Choose the "outward" normal direction
-    if(normal.z < 0) normal *= -1;
+    unit_normal = normal;  // Set global unit normal
+    if(normal.z < 0) normal *= -1;  // Choose the "outward" normal direction
     if(bool(flat_stroke)){
-        return mult * normalize(cross(normal, tangent));
+        return normalize(cross(normal, tangent));
     }else{
-        return mult * normalize(cross(camera_position - point, tangent));
+        return normalize(cross(camera_position - point, tangent));
     }
 }
 
@@ -135,15 +116,12 @@ void emit_point_with_width(
     vec4 joint_color
 ){
     vec3 unit_tan = normalize(tangent);
-    vec4 normed_join_product = normalized_joint_product(joint_product);
-    vec3 perp = 0.5 * width * left_step(point, unit_tan, normed_join_product);
+    vec4 unit_jp = normalized_joint_product(joint_product);
+    vec3 perp = 0.5 * width * left_step(point, unit_tan, unit_jp);
 
-    vec3 corners[2] = vec3[2](point + perp, point - perp);
-    create_joint(
-        normed_join_product, unit_tan, length(perp),
-        corners[0], corners[0],
-        corners[1], corners[1]
-    );
+    vec3 left = point + perp;
+    vec3 right = point - perp;
+    create_joint(unit_jp, unit_tan, length(perp), left, left, right, right);
 
     color = finalize_color(joint_color, point, unit_normal);
     if (width == 0) scaled_anti_alias_width = -1.0;  // Signal to discard in frag
@@ -153,26 +131,36 @@ void emit_point_with_width(
     // The frag shader will receive a value from -1 to 1,
     // reflecting where in the stroke that point is
     scaled_signed_dist_to_curve = -1.0;
-    emit_gl_Position(corners[0]);
+    emit_gl_Position(left);
     EmitVertex();
     scaled_signed_dist_to_curve = +1.0;
-    emit_gl_Position(corners[1]);
+    emit_gl_Position(right);
     EmitVertex();
 }
+
 
 void main() {
     // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
 
-    // Compute subdivision
-    int n_steps;
-    float subdivision[MAX_STEPS];
-    compute_subdivision(n_steps, subdivision);
+    // Coefficients such that the quadratic bezier is c0 + c1 * t  + c2 * t^2
+    vec3 c0 = verts[0];
+    vec3 c1 = 2 * (verts[1] - verts[0]);
+    vec3 c2 = verts[0] - 2 * verts[1] + verts[2];
+
+    // Estimate how many line segment the curve should be divided into
+    // based on the area of the triangle defined by these control points
+    float area = 0.5 * length(v_joint_product[1].xzy);
+    int count = int(round(POLYLINE_FACTOR * sqrt(area) / frame_scale));
+    int n_steps = min(2 + count, MAX_STEPS);
+
+    // Compute points along the curve
     vec3 points[MAX_STEPS];
     for (int i = 0; i < MAX_STEPS; i++){
         if (i >= n_steps) break;
-        points[i] = point_on_curve(subdivision[i]);
+        float t = float(i) / (n_steps - 1);
+        points[i] = point_on_quadratic(t, c0, c1, c2);
     }
 
     // Compute joint products
@@ -184,17 +172,16 @@ void main() {
         if (i >= n_steps - 1) break;
         vec3 v1 = points[i] - points[i - 1];
         vec3 v2 = points[i + 1] - points[i];
-        joint_products[i].xyz = cross(v1, v2);
-        joint_products[i].w = dot(v1, v2);
+        joint_products[i] = vec4(cross(v1, v2), dot(v1, v2));
     }
 
     // Emit vertex pairs aroudn subdivided points
     for (int i = 0; i < MAX_STEPS; i++){
         if (i >= n_steps) break;
-        float t = subdivision[i];
+        float t = float(i) / (n_steps - 1);
         emit_point_with_width(
             points[i],
-            tangent_on_curve(t),
+            tangent_on_quadratic(t, c1, c2),
             joint_products[i],
             mix(v_stroke_width[0], v_stroke_width[2], t),
             mix(v_color[0], v_color[2], t)
