@@ -32,8 +32,7 @@ const float COS_THRESHOLD = 0.99;
 // Used to determine how many lines to break the curve into
 const float POLYLINE_FACTOR = 30;
 const int MAX_STEPS = 32;
-
-vec3 unit_normal = vec3(0.0, 0.0, 1.0);
+const float MITER_LIMIT = 3.0;
 
 #INSERT emit_gl_Position.glsl
 #INSERT finalize_color.glsl
@@ -63,48 +62,57 @@ vec3 tangent_on_quadratic(float t, vec3 c1, vec3 c2){
 }
 
 
-void create_joint(
-    vec4 joint_product,
-    vec3 unit_tan,
-    float buff,
-    vec3 static_c0,
-    out vec3 changing_c0,
-    vec3 static_c1,
-    out vec3 changing_c1
-){
-    float cos_angle = joint_product.w;
-    if(abs(cos_angle) > COS_THRESHOLD || int(joint_type) == NO_JOINT){
-        // No joint
-        changing_c0 = static_c0;
-        changing_c1 = static_c1;
-        return;
-    }
-
-    float shift;
-    float sin_angle = length(joint_product.xyz) * sign(joint_product.z);
-    if(int(joint_type) == MITER_JOINT){
-        shift = buff * (-1.0 - cos_angle) / sin_angle;
-    }else{
-        // For a Bevel joint
-        shift = buff * (1.0 - cos_angle) / sin_angle;
-    }
-    changing_c0 = static_c0 - shift * unit_tan;
-    changing_c1 = static_c1 + shift * unit_tan;
+vec4 get_joint_product(vec3 v1, vec3 v2){
+    return vec4(cross(v1, v2), dot(v1, v2));
 }
 
 
-vec3 left_step(vec3 point, vec3 tangent, vec4 joint_product){
-    /*
-    Perpendicular vectors to the left of the curve
+vec3 project(vec3 vect, vec3 normal){
+    /* Project the vector onto the plane perpendicular to a given unit normal */
+    return vect - dot(vect, normal) * normal;
+}
+
+vec3 inverse_joint_product(vec3 vect, vec4 joint_product){
+    /* 
+    If joint_product represents vec4(cross(v1, v2), dot(v1, v2)), 
+    then given v1, this function recovers v2
     */
-    vec3 normal = get_joint_unit_normal(joint_product);
-    unit_normal = normal;  // Set global unit normal
-    if(normal.z < 0) normal *= -1;  // Choose the "outward" normal direction
-    if(bool(flat_stroke)){
-        return normalize(cross(normal, tangent));
-    }else{
-        return normalize(cross(camera_position - point, tangent));
+    float dp = joint_product.w;
+    if (abs(dp) > COS_THRESHOLD) return vect;
+    vec3 cp = joint_product.xyz;
+    vec3 perp = cross(cp, vect);
+    float a = dp / dot(vect, vect);
+    float b = length(cp) / length(cross(vect, perp));
+    return a * vect + b * perp;
+}
+
+
+vec3 step_to_corner(vec3 point, vec3 unit_tan, vec3 unit_normal, vec4 joint_product){
+    /*
+    Step the the left of a curve.
+    First a perpendicular direction is calculated, then it is adjusted
+    so as to make a joint.
+    */
+    vec3 step = normalize(cross(unit_normal, unit_tan));
+
+    // Check if an adjustment is needed
+    float cos_angle = joint_product.w;
+    if(abs(cos_angle) > 1 - 1e-5 || int(joint_type) == NO_JOINT){
+        return step;
     }
+
+    // Adjust based on the joint
+    float sin_angle = length(joint_product.xyz) * sign(joint_product.z);
+    float shift = (int(joint_type) == MITER_JOINT) ?
+        (cos_angle + 1.0) / sin_angle :
+        (cos_angle - 1.0) / sin_angle;
+
+    // return step + shift * unit_tan;
+    vec3 result = step + shift * unit_tan;
+    if (length(result) > MITER_LIMIT){
+        result = MITER_LIMIT * normalize(result);
+    }
+    return result;
 }
 
 
@@ -115,14 +123,28 @@ void emit_point_with_width(
     float width,
     vec4 joint_color
 ){
-    vec3 unit_tan = normalize(tangent);
-    vec4 unit_jp = normalized_joint_product(joint_product);
-    vec3 perp = 0.5 * width * left_step(point, unit_tan, unit_jp);
+    // Normalize relevant vectors
+    vec3 unit_tan;
+    vec4 unit_jp;
+    vec3 unit_normal;
+    if(bool(flat_stroke)){
+        unit_tan = normalize(tangent);
+        unit_jp = normalized_joint_product(joint_product);
+        unit_normal = get_joint_unit_normal(joint_product);
+    }else{
+        unit_normal = normalize(camera_position - point);
+        unit_tan = normalize(project(tangent, unit_normal));
+        vec3 adj_tan = inverse_joint_product(tangent, joint_product);
+        adj_tan = project(adj_tan, unit_normal);
+        unit_jp = normalized_joint_product(get_joint_product(unit_tan, adj_tan));
+    }
+    if(unit_normal.z < 0) unit_normal *= -1;  // Choose the "outward" normal direction
 
-    vec3 left = point + perp;
-    vec3 right = point - perp;
-    create_joint(unit_jp, unit_tan, length(perp), left, left, right, right);
+    // Figure out the step from the point to the corners of the
+    // triangle strip around the polyline
+    vec3 step = step_to_corner(point, unit_tan, unit_normal, unit_jp);
 
+    // Set styling
     color = finalize_color(joint_color, point, unit_normal);
     if (width == 0) scaled_anti_alias_width = -1.0;  // Signal to discard in frag
     else scaled_anti_alias_width = 2.0 * anti_alias_width * pixel_size / width;
@@ -130,12 +152,11 @@ void emit_point_with_width(
     // Emit two corners
     // The frag shader will receive a value from -1 to 1,
     // reflecting where in the stroke that point is
-    scaled_signed_dist_to_curve = -1.0;
-    emit_gl_Position(left);
-    EmitVertex();
-    scaled_signed_dist_to_curve = +1.0;
-    emit_gl_Position(right);
-    EmitVertex();
+    for (int sign = -1; sign <= 1; sign += 2){
+        scaled_signed_dist_to_curve = sign;
+        emit_gl_Position(point + 0.5 * width * sign * step);
+        EmitVertex();
+    }
 }
 
 
@@ -172,7 +193,7 @@ void main() {
         if (i >= n_steps - 1) break;
         vec3 v1 = points[i] - points[i - 1];
         vec3 v2 = points[i + 1] - points[i];
-        joint_products[i] = vec4(cross(v1, v2), dot(v1, v2));
+        joint_products[i] = get_joint_product(v1, v2);
     }
 
     // Emit vertex pairs aroudn subdivided points
