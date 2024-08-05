@@ -87,32 +87,46 @@ vec3 inverse_joint_product(vec3 vect, vec4 joint_product){
 }
 
 
-vec3 step_to_corner(vec3 point, vec3 unit_tan, vec3 unit_normal, vec4 joint_product, bool inner_joint){
+vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, vec4 joint_product, bool inner_joint){
     /*
     Step the the left of a curve.
     First a perpendicular direction is calculated, then it is adjusted
     so as to make a joint.
     */
+    vec3 unit_tan = normalize(flat_stroke == 0.0 ? project(tangent, unit_normal) : tangent);
+
     vec3 step = normalize(cross(unit_normal, unit_tan));
 
-    // Check if an adjustment is needed,
-    float cos_angle = joint_product.w;
-    if(inner_joint || int(joint_type) == NO_JOINT || cos_angle > 1 - 1e-5){
-        return step;
+    // Check if we can avoid creating a joint
+    if (inner_joint || int(joint_type) == NO_JOINT) return step;
+
+    // Find the appropriate unit joint product
+    vec4 unit_jp;
+    if (flat_stroke == 0){
+        // Figure out what joint product would be for everything projected onto
+        // the plane perpendicular to the normal direction (which here would be to_camera)
+        vec3 adj_tan = inverse_joint_product(tangent, joint_product);
+        adj_tan = project(adj_tan, unit_normal);
+        unit_jp = normalized_joint_product(get_joint_product(unit_tan, adj_tan));
+    }else {
+        unit_jp = normalized_joint_product(joint_product);
     }
 
+    float cos_angle = unit_jp.w;
+    if(cos_angle > 1 - 1e-5) return step;
+
     // Adjust based on the joint
-    float sin_angle = length(joint_product.xyz) * sign(joint_product.z);
+    float sin_angle = length(unit_jp.xyz) * sign(unit_jp.z);
     float shift = (int(joint_type) == MITER_JOINT) ?
         (cos_angle + 1.0) / sin_angle :
         (cos_angle - 1.0) / sin_angle;
 
-    vec3 result = step + shift * unit_tan;
-    if (length(result) > MITER_LIMIT){
-        result = MITER_LIMIT * normalize(result);
+    step = step + shift * unit_tan;
+    if (length(step) > MITER_LIMIT){
+        step = MITER_LIMIT * normalize(step);
     }
 
-    return result;
+    return step;
 }
 
 
@@ -125,27 +139,16 @@ void emit_point_with_width(
     bool inner_joint
 ){
     // Normalize relevant vectors
-    vec3 unit_tan;
-    vec4 unit_jp;
-    vec3 unit_normal;
     vec3 to_camera = camera_position - point;
-    if(flat_stroke == 1.0){
-        unit_tan = normalize(tangent);
-        unit_jp = normalized_joint_product(joint_product);
-        unit_normal = get_joint_unit_normal(joint_product);
-    }else{
-        unit_normal = normalize(to_camera);
-        unit_tan = normalize(project(tangent, unit_normal));
-        vec3 adj_tan = inverse_joint_product(tangent, joint_product);
-        adj_tan = project(adj_tan, unit_normal);
-        unit_jp = normalized_joint_product(get_joint_product(unit_tan, adj_tan));
-    }
+    vec3 unit_normal = (flat_stroke == 0.0) ?
+        normalize(to_camera) :
+        get_joint_unit_normal(joint_product);
     // Choose the "outward" normal direction
     if(to_camera.z * dot(unit_normal, to_camera) < 0) unit_normal *= -1;
 
     // Figure out the step from the point to the corners of the
     // triangle strip around the polyline
-    vec3 step = step_to_corner(point, unit_tan, unit_normal, unit_jp, inner_joint);
+    vec3 step = step_to_corner(point, tangent, unit_normal, joint_product, inner_joint);
 
     // TODO, this gives a somewhat nice effect that's like a ribbon mostly with its
     // broad side to the camera. Currently unused by VMobject
@@ -159,7 +162,7 @@ void emit_point_with_width(
 
     // Set styling
     color = finalize_color(joint_color, point, unit_normal);
-    if (width == 0) scaled_anti_alias_width = -1.0;  // Signal to discard in frag
+    if (width == 0) scaled_anti_alias_width = -1.0;  // Signal to discard in the frag shader
     else scaled_anti_alias_width = 2.0 * anti_alias_width * pixel_size / width;
 
     // Emit two corners
@@ -202,14 +205,14 @@ void main() {
         float stroke_width = mix(v_stroke_width[0], v_stroke_width[2], t);
         vec4 color = mix(v_color[0], v_color[2], t);
 
-        // Use middle joint product for inner points, flip cross sign for first
-        vec4 joint_product;
-        if (i == 0)               joint_product = v_joint_product[0] * vec4(-1, -1, -1, 1);
-        else if (i < n_steps - 1) joint_product = v_joint_product[1];
-        else                      joint_product = v_joint_product[2];
-
         // This is sent along to prevent needless joint creation
         bool inside_curve = (i > 0 && i < n_steps - 1);
+
+        // Use middle joint product for inner points, flip sign for first one's cross product component
+        vec4 joint_product;
+        if (i == 0)            joint_product = v_joint_product[0] * vec4(-1, -1, -1, 1);
+        else if (inside_curve) joint_product = v_joint_product[1];
+        else                   joint_product = v_joint_product[2];
 
         emit_point_with_width(
             point, tangent, joint_product,
