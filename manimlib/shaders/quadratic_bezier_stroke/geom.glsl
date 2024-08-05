@@ -67,9 +67,9 @@ vec4 get_joint_product(vec3 v1, vec3 v2){
 }
 
 
-vec3 project(vec3 vect, vec3 normal){
+vec3 project(vec3 vect, vec3 unit_normal){
     /* Project the vector onto the plane perpendicular to a given unit normal */
-    return vect - dot(vect, normal) * normal;
+    return vect - dot(vect, unit_normal) * unit_normal;
 }
 
 vec3 inverse_joint_product(vec3 vect, vec4 joint_product){
@@ -87,7 +87,7 @@ vec3 inverse_joint_product(vec3 vect, vec4 joint_product){
 }
 
 
-vec3 step_to_corner(vec3 point, vec3 unit_tan, vec3 unit_normal, vec4 joint_product){
+vec3 step_to_corner(vec3 point, vec3 unit_tan, vec3 unit_normal, vec4 joint_product, bool inner_joint){
     /*
     Step the the left of a curve.
     First a perpendicular direction is calculated, then it is adjusted
@@ -95,9 +95,9 @@ vec3 step_to_corner(vec3 point, vec3 unit_tan, vec3 unit_normal, vec4 joint_prod
     */
     vec3 step = normalize(cross(unit_normal, unit_tan));
 
-    // Check if an adjustment is needed
+    // Check if an adjustment is needed,
     float cos_angle = joint_product.w;
-    if(abs(cos_angle) > 1 - 1e-5 || int(joint_type) == NO_JOINT){
+    if(inner_joint || int(joint_type) == NO_JOINT || cos_angle > 1 - 1e-5){
         return step;
     }
 
@@ -107,11 +107,11 @@ vec3 step_to_corner(vec3 point, vec3 unit_tan, vec3 unit_normal, vec4 joint_prod
         (cos_angle + 1.0) / sin_angle :
         (cos_angle - 1.0) / sin_angle;
 
-    // return step + shift * unit_tan;
     vec3 result = step + shift * unit_tan;
     if (length(result) > MITER_LIMIT){
         result = MITER_LIMIT * normalize(result);
     }
+
     return result;
 }
 
@@ -121,28 +121,31 @@ void emit_point_with_width(
     vec3 tangent,
     vec4 joint_product,
     float width,
-    vec4 joint_color
+    vec4 joint_color,
+    bool inner_joint
 ){
     // Normalize relevant vectors
     vec3 unit_tan;
     vec4 unit_jp;
     vec3 unit_normal;
-    if(bool(flat_stroke)){
+    vec3 to_camera = camera_position - point;
+    if(flat_stroke == 1.0){
         unit_tan = normalize(tangent);
         unit_jp = normalized_joint_product(joint_product);
         unit_normal = get_joint_unit_normal(joint_product);
     }else{
-        unit_normal = normalize(camera_position - point);
+        unit_normal = normalize(to_camera);
         unit_tan = normalize(project(tangent, unit_normal));
         vec3 adj_tan = inverse_joint_product(tangent, joint_product);
         adj_tan = project(adj_tan, unit_normal);
         unit_jp = normalized_joint_product(get_joint_product(unit_tan, adj_tan));
     }
-    if(unit_normal.z < 0) unit_normal *= -1;  // Choose the "outward" normal direction
+    // Choose the "outward" normal direction
+    if(to_camera.z * dot(unit_normal, to_camera) < 0) unit_normal *= -1;
 
     // Figure out the step from the point to the corners of the
     // triangle strip around the polyline
-    vec3 step = step_to_corner(point, unit_tan, unit_normal, unit_jp);
+    vec3 step = step_to_corner(point, unit_tan, unit_normal, unit_jp, inner_joint);
 
     // Set styling
     color = finalize_color(joint_color, point, unit_normal);
@@ -205,7 +208,8 @@ void main() {
             tangent_on_quadratic(t, c1, c2),
             joint_products[i],
             mix(v_stroke_width[0], v_stroke_width[2], t),
-            mix(v_color[0], v_color[2], t)
+            mix(v_color[0], v_color[2], t),
+            (i > 0 && i < n_steps - 1)  // Is this an inner joint
         );
     }
     EndPrimitive();
