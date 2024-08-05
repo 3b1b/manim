@@ -189,37 +189,32 @@ void main() {
     int count = int(round(POLYLINE_FACTOR * sqrt(area) / frame_scale));
     int n_steps = min(2 + count, MAX_STEPS);
 
-    // Compute points along the curve
-    vec3 points[MAX_STEPS];
-    for (int i = 0; i < MAX_STEPS; i++){
-        if (i >= n_steps) break;
-        float t = float(i) / (n_steps - 1);
-        points[i] = point_on_quadratic(t, c0, c1, c2);
-    }
-
-    // Compute joint products
-    vec4 joint_products[MAX_STEPS];
-    joint_products[0] = v_joint_product[0];
-    joint_products[0].xyz *= -1;
-    joint_products[n_steps - 1] = v_joint_product[2];
-    for (int i = 1; i < MAX_STEPS; i++){
-        if (i >= n_steps - 1) break;
-        vec3 v1 = points[i] - points[i - 1];
-        vec3 v2 = points[i + 1] - points[i];
-        joint_products[i] = get_joint_product(v1, v2);
-    }
-
     // Emit vertex pairs aroudn subdivided points
     for (int i = 0; i < MAX_STEPS; i++){
         if (i >= n_steps) break;
         float t = float(i) / (n_steps - 1);
+
+        // Point and tangent
+        vec3 point = point_on_quadratic(t, c0, c1, c2);
+        vec3 tangent = tangent_on_quadratic(t, c1, c2);
+
+        // Style
+        float stroke_width = mix(v_stroke_width[0], v_stroke_width[2], t);
+        vec4 color = mix(v_color[0], v_color[2], t);
+
+        // Use middle joint product for inner points, flip cross sign for first
+        vec4 joint_product;
+        if (i == 0)               joint_product = v_joint_product[0] * vec4(-1, -1, -1, 1);
+        else if (i < n_steps - 1) joint_product = v_joint_product[1];
+        else                      joint_product = v_joint_product[2];
+
+        // This is sent along to prevent needless joint creation
+        bool inside_curve = (i > 0 && i < n_steps - 1);
+
         emit_point_with_width(
-            points[i],
-            tangent_on_quadratic(t, c1, c2),
-            joint_products[i],
-            mix(v_stroke_width[0], v_stroke_width[2], t),
-            mix(v_color[0], v_color[2], t),
-            (i > 0 && i < n_steps - 1)  // Is this an inner joint
+            point, tangent, joint_product,
+            stroke_width, color,
+            inside_curve
         );
     }
     EndPrimitive();
