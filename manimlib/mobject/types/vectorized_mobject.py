@@ -673,7 +673,7 @@ class VMobject(Mobject):
         return bool((dots > 1 - 1e-3).all())
 
     def change_anchor_mode(self, mode: str) -> Self:
-        assert(mode in ("jagged", "approx_smooth", "true_smooth"))
+        assert mode in ("jagged", "approx_smooth", "true_smooth")
         if self.get_num_points() == 0:
             return self
         subpaths = self.get_subpaths()
@@ -722,7 +722,7 @@ class VMobject(Mobject):
         return self
 
     def add_subpath(self, points: Vect3Array) -> Self:
-        assert(len(points) % 2 == 1 or len(points) == 0)
+        assert len(points) % 2 == 1 or len(points) == 0
         if not self.has_points():
             self.set_points(points)
             return self
