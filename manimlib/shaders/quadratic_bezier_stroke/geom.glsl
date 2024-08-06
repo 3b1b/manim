@@ -32,23 +32,21 @@ const float COS_THRESHOLD = 0.99;
 // Used to determine how many lines to break the curve into
 const float POLYLINE_FACTOR = 30;
 const int MAX_STEPS = 32;
-const float MITER_LIMIT = 3.0;
+const float MITER_LIMIT = 5.0;
 
 #INSERT emit_gl_Position.glsl
 #INSERT finalize_color.glsl
 
 
 vec3 get_joint_unit_normal(vec4 joint_product){
-    vec3 result = (joint_product.w < COS_THRESHOLD) ?
-        joint_product.xyz : v_joint_product[1].xyz;
-    float norm = length(result);
-    return (norm > 1e-5) ? result / norm : vec3(0.0, 0.0, 1.0);
-}
-
-
-vec4 normalized_joint_product(vec4 joint_product){
-    float norm = length(joint_product);
-    return (norm > 1e-10) ? joint_product / norm : vec4(0.0, 0.0, 0.0, 1.0);
+    float tol = 1e-8;
+    if (length(joint_product.xyz) > tol){
+        return normalize(joint_product.xyz);
+    }
+    if (length(v_joint_product[1].xyz) > tol){
+        return normalize(v_joint_product[1].xyz);
+    }
+    return vec3(0.0, 0.0, 1.0);
 }
 
 
@@ -72,18 +70,12 @@ vec3 project(vec3 vect, vec3 unit_normal){
     return vect - dot(vect, unit_normal) * unit_normal;
 }
 
-vec3 inverse_joint_product(vec3 vect, vec4 joint_product){
+vec3 inverse_vector_product(vec3 vect, vec3 cross_product, float dot_product){
     /* 
-    If joint_product represents vec4(cross(v1, v2), dot(v1, v2)), 
-    then given v1, this function recovers v2
+    Suppose cross(v1, v2) = cross_product and dot(v1, v2) = dot_product.
+    Given v1, this function return v2.
     */
-    float dp = joint_product.w;
-    if (abs(dp) > COS_THRESHOLD) return vect;
-    vec3 cp = joint_product.xyz;
-    vec3 perp = cross(cp, vect);
-    float a = dp / dot(vect, vect);
-    float b = length(cp) / length(cross(vect, perp));
-    return a * vect + b * perp;
+    return (vect * dot_product - cross(vect, cross_product)) / dot(vect, vect);
 }
 
 
@@ -94,29 +86,26 @@ vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, vec4 joint_produ
     so as to make a joint.
     */
     vec3 unit_tan = normalize(flat_stroke == 0.0 ? project(tangent, unit_normal) : tangent);
-
     vec3 step = normalize(cross(unit_normal, unit_tan));
 
     // Check if we can avoid creating a joint
     if (inner_joint || int(joint_type) == NO_JOINT) return step;
 
-    // Find the appropriate unit joint product
-    vec4 unit_jp;
+    // Find the angle between
+    
     if (flat_stroke == 0){
         // Figure out what joint product would be for everything projected onto
         // the plane perpendicular to the normal direction (which here would be to_camera)
-        vec3 adj_tan = inverse_joint_product(tangent, joint_product);
+        vec3 adj_tan = inverse_vector_product(tangent, joint_product.xyz, joint_product.w);
         adj_tan = project(adj_tan, unit_normal);
-        unit_jp = normalized_joint_product(get_joint_product(unit_tan, adj_tan));
-    }else {
-        unit_jp = normalized_joint_product(joint_product);
+        joint_product = get_joint_product(unit_tan, adj_tan);
     }
 
-    float cos_angle = unit_jp.w;
-    if(cos_angle > 1 - 1e-5) return step;
+    float cos_angle = (length(joint_product) > 1e-10) ? normalize(joint_product).w : 1.0;
+    if(cos_angle > 1 - 1e-3) return step;
+    float sin_angle = sqrt(1 - cos_angle * cos_angle) * sign(dot(joint_product.xyz, unit_normal));
 
     // Adjust based on the joint
-    float sin_angle = length(unit_jp.xyz) * sign(dot(unit_jp.xyz, unit_normal));
     float shift = (int(joint_type) == MITER_JOINT) ?
         (cos_angle + 1.0) / sin_angle :
         (cos_angle - 1.0) / sin_angle;
@@ -138,20 +127,22 @@ void emit_point_with_width(
     vec4 joint_color,
     bool inner_joint
 ){
-    // Normalize relevant vectors
+    // Find unit normal
     vec3 to_camera = camera_position - point;
-    vec3 unit_normal = (flat_stroke == 0.0) ?
-        normalize(to_camera) :
-        get_joint_unit_normal(joint_product);
-    // Choose the "outward" normal direction
-    unit_normal *= sign(dot(unit_normal, to_camera));
+    vec3 unit_normal;
+    if (flat_stroke == 0.0){
+        unit_normal = normalize(to_camera);
+    }else{
+        unit_normal = get_joint_unit_normal(joint_product);
+        unit_normal *= sign(dot(unit_normal, to_camera));  // Choose the "outward" normal direction
+    }
 
     // Figure out the step from the point to the corners of the
     // triangle strip around the polyline
     vec3 step = step_to_corner(point, tangent, unit_normal, joint_product, inner_joint);
 
-    // TODO, this gives a somewhat nice effect that's like a ribbon mostly with its
-    // broad side to the camera. Currently unused by VMobject
+    // TODO, this gives a potentially nice effect that's like a ribbon mostly with its
+    // broad side to the camera. Currently hard to access via VMobject
     if(flat_stroke == 2.0){
         // Rotate the step towards the unit normal by an amount depending
         // on the camera position 
