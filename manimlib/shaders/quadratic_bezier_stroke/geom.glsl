@@ -116,7 +116,7 @@ vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, vec4 joint_produ
     if(cos_angle > 1 - 1e-5) return step;
 
     // Adjust based on the joint
-    float sin_angle = length(unit_jp.xyz) * sign(unit_jp.z);
+    float sin_angle = length(unit_jp.xyz) * sign(dot(unit_jp.xyz, unit_normal));
     float shift = (int(joint_type) == MITER_JOINT) ?
         (cos_angle + 1.0) / sin_angle :
         (cos_angle - 1.0) / sin_angle;
@@ -144,7 +144,7 @@ void emit_point_with_width(
         normalize(to_camera) :
         get_joint_unit_normal(joint_product);
     // Choose the "outward" normal direction
-    if(to_camera.z * dot(unit_normal, to_camera) < 0) unit_normal *= -1;
+    unit_normal *= sign(dot(unit_normal, to_camera));
 
     // Figure out the step from the point to the corners of the
     // triangle strip around the polyline
