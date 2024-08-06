@@ -697,7 +697,7 @@ class VMobject(Mobject):
             self.add_subpath(new_subpath)
         return self
 
-    def make_smooth(self, approx=False, recurse=True) -> Self:
+    def make_smooth(self, approx=True, recurse=True) -> Self:
         """
         Edits the path so as to pass smoothly through all
         the current anchor points.
