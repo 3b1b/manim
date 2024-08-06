@@ -1201,7 +1201,7 @@ class VMobject(Mobject):
 
         points = self.get_points()
 
-        if(len(points) < 3):
+        if len(points) < 3:
             return self.data["joint_product"]
 
         # Find all the unit tangent vectors at each joint
