@@ -112,11 +112,14 @@ vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, vec4 joint_produ
     }
 
     // Adjust based on the joint.
-    // Bevel for cos(angle) > -0.7, smoothly transition
-    // to miter for those with sharper angles
+    // If joint type is auto, it will bevel for cos(angle) > -0.7,
+    // and smoothly transition to miter for those with sharper angles
+    float miter_factor;
+    if (joint_type == AUTO_JOINT)       miter_factor = smoothstep(-0.7, -0.9, cos_angle);
+    else if (joint_type == BEVEL_JOINT) miter_factor = 0.0;
+    else                                miter_factor = 1.0;
+
     float sin_angle = sqrt(1 - cos_angle * cos_angle) * sign(dot(joint_product.xyz, unit_normal));
-    float miter_factor = (int(joint_type) == MITER_JOINT) ? 
-        1.0 : smoothstep(-0.7, -0.9, cos_angle);
     float shift = (cos_angle + mix(-1, 1, miter_factor)) / sin_angle;
 
     return step + shift * unit_tan;
