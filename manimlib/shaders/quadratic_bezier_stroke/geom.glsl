@@ -28,11 +28,10 @@ const int MITER_JOINT = 3;
 // When the cosine of the angle between
 // two vectors is larger than this, we
 // consider them aligned
-const float COS_THRESHOLD = 0.99;
+const float COS_THRESHOLD = 0.999;
 // Used to determine how many lines to break the curve into
 const float POLYLINE_FACTOR = 30;
 const int MAX_STEPS = 32;
-const float MITER_LIMIT = 5.0;
 
 #INSERT emit_gl_Position.glsl
 #INSERT finalize_color.glsl
@@ -47,6 +46,13 @@ vec3 get_joint_unit_normal(vec4 joint_product){
         return normalize(v_joint_product[1].xyz);
     }
     return vec3(0.0, 0.0, 1.0);
+}
+
+
+vec4 unit_joint_product(vec4 joint_product){
+    float tol = 1e-8;
+    float norm = length(joint_product);
+    return (norm < tol) ? vec4(0.0, 0.0, 0.0, 1.0) : joint_product / norm;
 }
 
 
@@ -86,36 +92,34 @@ vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, vec4 joint_produ
     so as to make a joint.
     */
     vec3 unit_tan = normalize(flat_stroke == 0.0 ? project(tangent, unit_normal) : tangent);
+    vec4 unit_jp = unit_joint_product(joint_product);
+    float cos_angle = unit_jp.w;
+
+    // Step to stroke width bound should be perpendicular
+    // both to the tangent and the normal direction
     vec3 step = normalize(cross(unit_normal, unit_tan));
 
-    // Check if we can avoid creating a joint
-    if (inner_joint || int(joint_type) == NO_JOINT) return step;
+    // Conditions where no joint needs to be created
+    if (inner_joint || int(joint_type) == NO_JOINT || cos_angle > COS_THRESHOLD) return step;
 
-    // Find the angle between
-    
     if (flat_stroke == 0){
         // Figure out what joint product would be for everything projected onto
         // the plane perpendicular to the normal direction (which here would be to_camera)
-        vec3 adj_tan = inverse_vector_product(tangent, joint_product.xyz, joint_product.w);
+        vec3 adj_tan = inverse_vector_product(tangent, unit_jp.xyz, unit_jp.w);
         adj_tan = project(adj_tan, unit_normal);
-        joint_product = get_joint_product(unit_tan, adj_tan);
+        vec4 flat_jp = get_joint_product(unit_tan, adj_tan);
+        cos_angle = unit_joint_product(flat_jp).w;
     }
 
-    float cos_angle = (length(joint_product) > 1e-10) ? normalize(joint_product).w : 1.0;
-    if(cos_angle > 1 - 1e-3) return step;
+    // Adjust based on the joint.
+    // Bevel for cos(angle) > -0.7, smoothly transition
+    // to miter for those with sharper angles
     float sin_angle = sqrt(1 - cos_angle * cos_angle) * sign(dot(joint_product.xyz, unit_normal));
+    float miter_factor = (int(joint_type) == MITER_JOINT) ? 
+        1.0 : smoothstep(-0.7, -0.9, cos_angle);
+    float shift = (cos_angle + mix(-1, 1, miter_factor)) / sin_angle;
 
-    // Adjust based on the joint
-    float shift = (int(joint_type) == MITER_JOINT) ?
-        (cos_angle + 1.0) / sin_angle :
-        (cos_angle - 1.0) / sin_angle;
-
-    step = step + shift * unit_tan;
-    if (length(step) > MITER_LIMIT){
-        step = MITER_LIMIT * normalize(step);
-    }
-
-    return step;
+    return step + shift * unit_tan;
 }
 
 
@@ -155,6 +159,7 @@ void emit_point_with_width(
     color = finalize_color(joint_color, point, unit_normal);
     if (width == 0) scaled_anti_alias_width = -1.0;  // Signal to discard in the frag shader
     else scaled_anti_alias_width = 2.0 * anti_alias_width * pixel_size / width;
+    width += anti_alias_width * pixel_size;
 
     // Emit two corners
     // The frag shader will receive a value from -1 to 1,
