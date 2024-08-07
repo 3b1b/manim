@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import warnings
 
 import numpy as np
 from scipy.spatial.transform import Rotation
@@ -9,8 +10,10 @@ from pyrr import Matrix44
 from manimlib.constants import DEGREES, RADIANS
 from manimlib.constants import FRAME_SHAPE
 from manimlib.constants import DOWN, LEFT, ORIGIN, OUT, RIGHT, UP
+from manimlib.constants import PI
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.space_ops import normalize
+from manimlib.utils.simple_functions import clip
 
 from typing import TYPE_CHECKING
 
@@ -62,9 +65,19 @@ class CameraFrame(Mobject):
 
     def get_euler_angles(self) -> np.ndarray:
         orientation = self.get_orientation()
-        if all(orientation.as_quat() == [0, 0, 0, 1]):
+        if np.isclose(orientation.as_quat(), [0, 0, 0, 1]).all():
             return np.zeros(3)
-        return orientation.as_euler(self.euler_axes)[::-1]
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)  # Ignore UserWarnings
+            angles = orientation.as_euler(self.euler_axes)[::-1]
+        # Handle Gimble lock case
+        if np.isclose(angles[1], 0, atol=1e-2):
+            angles[0] = angles[0] + angles[2]
+            angles[2] = 0
+        if np.isclose(angles[1], PI, atol=1e-2):
+            angles[0] = angles[0] - angles[2]
+            angles[2] = 0
+        return angles
 
     def get_theta(self):
         return self.get_euler_angles()[0]
@@ -134,16 +147,16 @@ class CameraFrame(Mobject):
 
     def increment_euler_angles(
         self,
-        dtheta: float | None = None,
-        dphi: float | None = None,
-        dgamma: float | None = None,
+        dtheta: float = 0,
+        dphi: float = 0,
+        dgamma: float = 0,
         units: float = RADIANS
     ):
         angles = self.get_euler_angles()
-        for i, value in enumerate([dtheta, dphi, dgamma]):
-            if value is not None:
-                angles[i] += value * units
-        self.set_euler_angles(*angles)
+        new_angles = angles + np.array([dtheta, dphi, dgamma]) * units
+        new_angles[1] = clip(new_angles[1], 0, PI)  # Limit range for phi
+        new_rot = Rotation.from_euler(self.euler_axes, new_angles[::-1])
+        self.set_orientation(new_rot)
         return self
 
     def set_euler_axes(self, seq: str):

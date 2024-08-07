@@ -97,7 +97,7 @@ class VMobject(Mobject):
         long_lines: bool = False,
         # Could also be "no_joint", "bevel", "miter"
         joint_type: str = "auto",
-        flat_stroke: bool = True,
+        flat_stroke: bool = False,
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
         anti_alias_width: float = 1.5,
@@ -203,6 +203,7 @@ class VMobject(Mobject):
         width: float | Iterable[float] | None = None,
         opacity: float | Iterable[float] | None = None,
         background: bool | None = None,
+        flat: bool | None = None,
         recurse: bool = True
     ) -> Self:
         self.set_rgba_array_by_color(color, opacity, 'stroke_rgba', recurse)
@@ -220,6 +221,9 @@ class VMobject(Mobject):
         if background is not None:
             for mob in self.get_family(recurse):
                 mob.stroke_behind = background
+
+        if flat is not None:
+            self.set_flat_stroke(flat)
 
         self.note_changed_stroke()
         return self
@@ -673,7 +677,7 @@ class VMobject(Mobject):
         return bool((dots > 1 - 1e-3).all())
 
     def change_anchor_mode(self, mode: str) -> Self:
-        assert(mode in ("jagged", "approx_smooth", "true_smooth"))
+        assert mode in ("jagged", "approx_smooth", "true_smooth")
         if self.get_num_points() == 0:
             return self
         subpaths = self.get_subpaths()
@@ -697,7 +701,7 @@ class VMobject(Mobject):
             self.add_subpath(new_subpath)
         return self
 
-    def make_smooth(self, approx=False, recurse=True) -> Self:
+    def make_smooth(self, approx=True, recurse=True) -> Self:
         """
         Edits the path so as to pass smoothly through all
         the current anchor points.
@@ -722,7 +726,7 @@ class VMobject(Mobject):
         return self
 
     def add_subpath(self, points: Vect3Array) -> Self:
-        assert(len(points) % 2 == 1 or len(points) == 0)
+        assert len(points) % 2 == 1 or len(points) == 0
         if not self.has_points():
             self.set_points(points)
             return self
@@ -1201,7 +1205,7 @@ class VMobject(Mobject):
 
         points = self.get_points()
 
-        if(len(points) < 3):
+        if len(points) < 3:
             return self.data["joint_product"]
 
         # Find all the unit tangent vectors at each joint

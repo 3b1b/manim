@@ -488,10 +488,7 @@ class GraphExample(Scene):
         # with the intent of having other mobjects update based
         # on the parameter
         x_tracker = ValueTracker(2)
-        f_always(
-            dot.move_to,
-            lambda: axes.i2gp(x_tracker.get_value(), parabola)
-        )
+        dot.add_updater(lambda d: d.move_to(axes.i2gp(x_tracker.get_value(), parabola)))
 
         self.play(x_tracker.animate.set_value(4), run_time=3)
         self.play(x_tracker.animate.set_value(-2), run_time=3)

@@ -6,7 +6,6 @@ uniform float is_fixed_in_frame;
 in vec3 point;
 in vec4 stroke_rgba;
 in float stroke_width;
-in vec3 joint_normal;
 in vec4 joint_product;
 
 // Bezier control point
@@ -16,7 +15,7 @@ out vec4 v_joint_product;
 out float v_stroke_width;
 out vec4 v_color;
 
-const float STROKE_WIDTH_CONVERSION = 0.01;
+const float STROKE_WIDTH_CONVERSION = 0.015;
 
 void main(){
     verts = point;
