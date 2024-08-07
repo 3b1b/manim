@@ -162,7 +162,6 @@ void emit_point_with_width(
     color = finalize_color(joint_color, point, unit_normal);
     if (width == 0) scaled_anti_alias_width = -1.0;  // Signal to discard in the frag shader
     else scaled_anti_alias_width = 2.0 * anti_alias_width * pixel_size / width;
-    width += anti_alias_width * pixel_size;
 
     // Emit two corners
     // The frag shader will receive a value from -1 to 1,
