@@ -30,7 +30,7 @@ const int MITER_JOINT = 3;
 // consider them aligned
 const float COS_THRESHOLD = 0.999;
 // Used to determine how many lines to break the curve into
-const float POLYLINE_FACTOR = 30;
+const float POLYLINE_FACTOR = 100;
 const int MAX_STEPS = 32;
 
 #INSERT emit_gl_Position.glsl
