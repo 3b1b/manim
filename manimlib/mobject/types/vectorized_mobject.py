@@ -203,6 +203,7 @@ class VMobject(Mobject):
         width: float | Iterable[float] | None = None,
         opacity: float | Iterable[float] | None = None,
         background: bool | None = None,
+        flat: bool | None = None,
         recurse: bool = True
     ) -> Self:
         self.set_rgba_array_by_color(color, opacity, 'stroke_rgba', recurse)
@@ -220,6 +221,9 @@ class VMobject(Mobject):
         if background is not None:
             for mob in self.get_family(recurse):
                 mob.stroke_behind = background
+
+        if flat is not None:
+            self.set_flat_stroke(flat)
 
         self.note_changed_stroke()
         return self
