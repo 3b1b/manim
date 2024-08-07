@@ -74,6 +74,9 @@ class CameraFrame(Mobject):
         if np.isclose(angles[1], 0, atol=1e-2):
             angles[0] = angles[0] + angles[2]
             angles[2] = 0
+        if np.isclose(angles[1], PI, atol=1e-2):
+            angles[0] = angles[0] - angles[2]
+            angles[2] = 0
         return angles
 
     def get_theta(self):
