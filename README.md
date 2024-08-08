@@ -1,3 +1,26 @@
+## Problem:
+> Many kids find math a dull subject leading to disengagement.
+> Finding a good education in math is getting harder every day as most students fail to grasp the concept they are trying to learn.
+> Today’s math classes move at a fixed pace, which may not suit every student.
+
+
+## Impact:
+> My app animates the math experience leading to more engagement.
+> My course is accessible any time and can be easily accessed. Students can move at their own pace because they don’t have a class making them hurry up.
+
+## Future Implementations:
+> SQL: Structured Query Language to store a huge database of videos.
+> Camera Algorithm: To take pictures of the current assignment and help the student.
+> More Courses: More Courses so students can learn from.
+> Mobile Application: So students can access the course anywhere.
+> Web Scraping: To gather further information on the topic.
+> Narration: Improve engagement
+
+
+
+
+<!--
+
 <p align="center">
     <a href="https://github.com/3b1b/manim">
         <img src="https://raw.githubusercontent.com/3b1b/manim/master/logo/cropped.png">
@@ -115,3 +138,4 @@ Is always welcome.  As mentioned above, the [community edition](https://github.c
 
 ## License
 This project falls under the MIT license.
+-->
