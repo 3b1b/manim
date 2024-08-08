@@ -165,21 +165,6 @@ void emit_point_with_width(
     // triangle strip around the polyline
     vec3 step = step_to_corner(point, tangent, unit_normal, joint_product, inside_curve);
 
-    // TODO, this gives a potentially nice effect that's like a ribbon mostly with its
-    // broad side to the camera. Currently hard to access via VMobject
-    if(flat_stroke == 2.0){
-        // Rotate the step towards the unit normal by an amount depending
-        // on the camera position 
-        float cos_angle = dot(unit_normal, normalize(camera_position));
-        float sin_angle = sqrt(max(1 - cos_angle * cos_angle, 0));
-        step = cos_angle * step + sin_angle * unit_normal;
-    }
-
-    // Set styling
-    color = finalize_color(joint_color, point, unit_normal);
-    if (width == 0) scaled_anti_alias_width = -1.0;  // Signal to discard in the frag shader
-    else scaled_anti_alias_width = 2.0 * anti_alias_width * pixel_size / width;
-
     // Emit two corners
     // The frag shader will receive a value from -1 to 1,
     // reflecting where in the stroke that point is
