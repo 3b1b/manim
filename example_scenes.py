@@ -132,8 +132,8 @@ class TextExample(Scene):
         self.wait(3)
 
         fonts = Text(
-            "And you can also set the font according to different words",
-            font="Arial",
+            "And you 444 also set the font according to different words",
+            font="Octin Prison",
             t2f={"font": "Consolas", "words": "Consolas"},
             t2c={"font": BLUE, "words": GREEN}
         )
