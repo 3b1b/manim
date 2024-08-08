@@ -34,6 +34,8 @@ class Tex(StringMobject):
         t2c: dict = dict(),
         isolate: Selector = [],
         use_labelled_svg: bool = True,
+        pdf_flag: bool = True,
+        documentclass: str = "",
         **kwargs
     ):
         # Combine multi-string arg, but mark them to isolate
@@ -52,7 +54,9 @@ class Tex(StringMobject):
         self.alignment = alignment
         self.template = template
         self.additional_preamble = additional_preamble
+        self.documentclass = documentclass
         self.tex_to_color_map = dict(**t2c, **tex_to_color_map)
+        self.pdf_flag = pdf_flag
 
         super().__init__(
             tex_string,
@@ -78,12 +82,13 @@ class Tex(StringMobject):
             self.tex_environment,
             self.tex_to_color_map,
             self.template,
-            self.additional_preamble
+            self.additional_preamble,
+            self.documentclass
         )
 
     def get_file_path_by_content(self, content: str) -> str:
         return tex_content_to_svg_file(
-            content, self.template, self.additional_preamble, self.tex_string
+            content, self.template, self.additional_preamble, self.tex_string, self.documentclass, self.pdf_flag
         )
 
     # Parsing
