@@ -48,7 +48,7 @@ class Rotating(Animation):
             for key in sm1.pointlike_data_keys:
                 sm1.data[key][:] = sm2.data[key]
         self.mobject.rotate(
-            self.rate_func(alpha) * self.angle,
+            self.rate_func(self.time_spanned_alpha(alpha)) * self.angle,
             axis=self.axis,
             about_point=self.about_point,
             about_edge=self.about_edge,
