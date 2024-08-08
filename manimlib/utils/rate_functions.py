@@ -46,7 +46,7 @@ def there_and_back(t: float) -> float:
 
 
 def there_and_back_with_pause(t: float, pause_ratio: float = 1. / 3) -> float:
-    a = 1. / pause_ratio
+    a = 2. / (1. - pause_ratio)
     if t < 0.5 - pause_ratio / 2:
         return smooth(a * t)
     elif t < 0.5 + pause_ratio / 2:
