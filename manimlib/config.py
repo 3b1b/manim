@@ -13,7 +13,6 @@ import yaml
 from manimlib.logger import log
 from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.init_config import init_customization
-from manimlib.constants import FRAME_HEIGHT
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -476,7 +475,7 @@ def get_camera_config(args: Namespace, custom_config: dict) -> dict:
         "pixel_width": width,
         "pixel_height": height,
         "frame_config": {
-            "frame_shape": ((width / height) * FRAME_HEIGHT, FRAME_HEIGHT),
+            "frame_shape": ((width / height) * get_frame_height(), get_frame_height()),
         },
         "fps": fps,
     })
@@ -523,3 +522,18 @@ def get_configuration(args: Namespace) -> dict:
         "embed_exception_mode": custom_config["embed_exception_mode"],
         "embed_error_sound": custom_config["embed_error_sound"],
     }
+
+def get_frame_height():
+    return 8.0
+
+def get_aspect_ratio():
+    cam_config = get_camera_config(parse_cli(), get_custom_config())
+    return cam_config['pixel_width'] / cam_config['pixel_height']
+
+def get_default_pixel_width():
+    cam_config = get_camera_config(parse_cli(), get_custom_config())
+    return cam_config['pixel_width']
+
+def get_default_pixel_height():
+    cam_config = get_camera_config(parse_cli(), get_custom_config())
+    return cam_config['pixel_height']
