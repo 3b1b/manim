@@ -161,6 +161,12 @@ void emit_point_with_width(
         unit_normal *= sign(dot(unit_normal, to_camera));  // Choose the "outward" normal direction
     }
 
+    // Set styling
+    color = finalize_color(joint_color, point, unit_normal);
+    scaled_anti_alias_width = (width == 0) ?
+        -1.0 : // Signal to discard in the frag shader
+        2.0 * anti_alias_width * pixel_size / width;
+
     // Figure out the step from the point to the corners of the
     // triangle strip around the polyline
     vec3 step = step_to_corner(point, tangent, unit_normal, joint_product, inside_curve);
