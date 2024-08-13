@@ -32,6 +32,7 @@ const float COS_THRESHOLD = 0.999;
 // Used to determine how many lines to break the curve into
 const float POLYLINE_FACTOR = 100;
 const int MAX_STEPS = 32;
+const float MITER_COS_ANGLE_THRESHOLD = -0.8;
 
 #INSERT emit_gl_Position.glsl
 #INSERT finalize_color.glsl
@@ -85,39 +86,59 @@ vec3 inverse_vector_product(vec3 vect, vec3 cross_product, float dot_product){
 }
 
 
-vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, vec4 joint_product, bool inner_joint){
+vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, vec4 joint_product, bool inside_curve){
     /*
     Step the the left of a curve.
     First a perpendicular direction is calculated, then it is adjusted
     so as to make a joint.
     */
     vec3 unit_tan = normalize(flat_stroke == 0.0 ? project(tangent, unit_normal) : tangent);
-    vec4 unit_jp = unit_joint_product(joint_product);
-    float cos_angle = unit_jp.w;
 
     // Step to stroke width bound should be perpendicular
     // both to the tangent and the normal direction
     vec3 step = normalize(cross(unit_normal, unit_tan));
 
-    // Conditions where no joint needs to be created
-    if (inner_joint || int(joint_type) == NO_JOINT || cos_angle > COS_THRESHOLD) return step;
+    // For non-flat stroke, there can be glitches when the tangent direction
+    // lines up very closely with the direction to the camera, treated here
+    // as the unit normal. To avoid those, this smoothly transitions to a step
+    // direction perpendicular to the true curve normal.
+    float alignment = abs(dot(normalize(tangent), unit_normal));
+    float alignment_threshold = 0.97;  // This could maybe be chosen in a more principled way based on stroke width
+    if (alignment > alignment_threshold) {
+        vec3 perp = normalize(cross(get_joint_unit_normal(joint_product), tangent));
+        step = mix(step, project(step, perp), smoothstep(alignment_threshold, 1.0, alignment));
+    }
 
+    if (inside_curve || int(joint_type) == NO_JOINT) return step;
+
+    vec4 unit_jp = unit_joint_product(joint_product);
+    float cos_angle = unit_jp.w;
+
+    if (cos_angle > COS_THRESHOLD) return step;
+
+    // Below here, figure out the adjustment to bevel or miter a joint
     if (flat_stroke == 0){
         // Figure out what joint product would be for everything projected onto
         // the plane perpendicular to the normal direction (which here would be to_camera)
+        step = normalize(cross(unit_normal, unit_tan));  // Back to original step
         vec3 adj_tan = inverse_vector_product(tangent, unit_jp.xyz, unit_jp.w);
         adj_tan = project(adj_tan, unit_normal);
         vec4 flat_jp = get_joint_product(unit_tan, adj_tan);
         cos_angle = unit_joint_product(flat_jp).w;
     }
 
-    // Adjust based on the joint.
-    // If joint type is auto, it will bevel for cos(angle) > -0.7,
+    // If joint type is auto, it will bevel for cos(angle) > MITER_COS_ANGLE_THRESHOLD,
     // and smoothly transition to miter for those with sharper angles
     float miter_factor;
-    if (joint_type == AUTO_JOINT)       miter_factor = smoothstep(-0.7, -0.9, cos_angle);
-    else if (joint_type == BEVEL_JOINT) miter_factor = 0.0;
-    else                                miter_factor = 1.0;
+    if (joint_type == BEVEL_JOINT){
+        miter_factor = 0.0;
+    }else if (joint_type == MITER_JOINT){
+        miter_factor = 1.0;
+    }else {
+        float mcat1 = MITER_COS_ANGLE_THRESHOLD;
+        float mcat2 = 0.5 * (mcat1 - 1.0);
+        miter_factor = smoothstep(mcat1, mcat2, cos_angle);
+    }
 
     float sin_angle = sqrt(1 - cos_angle * cos_angle) * sign(dot(joint_product.xyz, unit_normal));
     float shift = (cos_angle + mix(-1, 1, miter_factor)) / sin_angle;
@@ -132,7 +153,7 @@ void emit_point_with_width(
     vec4 joint_product,
     float width,
     vec4 joint_color,
-    bool inner_joint
+    bool inside_curve
 ){
     // Find unit normal
     vec3 to_camera = camera_position - point;
@@ -144,24 +165,15 @@ void emit_point_with_width(
         unit_normal *= sign(dot(unit_normal, to_camera));  // Choose the "outward" normal direction
     }
 
-    // Figure out the step from the point to the corners of the
-    // triangle strip around the polyline
-    vec3 step = step_to_corner(point, tangent, unit_normal, joint_product, inner_joint);
-
-    // TODO, this gives a potentially nice effect that's like a ribbon mostly with its
-    // broad side to the camera. Currently hard to access via VMobject
-    if(flat_stroke == 2.0){
-        // Rotate the step towards the unit normal by an amount depending
-        // on the camera position 
-        float cos_angle = dot(unit_normal, normalize(camera_position));
-        float sin_angle = sqrt(max(1 - cos_angle * cos_angle, 0));
-        step = cos_angle * step + sin_angle * unit_normal;
-    }
-
     // Set styling
     color = finalize_color(joint_color, point, unit_normal);
-    if (width == 0) scaled_anti_alias_width = -1.0;  // Signal to discard in the frag shader
-    else scaled_anti_alias_width = 2.0 * anti_alias_width * pixel_size / width;
+    scaled_anti_alias_width = (width == 0) ?
+        -1.0 : // Signal to discard in the frag shader
+        2.0 * anti_alias_width * pixel_size / width;
+
+    // Figure out the step from the point to the corners of the
+    // triangle strip around the polyline
+    vec3 step = step_to_corner(point, tangent, unit_normal, joint_product, inside_curve);
 
     // Emit two corners
     // The frag shader will receive a value from -1 to 1,
