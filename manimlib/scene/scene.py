@@ -214,7 +214,7 @@ class Scene(object):
     ) -> None:
         if not self.preview:
             # Embed is only relevant with a preview
-            return  
+            return
         self.stop_skipping()
         self.update_frame()
         self.save_state()
@@ -269,6 +269,7 @@ class Scene(object):
         # Operation to run after each ipython command
         def post_cell_func(*args, **kwargs):
             if not self.is_window_closing():
+                self.window._has_undrawn_event = True
                 self.update_frame(dt=0, ignore_skipping=True)
 
         shell.events.register("post_run_cell", post_cell_func)
@@ -325,16 +326,18 @@ class Scene(object):
         if self.is_window_closing():
             raise EndScene()
 
-        if self.window:
-            self.window.clear()
+        if self.window and dt == 0 and not self.window.has_undrawn_event():
+            # In this case, there's no need for new rendering, but we
+            # shoudl still listen for new events
+            self.window._window.dispatch_events()
+            return
+
         self.camera.capture(*self.render_groups)
 
         if self.window:
-            self.window.swap_buffers()
             vt = self.time - self.virtual_animation_start_time
             rt = time.time() - self.real_animation_start_time
-            if rt < vt:
-                self.update_frame(0)
+            time.sleep(max(vt - rt, 0))
 
     def emit_frame(self) -> None:
         if not self.skip_animations:
@@ -530,6 +533,7 @@ class Scene(object):
 
     def stop_skipping(self) -> None:
         self.virtual_animation_start_time = self.time
+        self.real_animation_start_time = time.time()
         self.skip_animations = False
 
     # Methods associated with running animations
@@ -596,8 +600,8 @@ class Scene(object):
             self.file_writer.begin_animation()
 
         if self.window:
-            self.real_animation_start_time = time.time()
             self.virtual_animation_start_time = self.time
+            self.real_animation_start_time = time.time()
 
     def post_play(self):
         if not self.skip_animations:
