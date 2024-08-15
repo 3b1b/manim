@@ -16,7 +16,7 @@ in float v_stroke_width[3];
 in vec4 v_color[3];
 
 out vec4 color;
-out float scaled_anti_alias_width;
+out float anti_alias_prop;
 out float scaled_signed_dist_to_curve;
 
 // Codes for joint types
@@ -167,9 +167,8 @@ void emit_point_with_width(
 
     // Set styling
     color = finalize_color(joint_color, point, unit_normal);
-    scaled_anti_alias_width = (width == 0) ?
-        -1.0 : // Signal to discard in the frag shader
-        2.0 * anti_alias_width * pixel_size / width;
+    float aaw = anti_alias_width * pixel_size;
+    anti_alias_prop = (width == 0) ? -1.0 : 2 * aaw / (width + 2 * aaw);
 
     // Figure out the step from the point to the corners of the
     // triangle strip around the polyline
@@ -180,7 +179,7 @@ void emit_point_with_width(
     // reflecting where in the stroke that point is
     for (int sign = -1; sign <= 1; sign += 2){
         scaled_signed_dist_to_curve = sign;
-        emit_gl_Position(point + 0.5 * width * sign * step);
+        emit_gl_Position(point + 0.5 * (width + aaw) * sign * step);
         EmitVertex();
     }
 }

@@ -248,6 +248,7 @@ class VMobject(Mobject):
         stroke_rgba: Vect4 | None = None,
         stroke_width: float | Iterable[float] | None = None,
         stroke_background: bool = False,
+        flat_stroke: bool = False,
         shading: Tuple[float, float, float] | None = None,
         recurse: bool = True
     ) -> Self:
@@ -266,6 +267,7 @@ class VMobject(Mobject):
                 mob.set_stroke(
                     width=stroke_width,
                     background=stroke_background,
+                    flat=flat_stroke,
                     recurse=False,
                 )
             else:
@@ -273,8 +275,9 @@ class VMobject(Mobject):
                     color=stroke_color,
                     width=stroke_width,
                     opacity=stroke_opacity,
-                    recurse=False,
+                    flat=flat_stroke,
                     background=stroke_background,
+                    recurse=False,
                 )
 
             if shading is not None:
@@ -290,6 +293,7 @@ class VMobject(Mobject):
             "stroke_rgba": data['stroke_rgba'].copy(),
             "stroke_width": data['stroke_width'].copy(),
             "stroke_background": self.stroke_behind,
+            "flat_stroke": bool(self.uniforms["flat_stroke"]),
             "shading": self.get_shading(),
         }
 

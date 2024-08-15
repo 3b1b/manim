@@ -250,7 +250,7 @@ class SceneFileWriter(object):
                 self.add_sound_to_video()
             self.print_file_ready_message(self.get_movie_file_path())
         if self.save_last_frame:
-            self.scene.update_frame(ignore_skipping=True)
+            self.scene.update_frame(force_draw=True)
             self.save_final_image(self.scene.get_image())
         if self.should_open_file():
             self.open_file()
