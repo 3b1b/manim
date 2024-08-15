@@ -118,6 +118,7 @@ class FadeTransform(Transform):
 
     def ghost_to(self, source: Mobject, target: Mobject) -> None:
         source.replace(target, stretch=self.stretch, dim_to_match=self.dim_to_match)
+        source.set_uniform(**target.get_uniforms())
         source.set_opacity(0)
 
     def get_all_mobjects(self) -> list[Mobject]:
@@ -134,7 +135,8 @@ class FadeTransform(Transform):
         Animation.clean_up_from_scene(self, scene)
         scene.remove(self.mobject)
         self.mobject[0].restore()
-        scene.add(self.to_add_on_completion)
+        if not self.remover:
+            scene.add(self.to_add_on_completion)
 
 
 class FadeTransformPieces(FadeTransform):

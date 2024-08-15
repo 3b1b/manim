@@ -103,21 +103,16 @@ class TracedPath(VMobject):
         time_per_anchor: float = 1.0 / 15,
         stroke_width: float | Iterable[float] = 2.0,
         stroke_color: ManimColor = WHITE,
-        fill_opacity: float = 0.0,
         **kwargs
     ):
-        super().__init__(
-            stroke_width=stroke_width,
-            stroke_color=stroke_color,
-            fill_opacity=fill_opacity,
-            **kwargs
-        )
+        super().__init__(**kwargs)
         self.traced_point_func = traced_point_func
         self.time_traced = time_traced
         self.time_per_anchor = time_per_anchor
         self.time: float = 0
         self.traced_points: list[np.ndarray] = []
         self.add_updater(lambda m, dt: m.update_path(dt))
+        self.set_stroke(stroke_color, stroke_width)
 
     def update_path(self, dt: float) -> Self:
         if dt == 0:
@@ -167,3 +162,4 @@ class TracingTail(TracedPath):
             stroke_color=stroke_color,
             **kwargs
         )
+        self.add_updater(lambda m: m.set_stroke(width=stroke_width, opacity=stroke_opacity))

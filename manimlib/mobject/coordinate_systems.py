@@ -530,7 +530,6 @@ class ThreeDAxes(Axes):
         z_axis_config: dict = dict(),
         z_normal: Vect3 = DOWN,
         depth: float | None = None,
-        flat_stroke: bool = False,
         **kwargs
     ):
         Axes.__init__(self, x_range, y_range, **kwargs)
@@ -554,8 +553,6 @@ class ThreeDAxes(Axes):
         self.z_axis.shift(self.x_axis.n2p(0))
         self.axes.add(self.z_axis)
         self.add(self.z_axis)
-
-        self.set_flat_stroke(flat_stroke)
 
     def get_all_ranges(self) -> list[Sequence[float]]:
         return [self.x_range, self.y_range, self.z_range]
@@ -603,9 +600,6 @@ class ThreeDAxes(Axes):
         **kwargs
     ) -> ParametricSurface:
         surface = ParametricSurface(func, color=color, opacity=opacity, **kwargs)
-        xu = self.x_axis.get_unit_size()
-        yu = self.y_axis.get_unit_size()
-        zu = self.z_axis.get_unit_size()
         axes = [self.x_axis, self.y_axis, self.z_axis]
         for dim, axis in zip(range(3), axes):
             surface.stretch(axis.get_unit_size(), dim, about_point=ORIGIN)

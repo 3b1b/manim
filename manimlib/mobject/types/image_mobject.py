@@ -71,5 +71,5 @@ class ImageMobject(Mobject):
         rgb = self.image.getpixel((
             int((pw - 1) * x_alpha),
             int((ph - 1) * y_alpha),
-        ))
+        ))[:3]
         return np.array(rgb) / 255
