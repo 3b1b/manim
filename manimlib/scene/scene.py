@@ -269,8 +269,7 @@ class Scene(object):
         # Operation to run after each ipython command
         def post_cell_func(*args, **kwargs):
             if not self.is_window_closing():
-                self.window._has_undrawn_event = True
-                self.update_frame(dt=0, ignore_skipping=True)
+                self.update_frame(dt=0, force_draw=True)
 
         shell.events.register("post_run_cell", post_cell_func)
 
@@ -314,19 +313,19 @@ class Scene(object):
         return image
 
     def show(self) -> None:
-        self.update_frame(ignore_skipping=True)
+        self.update_frame(force_draw=True)
         self.get_image().show()
 
-    def update_frame(self, dt: float = 0, ignore_skipping: bool = False) -> None:
+    def update_frame(self, dt: float = 0, force_draw: bool = False) -> None:
         self.increment_time(dt)
         self.update_mobjects(dt)
-        if self.skip_animations and not ignore_skipping:
+        if self.skip_animations and not force_draw:
             return
 
         if self.is_window_closing():
             raise EndScene()
 
-        if self.window and dt == 0 and not self.window.has_undrawn_event():
+        if self.window and dt == 0 and not self.window.has_undrawn_event() and not force_draw:
             # In this case, there's no need for new rendering, but we
             # shoudl still listen for new events
             self.window._window.dispatch_events()
@@ -609,7 +608,7 @@ class Scene(object):
 
         if self.skip_animations and self.window is not None:
             # Show some quick frames along the way
-            self.update_frame(dt=0, ignore_skipping=True)
+            self.update_frame(dt=0, force_draw=True)
 
         self.num_plays += 1
 
