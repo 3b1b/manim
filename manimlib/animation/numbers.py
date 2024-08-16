@@ -19,7 +19,7 @@ class ChangingDecimal(Animation):
         suspend_mobject_updating: bool = False,
         **kwargs
     ):
-        assert(isinstance(decimal_mob, DecimalNumber))
+        assert isinstance(decimal_mob, DecimalNumber)
         self.number_update_func = number_update_func
         super().__init__(
             decimal_mob,

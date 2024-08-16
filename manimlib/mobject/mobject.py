@@ -125,11 +125,11 @@ class Mobject(object):
         return self.__class__.__name__
 
     def __add__(self, other: Mobject) -> Mobject:
-        assert(isinstance(other, Mobject))
+        assert isinstance(other, Mobject)
         return self.get_group_class()(self, other)
 
     def __mul__(self, other: int) -> Mobject:
-        assert(isinstance(other, int))
+        assert isinstance(other, int)
         return self.replicate(other)
 
     def init_data(self, length: int = 0):
@@ -228,7 +228,7 @@ class Mobject(object):
     # Only these methods should directly affect points
     @affects_data
     def set_data(self, data: np.ndarray) -> Self:
-        assert(data.dtype == self.data.dtype)
+        assert data.dtype == self.data.dtype
         self.resize_points(len(data))
         self.data[:] = data
         return self

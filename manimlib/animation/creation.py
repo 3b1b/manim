@@ -84,7 +84,7 @@ class DrawBorderThenFill(Animation):
         fill_animation_config: dict = {},
         **kwargs
     ):
-        assert(isinstance(vmobject, VMobject))
+        assert isinstance(vmobject, VMobject)
         self.sm_to_index = {hash(sm): 0 for sm in vmobject.get_family()}
         self.stroke_width = stroke_width
         self.stroke_color = stroke_color

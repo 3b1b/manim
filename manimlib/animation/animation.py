@@ -49,7 +49,7 @@ class Animation(object):
         self.lag_ratio = lag_ratio
         self.suspend_mobject_updating = suspend_mobject_updating
 
-        assert(isinstance(mobject, Mobject))
+        assert isinstance(mobject, Mobject)
 
     def __str__(self) -> str:
         return self.name

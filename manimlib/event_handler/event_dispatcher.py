@@ -20,12 +20,12 @@ class EventDispatcher(object):
         self.draggable_object_listners: list[EventListener] = []
 
     def add_listner(self, event_listner: EventListener):
-        assert(isinstance(event_listner, EventListener))
+        assert isinstance(event_listner, EventListener)
         self.event_listners[event_listner.event_type].append(event_listner)
         return self
 
     def remove_listner(self, event_listner: EventListener):
-        assert(isinstance(event_listner, EventListener))
+        assert isinstance(event_listner, EventListener)
         try:
             while event_listner in self.event_listners[event_listner.event_type]:
                 self.event_listners[event_listner.event_type].remove(event_listner)
@@ -56,7 +56,7 @@ class EventDispatcher(object):
 
         if event_type == EventType.MouseDragEvent:
             for listner in self.draggable_object_listners:
-                assert(isinstance(listner, EventListener))
+                assert isinstance(listner, EventListener)
                 propagate_event = listner.callback(listner.mobject, event_data)
                 if propagate_event is not None and propagate_event is False:
                     return propagate_event

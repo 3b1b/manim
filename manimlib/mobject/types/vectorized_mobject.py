@@ -473,7 +473,7 @@ class VMobject(Mobject):
         if len(anchors) == 0:
             self.clear_points()
             return self
-        assert(len(anchors) == len(handles) + 1)
+        assert len(anchors) == len(handles) + 1
         points = resize_array(self.get_points(), 2 * len(anchors) - 1)
         points[0::2] = anchors
         points[1::2] = handles
@@ -1057,7 +1057,7 @@ class VMobject(Mobject):
         return self
 
     def pointwise_become_partial(self, vmobject: VMobject, a: float, b: float) -> Self:
-        assert(isinstance(vmobject, VMobject))
+        assert isinstance(vmobject, VMobject)
         vm_points = vmobject.get_points()
         self.data["joint_product"] = vmobject.data["joint_product"]
         if a <= 0 and b >= 1:
@@ -1259,7 +1259,7 @@ class VMobject(Mobject):
         return wrapper
 
     def set_points(self, points: Vect3Array, refresh_joints: bool = True) -> Self:
-        assert(len(points) == 0 or len(points) % 2 == 1)
+        assert len(points) == 0 or len(points) % 2 == 1
         super().set_points(points)
         self.refresh_triangulation()
         if refresh_joints:
@@ -1269,7 +1269,7 @@ class VMobject(Mobject):
 
     @triggers_refreshed_triangulation
     def append_points(self, points: Vect3Array) -> Self:
-        assert(len(points) % 2 == 0)
+        assert len(points) % 2 == 0
         super().append_points(points)
         return self
 

@@ -868,7 +868,7 @@ class Scene(object):
         point: Vect3,
         d_point: Vect3
     ) -> None:
-        assert(self.window is not None)
+        assert self.window is not None
         self.mouse_point.move_to(point)
 
         event_data = {"point": point, "d_point": d_point}

@@ -219,7 +219,7 @@ class ShaderWrapper(object):
         self.set_ctx_clip_plane(self.use_clip_plane())
 
     def render(self):
-        assert(self.vao is not None)
+        assert self.vao is not None
         self.vao.render()
 
     def update_program_uniforms(self, camera_uniforms: UniformDict):

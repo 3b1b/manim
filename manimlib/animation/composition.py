@@ -133,7 +133,7 @@ class Succession(AnimationGroup):
         super().__init__(*animations, lag_ratio=lag_ratio, **kwargs)
 
     def begin(self) -> None:
-        assert(len(self.animations) > 0)
+        assert len(self.animations) > 0
         self.active_animation = self.animations[0]
         self.active_animation.begin()
 
