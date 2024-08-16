@@ -194,7 +194,8 @@ class VMobject(Mobject):
         self.set_rgba_array_by_color(color, opacity, 'fill_rgba', recurse)
         if border_width is not None:
             for mob in self.get_family(recurse):
-                mob.data["fill_border_width"] = border_width
+                data = mob.data if mob.has_points() > 0 else mob._data_defaults
+                data["fill_border_width"] = border_width
         self.note_changed_fill()
         return self
 
