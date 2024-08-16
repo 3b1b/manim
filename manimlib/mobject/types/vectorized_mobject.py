@@ -247,6 +247,7 @@ class VMobject(Mobject):
         fill_color: ManimColor | Iterable[ManimColor] | None = None,
         fill_opacity: float | Iterable[float] | None = None,
         fill_rgba: Vect4 | None = None,
+        fill_border_width: float | None = None,
         stroke_color: ManimColor | Iterable[ManimColor] | None = None,
         stroke_opacity: float | Iterable[float] | None = None,
         stroke_rgba: Vect4 | None = None,
@@ -263,6 +264,7 @@ class VMobject(Mobject):
                 mob.set_fill(
                     color=fill_color,
                     opacity=fill_opacity,
+                    border_width=fill_border_width,
                     recurse=False
                 )
 
@@ -294,6 +296,7 @@ class VMobject(Mobject):
         data = self.data if self.get_num_points() > 0 else self._data_defaults
         return {
             "fill_rgba": data['fill_rgba'].copy(),
+            "fill_border_width": data['fill_border_width'].copy(),
             "stroke_rgba": data['stroke_rgba'].copy(),
             "stroke_width": data['stroke_width'].copy(),
             "stroke_background": self.stroke_behind,
