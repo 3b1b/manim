@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from functools import wraps
+from functools import reduce
 
 import moderngl
 import numpy as np
+import operator as op
 
 from manimlib.constants import GREY_A, GREY_C, GREY_E
 from manimlib.constants import BLACK
@@ -101,7 +103,7 @@ class VMobject(Mobject):
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
         anti_alias_width: float = 1.5,
-        fill_border_width: float = 0.5,
+        fill_border_width: float = 0.0,
         use_winding_fill: bool = True,
         **kwargs
     ):
@@ -190,10 +192,9 @@ class VMobject(Mobject):
         recurse: bool = True
     ) -> Self:
         self.set_rgba_array_by_color(color, opacity, 'fill_rgba', recurse)
-        if border_width is None:
-            border_width = 0 if self.get_fill_opacity() < 1 else 0.5
-        for mob in self.get_family(recurse):
-            mob.data["fill_border_width"] = border_width
+        if border_width is not None:
+            for mob in self.get_family(recurse):
+                mob.data["fill_border_width"] = border_width
         self.note_changed_fill()
         return self
 
@@ -439,23 +440,19 @@ class VMobject(Mobject):
     def apply_depth_test(
         self,
         anti_alias_width: float = 0,
-        fill_border_width: float = 0,
         recurse: bool = True
     ) -> Self:
         super().apply_depth_test(recurse)
         self.set_anti_alias_width(anti_alias_width)
-        self.set_fill(border_width=fill_border_width)
         return self
 
     def deactivate_depth_test(
         self,
         anti_alias_width: float = 1.0,
-        fill_border_width: float = 0.5,
         recurse: bool = True
     ) -> Self:
         super().deactivate_depth_test(recurse)
         self.set_anti_alias_width(anti_alias_width)
-        self.set_fill(border_width=fill_border_width)
         return self
 
     @Mobject.affects_family_data
@@ -1393,7 +1390,13 @@ class VMobject(Mobject):
             else:
                 fill_datas.append(submob.data[fill_names])
                 fill_indices.append(submob.get_triangulation())
-            if (not submob._has_stroke) or submob.stroke_behind:
+
+            draw_border_width = reduce(op.and_, [
+                (not submob._has_stroke) or submob.stroke_behind,
+                submob.data['fill_border_width'][0] > 0,
+                submob.data['fill_rgba'][0, 3] == 1
+            ])
+            if draw_border_width:
                 # Add fill border
                 submob.get_joint_products()
                 names = list(stroke_names)
