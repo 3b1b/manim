@@ -110,7 +110,6 @@ class Mobject(object):
         self.shader_code_replacements: dict[str, str] = dict()
 
         self.init_data()
-        self._data_defaults = np.ones(1, dtype=self.data.dtype)
         self.init_uniforms()
         self.init_updaters()
         self.init_event_listners()
@@ -135,6 +134,7 @@ class Mobject(object):
 
     def init_data(self, length: int = 0):
         self.data = np.zeros(length, dtype=self.shader_dtype)
+        self._data_defaults = np.ones(1, dtype=self.data.dtype)
 
     def init_uniforms(self):
         self.uniforms: UniformDict = {
