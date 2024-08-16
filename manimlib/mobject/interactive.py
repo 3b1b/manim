@@ -37,7 +37,7 @@ class MotionMobject(Mobject):
     """
     def __init__(self, mobject: Mobject, **kwargs):
         super().__init__(**kwargs)
-        assert(isinstance(mobject, Mobject))
+        assert isinstance(mobject, Mobject)
         self.mobject = mobject
         self.mobject.add_mouse_drag_listner(self.mob_on_mouse_drag)
         # To avoid locking it as static mobject
@@ -58,7 +58,7 @@ class Button(Mobject):
 
     def __init__(self, mobject: Mobject, on_click: Callable[[Mobject]], **kwargs):
         super().__init__(**kwargs)
-        assert(isinstance(mobject, Mobject))
+        assert isinstance(mobject, Mobject)
         self.on_click = on_click
         self.mobject = mobject
         self.mobject.add_mouse_press_listner(self.mob_on_mouse_press)
@@ -119,7 +119,7 @@ class EnableDisableButton(ControlMobject):
         self.add_mouse_press_listner(self.on_mouse_press)
 
     def assert_value(self, value: bool) -> None:
-        assert(isinstance(value, bool))
+        assert isinstance(value, bool)
 
     def set_value_anim(self, value: bool) -> None:
         if value:
@@ -168,7 +168,7 @@ class Checkbox(ControlMobject):
         self.add_mouse_press_listner(self.on_mouse_press)
 
     def assert_value(self, value: bool) -> None:
-        assert(isinstance(value, bool))
+        assert isinstance(value, bool)
 
     def toggle_value(self) -> None:
         super().set_value(not self.get_value())
@@ -252,7 +252,7 @@ class LinearNumberSlider(ControlMobject):
         super().__init__(value, self.bar, self.slider, self.slider_axis, **kwargs)
 
     def assert_value(self, value: float) -> None:
-        assert(self.min_value <= value <= self.max_value)
+        assert self.min_value <= value <= self.max_value
 
     def set_value_anim(self, value: float) -> None:
         prop = (value - self.min_value) / (self.max_value - self.min_value)
@@ -351,7 +351,7 @@ class ColorSliders(Group):
         grid.move_to(self.selected_color_box)
 
         for idx, square in enumerate(grid):
-            assert(isinstance(square, Square))
+            assert isinstance(square, Square)
             square.set_stroke(width=0.0, opacity=0.0)
             square.set_fill(colors[idx % len(colors)], 1.0)
 

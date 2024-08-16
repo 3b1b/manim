@@ -99,7 +99,7 @@ class Camera(object):
         self.light_source = Point(self.light_source_position)
 
     def use_window_fbo(self, use: bool = True):
-        assert(self.window is not None)
+        assert self.window is not None
         if use:
             self.fbo = self.window_fbo
         else:

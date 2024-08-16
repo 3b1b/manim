@@ -153,7 +153,7 @@ class SampleSpace(Rectangle):
         direction: np.ndarray = LEFT,
         **kwargs
     ) -> VGroup:
-        assert(hasattr(self, "horizontal_parts"))
+        assert hasattr(self, "horizontal_parts")
         parts = self.horizontal_parts
         return self.get_subdivision_braces_and_labels(parts, labels, direction, **kwargs)
 
@@ -162,7 +162,7 @@ class SampleSpace(Rectangle):
         labels: str,
         **kwargs
     ) -> VGroup:
-        assert(hasattr(self, "vertical_parts"))
+        assert hasattr(self, "vertical_parts")
         parts = self.vertical_parts
         return self.get_subdivision_braces_and_labels(parts, labels, UP, **kwargs)
 
@@ -171,7 +171,7 @@ class SampleSpace(Rectangle):
         labels: str,
         **kwargs
     ) -> VGroup:
-        assert(hasattr(self, "vertical_parts"))
+        assert hasattr(self, "vertical_parts")
         parts = self.vertical_parts
         return self.get_subdivision_braces_and_labels(parts, labels, DOWN, **kwargs)
 

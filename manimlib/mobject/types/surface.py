@@ -167,7 +167,7 @@ class Surface(Mobject):
         b: float,
         axis: int | None = None
     ) -> Self:
-        assert(isinstance(smobject, Surface))
+        assert isinstance(smobject, Surface)
         if axis is None:
             axis = self.prefered_creation_axis
         if a <= 0 and b >= 1:

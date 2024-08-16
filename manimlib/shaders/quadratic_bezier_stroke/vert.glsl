@@ -15,7 +15,7 @@ out vec4 v_joint_product;
 out float v_stroke_width;
 out vec4 v_color;
 
-const float STROKE_WIDTH_CONVERSION = 0.015;
+const float STROKE_WIDTH_CONVERSION = 0.01;
 
 void main(){
     verts = point;

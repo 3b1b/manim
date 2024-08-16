@@ -148,7 +148,8 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray]:
     along with the rgb value which is meant to be discarded.
     """
     cam_config = get_configuration(parse_cli())['camera_config']
-    size = (cam_config['pixel_width'], cam_config['pixel_height'])
+    # Double the size so as to effectively to 4x multi-sample antialiasing
+    size = (2 * cam_config['pixel_width'], 2 * cam_config['pixel_height'])
 
     # Important to make sure dtype is floating point (not fixed point)
     # so that alpha values can be negative and are not clipped

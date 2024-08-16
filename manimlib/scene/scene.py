@@ -333,7 +333,7 @@ class Scene(object):
 
         self.camera.capture(*self.render_groups)
 
-        if self.window:
+        if self.window and not self.skip_animations:
             vt = self.time - self.virtual_animation_start_time
             rt = time.time() - self.real_animation_start_time
             time.sleep(max(vt - rt, 0))
@@ -868,7 +868,7 @@ class Scene(object):
         point: Vect3,
         d_point: Vect3
     ) -> None:
-        assert(self.window is not None)
+        assert self.window is not None
         self.mouse_point.move_to(point)
 
         event_data = {"point": point, "d_point": d_point}

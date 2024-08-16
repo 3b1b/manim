@@ -30,6 +30,7 @@ class DecimalNumber(VMobject):
         color: ManimColor = WHITE,
         stroke_width: float = 0,
         fill_opacity: float = 1.0,
+        fill_border_width: float = 0.5,
         num_decimal_places: int = 2,
         include_sign: bool = False,
         group_with_commas: bool = True,
@@ -57,6 +58,7 @@ class DecimalNumber(VMobject):
             color=color,
             stroke_width=stroke_width,
             fill_opacity=fill_opacity,
+            fill_border_width=fill_border_width,
             **kwargs
         )
 

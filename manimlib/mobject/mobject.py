@@ -110,7 +110,6 @@ class Mobject(object):
         self.shader_code_replacements: dict[str, str] = dict()
 
         self.init_data()
-        self._data_defaults = np.ones(1, dtype=self.data.dtype)
         self.init_uniforms()
         self.init_updaters()
         self.init_event_listners()
@@ -126,15 +125,16 @@ class Mobject(object):
         return self.__class__.__name__
 
     def __add__(self, other: Mobject) -> Mobject:
-        assert(isinstance(other, Mobject))
+        assert isinstance(other, Mobject)
         return self.get_group_class()(self, other)
 
     def __mul__(self, other: int) -> Mobject:
-        assert(isinstance(other, int))
+        assert isinstance(other, int)
         return self.replicate(other)
 
     def init_data(self, length: int = 0):
         self.data = np.zeros(length, dtype=self.shader_dtype)
+        self._data_defaults = np.ones(1, dtype=self.data.dtype)
 
     def init_uniforms(self):
         self.uniforms: UniformDict = {
@@ -228,7 +228,7 @@ class Mobject(object):
     # Only these methods should directly affect points
     @affects_data
     def set_data(self, data: np.ndarray) -> Self:
-        assert(data.dtype == self.data.dtype)
+        assert data.dtype == self.data.dtype
         self.resize_points(len(data))
         self.data[:] = data
         return self

@@ -179,7 +179,7 @@ class ApplyMethod(Transform):
                 "Whoops, looks like you accidentally invoked "
                 "the method you want to animate"
             )
-        assert(isinstance(method.__self__, Mobject))
+        assert isinstance(method.__self__, Mobject)
 
     def create_target(self) -> Mobject:
         method = self.method
