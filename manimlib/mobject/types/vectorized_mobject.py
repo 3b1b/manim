@@ -750,7 +750,7 @@ class VMobject(Mobject):
 
     #
     def consider_points_equal(self, p0: Vect3, p1: Vect3) -> bool:
-        return get_norm(p1 - p0) < self.tolerance_for_point_equality
+        return all(abs(p1 - p0) < self.tolerance_for_point_equality)
 
     # Information about the curve
     def get_bezier_tuples_from_points(self, points: Vect3Array) -> Iterable[Vect3Array]:
