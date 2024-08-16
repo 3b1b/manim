@@ -333,7 +333,7 @@ class Scene(object):
 
         self.camera.capture(*self.render_groups)
 
-        if self.window:
+        if self.window and not self.skip_animations:
             vt = self.time - self.virtual_animation_start_time
             rt = time.time() - self.real_animation_start_time
             time.sleep(max(vt - rt, 0))
