@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import wraps
-from functools import reduce
 
 import moderngl
 import numpy as np
@@ -192,7 +191,10 @@ class VMobject(Mobject):
         recurse: bool = True
     ) -> Self:
         self.set_rgba_array_by_color(color, opacity, 'fill_rgba', recurse)
+        if opacity is not None and 0 < opacity < 1 and border_width is None:
+            border_width = 0
         if border_width is not None:
+            self.border_width = border_width
             for mob in self.get_family(recurse):
                 data = mob.data if mob.has_points() > 0 else mob._data_defaults
                 data["fill_border_width"] = border_width
@@ -1392,11 +1394,10 @@ class VMobject(Mobject):
                 fill_datas.append(submob.data[fill_names])
                 fill_indices.append(submob.get_triangulation())
 
-            draw_border_width = reduce(op.and_, [
-                (not submob._has_stroke) or submob.stroke_behind,
+            draw_border_width = op.and_(
                 submob.data['fill_border_width'][0] > 0,
-                submob.data['fill_rgba'][0, 3] == 1
-            ])
+                (not submob._has_stroke) or submob.stroke_behind,
+            )
             if draw_border_width:
                 # Add fill border
                 submob.get_joint_products()
