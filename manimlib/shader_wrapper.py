@@ -229,21 +229,30 @@ class ShaderWrapper(object):
             for name, value in uniforms.items():
                 set_program_uniform(self.program, name, value)
 
-    def get_vertex_buffer_object(self, refresh: bool = True):
-        if refresh:
-            self.vbo = self.ctx.buffer(self.vert_data)
+    def get_vertex_buffer_object(self):
+        self.vbo = self.ctx.buffer(self.vert_data)
         return self.vbo
 
-    def get_index_buffer_object(self, refresh: bool = True):
-        if refresh and len(self.vert_indices) > 0:
+    def get_index_buffer_object(self):
+        if len(self.vert_indices) > 0:
             self.ibo = self.ctx.buffer(self.vert_indices.astype(np.uint32))
         return self.ibo
 
-    def generate_vao(self, refresh: bool = True):
-        self.release()
+    def load_data(self):
+        if self.vao is None:
+            self.generate_vao()
+        elif self.vao.vertices != len(self.vert_data):
+            self.release()
+            self.generate_vao()
+        else:
+            self.vbo.write(self.vert_data)
+            if self.ibo is not None:
+                self.ibo.write(self.self.vert_indices.astype(np.uint32))
+
+    def generate_vao(self):
         # Data buffer
-        vbo = self.get_vertex_buffer_object(refresh)
-        ibo = self.get_index_buffer_object(refresh)
+        vbo = self.get_vertex_buffer_object()
+        ibo = self.get_index_buffer_object()
 
         # Vertex array object
         self.vao = self.ctx.vertex_array(
