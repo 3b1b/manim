@@ -148,14 +148,14 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray]:
     along with the rgb value which is meant to be discarded.
     """
     cam_config = get_configuration(parse_cli())['camera_config']
-    # Double the size so as to effectively to 4x multi-sample antialiasing
-    size = (2 * cam_config['pixel_width'], 2 * cam_config['pixel_height'])
+    size = (cam_config['pixel_width'], cam_config['pixel_height'])
 
     # Important to make sure dtype is floating point (not fixed point)
     # so that alpha values can be negative and are not clipped
     texture = ctx.texture(size=size, components=4, dtype='f2')
-    depth_texture = ctx.depth_texture(size=size)
-    texture_fbo = ctx.framebuffer(texture, depth_texture)
+    depth_texture = ctx.texture(size=size, components=1, dtype='f4')
+    texture_fbo = ctx.framebuffer(texture)
+    depth_texture_fbo = ctx.framebuffer(depth_texture)
 
     simple_program = ctx.program(
         vertex_shader='''
@@ -200,4 +200,4 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray]:
         'texcoord',
         mode=moderngl.TRIANGLE_STRIP
     )
-    return (texture_fbo, fill_texture_vao)
+    return (texture_fbo, depth_texture_fbo, fill_texture_vao)

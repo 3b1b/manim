@@ -277,7 +277,7 @@ class VShaderWrapper(ShaderWrapper):
             f"{vtype}_{name}": get_shader_code_from_file(
                 os.path.join(f"quadratic_bezier_{vtype}", f"{name}.glsl")
             )
-            for vtype in ["stroke", "fill"]
+            for vtype in ["stroke", "fill", "depth"]
             for name in ["vert", "geom", "frag"]
         }
 
@@ -294,7 +294,13 @@ class VShaderWrapper(ShaderWrapper):
             geometry_shader=self.program_code["fill_geom"],
             fragment_shader=self.program_code["fill_frag"],
         )
-        self.programs = [self.stroke_program, self.fill_program]
+        self.fill_depth_program = get_shader_program(
+            self.ctx,
+            vertex_shader=self.program_code["depth_vert"],
+            geometry_shader=self.program_code["depth_geom"],
+            fragment_shader=self.program_code["depth_frag"],
+        )
+        self.programs = [self.stroke_program, self.fill_program, self.fill_depth_program]
 
         # Full vert format looks like this (total of 4x23 = 92 bytes):
         # point 3
@@ -313,6 +319,9 @@ class VShaderWrapper(ShaderWrapper):
 
         self.fill_border_vert_format = '3f 20x 4f 4f 24x 1f'
         self.fill_border_vert_attributes = ['point', 'joint_product', 'stroke_rgba', 'stroke_width']
+
+        self.fill_depth_vert_format = '3f 52x 3f 16x'
+        self.fill_depth_vert_attributes = ['point', 'base_point']
 
     def init_vertex_objects(self):
         self.vbo = None
@@ -337,7 +346,12 @@ class VShaderWrapper(ShaderWrapper):
             content=[(self.vbo, self.fill_border_vert_format, *self.fill_border_vert_attributes)],
             mode=self.render_primitive,
         )
-        self.vaos = [self.stroke_vao, self.fill_vao, self.fill_border_vao]
+        self.fill_depth_vao = self.ctx.vertex_array(
+            program=self.fill_depth_program,
+            content=[(self.vbo, self.fill_depth_vert_format, *self.fill_depth_vert_attributes)],
+            mode=self.render_primitive,
+        )
+        self.vaos = [self.stroke_vao, self.fill_vao, self.fill_border_vao, self.fill_depth_vao]
 
     def set_backstroke(self, value: bool = True):
         self.stroke_behind = value
@@ -366,7 +380,7 @@ class VShaderWrapper(ShaderWrapper):
             return
 
         original_fbo = self.ctx.fbo
-        texture_fbo, texture_vao = self.fill_canvas
+        texture_fbo, depth_texture_fbo, texture_vao = self.fill_canvas
 
         texture_fbo.clear()
         texture_fbo.use()
@@ -384,16 +398,26 @@ class VShaderWrapper(ShaderWrapper):
         self.ctx.disable(moderngl.DEPTH_TEST)
         self.fill_vao.render()
         if apply_depth_test:
+            depth_texture_fbo.clear(1.0)
+            depth_texture_fbo.use()
+            gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE)
+            gl.glBlendEquation(gl.GL_MIN)
+            self.fill_depth_vao.render()
             self.ctx.enable(moderngl.DEPTH_TEST)
 
-        original_fbo.use()
-        gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
-
-        texture_vao.render()
-
-        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-
+        # Border width is used for antialiasing. Take the maximum between these
+        # two alphas, before compositing back to the rest of the scene
+        gl.glBlendFuncSeparate(
+            gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
+            gl.GL_ONE, gl.GL_ZERO
+        )
+        gl.glBlendEquationSeparate(gl.GL_FUNC_ADD, gl.GL_MAX)
         self.fill_border_vao.render()
+
+        original_fbo.use()
+        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+        gl.glBlendEquation(gl.GL_FUNC_ADD)
+        texture_vao.render()
 
     def render(self):
         if self.stroke_behind:
