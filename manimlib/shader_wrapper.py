@@ -261,6 +261,7 @@ class VShaderWrapper(ShaderWrapper):
         depth_test: bool = False,
         # render_primitive: int = moderngl.TRIANGLES,
         render_primitive: int = moderngl.TRIANGLE_STRIP,
+        stroke_behind: bool = False,
     ):
         super().__init__(
             ctx=ctx,
@@ -271,6 +272,7 @@ class VShaderWrapper(ShaderWrapper):
             depth_test=depth_test,
             render_primitive=render_primitive,
         )
+        self.stroke_behind = stroke_behind
         self.fill_canvas = get_fill_canvas(self.ctx)
 
     def init_program_code(self) -> None:
@@ -312,10 +314,34 @@ class VShaderWrapper(ShaderWrapper):
         self.fill_vert_format = '3f 36x 4f 3f 3f 4x'
         self.fill_vert_attributes = ['point', 'fill_rgba', 'base_point', 'unit_normal']
 
+        self.fill_border_vert_format = '3f 20x 4f 4f 24x 1f'
+        self.fill_border_vert_attributes = ['point', 'joint_product', 'stroke_rgba', 'stroke_width']
+
     def init_vertex_objects(self):
         self.vbo = None
         self.stroke_vao = None
         self.fill_vao = None
+        self.fill_border_vao = None
+
+    def generate_vao(self):
+        self.stroke_vao = self.ctx.vertex_array(
+            program=self.stroke_program,
+            content=[(self.vbo, self.stroke_vert_format, *self.stroke_vert_attributes)],
+            mode=self.render_primitive,
+        )
+        self.fill_vao = self.ctx.vertex_array(
+            program=self.fill_program,
+            content=[(self.vbo, self.fill_vert_format, *self.fill_vert_attributes)],
+            mode=self.render_primitive,
+        )
+        self.fill_border_vao = self.ctx.vertex_array(
+            program=self.stroke_program,
+            content=[(self.vbo, self.fill_border_vert_format, *self.fill_border_vert_attributes)],
+            mode=self.render_primitive,
+        )
+
+    def set_backstroke(self, value: bool = True):
+        self.stroke_behind = value
 
     # TODO, think about create_id, replace_code
     def is_valid(self) -> bool:
@@ -362,23 +388,17 @@ class VShaderWrapper(ShaderWrapper):
 
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
+        self.fill_border_vao.render()
+
     def render(self):
         if self.stroke_vao is None or self.fill_vao is None:
             self.generate_vao()
-        self.render_fill()
-        self.render_stroke()
-
-    def generate_vao(self):
-        self.stroke_vao = self.ctx.vertex_array(
-            program=self.stroke_program,
-            content=[(self.vbo, self.stroke_vert_format, *self.stroke_vert_attributes)],
-            mode=self.render_primitive,
-        )
-        self.fill_vao = self.ctx.vertex_array(
-            program=self.fill_program,
-            content=[(self.vbo, self.fill_vert_format, *self.fill_vert_attributes)],
-            mode=self.render_primitive,
-        )
+        if self.stroke_behind:
+            self.render_stroke()
+            self.render_fill()
+        else:
+            self.render_fill()
+            self.render_stroke()
 
     def release(self):
         attrs = ["vbo", "stroke_vao", "fill_vao"]

@@ -1347,9 +1347,12 @@ class VMobject(Mobject):
         if not family:
             return []
 
+        stroke_behind = False
         for submob in family:
             if submob._has_fill:
                 submob.data["base_point"] = submob.data["point"][0]
+            if submob.stroke_behind:
+                stroke_behind = True
 
         self.shader_wrapper.read_in(
             # [sm.data for sm in family],
@@ -1359,6 +1362,7 @@ class VMobject(Mobject):
         rep = family[0]  # Representative family member
         self.shader_wrapper.bind_to_mobject_uniforms(rep.get_uniforms())
         self.shader_wrapper.depth_test = rep.depth_test
+        self.shader_wrapper.stroke_behind = stroke_behind
         return [self.shader_wrapper]
 
 
