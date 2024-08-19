@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from manimlib.typing import Vect3
 
 
-
 class Fade(Transform):
     def __init__(
         self,
