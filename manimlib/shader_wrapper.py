@@ -378,7 +378,13 @@ class VShaderWrapper(ShaderWrapper):
             gl.GL_ONE_MINUS_DST_ALPHA, gl.GL_ONE,
         )
 
+        # Be sure not to apply depth test while rendering fill
+        # but set it back to where it was after
+        apply_depth_test = bool(gl.glGetBooleanv(gl.GL_DEPTH_TEST))
+        self.ctx.disable(moderngl.DEPTH_TEST)
         self.fill_vao.render()
+        if apply_depth_test:
+            self.ctx.enable(moderngl.DEPTH_TEST)
 
         original_fbo.use()
         gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
