@@ -1336,7 +1336,11 @@ class VMobject(Mobject):
         )
 
     def get_shader_vert_indices(self):
-        return self.get_outer_vert_indices()
+        return None
+
+    def get_shader_data(self):
+        # This should only come up when VMobjects appear together in a group
+        return np.hstack([self.data, self.data[-1:]])
 
     def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
         if not self._shaders_initialized:
@@ -1355,9 +1359,7 @@ class VMobject(Mobject):
                 stroke_behind = True
 
         self.shader_wrapper.read_in(
-            # [sm.data for sm in family],
             list(it.chain(*([sm.data, sm.data[-1:]] for sm in family)))
-            # [sm.get_shader_vert_indices() for sm in family]
         )
         rep = family[0]  # Representative family member
         self.shader_wrapper.bind_to_mobject_uniforms(rep.get_uniforms())

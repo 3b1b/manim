@@ -1992,7 +1992,7 @@ class Mobject(object):
     # For shader data
 
     def init_shader_data(self, ctx: Context):
-        self.shader_indices = np.zeros(0)
+        self.shader_indices = None
         self.shader_wrapper = ShaderWrapper(
             ctx=ctx,
             vert_data=self.data,
@@ -2012,8 +2012,6 @@ class Mobject(object):
             self.init_shader_data(ctx)
             self._shaders_initialized = True
 
-        self.shader_wrapper.vert_data = self.get_shader_data()
-        self.shader_wrapper.vert_indices = self.get_shader_vert_indices()
         self.shader_wrapper.bind_to_mobject_uniforms(self.get_uniforms())
         self.shader_wrapper.depth_test = self.depth_test
         for old, new in self.shader_code_replacements.items():
@@ -2021,20 +2019,20 @@ class Mobject(object):
         return self.shader_wrapper
 
     def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
-        shader_wrappers = it.chain(
-            [self.get_shader_wrapper(ctx)],
-            *[sm.get_shader_wrapper_list(ctx) for sm in self.submobjects]
-        )
-        batches = batch_by_property(shader_wrappers, lambda sw: sw.get_id())
+        family = self.family_members_with_points()
+        for submob in family:
+            submob.get_shader_wrapper(ctx)
+        batches = batch_by_property(family, lambda submob: submob.shader_wrapper.get_id())
 
         result = []
-        for wrapper_group, sid in batches:
-            shader_wrapper = wrapper_group[0]
-            if not shader_wrapper.is_valid():
-                continue
-            shader_wrapper.combine_with(*wrapper_group[1:])
-            if len(shader_wrapper.vert_data) > 0:
-                result.append(shader_wrapper)
+        for submobs, sid in batches:
+            shader_wrapper = submobs[0].shader_wrapper
+            data_list = [sm.get_shader_data() for sm in submobs]
+            indices_list = [sm.get_shader_vert_indices() for sm in submobs]
+            if indices_list[0] is None:
+                indices_list = None
+            shader_wrapper.read_in(data_list, indices_list)
+            result.append(shader_wrapper)
         return result
 
     def get_shader_data(self):

@@ -76,6 +76,7 @@ class ShaderWrapper(object):
         if not self.shader_folder:
             self.program = None
             self.vert_format = None
+            self.programs = []
             return
         self.program = get_shader_program(self.ctx, **self.program_code)
         self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
@@ -89,7 +90,7 @@ class ShaderWrapper(object):
 
     def init_vertex_objects(self):
         self.vbo = None
-        self.vao = None
+        self.vaos = []
 
     def bind_to_mobject_uniforms(self, mobject_uniforms: UniformDict):
         self.mobject_uniforms = mobject_uniforms
@@ -115,7 +116,7 @@ class ShaderWrapper(object):
 
     def is_valid(self) -> bool:
         return all([
-            self.vert_data is not None,
+            # self.vert_data is not None,
             self.program_code["vertex_shader"] is not None,
             self.program_code["fragment_shader"] is not None,
         ])
@@ -166,7 +167,7 @@ class ShaderWrapper(object):
 
     def combine_with(self, *shader_wrappers: ShaderWrapper) -> ShaderWrapper:
         if len(shader_wrappers) > 0:
-            self.read_in([self.vert_data, (sw.vert_data for sw in shader_wrappers)])
+            self.read_in([self.vert_data, *(sw.vert_data for sw in shader_wrappers)])
             vbos = [
                 vbo
                 for vbo in [self.vbo, *(sw.vbo for sw in shader_wrappers)]
@@ -188,10 +189,8 @@ class ShaderWrapper(object):
     ):
         if indices_list is not None:
             data_list = [data[indices] for data, indices in zip(data_list, indices_list)]
-            total_len = sum(map(len, indices_list))
-        else:
-            total_len = sum(map(len, data_list))
 
+        total_len = sum(map(len, data_list))
         if total_len == 0:
             if self.vbo is not None:
                 self.vbo.clear()
@@ -205,13 +204,24 @@ class ShaderWrapper(object):
 
         # Either create new vbo, or read data into it
         total_size = self.vert_data.itemsize * total_len
+        if self.vbo is not None and self.vbo.size != total_size:
+            self.release()  # This sets vbo to be None
         if self.vbo is None:
             self.vbo = self.ctx.buffer(self.vert_data)
-        elif self.vbo.size != total_size:
-            self.vbo.release()
-            self.vbo = self.ctx.buffer(self.vert_data)
+            self.generate_vaos()
         else:
             self.vbo.write(self.vert_data)
+
+    def generate_vaos(self):
+        # Vertex array object
+        self.vaos = [
+            self.ctx.vertex_array(
+                program=program,
+                content=[(self.vbo, self.vert_format, *self.vert_attributes)],
+                mode=self.render_primitive,
+            )
+            for program in self.programs
+        ]
 
     # Related to data and rendering
     def pre_render(self):
@@ -219,9 +229,8 @@ class ShaderWrapper(object):
         self.set_ctx_clip_plane(self.use_clip_plane())
 
     def render(self):
-        if self.vao is None:
-            self.generate_vao()
-        self.vao.render()
+        for vao in self.vaos:
+            vao.render()
 
     def update_program_uniforms(self, camera_uniforms: UniformDict):
         for program in self.programs:
@@ -231,23 +240,11 @@ class ShaderWrapper(object):
                 for name, value in uniforms.items():
                     set_program_uniform(program, name, value)
 
-    def generate_vao(self):
-        if self.vbo is None:
-            self.vbo = self.ctx.buffer(self.vert_data)
-
-        # Vertex array object
-        self.vao = self.ctx.vertex_array(
-            program=self.program,
-            content=[(self.vbo, self.vert_format, *self.vert_attributes)],
-            mode=self.render_primitive,
-        )
-
     def release(self):
-        for obj in (self.vbo, self.vao):
+        for obj in (self.vbo, *self.vaos):
             if obj is not None:
                 obj.release()
-        self.vbo = None
-        self.vao = None
+        self.init_vertex_objects()
 
 
 class VShaderWrapper(ShaderWrapper):
@@ -322,8 +319,9 @@ class VShaderWrapper(ShaderWrapper):
         self.stroke_vao = None
         self.fill_vao = None
         self.fill_border_vao = None
+        self.vaos = []
 
-    def generate_vao(self):
+    def generate_vaos(self):
         self.stroke_vao = self.ctx.vertex_array(
             program=self.stroke_program,
             content=[(self.vbo, self.stroke_vert_format, *self.stroke_vert_attributes)],
@@ -339,13 +337,14 @@ class VShaderWrapper(ShaderWrapper):
             content=[(self.vbo, self.fill_border_vert_format, *self.fill_border_vert_attributes)],
             mode=self.render_primitive,
         )
+        self.vaos = [self.stroke_vao, self.fill_vao, self.fill_border_vao]
 
     def set_backstroke(self, value: bool = True):
         self.stroke_behind = value
 
     # TODO, think about create_id, replace_code
     def is_valid(self) -> bool:
-        return self.vert_data is not None
+        return self.vert_data is not None  # Isn't this always true?
 
     # TODO, motidify read in to handle triangulation case for non-winding fill?
 
@@ -359,7 +358,7 @@ class VShaderWrapper(ShaderWrapper):
         if self.fill_vao is None:
             return
 
-        # TODO, need a new test here
+        # TODO, need a new test here...or to just kill non-winding fill?
         winding = True
         self.fill_program['winding'].value = winding
         if not winding:
@@ -391,19 +390,9 @@ class VShaderWrapper(ShaderWrapper):
         self.fill_border_vao.render()
 
     def render(self):
-        if self.stroke_vao is None or self.fill_vao is None:
-            self.generate_vao()
         if self.stroke_behind:
             self.render_stroke()
             self.render_fill()
         else:
             self.render_fill()
             self.render_stroke()
-
-    def release(self):
-        attrs = ["vbo", "stroke_vao", "fill_vao"]
-        for attr in attrs:
-            obj = getattr(self, attr)
-            if obj is not None:
-                obj.release()
-            setattr(self, attr, None)
