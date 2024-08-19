@@ -372,13 +372,6 @@ class VShaderWrapper(ShaderWrapper):
         if self.fill_vao is None:
             return
 
-        # TODO, need a new test here...or to just kill non-winding fill?
-        winding = True
-        self.fill_program['winding'].value = winding
-        if not winding:
-            self.fill_vao.render()
-            return
-
         original_fbo = self.ctx.fbo
         texture_fbo, depth_texture_fbo, texture_vao = self.fill_canvas
 

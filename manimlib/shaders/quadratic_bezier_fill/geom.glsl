@@ -3,8 +3,6 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 6) out;
 
-uniform bool winding;
-
 in vec3 verts[3];
 in vec4 v_color[3];
 in vec3 v_base_point[3];
@@ -48,14 +46,6 @@ void emit_triangle(vec3 points[3], vec4 v_color[3]){
 }
 
 
-void emit_simple_triangle(){
-    emit_triangle(
-        vec3[3](verts[0], verts[1], verts[2]),
-        vec4[3](v_color[0], v_color[1], v_color[2])
-    );
-}
-
-
 void main(){
     // Vector graphic shaders use TRIANGLE_STRIP, but only
     // every other one needs to be rendered
@@ -68,25 +58,17 @@ void main(){
     // Check zero fill
     if (vec3(v_color[0].a, v_color[1].a, v_color[2].a) == vec3(0.0, 0.0, 0.0)) return;
 
-
-    if(winding){
-        // Emit main triangle
-        fill_all = 1.0;
-        emit_triangle(
-            vec3[3](v_base_point[0], verts[0], verts[2]),
-            vec4[3](v_color[1], v_color[0], v_color[2])
-        );
-        // Edge triangle
-        fill_all = 0.0;
-        emit_simple_triangle();
-    }else{
-        // In this case, one should fill all if the vertices are
-        // not in sequential order
-        fill_all = float(
-            (v_vert_index[1] - v_vert_index[0]) != 1.0 ||
-            (v_vert_index[2] - v_vert_index[1]) != 1.0
-        );
-        emit_simple_triangle();
-    }
+    // Emit main triangle
+    fill_all = 1.0;
+    emit_triangle(
+        vec3[3](v_base_point[0], verts[0], verts[2]),
+        vec4[3](v_color[1], v_color[0], v_color[2])
+    );
+    // Edge triangle
+    fill_all = 0.0;
+    emit_triangle(
+        vec3[3](verts[0], verts[1], verts[2]),
+        vec4[3](v_color[0], v_color[1], v_color[2])
+    );
 }
 
