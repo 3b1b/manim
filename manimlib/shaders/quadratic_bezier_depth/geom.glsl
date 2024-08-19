@@ -15,8 +15,6 @@ out float depth;
 void emit_triangle(vec3 points[3]){
     for(int i = 0; i < 3; i++){
         emit_gl_Position(points[i]);
-        // float z = gl_Position.z / gl_Position.w;
-        // depth = 0.5 * z + 0.5;
         EmitVertex();
     }
     EndPrimitive();
@@ -32,7 +30,7 @@ void main(){
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
 
-    // Emit main triangle
+    // Emit two triangles
     emit_triangle(vec3[3](v_base_point[0], verts[0], verts[2]));
     emit_triangle(vec3[3](verts[0], verts[1], verts[2]));
 }
