@@ -69,7 +69,7 @@ class VMobject(Mobject):
         ('stroke_width', np.float32, (1,)),
         ('joint_product', np.float32, (4,)),
         ('fill_rgba', np.float32, (4,)),
-        ('base_normal', np.float32, (3,)),  # Every other holds base point and unit normal vector
+        ('base_normal', np.float32, (3,)),  # Base points and unit normal vectors are interleaved in this array
         ('fill_border_width', np.float32, (1,)),
     ])
     pre_function_handle_to_anchor_scale_factor: float = 0.01
@@ -112,8 +112,6 @@ class VMobject(Mobject):
         self.anti_alias_width = anti_alias_width
         self.fill_border_width = fill_border_width
         self._use_winding_fill = use_winding_fill
-        self._has_fill = False
-        self._has_stroke = False
 
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
@@ -137,16 +135,6 @@ class VMobject(Mobject):
         return super().add(*vmobjects)
 
     # Colors
-    def note_changed_fill(self) -> Self:
-        for submob in self.get_family():
-            submob._has_fill = submob.has_fill()
-        return self
-
-    def note_changed_stroke(self) -> Self:
-        for submob in self.get_family():
-            submob._has_stroke = submob.has_stroke()
-        return self
-
     def init_colors(self):
         self.set_fill(
             color=self.fill_color,
@@ -164,17 +152,6 @@ class VMobject(Mobject):
         self.color = self.get_color()
         return self
 
-    def set_rgba_array(
-        self,
-        rgba_array: Vect4Array,
-        name: str = "stroke_rgba",
-        recurse: bool = False
-    ) -> Self:
-        super().set_rgba_array(rgba_array, name, recurse)
-        self.note_changed_fill()
-        self.note_changed_stroke()
-        return self
-
     def set_fill(
         self,
         color: ManimColor | Iterable[ManimColor] = None,
@@ -188,7 +165,6 @@ class VMobject(Mobject):
             for mob in self.get_family(recurse):
                 data = mob.data if mob.has_points() > 0 else mob._data_defaults
                 data["fill_border_width"] = border_width
-        self.note_changed_fill()
         return self
 
     def set_stroke(
@@ -219,7 +195,6 @@ class VMobject(Mobject):
         if flat is not None:
             self.set_flat_stroke(flat)
 
-        self.note_changed_stroke()
         return self
 
     def set_backstroke(
@@ -278,8 +253,6 @@ class VMobject(Mobject):
 
             if shading is not None:
                 mob.set_shading(*shading, recurse=False)
-        self.note_changed_fill()
-        self.note_changed_stroke()
         return self
 
     def get_style(self) -> dict[str, Any]:
@@ -1041,10 +1014,7 @@ class VMobject(Mobject):
     ) -> Self:
         super().interpolate(mobject1, mobject2, alpha, *args, **kwargs)
 
-        self._has_stroke = mobject1._has_stroke or mobject2._has_stroke
-        self._has_fill = mobject1._has_fill or mobject2._has_fill
-
-        if self._has_fill and not self._use_winding_fill:
+        if not self._use_winding_fill and self.has_fill():
             tri1 = mobject1.get_triangulation()
             tri2 = mobject2.get_triangulation()
             if not arrays_match(tri1, tri2):
@@ -1284,8 +1254,6 @@ class VMobject(Mobject):
     @triggers_refreshed_triangulation
     def set_data(self, data: np.ndarray) -> Self:
         super().set_data(data)
-        self.note_changed_fill()
-        self.note_changed_stroke()
         return self
 
     # TODO, how to be smart about tangents here?
@@ -1342,8 +1310,8 @@ class VMobject(Mobject):
 
         stroke_behind = False
         for submob in family:
-            if submob._has_fill:
-                submob.data["base_normal"][0::2] = submob.data["point"][0]
+            # Maybe do this on set points instead? Or on noting changed data?
+            submob.data["base_normal"][0::2] = submob.data["point"][0]
             if submob.stroke_behind:
                 stroke_behind = True
 
