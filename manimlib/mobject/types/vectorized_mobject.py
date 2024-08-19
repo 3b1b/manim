@@ -63,8 +63,6 @@ DEFAULT_FILL_COLOR = GREY_C
 
 
 class VMobject(Mobject):
-    fill_shader_folder: str = "quadratic_bezier_fill"
-    stroke_shader_folder: str = "quadratic_bezier_stroke"
     shader_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('stroke_rgba', np.float32, (4,)),
@@ -75,12 +73,6 @@ class VMobject(Mobject):
         ('unit_normal', np.float32, (3,)),
         ('fill_border_width', np.float32, (1,)),
     ])
-    fill_data_names = ['point', 'fill_rgba', 'base_point', 'unit_normal']  # Delete these
-    stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_product']  # Delete these
-
-    fill_render_primitive: int = moderngl.TRIANGLES
-    stroke_render_primitive: int = moderngl.TRIANGLES
-
     pre_function_handle_to_anchor_scale_factor: float = 0.01
     make_smooth_after_applying_functions: bool = False
     # TODO, do we care about accounting for varying zoom levels?
