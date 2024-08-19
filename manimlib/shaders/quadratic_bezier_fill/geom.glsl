@@ -8,8 +8,8 @@ uniform bool winding;
 in vec3 verts[3];
 in vec4 v_color[3];
 in vec3 v_base_point[3];
-in float v_vert_index[3];
 in vec3 v_unit_normal[3];
+in int v_vert_index[3];
 
 out vec4 color;
 out float fill_all;
@@ -57,9 +57,17 @@ void emit_simple_triangle(){
 
 
 void main(){
+    // Vector graphic shaders use TRIANGLE_STRIP, but only
+    // every other one needs to be rendered
+    if (v_vert_index[0] % 2 != 0) return;
+
     // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
+
+    // Check zero fill
+    if (vec3(v_color[0].a, v_color[1].a, v_color[2].a) == vec3(0.0, 0.0, 0.0)) return;
+
 
     if(winding){
         // Emit main triangle

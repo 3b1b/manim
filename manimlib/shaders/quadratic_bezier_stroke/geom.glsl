@@ -14,6 +14,7 @@ in vec3 verts[3];
 in vec4 v_joint_product[3];
 in float v_stroke_width[3];
 in vec4 v_color[3];
+in int v_vert_index[3];
 
 out vec4 color;
 out float dist_to_curve;
@@ -187,9 +188,18 @@ void emit_point_with_width(
 
 
 void main() {
+    // Vector graphic shaders use TRIANGLE_STRIP, but only
+    // every other one needs to be rendered
+    if (v_vert_index[0] % 2 != 0) return;
+
     // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
+
+    // Check null stroke
+    if (vec3(v_stroke_width[0], v_stroke_width[1], v_stroke_width[2]) == vec3(0.0, 0.0, 0.0)) return;
+    if (vec3(v_color[0].a, v_color[1].a, v_color[2].a) == vec3(0.0, 0.0, 0.0)) return;
+
 
     // Coefficients such that the quadratic bezier is c0 + c1 * t  + c2 * t^2
     vec3 c0 = verts[0];

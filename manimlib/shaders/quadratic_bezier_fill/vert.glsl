@@ -9,7 +9,7 @@ out vec3 verts;  // Bezier control point
 out vec4 v_color;
 out vec3 v_base_point;
 out vec3 v_unit_normal;
-out float v_vert_index;
+out int v_vert_index;
 
 void main(){
     verts = point;

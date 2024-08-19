@@ -5,6 +5,7 @@ from functools import wraps
 import moderngl
 import numpy as np
 import operator as op
+import itertools as it
 
 from manimlib.constants import GREY_A, GREY_C, GREY_E
 from manimlib.constants import BLACK
@@ -46,7 +47,7 @@ from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import poly_line_length
 from manimlib.utils.space_ops import z_to_vector
 from manimlib.shader_wrapper import ShaderWrapper
-from manimlib.shader_wrapper import FillShaderWrapper
+from manimlib.shader_wrapper import VShaderWrapper
 
 from typing import TYPE_CHECKING
 from typing import Generic, TypeVar, Iterable
@@ -74,8 +75,8 @@ class VMobject(Mobject):
         ('unit_normal', np.float32, (3,)),
         ('fill_border_width', np.float32, (1,)),
     ])
-    fill_data_names = ['point', 'fill_rgba', 'base_point', 'unit_normal']
-    stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_product']
+    fill_data_names = ['point', 'fill_rgba', 'base_point', 'unit_normal']  # Delete these
+    stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_product']  # Delete these
 
     fill_render_primitive: int = moderngl.TRIANGLES
     stroke_render_primitive: int = moderngl.TRIANGLES
@@ -1325,49 +1326,17 @@ class VMobject(Mobject):
         return self
 
     # For shaders
-    def init_shader_data(self, ctx: Context):
-        dtype = self.shader_dtype
-        fill_dtype, stroke_dtype = (
-            np.dtype([
-                (name, dtype[name].base, dtype[name].shape)
-                for name in names
-            ])
-            for names in [self.fill_data_names, self.stroke_data_names]
-        )
-        fill_data = np.zeros(0, dtype=fill_dtype)
-        stroke_data = np.zeros(0, dtype=stroke_dtype)
-        self.fill_shader_wrapper = FillShaderWrapper(
-            ctx=ctx,
-            vert_data=fill_data,
-            mobject_uniforms=self.uniforms,
-            shader_folder=self.fill_shader_folder,
-            render_primitive=self.fill_render_primitive,
-        )
-        self.stroke_shader_wrapper = ShaderWrapper(
-            ctx=ctx,
-            vert_data=stroke_data,
-            mobject_uniforms=self.uniforms,
-            shader_folder=self.stroke_shader_folder,
-            render_primitive=self.stroke_render_primitive,
-        )
-        self.back_stroke_shader_wrapper = self.stroke_shader_wrapper.copy()
-        self.shader_wrappers = [
-            self.back_stroke_shader_wrapper,
-            self.fill_shader_wrapper,
-            self.stroke_shader_wrapper,
-        ]
-        for sw in self.shader_wrappers:
-            family = self.family_members_with_points()
-            rep = family[0] if family else self
-            for old, new in rep.shader_code_replacements.items():
-                sw.replace_code(old, new)
 
-    def refresh_shader_wrapper_id(self) -> Self:
-        if not self._shaders_initialized:
-            return self
-        for wrapper in self.shader_wrappers:
-            wrapper.refresh_id()
-        return self
+    def init_shader_data(self, ctx: Context):
+        self.shader_indices = np.zeros(0)
+        self.shader_wrapper = VShaderWrapper(
+            ctx=ctx,
+            vert_data=self.data,
+            mobject_uniforms=self.uniforms,
+        )
+
+    def get_shader_vert_indices(self):
+        return self.get_outer_vert_indices()
 
     def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
         if not self._shaders_initialized:
@@ -1377,62 +1346,20 @@ class VMobject(Mobject):
         family = self.family_members_with_points()
         if not family:
             return []
-        fill_names = self.fill_data_names
-        stroke_names = self.stroke_data_names
 
-        fill_family = (sm for sm in family if sm._has_fill)
-        stroke_family = (sm for sm in family if sm._has_stroke)
+        for submob in family:
+            if submob._has_fill:
+                submob.data["base_point"] = submob.data["point"][0]
 
-        # Build up fill data lists
-        fill_datas = []
-        fill_indices = []
-        fill_border_datas = []
-        for submob in fill_family:
-            indices = submob.get_outer_vert_indices()
-            if submob._use_winding_fill:
-                data = submob.data[fill_names]
-                data["base_point"][:] = data["point"][0]
-                fill_datas.append(data[indices])
-            else:
-                fill_datas.append(submob.data[fill_names])
-                fill_indices.append(submob.get_triangulation())
-
-            draw_border_width = op.and_(
-                submob.data['fill_border_width'][0] > 0,
-                (not submob._has_stroke) or submob.stroke_behind,
-            )
-            if draw_border_width:
-                # Add fill border
-                submob.get_joint_products()
-                names = list(stroke_names)
-                names[names.index('stroke_rgba')] = 'fill_rgba'
-                names[names.index('stroke_width')] = 'fill_border_width'
-                border_stroke_data = submob.data[names].astype(
-                    self.stroke_shader_wrapper.vert_data.dtype
-                )
-                fill_border_datas.append(border_stroke_data[indices])
-
-        # Build up stroke data lists
-        stroke_datas = []
-        back_stroke_datas = []
-        for submob in stroke_family:
-            submob.get_joint_products()
-            indices = submob.get_outer_vert_indices()
-            if submob.stroke_behind:
-                back_stroke_datas.append(submob.data[stroke_names][indices])
-            else:
-                stroke_datas.append(submob.data[stroke_names][indices])
-
-        shader_wrappers = [
-            self.back_stroke_shader_wrapper.read_in([*back_stroke_datas, *fill_border_datas]),
-            self.fill_shader_wrapper.read_in(fill_datas, fill_indices or None),
-            self.stroke_shader_wrapper.read_in(stroke_datas),
-        ]
-        for sw in shader_wrappers:
-            rep = family[0]  # Representative family member
-            sw.bind_to_mobject_uniforms(rep.get_uniforms())
-            sw.depth_test = rep.depth_test
-        return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
+        self.shader_wrapper.read_in(
+            # [sm.data for sm in family],
+            list(it.chain(*([sm.data, sm.data[-1:]] for sm in family)))
+            # [sm.get_shader_vert_indices() for sm in family]
+        )
+        rep = family[0]  # Representative family member
+        self.shader_wrapper.bind_to_mobject_uniforms(rep.get_uniforms())
+        self.shader_wrapper.depth_test = rep.depth_test
+        return [self.shader_wrapper]
 
 
 class VGroup(Group, VMobject, Generic[SubVmobjectType]):

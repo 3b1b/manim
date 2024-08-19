@@ -2049,8 +2049,6 @@ class Mobject(object):
     def render(self, ctx: Context, camera_uniforms: dict):
         if self._data_has_changed:
             self.shader_wrappers = self.get_shader_wrapper_list(ctx)
-            for shader_wrapper in self.shader_wrappers:
-                shader_wrapper.load_data()
             self._data_has_changed = False
         for shader_wrapper in self.shader_wrappers:
             shader_wrapper.update_program_uniforms(camera_uniforms)
