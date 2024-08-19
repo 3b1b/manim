@@ -69,8 +69,7 @@ class VMobject(Mobject):
         ('stroke_width', np.float32, (1,)),
         ('joint_product', np.float32, (4,)),
         ('fill_rgba', np.float32, (4,)),
-        ('base_point', np.float32, (3,)),
-        ('unit_normal', np.float32, (3,)),
+        ('base_normal', np.float32, (3,)),  # Every other holds base point and unit normal vector
         ('fill_border_width', np.float32, (1,)),
     ])
     pre_function_handle_to_anchor_scale_factor: float = 0.01
@@ -907,7 +906,7 @@ class VMobject(Mobject):
                 points[1] - points[0],
                 points[2] - points[1],
             )
-        self.data["unit_normal"][:] = normal
+        self.data["base_normal"][1::2] = normal
         return normal
 
     def refresh_unit_normal(self) -> Self:
@@ -1278,7 +1277,7 @@ class VMobject(Mobject):
                 continue
             inner_ends = mob.get_subpath_end_indices()[:-1]
             mob.data["point"][inner_ends + 1] = mob.data["point"][inner_ends + 2]
-            mob.data["unit_normal"] *= -1
+            mob.data["base_normal"][1::2] *= -1
         super().reverse_points()
         return self
 
@@ -1344,7 +1343,7 @@ class VMobject(Mobject):
         stroke_behind = False
         for submob in family:
             if submob._has_fill:
-                submob.data["base_point"] = submob.data["point"][0]
+                submob.data["base_normal"][0::2] = submob.data["point"][0]
             if submob.stroke_behind:
                 stroke_behind = True
 

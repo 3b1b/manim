@@ -265,20 +265,19 @@ class VShaderWrapper(ShaderWrapper):
         # stroke_width 1
         # joint_product 4
         # fill_rgba 4
-        # base_point 3
-        # unit_normal 3
+        # base_normal 3
         # fill_border_width 1
-        self.stroke_vert_format = '3f 4f 1f 4f 44x'
+        self.stroke_vert_format = '3f 4f 1f 4f 32x'
         self.stroke_vert_attributes = ['point', 'stroke_rgba', 'stroke_width', 'joint_product']
 
-        self.fill_vert_format = '3f 36x 4f 3f 3f 4x'
-        self.fill_vert_attributes = ['point', 'fill_rgba', 'base_point', 'unit_normal']
+        self.fill_vert_format = '3f 36x 4f 3f 4x'
+        self.fill_vert_attributes = ['point', 'fill_rgba', 'base_normal']
 
-        self.fill_border_vert_format = '3f 20x 4f 4f 24x 1f'
+        self.fill_border_vert_format = '3f 20x 4f 4f 12x 1f'
         self.fill_border_vert_attributes = ['point', 'joint_product', 'stroke_rgba', 'stroke_width']
 
-        self.fill_depth_vert_format = '3f 52x 3f 16x'
-        self.fill_depth_vert_attributes = ['point', 'base_point']
+        self.fill_depth_vert_format = '3f 40x 3f 16x'
+        self.fill_depth_vert_attributes = ['point', 'base_normal']
 
     def init_vertex_objects(self):
         self.vbo = None
