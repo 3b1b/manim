@@ -95,32 +95,6 @@ class ShaderWrapper(object):
     def bind_to_mobject_uniforms(self, mobject_uniforms: UniformDict):
         self.mobject_uniforms = mobject_uniforms
 
-    def __eq__(self, shader_wrapper: ShaderWrapper):
-        return all((
-            # np.all(self.vert_data == shader_wrapper.vert_data),
-            self.shader_folder == shader_wrapper.shader_folder,
-            all(
-                self.mobject_uniforms[key] == shader_wrapper.mobject_uniforms[key]
-                for key in self.mobject_uniforms
-            ),
-            self.depth_test == shader_wrapper.depth_test,
-            self.render_primitive == shader_wrapper.render_primitive,
-        ))
-
-    def copy(self):
-        result = copy.copy(self)
-        result.ctx = self.ctx
-        result.vert_data = self.vert_data.copy()
-        result.init_vertex_objects()
-        return result
-
-    def is_valid(self) -> bool:
-        return all([
-            # self.vert_data is not None,
-            self.program_code["vertex_shader"] is not None,
-            self.program_code["fragment_shader"] is not None,
-        ])
-
     def get_id(self) -> str:
         return self.id
 
@@ -164,23 +138,6 @@ class ShaderWrapper(object):
             gl.glEnable(gl.GL_CLIP_DISTANCE0)
 
     # Adding data
-
-    def combine_with(self, *shader_wrappers: ShaderWrapper) -> ShaderWrapper:
-        if len(shader_wrappers) > 0:
-            self.read_in([self.vert_data, *(sw.vert_data for sw in shader_wrappers)])
-            vbos = [
-                vbo
-                for vbo in [self.vbo, *(sw.vbo for sw in shader_wrappers)]
-                if vbo is not None
-            ]
-            total_size = sum(vbo.size for vbo in vbos)
-            new_vbo = self.ctx.buffer(reserve=total_size)
-            offset = 0
-            for vbo in vbos:
-                new_vbo.write(vbo.read(), offset=offset)
-                offset += vbo.size
-            self.vbo = new_vbo
-        return self
 
     def read_in(
         self,
@@ -355,10 +312,6 @@ class VShaderWrapper(ShaderWrapper):
 
     def set_backstroke(self, value: bool = True):
         self.stroke_behind = value
-
-    # TODO, think about create_id, replace_code
-    def is_valid(self) -> bool:
-        return self.vert_data is not None  # Isn't this always true?
 
     # TODO, motidify read in to handle triangulation case for non-winding fill?
 
