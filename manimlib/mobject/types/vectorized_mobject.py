@@ -95,7 +95,7 @@ class VMobject(Mobject):
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
         anti_alias_width: float = 1.5,
-        fill_border_width: float = 0.0,
+        fill_border_width: float = 0.5,
         use_winding_fill: bool = True,
         **kwargs
     ):
@@ -184,8 +184,6 @@ class VMobject(Mobject):
         recurse: bool = True
     ) -> Self:
         self.set_rgba_array_by_color(color, opacity, 'fill_rgba', recurse)
-        if opacity is not None and 0 < opacity < 1 and border_width is None:
-            border_width = 0
         if border_width is not None:
             self.border_width = border_width
             for mob in self.get_family(recurse):
