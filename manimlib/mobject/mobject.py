@@ -1944,8 +1944,9 @@ class Mobject(object):
 
     @affects_data
     def replace_shader_code(self, old: str, new: str) -> Self:
-        self.shader_code_replacements[old] = new
-        self._shaders_initialized = False
+        for mob in self.get_family():
+            mob.shader_code_replacements[old] = new
+            mob._shaders_initialized = False
         for mob in self.get_ancestors():
             mob._shaders_initialized = False
         return self
@@ -2000,48 +2001,45 @@ class Mobject(object):
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
             render_primitive=self.render_primitive,
+            code_replacements=self.shader_code_replacements,
         )
 
     def refresh_shader_wrapper_id(self):
-        if self._shaders_initialized:
-            self.shader_wrapper.refresh_id()
+        for submob in self.get_family():
+            if submob._shaders_initialized:
+                submob.shader_wrapper.depth_test = submob.depth_test
+                submob.shader_wrapper.refresh_id()
         return self
 
     def get_shader_wrapper(self, ctx: Context) -> ShaderWrapper:
         if not self._shaders_initialized:
             self.init_shader_data(ctx)
             self._shaders_initialized = True
-
-        self.shader_wrapper.bind_to_mobject_uniforms(self.get_uniforms())
-        self.shader_wrapper.depth_test = self.depth_test
-        for old, new in self.shader_code_replacements.items():
-            self.shader_wrapper.replace_code(old, new)
         return self.shader_wrapper
 
     def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
         family = self.family_members_with_points()
-        for submob in family:
-            submob.get_shader_wrapper(ctx)
-        batches = batch_by_property(family, lambda submob: submob.shader_wrapper.get_id())
+        batches = batch_by_property(family, lambda sm: sm.get_shader_wrapper(ctx).get_id())
 
         result = []
         for submobs, sid in batches:
             shader_wrapper = submobs[0].shader_wrapper
-            data_list = [sm.get_shader_data() for sm in submobs]
-            indices_list = [sm.get_shader_vert_indices() for sm in submobs]
-            if indices_list[0] is None:
-                indices_list = None
-            shader_wrapper.read_in(data_list, indices_list)
+            data_list = list(it.chain(*(sm.get_shader_data() for sm in submobs)))
+            shader_wrapper.read_in(data_list, indices_list=None)
             result.append(shader_wrapper)
         return result
 
-    def get_shader_data(self):
-        return self.data
+    def get_shader_data(self) -> Iterable[np.ndarray]:
+        indices = self.get_shader_vert_indices()
+        if indices is not None:
+            return [self.data[indices]]
+        else:
+            return [self.data]
 
     def get_uniforms(self):
         return self.uniforms
 
-    def get_shader_vert_indices(self):
+    def get_shader_vert_indices(self) -> Optional[np.ndarray]:
         return self.shader_indices
 
     def render(self, ctx: Context, camera_uniforms: dict):

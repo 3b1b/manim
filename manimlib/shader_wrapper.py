@@ -41,6 +41,7 @@ class ShaderWrapper(object):
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
         render_primitive: int = moderngl.TRIANGLE_STRIP,
+        code_replacements: dict[str, str] = dict(),
     ):
         self.ctx = ctx
         self.vert_data = vert_data
@@ -48,13 +49,15 @@ class ShaderWrapper(object):
         self.shader_folder = shader_folder
         self.depth_test = depth_test
         self.render_primitive = render_primitive
+        self.texture_names_to_ids = dict()
 
         self.program_uniform_mirror: UniformDict = dict()
         self.bind_to_mobject_uniforms(mobject_uniforms or dict())
 
         self.init_program_code()
+        for old, new in code_replacements.items():
+            self.replace_code(old, new)
         self.init_program()
-        self.texture_names_to_ids = dict()
         if texture_paths is not None:
             self.init_textures(texture_paths)
         self.init_vertex_objects()
@@ -98,19 +101,14 @@ class ShaderWrapper(object):
     def get_id(self) -> str:
         return self.id
 
-    def create_id(self) -> str:
-        # A unique id for a shader
-        program_id = hash("".join(map(str, self.program_code.values())))
-        return "|".join(map(str, [
-            program_id,
+    def refresh_id(self) -> None:
+        self.id = hash("".join(map(str, [
+            "".join(map(str, self.program_code.values())),
             self.mobject_uniforms,
             self.depth_test,
             self.render_primitive,
             self.texture_names_to_ids,
-        ]))
-
-    def refresh_id(self) -> None:
-        self.id = self.create_id()
+        ])))
 
     def replace_code(self, old: str, new: str) -> None:
         code_map = self.program_code
@@ -213,10 +211,12 @@ class VShaderWrapper(ShaderWrapper):
         mobject_uniforms: Optional[UniformDict] = None,  # A dictionary mapping names of uniform variables
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
-        # render_primitive: int = moderngl.TRIANGLES,
         render_primitive: int = moderngl.TRIANGLE_STRIP,
+        code_replacements: dict[str, str] = dict(),
         stroke_behind: bool = False,
     ):
+        self.stroke_behind = stroke_behind
+        self.fill_canvas = get_fill_canvas(ctx)
         super().__init__(
             ctx=ctx,
             vert_data=vert_data,
@@ -225,9 +225,8 @@ class VShaderWrapper(ShaderWrapper):
             texture_paths=texture_paths,
             depth_test=depth_test,
             render_primitive=render_primitive,
+            code_replacements=code_replacements,
         )
-        self.stroke_behind = stroke_behind
-        self.fill_canvas = get_fill_canvas(self.ctx)
 
     def init_program_code(self) -> None:
         self.program_code = {
@@ -311,6 +310,10 @@ class VShaderWrapper(ShaderWrapper):
 
     def set_backstroke(self, value: bool = True):
         self.stroke_behind = value
+
+    def refresh_id(self):
+        super().refresh_id()
+        self.id = hash(str(self.id) + str(self.stroke_behind))
 
     # TODO, motidify read in to handle triangulation case for non-winding fill?
 

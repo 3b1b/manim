@@ -191,6 +191,7 @@ class VMobject(Mobject):
         if background is not None:
             for mob in self.get_family(recurse):
                 mob.stroke_behind = background
+                mob.refresh_shader_wrapper_id()
 
         if flat is not None:
             self.set_flat_stroke(flat)
@@ -1285,44 +1286,27 @@ class VMobject(Mobject):
     # For shaders
 
     def init_shader_data(self, ctx: Context):
-        self.shader_indices = np.zeros(0)
+        self.shader_indices = None
         self.shader_wrapper = VShaderWrapper(
             ctx=ctx,
             vert_data=self.data,
             mobject_uniforms=self.uniforms,
+            code_replacements=self.shader_code_replacements,
+            stroke_behind=self.stroke_behind,
+            depth_test=self.depth_test
         )
 
-    def get_shader_vert_indices(self):
-        return None
+    def refresh_shader_wrapper_id(self):
+        for submob in self.get_family():
+            if submob._shaders_initialized:
+                submob.shader_wrapper.stroke_behind = submob.stroke_behind
+        super().refresh_shader_wrapper_id()
+        return self
 
-    def get_shader_data(self):
-        # This should only come up when VMobjects appear together in a group
-        return np.hstack([self.data, self.data[-1:]])
-
-    def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
-        if not self._shaders_initialized:
-            self.init_shader_data(ctx)
-            self._shaders_initialized = True
-
-        family = self.family_members_with_points()
-        if not family:
-            return []
-
-        stroke_behind = False
-        for submob in family:
-            # Maybe do this on set points instead? Or on noting changed data?
-            submob.data["base_normal"][0::2] = submob.data["point"][0]
-            if submob.stroke_behind:
-                stroke_behind = True
-
-        self.shader_wrapper.read_in(
-            list(it.chain(*([sm.data, sm.data[-1:]] for sm in family)))
-        )
-        rep = family[0]  # Representative family member
-        self.shader_wrapper.bind_to_mobject_uniforms(rep.get_uniforms())
-        self.shader_wrapper.depth_test = rep.depth_test
-        self.shader_wrapper.stroke_behind = stroke_behind
-        return [self.shader_wrapper]
+    def get_shader_data(self) -> Iterable[np.ndarray]:
+        # Do we want this elsewhere? Say whenever points are refreshed or something?
+        self.data["base_normal"][0::2] = self.data["point"][0]
+        return [self.data, self.data[-1:]]
 
 
 class VGroup(Group, VMobject, Generic[SubVmobjectType]):

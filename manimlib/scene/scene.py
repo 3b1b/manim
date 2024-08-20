@@ -388,7 +388,7 @@ class Scene(object):
         """
         batches = batch_by_property(
             self.mobjects,
-            lambda m: str(type(m)) + str(m.get_uniforms())
+            lambda m: m.get_shader_wrapper(self.camera.ctx).get_id()
         )
 
         for group in self.render_groups:
