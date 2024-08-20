@@ -8,6 +8,8 @@ from manimlib.constants import WHITE
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.utils.paths import straight_path
+from manimlib.utils.bezier import interpolate
 
 from typing import TYPE_CHECKING
 
@@ -129,12 +131,19 @@ class DecimalNumber(VMobject):
     def char_to_mob(self, char: str) -> Text:
         return char_to_cahced_mob(char, **self.text_config)
 
-    def init_uniforms(self) -> None:
-        super().init_uniforms()
-        self.uniforms["font_size"] = self.font_size
+    def interpolate(
+        self,
+        mobject1: Mobject,
+        mobject2: Mobject,
+        alpha: float,
+        path_func: Callable[[np.ndarray, np.ndarray, float], np.ndarray] = straight_path
+    ) -> Self:
+        super().interpolate(mobject1, mobject2, alpha, path_func)
+        if hasattr(mobject1, "font_size") and hasattr(mobject2, "font_size"):
+            self.font_size = interpolate(mobject1.font_size, mobject2.font_size, alpha)
 
     def get_font_size(self) -> float:
-        return float(self.uniforms["font_size"])
+        return self.font_size
 
     def get_formatter(self, **kwargs) -> str:
         """
@@ -187,7 +196,7 @@ class DecimalNumber(VMobject):
         return self
 
     def _handle_scale_side_effects(self, scale_factor: float) -> Self:
-        self.uniforms["font_size"] = scale_factor * self.uniforms["font_size"]
+        self.font_size *= scale_factor
         return self
 
     def get_value(self) -> float | complex:
