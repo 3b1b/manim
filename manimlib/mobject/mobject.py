@@ -2004,6 +2004,8 @@ class Mobject(object):
             if submob.shader_wrapper is not None:
                 submob.shader_wrapper.depth_test = submob.depth_test
                 submob.shader_wrapper.refresh_id()
+        for mob in (self, *self.get_ancestors()):
+            mob._data_has_changed = True
         return self
 
     def get_shader_wrapper(self, ctx: Context) -> ShaderWrapper:
