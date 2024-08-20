@@ -642,7 +642,6 @@ class Arrow(Line):
         end: Vect3 | Mobject,
         stroke_color: ManimColor = GREY_A,
         stroke_width: float = 5,
-        flat_stroke: bool = True,
         buff: float = 0.25,
         tip_width_ratio: float = 5,
         tip_len_to_width: float = 0.0075,
@@ -660,7 +659,6 @@ class Arrow(Line):
             start, end,
             stroke_color=stroke_color,
             stroke_width=stroke_width,
-            flat_stroke=flat_stroke,
             buff=buff,
             **kwargs
         )
