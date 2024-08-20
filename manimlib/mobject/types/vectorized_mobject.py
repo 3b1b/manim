@@ -265,7 +265,7 @@ class VMobject(Mobject):
             "stroke_rgba": data['stroke_rgba'].copy(),
             "stroke_width": data['stroke_width'].copy(),
             "stroke_background": self.stroke_behind,
-            "flat_stroke": bool(self.uniforms["flat_stroke"]),
+            "flat_stroke": self.get_flat_stroke(),
             "shading": self.get_shading(),
         }
 
@@ -393,8 +393,7 @@ class VMobject(Mobject):
         return self.get_stroke_opacity()
 
     def set_flat_stroke(self, flat_stroke: bool = True, recurse: bool = True) -> Self:
-        for mob in self.get_family(recurse):
-            mob.uniforms["flat_stroke"] = float(flat_stroke)
+        self.set_uniform(recurse, flat_stroke=flat_stroke)
         return self
 
     def get_flat_stroke(self) -> bool:
@@ -1305,6 +1304,7 @@ class VMobject(Mobject):
 
     def get_shader_data(self) -> Iterable[np.ndarray]:
         # Do we want this elsewhere? Say whenever points are refreshed or something?
+        self.get_joint_products()
         self.data["base_normal"][0::2] = self.data["point"][0]
         return [self.data, self.data[-1:]]
 
