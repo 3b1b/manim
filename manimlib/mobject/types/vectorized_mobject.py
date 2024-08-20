@@ -1286,8 +1286,7 @@ class VMobject(Mobject):
 
     # For shaders
 
-    def init_shader_data(self, ctx: Context):
-        self.shader_indices = None
+    def init_shader_wrapper(self, ctx: Context):
         self.shader_wrapper = VShaderWrapper(
             ctx=ctx,
             vert_data=self.data,
@@ -1299,7 +1298,7 @@ class VMobject(Mobject):
 
     def refresh_shader_wrapper_id(self):
         for submob in self.get_family():
-            if submob._shaders_initialized:
+            if submob.shader_wrapper is not None:
                 submob.shader_wrapper.stroke_behind = submob.stroke_behind
         super().refresh_shader_wrapper_id()
         return self
