@@ -237,7 +237,7 @@ class VShaderWrapper(ShaderWrapper):
     def init_program_code(self) -> None:
         self.program_code = {
             f"{vtype}_{name}": get_shader_code_from_file(
-                os.path.join(f"quadratic_bezier_{vtype}", f"{name}.glsl")
+                os.path.join("quadratic_bezier", f"{vtype}", f"{name}.glsl")
             )
             for vtype in ["stroke", "fill", "depth"]
             for name in ["vert", "geom", "frag"]
