@@ -157,47 +157,48 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray]:
     texture_fbo = ctx.framebuffer(texture)
     depth_texture_fbo = ctx.framebuffer(depth_texture)
 
+    simple_vert = '''
+        #version 330
+
+        in vec2 texcoord;
+        out vec2 uv;
+
+        void main() {
+            gl_Position = vec4((2.0 * texcoord - 1.0), 0.0, 1.0);
+            uv = texcoord;
+        }
+    '''
+    alpha_adjust_frag = '''
+        #version 330
+
+        uniform sampler2D Texture;
+        uniform sampler2D DepthTexture;
+
+        in vec2 uv;
+        out vec4 color;
+
+        void main() {
+            color = texture(Texture, uv);
+            if(color.a == 0) discard;
+
+            // Counteract scaling in fill frag
+            color.a *= 1.06;
+
+            gl_FragDepth = texture(DepthTexture, uv)[0];
+        }
+    '''
     simple_program = ctx.program(
-        vertex_shader='''
-            #version 330
-
-            in vec2 texcoord;
-            out vec2 uv;
-
-            void main() {
-                gl_Position = vec4((2.0 * texcoord - 1.0), 0.0, 1.0);
-                uv = texcoord;
-            }
-        ''',
-        fragment_shader='''
-            #version 330
-
-            uniform sampler2D Texture;
-            uniform sampler2D DepthTexture;
-
-            in vec2 uv;
-            out vec4 color;
-
-            void main() {
-                color = texture(Texture, uv);
-                if(color.a == 0) discard;
-
-                // Counteract scaling in fill frag
-                color *= 1.06;
-
-                gl_FragDepth = texture(DepthTexture, uv)[0];
-            }
-        ''',
+        vertex_shader=simple_vert,
+        fragment_shader=alpha_adjust_frag,
     )
 
     simple_program['Texture'].value = get_texture_id(texture)
     simple_program['DepthTexture'].value = get_texture_id(depth_texture)
 
     verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    simple_vbo = ctx.buffer(verts.astype('f4').tobytes())
     fill_texture_vao = ctx.simple_vertex_array(
-        simple_program,
-        ctx.buffer(verts.astype('f4').tobytes()),
-        'texcoord',
+        simple_program, simple_vbo, 'texcoord',
         mode=moderngl.TRIANGLE_STRIP
     )
     return (texture_fbo, depth_texture_fbo, fill_texture_vao)

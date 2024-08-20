@@ -327,8 +327,19 @@ class VShaderWrapper(ShaderWrapper):
         original_fbo = self.ctx.fbo
         texture_fbo, depth_texture_fbo, texture_vao = self.fill_canvas
 
+        # First, draw the border for antialiasing
+        self.fill_border_vao.render()
+
+        # Render to a separate texture, due to strange alpha compositing
+        # for the blended winding calculation
         texture_fbo.clear()
         texture_fbo.use()
+
+        # Be sure not to apply depth test while rendering fill
+        # but set it back to where it was after
+        apply_depth_test = bool(gl.glGetBooleanv(gl.GL_DEPTH_TEST))
+
+        self.ctx.disable(moderngl.DEPTH_TEST)
         gl.glBlendFuncSeparate(
             # Ordinary blending for colors
             gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
@@ -337,10 +348,6 @@ class VShaderWrapper(ShaderWrapper):
             gl.GL_ONE_MINUS_DST_ALPHA, gl.GL_ONE,
         )
 
-        # Be sure not to apply depth test while rendering fill
-        # but set it back to where it was after
-        apply_depth_test = bool(gl.glGetBooleanv(gl.GL_DEPTH_TEST))
-        self.ctx.disable(moderngl.DEPTH_TEST)
         self.fill_vao.render()
         if apply_depth_test:
             depth_texture_fbo.clear(1.0)
@@ -350,19 +357,14 @@ class VShaderWrapper(ShaderWrapper):
             self.fill_depth_vao.render()
             self.ctx.enable(moderngl.DEPTH_TEST)
 
-        # Border width is used for antialiasing. Take the maximum between these
-        # two alphas, before compositing back to the rest of the scene
-        gl.glBlendFuncSeparate(
-            gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
-            gl.GL_ONE, gl.GL_ZERO
-        )
-        gl.glBlendEquationSeparate(gl.GL_FUNC_ADD, gl.GL_MAX)
-        self.fill_border_vao.render()
 
         original_fbo.use()
-        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+        gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
         gl.glBlendEquation(gl.GL_FUNC_ADD)
         texture_vao.render()
+
+        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+        gl.glBlendEquation(gl.GL_FUNC_ADD)
 
     def render(self):
         if self.stroke_behind:
