@@ -652,9 +652,13 @@ class Mobject(object):
         return self
 
     def deepcopy(self) -> Self:
+        self.parents = []
+        result.target = None
+        result.saved_state = None
+        for submob in self.get_family():
+            submob._shaders_initialized = False
+            submob._data_has_changed = True
         result = copy.deepcopy(self)
-        result._shaders_initialized = False
-        result._data_has_changed = True
         return result
 
     def copy(self, deep: bool = False) -> Self:

@@ -63,6 +63,12 @@ class ShaderWrapper(object):
         self.init_vertex_objects()
         self.refresh_id()
 
+    def __deepcopy__(self, memo):
+        # Don't allow deepcopies, e.g. if the mobject with this ShaderWrapper as an
+        # attribute gets copies. Returning None means the parent object with this ShaderWrapper
+        # as an attribute should smoothly handle this case.
+        return None
+
     def init_program_code(self) -> None:
         def get_code(name: str) -> str | None:
             return get_shader_code_from_file(
