@@ -143,14 +143,7 @@ class ShaderWrapper(object):
 
     # Adding data
 
-    def read_in(
-        self,
-        data_list: Iterable[np.ndarray],
-        indices_list: Iterable[np.ndarray] | None = None
-    ):
-        if indices_list is not None:
-            data_list = [data[indices] for data, indices in zip(data_list, indices_list)]
-
+    def read_in(self, data_list: Iterable[np.ndarray]):
         total_len = sum(map(len, data_list))
         if total_len == 0:
             if self.vbo is not None:

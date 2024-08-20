@@ -2018,7 +2018,7 @@ class Mobject(object):
         for submobs, sid in batches:
             shader_wrapper = submobs[0].shader_wrapper
             data_list = list(it.chain(*(sm.get_shader_data() for sm in submobs)))
-            shader_wrapper.read_in(data_list, indices_list=None)
+            shader_wrapper.read_in(data_list)
             result.append(shader_wrapper)
         return result
 
