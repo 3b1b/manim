@@ -190,8 +190,9 @@ class VMobject(Mobject):
 
         if background is not None:
             for mob in self.get_family(recurse):
-                mob.stroke_behind = background
-                mob.refresh_shader_wrapper_id()
+                if mob.stroke_behind != background:
+                    mob.refresh_shader_wrapper_id()
+                    mob.stroke_behind = background
 
         if flat is not None:
             self.set_flat_stroke(flat)
