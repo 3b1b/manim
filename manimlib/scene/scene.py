@@ -216,7 +216,7 @@ class Scene(object):
             # Embed is only relevant with a preview
             return
         self.stop_skipping()
-        self.update_frame()
+        self.update_frame(force_draw=True)
         self.save_state()
         self.show_animation_progress = show_animation_progress
 
