@@ -152,9 +152,14 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray]:
 
     # Important to make sure dtype is floating point (not fixed point)
     # so that alpha values can be negative and are not clipped
-    texture = ctx.texture(size=size, components=4, dtype='f2')
+    fill_texture = ctx.texture(size=size, components=4, dtype='f2')
+    # Use a separate texture to firset render the antialiased border
+    border_texture = ctx.texture(size=size, components=4, dtype='f1')
+    # Use yet another one to keep track of depth
     depth_texture = ctx.texture(size=size, components=1, dtype='f4')
-    texture_fbo = ctx.framebuffer(texture)
+
+    fill_texture_fbo = ctx.framebuffer(fill_texture)
+    border_texture_fbo = ctx.framebuffer(border_texture)
     depth_texture_fbo = ctx.framebuffer(depth_texture)
 
     simple_vert = '''
@@ -183,22 +188,50 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray]:
 
             // Counteract scaling in fill frag
             color.a *= 1.06;
+            // Cancel out what was effectively a premultiplication
+            color.rgb /= color.a;
 
             gl_FragDepth = texture(DepthTexture, uv)[0];
         }
     '''
-    simple_program = ctx.program(
+    simple_frag = '''
+        #version 330
+
+        uniform sampler2D Texture;
+
+        in vec2 uv;
+        out vec4 color;
+
+        void main() {
+            color = texture(Texture, uv);
+            if(color.a == 0) discard;
+        }
+    '''
+    fill_program = ctx.program(
         vertex_shader=simple_vert,
         fragment_shader=alpha_adjust_frag,
     )
+    border_program = ctx.program(
+        vertex_shader=simple_vert,
+        fragment_shader=simple_frag,
+    )
 
-    simple_program['Texture'].value = get_texture_id(texture)
-    simple_program['DepthTexture'].value = get_texture_id(depth_texture)
+    fill_program['Texture'].value = get_texture_id(fill_texture)
+    fill_program['DepthTexture'].value = get_texture_id(depth_texture)
+    border_program['Texture'].value = get_texture_id(border_texture)
 
     verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     simple_vbo = ctx.buffer(verts.astype('f4').tobytes())
     fill_texture_vao = ctx.simple_vertex_array(
-        simple_program, simple_vbo, 'texcoord',
+        fill_program, simple_vbo, 'texcoord',
         mode=moderngl.TRIANGLE_STRIP
     )
-    return (texture_fbo, depth_texture_fbo, fill_texture_vao)
+    border_texture_vao = ctx.simple_vertex_array(
+        border_program, simple_vbo, 'texcoord',
+        mode=moderngl.TRIANGLE_STRIP
+    )
+    return (
+        fill_texture_fbo, fill_texture_vao,
+        border_texture_fbo, border_texture_vao,
+        depth_texture_fbo,
+    )

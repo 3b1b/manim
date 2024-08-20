@@ -325,15 +325,17 @@ class VShaderWrapper(ShaderWrapper):
             return
 
         original_fbo = self.ctx.fbo
-        texture_fbo, depth_texture_fbo, texture_vao = self.fill_canvas
+        fill_tx_fbo, fill_tx_vao, border_tx_fbo, border_tx_vao, depth_tx_fbo = self.fill_canvas
 
         # First, draw the border for antialiasing
+        border_tx_fbo.clear()
+        border_tx_fbo.use()
         self.fill_border_vao.render()
 
         # Render to a separate texture, due to strange alpha compositing
         # for the blended winding calculation
-        texture_fbo.clear()
-        texture_fbo.use()
+        fill_tx_fbo.clear()
+        fill_tx_fbo.use()
 
         # Be sure not to apply depth test while rendering fill
         # but set it back to where it was after
@@ -341,30 +343,34 @@ class VShaderWrapper(ShaderWrapper):
 
         self.ctx.disable(moderngl.DEPTH_TEST)
         gl.glBlendFuncSeparate(
-            # Ordinary blending for colors
             gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
-            # The effect of blending with -a / (1 - a)
-            # should be to cancel out
-            gl.GL_ONE_MINUS_DST_ALPHA, gl.GL_ONE,
+            # With this blend function, the effect of blending alpha a with
+            # -a / (1 - a) cancels out, so we can cancel positively and negatively
+            # oriented triangles
+            gl.GL_ONE_MINUS_DST_ALPHA, gl.GL_ONE
         )
-
         self.fill_vao.render()
+
         if apply_depth_test:
-            depth_texture_fbo.clear(1.0)
-            depth_texture_fbo.use()
+            depth_tx_fbo.clear(1.0)
+            depth_tx_fbo.use()
             gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE)
             gl.glBlendEquation(gl.GL_MIN)
             self.fill_depth_vao.render()
             self.ctx.enable(moderngl.DEPTH_TEST)
 
+        # Render fill onto the border_width fbo
+        # two alphas, before compositing back to the rest of the scene
+        border_tx_fbo.use()
+        gl.glEnable(gl.GL_BLEND)
+        gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE)
+        gl.glBlendEquation(gl.GL_MAX)
+        fill_tx_vao.render()
 
         original_fbo.use()
-        gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
-        gl.glBlendEquation(gl.GL_FUNC_ADD)
-        texture_vao.render()
-
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         gl.glBlendEquation(gl.GL_FUNC_ADD)
+        border_tx_vao.render()
 
     def render(self):
         if self.stroke_behind:
