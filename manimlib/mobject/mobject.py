@@ -1990,6 +1990,7 @@ class Mobject(object):
             ctx=ctx,
             vert_data=self.data,
             shader_folder=self.shader_folder,
+            mobject_uniforms=self.uniforms,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
             render_primitive=self.render_primitive,
