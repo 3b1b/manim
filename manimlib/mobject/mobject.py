@@ -651,12 +651,9 @@ class Mobject(object):
         self.become(pickle.loads(data))
         return self
 
+    @stash_mobject_pointers
     def deepcopy(self) -> Self:
-        parents = self.parents
-        self.parents = []
-        result = copy.deepcopy(self)
-        self.parents = parents
-        return result
+        return copy.deepcopy(self)
 
     def copy(self, deep: bool = False) -> Self:
         if deep:
