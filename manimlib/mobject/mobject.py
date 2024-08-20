@@ -1444,9 +1444,11 @@ class Mobject(object):
         Makes parts bright where light gets reflected toward the camera
         """
         for mob in self.get_family(recurse):
+            shading = mob.uniforms["shading"]
             for i, value in enumerate([reflectiveness, gloss, shadow]):
                 if value is not None:
-                    mob.uniforms["shading"][i] = value
+                    shading[i] = value
+            mob.set_uniform(shading=shading, recurse=False)
         return self
 
     def get_reflectiveness(self) -> float:
