@@ -1815,7 +1815,7 @@ class Mobject(object):
             if key in self.const_data_keys:
                 md1 = md1[0]
                 md2 = md2[0]
-            if path_func in self.pointlike_data_keys:
+            if key in self.pointlike_data_keys:
                 self.data[key] = path_func(md1, md2, alpha)
             else:
                 self.data[key] = (1 - alpha) * md1 + alpha * md2
