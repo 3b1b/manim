@@ -220,7 +220,7 @@ class VMobject(Mobject):
         stroke_rgba: Vect4 | None = None,
         stroke_width: float | Iterable[float] | None = None,
         stroke_background: bool = False,
-        flat_stroke: bool = False,
+        flat_stroke: Optional[bool] = None,
         shading: Tuple[float, float, float] | None = None,
         recurse: bool = True
     ) -> Self:
