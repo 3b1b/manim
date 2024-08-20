@@ -38,6 +38,5 @@ void main() {
     float x = uv_coords.x;
     float y = uv_coords.y;
     float Fxy = (y - x * x);
-    // if(!winding && orientation < 0) Fxy *= -1;
     if(Fxy < 0) discard;
 }
