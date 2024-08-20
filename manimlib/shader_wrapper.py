@@ -315,8 +315,6 @@ class VShaderWrapper(ShaderWrapper):
         super().refresh_id()
         self.id = hash(str(self.id) + str(self.stroke_behind))
 
-    # TODO, motidify read in to handle triangulation case for non-winding fill?
-
     # Rendering
     def render_stroke(self):
         if self.stroke_vao is None:
