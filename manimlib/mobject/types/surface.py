@@ -153,8 +153,8 @@ class Surface(Mobject):
 
         points = self.get_points()
         crosses = cross(
-            points[step1] - points,
             points[step2] - points,
+            points[step1] - points,
         )
         self.data["normal"] = normalize_along_axis(crosses, 1)
         return self.data["normal"]
