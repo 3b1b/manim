@@ -85,7 +85,7 @@ class VMobject(Mobject):
         stroke_color: ManimColor = None,
         stroke_opacity: float | Iterable[float] | None = 1.0,
         stroke_width: float | Iterable[float] | None = DEFAULT_STROKE_WIDTH,
-        stroke_behind: bool = False,
+        stroke_behind: Optional[bool] = None,
         background_image_file: str | None = None,
         long_lines: bool = False,
         # Could also be "no_joint", "bevel", "miter"
@@ -136,16 +136,16 @@ class VMobject(Mobject):
 
     # Colors
     def init_colors(self):
-        self.set_fill(
-            color=self.fill_color,
-            opacity=self.fill_opacity,
-            border_width=self.fill_border_width,
-        )
         self.set_stroke(
             color=self.stroke_color,
             width=self.stroke_width,
             opacity=self.stroke_opacity,
-            background=self.stroke_behind,
+            behind=self.stroke_behind,
+        )
+        self.set_fill(
+            color=self.fill_color,
+            opacity=self.fill_opacity,
+            border_width=self.fill_border_width,
         )
         self.set_shading(*self.shading)
         self.set_flat_stroke(self.flat_stroke)
@@ -165,6 +165,8 @@ class VMobject(Mobject):
             for mob in self.get_family(recurse):
                 data = mob.data if mob.has_points() > 0 else mob._data_defaults
                 data["fill_border_width"] = border_width
+        if self.has_fill() and not self.has_stroke():
+            self.set_stroke(behind=True)
         return self
 
     def set_stroke(
@@ -172,7 +174,7 @@ class VMobject(Mobject):
         color: ManimColor | Iterable[ManimColor] = None,
         width: float | Iterable[float] | None = None,
         opacity: float | Iterable[float] | None = None,
-        background: bool | None = None,
+        behind: bool | None = None,
         flat: bool | None = None,
         recurse: bool = True
     ) -> Self:
@@ -187,12 +189,14 @@ class VMobject(Mobject):
                     data['stroke_width'][:, 0] = resize_with_interpolation(
                         np.array(width), len(data)
                     ).flatten()
+        if behind is None and self.has_stroke() and not self.has_fill():
+            behind = False
 
-        if background is not None:
+        if behind is not None:
             for mob in self.get_family(recurse):
-                if mob.stroke_behind != background:
+                if mob.stroke_behind != behind:
+                    mob.stroke_behind = behind
                     mob.refresh_shader_wrapper_id()
-                    mob.stroke_behind = background
 
         if flat is not None:
             self.set_flat_stroke(flat)
@@ -203,9 +207,8 @@ class VMobject(Mobject):
         self,
         color: ManimColor | Iterable[ManimColor] = BLACK,
         width: float | Iterable[float] = 3,
-        background: bool = True
     ) -> Self:
-        self.set_stroke(color, width, background=background)
+        self.set_stroke(color, width, behind=True)
         return self
 
     @Mobject.affects_family_data
@@ -219,7 +222,7 @@ class VMobject(Mobject):
         stroke_opacity: float | Iterable[float] | None = None,
         stroke_rgba: Vect4 | None = None,
         stroke_width: float | Iterable[float] | None = None,
-        stroke_background: bool = False,
+        stroke_behind: bool | None = None,
         flat_stroke: Optional[bool] = None,
         shading: Tuple[float, float, float] | None = None,
         recurse: bool = True
@@ -239,7 +242,7 @@ class VMobject(Mobject):
                 mob.data['stroke_rgba'][:] = resize_with_interpolation(stroke_rgba, len(mob.data['stroke_rgba']))
                 mob.set_stroke(
                     width=stroke_width,
-                    background=stroke_background,
+                    behind=stroke_behind,
                     flat=flat_stroke,
                     recurse=False,
                 )
@@ -249,7 +252,7 @@ class VMobject(Mobject):
                     width=stroke_width,
                     opacity=stroke_opacity,
                     flat=flat_stroke,
-                    background=stroke_background,
+                    behind=stroke_behind,
                     recurse=False,
                 )
 
@@ -264,7 +267,7 @@ class VMobject(Mobject):
             "fill_border_width": data['fill_border_width'].copy(),
             "stroke_rgba": data['stroke_rgba'].copy(),
             "stroke_width": data['stroke_width'].copy(),
-            "stroke_background": self.stroke_behind,
+            "stroke_behind": self.stroke_behind,
             "flat_stroke": self.get_flat_stroke(),
             "shading": self.get_shading(),
         }
