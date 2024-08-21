@@ -635,7 +635,7 @@ class Elbow(VMobject):
         self.rotate(angle, about_point=ORIGIN)
 
 
-class Arrow(Line):
+class StrokeArrow(Line):
     def __init__(
         self,
         start: Vect3 | Mobject,
@@ -731,7 +731,9 @@ class Arrow(Line):
         return self
 
 
-class FillArrow(Line):
+class Arrow(Line):
+    tickness_multiplier = 0.015
+
     def __init__(
         self,
         start: Vect3 | Mobject = LEFT,
@@ -740,7 +742,7 @@ class FillArrow(Line):
         fill_opacity: float = 1.0,
         stroke_width: float = 0.0,
         buff: float = MED_SMALL_BUFF,
-        thickness: float = 0.05,
+        thickness: float = 3.0,
         tip_width_ratio: float = 5,
         tip_angle: float = PI / 3,
         max_tip_length_to_length_ratio: float = 0.5,
@@ -771,12 +773,12 @@ class FillArrow(Line):
         # Find the right tip length and thickness
         vect = end - start
         length = max(get_norm(vect), 1e-8)
-        thickness = self.thickness
-        w_ratio = fdiv(self.max_width_to_length_ratio, fdiv(thickness, length))
+        width = self.thickness * self.tickness_multiplier
+        w_ratio = fdiv(self.max_width_to_length_ratio, fdiv(width, length))
         if w_ratio < 1:
-            thickness *= w_ratio
+            width *= w_ratio
 
-        tip_width = self.tip_width_ratio * thickness
+        tip_width = self.tip_width_ratio * width
         tip_length = tip_width / (2 * np.tan(self.tip_angle / 2))
         t_ratio = fdiv(self.max_tip_length_to_length_ratio, fdiv(tip_length, length))
         if t_ratio < 1:
@@ -786,8 +788,8 @@ class FillArrow(Line):
         # Find points for the stem
         if path_arc == 0:
             points1 = (length - tip_length) * np.array([RIGHT, 0.5 * RIGHT, ORIGIN])
-            points1 += thickness * UP / 2
-            points2 = points1[::-1] + thickness * DOWN
+            points1 += width * UP / 2
+            points2 = points1[::-1] + width * DOWN
         else:
             # Solve for radius so that the tip-to-tail length matches |end - start|
             a = 2 * (1 - np.cos(path_arc))
@@ -798,8 +800,8 @@ class FillArrow(Line):
             # Find arc points
             points1 = quadratic_bezier_points_for_arc(path_arc)
             points2 = np.array(points1[::-1])
-            points1 *= (R + thickness / 2)
-            points2 *= (R - thickness / 2)
+            points1 *= (R + width / 2)
+            points2 *= (R - width / 2)
             if path_arc < 0:
                 tip_length *= -1
             rot_T = rotation_matrix_transpose(PI / 2 - path_arc, OUT)
