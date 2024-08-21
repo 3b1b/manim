@@ -115,6 +115,7 @@ class DrawBorderThenFill(Animation):
             sm.set_stroke(
                 color=self.stroke_color or sm.get_stroke_color(),
                 width=self.stroke_width,
+                behind=self.mobject.stroke_behind,
             )
         return outline
 
