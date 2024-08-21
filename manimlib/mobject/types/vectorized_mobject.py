@@ -116,6 +116,7 @@ class VMobject(Mobject):
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
         self.needs_new_joint_angles = True
+        self.needs_new_unit_normal = True
         self.outer_vert_indices = np.zeros(0, dtype='i4')
 
         super().__init__(**kwargs)
@@ -873,21 +874,22 @@ class VMobject(Mobject):
         if self.get_num_points() < 3:
             return OUT
 
+        if not self.needs_new_unit_normal:
+            return self.data["base_normal"][1, :]
+
         area_vect = self.get_area_vector()
         area = get_norm(area_vect)
         if area > 0:
             normal = area_vect / area
         else:
-            points = self.get_points()
-            normal = get_unit_normal(
-                points[1] - points[0],
-                points[2] - points[1],
-            )
+            p = self.get_points()
+            normal = get_unit_normal(p[1] - p[0], p[2] - p[1])
         self.data["base_normal"][1::2] = normal
+        self.needs_new_unit_normal = False
         return normal
 
     def refresh_unit_normal(self) -> Self:
-        self.get_unit_normal()
+        self.needs_new_unit_normal = True
         return self
 
     def rotate(
@@ -1236,14 +1238,14 @@ class VMobject(Mobject):
         self.refresh_triangulation()
         if refresh_joints:
             self.get_joint_angles(refresh=True)
-            self.get_unit_normal()
+            self.refresh_unit_normal()
         return self
 
     @triggers_refreshed_triangulation
     def append_points(self, points: Vect3Array) -> Self:
         assert len(points) % 2 == 0
         super().append_points(points)
-        self.get_unit_normal()
+        self.refresh_unit_normal()
         return self
 
     @triggers_refreshed_triangulation
