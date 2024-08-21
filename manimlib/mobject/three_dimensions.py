@@ -38,7 +38,6 @@ class SurfaceMesh(VGroup):
         normal_nudge: float = 1e-2,
         depth_test: bool = True,
         joint_type: str = 'no_joint',
-        flat_stroke: bool = False,
         **kwargs
     ):
         self.uv_surface = uv_surface
@@ -50,7 +49,6 @@ class SurfaceMesh(VGroup):
             stroke_width=stroke_width,
             depth_test=depth_test,
             joint_type=joint_type,
-            flat_stroke=flat_stroke,
             **kwargs
         )
 
