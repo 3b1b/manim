@@ -118,6 +118,7 @@ class VMobject(Mobject):
         self.triangulation = np.zeros(0, dtype='i4')
         self.needs_new_joint_angles = True
         self.needs_new_unit_normal = True
+        self.subpath_end_indices = None
         self.outer_vert_indices = np.zeros(0, dtype='i4')
 
         super().__init__(**kwargs)
@@ -504,6 +505,8 @@ class VMobject(Mobject):
     def add_quadratic_bezier_curve_to(self, handle: Vect3, anchor: Vect3) -> Self:
         self.throw_error_if_no_points()
         last_point = self.get_last_point()
+        if self.consider_points_equal(last_point, anchor):
+            return self
         if self.consider_points_equal(handle, last_point):
             # This is to prevent subpaths from accidentally being marked closed
             handle = midpoint(handle, anchor)
@@ -513,6 +516,8 @@ class VMobject(Mobject):
     def add_line_to(self, point: Vect3) -> Self:
         self.throw_error_if_no_points()
         last_point = self.get_last_point()
+        if self.consider_points_equal(last_point, point):
+            return self
         alphas = np.linspace(0, 1, 5 if self.long_lines else 3)
         self.append_points(outer_interpolate(last_point, point, alphas[1:]))
         return self
@@ -746,7 +751,9 @@ class VMobject(Mobject):
         return np.array([2 * n for n, end in enumerate(is_end) if end])
 
     def get_subpath_end_indices(self) -> np.ndarray:
-        return self.get_subpath_end_indices_from_points(self.get_points())
+        if self.subpath_end_indices is None:
+            self.subpath_end_indices = self.get_subpath_end_indices_from_points(self.get_points())
+        return self.subpath_end_indices
 
     def get_subpaths_from_points(self, points: Vect3Array) -> list[Vect3Array]:
         if len(points) == 0:
@@ -1224,33 +1231,37 @@ class VMobject(Mobject):
         super().lock_matching_data(vmobject1, vmobject2)
         return self
 
-    def triggers_refreshed_triangulation(func: Callable):
+    def triggers_refresh(func: Callable):
         @wraps(func)
         def wrapper(self, *args, refresh=True, **kwargs):
             func(self, *args, **kwargs)
             if refresh:
+                self.subpath_end_indices = None
                 self.refresh_triangulation()
                 self.refresh_joint_angles()
+                self.refresh_unit_normal()
             return self
         return wrapper
 
+    @triggers_refresh
+    def resize_points(
+        self,
+        new_length: int,
+        resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
+    ) -> Self:
+        return super().resize_points(new_length, resize_func)
+
+    @triggers_refresh
     def set_points(self, points: Vect3Array, refresh_joints: bool = True) -> Self:
         assert len(points) == 0 or len(points) % 2 == 1
-        super().set_points(points)
-        self.refresh_triangulation()
-        if refresh_joints:
-            self.get_joint_angles(refresh=True)
-            self.refresh_unit_normal()
-        return self
+        return super().set_points(points)
 
-    @triggers_refreshed_triangulation
+    @triggers_refresh
     def append_points(self, points: Vect3Array) -> Self:
         assert len(points) % 2 == 0
-        super().append_points(points)
-        self.refresh_unit_normal()
-        return self
+        return super().append_points(points)
 
-    @triggers_refreshed_triangulation
+    @triggers_refresh
     def reverse_points(self, recurse: bool = True) -> Self:
         # This will reset which anchors are
         # considered path ends
@@ -1260,16 +1271,14 @@ class VMobject(Mobject):
             inner_ends = mob.get_subpath_end_indices()[:-1]
             mob.data["point"][inner_ends + 1] = mob.data["point"][inner_ends + 2]
             mob.data["base_normal"][1::2] *= -1
-        super().reverse_points()
-        return self
+        return super().reverse_points()
 
-    @triggers_refreshed_triangulation
+    @triggers_refresh
     def set_data(self, data: np.ndarray) -> Self:
-        super().set_data(data)
-        return self
+        return super().set_data(data)
 
     # TODO, how to be smart about tangents here?
-    @triggers_refreshed_triangulation
+    @triggers_refresh
     def apply_function(
         self,
         function: Callable[[Vect3], Vect3],
@@ -1281,10 +1290,9 @@ class VMobject(Mobject):
             self.make_smooth(approx=True)
         return self
 
+    @triggers_refresh
     def apply_points_function(self, *args, **kwargs) -> Self:
-        super().apply_points_function(*args, **kwargs)
-        self.refresh_joint_angles()
-        return self
+        return super().apply_points_function(*args, **kwargs)
 
     def set_animating_status(self, is_animating: bool, recurse: bool = True):
         super().set_animating_status(is_animating, recurse)
