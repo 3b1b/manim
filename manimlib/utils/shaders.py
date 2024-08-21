@@ -153,13 +153,10 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray]:
     # Important to make sure dtype is floating point (not fixed point)
     # so that alpha values can be negative and are not clipped
     fill_texture = ctx.texture(size=size, components=4, dtype='f2')
-    # Use a separate texture to firset render the antialiased border
-    border_texture = ctx.texture(size=size, components=4, dtype='f1')
-    # Use yet another one to keep track of depth
+    # Use another one to keep track of depth
     depth_texture = ctx.texture(size=size, components=1, dtype='f4')
 
     fill_texture_fbo = ctx.framebuffer(fill_texture)
-    border_texture_fbo = ctx.framebuffer(border_texture)
     depth_texture_fbo = ctx.framebuffer(depth_texture)
 
     simple_vert = '''
@@ -187,38 +184,18 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray]:
             if(color.a == 0) discard;
 
             // Counteract scaling in fill frag
-            color.a *= 1.06;
-            // Cancel out what was effectively a premultiplication
-            color.rgb /= color.a;
+            color *= 1.06;
 
             gl_FragDepth = texture(DepthTexture, uv)[0];
-        }
-    '''
-    simple_frag = '''
-        #version 330
-
-        uniform sampler2D Texture;
-
-        in vec2 uv;
-        out vec4 color;
-
-        void main() {
-            color = texture(Texture, uv);
-            if(color.a == 0) discard;
         }
     '''
     fill_program = ctx.program(
         vertex_shader=simple_vert,
         fragment_shader=alpha_adjust_frag,
     )
-    border_program = ctx.program(
-        vertex_shader=simple_vert,
-        fragment_shader=simple_frag,
-    )
 
     fill_program['Texture'].value = get_texture_id(fill_texture)
     fill_program['DepthTexture'].value = get_texture_id(depth_texture)
-    border_program['Texture'].value = get_texture_id(border_texture)
 
     verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     simple_vbo = ctx.buffer(verts.astype('f4').tobytes())
@@ -226,12 +203,4 @@ def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray]:
         fill_program, simple_vbo, 'texcoord',
         mode=moderngl.TRIANGLE_STRIP
     )
-    border_texture_vao = ctx.simple_vertex_array(
-        border_program, simple_vbo, 'texcoord',
-        mode=moderngl.TRIANGLE_STRIP
-    )
-    return (
-        fill_texture_fbo, fill_texture_vao,
-        border_texture_fbo, border_texture_vao,
-        depth_texture_fbo,
-    )
+    return (fill_texture_fbo, fill_texture_vao, depth_texture_fbo)

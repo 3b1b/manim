@@ -13,4 +13,6 @@ void main() {
     // sdf for the region around the curve we wish to color.
     float signed_dist_to_region = abs(dist_to_aaw) - half_width_to_aaw;
     frag_color.a *= smoothstep(0.5, -0.5, signed_dist_to_region);
+    // This line is replaced in VShaderWrapper
+    // MODIFY FRAG COLOR
 }

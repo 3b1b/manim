@@ -249,13 +249,22 @@ class VShaderWrapper(ShaderWrapper):
             geometry_shader=self.program_code["fill_geom"],
             fragment_shader=self.program_code["fill_frag"],
         )
+        self.fill_border_program = get_shader_program(
+            self.ctx,
+            vertex_shader=self.program_code["stroke_vert"],
+            geometry_shader=self.program_code["stroke_geom"],
+            fragment_shader=self.program_code["stroke_frag"].replace(
+                "// MODIFY FRAG COLOR",
+                "frag_color.a *= 0.95; frag_color.rgb *= frag_color.a;",
+            )
+        )
         self.fill_depth_program = get_shader_program(
             self.ctx,
             vertex_shader=self.program_code["depth_vert"],
             geometry_shader=self.program_code["depth_geom"],
             fragment_shader=self.program_code["depth_frag"],
         )
-        self.programs = [self.stroke_program, self.fill_program, self.fill_depth_program]
+        self.programs = [self.stroke_program, self.fill_program, self.fill_border_program, self.fill_depth_program]
 
         # Full vert format looks like this (total of 4x23 = 92 bytes):
         # point 3
@@ -296,7 +305,7 @@ class VShaderWrapper(ShaderWrapper):
             mode=self.render_primitive,
         )
         self.fill_border_vao = self.ctx.vertex_array(
-            program=self.stroke_program,
+            program=self.fill_border_program,
             content=[(self.vbo, self.fill_border_vert_format, *self.fill_border_vert_attributes)],
             mode=self.render_primitive,
         )
@@ -325,12 +334,7 @@ class VShaderWrapper(ShaderWrapper):
             return
 
         original_fbo = self.ctx.fbo
-        fill_tx_fbo, fill_tx_vao, border_tx_fbo, border_tx_vao, depth_tx_fbo = self.fill_canvas
-
-        # First, draw the border for antialiasing
-        border_tx_fbo.clear()
-        border_tx_fbo.use()
-        self.fill_border_vao.render()
+        fill_tx_fbo, fill_tx_vao, depth_tx_fbo = self.fill_canvas
 
         # Render to a separate texture, due to strange alpha compositing
         # for the blended winding calculation
@@ -340,13 +344,13 @@ class VShaderWrapper(ShaderWrapper):
         # Be sure not to apply depth test while rendering fill
         # but set it back to where it was after
         apply_depth_test = bool(gl.glGetBooleanv(gl.GL_DEPTH_TEST))
-
         self.ctx.disable(moderngl.DEPTH_TEST)
+
+        # With this blend function, the effect of blending alpha a with
+        # -a / (1 - a) cancels out, so we can cancel positively and negatively
+        # oriented triangles
         gl.glBlendFuncSeparate(
             gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
-            # With this blend function, the effect of blending alpha a with
-            # -a / (1 - a) cancels out, so we can cancel positively and negatively
-            # oriented triangles
             gl.GL_ONE_MINUS_DST_ALPHA, gl.GL_ONE
         )
         self.fill_vao.render()
@@ -359,18 +363,20 @@ class VShaderWrapper(ShaderWrapper):
             self.fill_depth_vao.render()
             self.ctx.enable(moderngl.DEPTH_TEST)
 
-        # Render fill onto the border_width fbo
-        # two alphas, before compositing back to the rest of the scene
-        border_tx_fbo.use()
-        gl.glEnable(gl.GL_BLEND)
+        # Now add border, just taking the max alpha
         gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE)
         gl.glBlendEquation(gl.GL_MAX)
+        self.fill_border_vao.render()
+
+        # Take the texture we were just drawing to, and render it to
+        # the main scene. Account for how alphas have been premultiplied
+        original_fbo.use()
+        gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
+        gl.glBlendEquation(gl.GL_FUNC_ADD)
         fill_tx_vao.render()
 
-        original_fbo.use()
+        # Return to original blending state
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-        gl.glBlendEquation(gl.GL_FUNC_ADD)
-        border_tx_vao.render()
 
     def render(self):
         if self.stroke_behind:
