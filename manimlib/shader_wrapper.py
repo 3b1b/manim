@@ -284,7 +284,7 @@ class VShaderWrapper(ShaderWrapper):
         self.fill_border_vert_format = '3f 20x 4f 4f 12x 1f'
         self.fill_border_vert_attributes = ['point', 'joint_product', 'stroke_rgba', 'stroke_width']
 
-        self.fill_depth_vert_format = '3f 40x 3f 16x'
+        self.fill_depth_vert_format = '3f 52x 3f 4x'
         self.fill_depth_vert_attributes = ['point', 'base_normal']
 
     def init_vertex_objects(self):
@@ -379,7 +379,7 @@ class VShaderWrapper(ShaderWrapper):
         # Return to original blending state
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
-    # Meant to be a static method returning one shared value across all VShaderWrappers
+    # Static method returning one shared value across all VShaderWrappers
     @lru_cache
     @staticmethod
     def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Framebuffer]:
