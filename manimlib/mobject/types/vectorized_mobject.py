@@ -735,20 +735,12 @@ class VMobject(Mobject):
         return self.get_bezier_tuples_from_points(self.get_points())
 
     def get_subpath_end_indices_from_points(self, points: Vect3Array) -> np.ndarray:
-        atol = self.tolerance_for_point_equality
-        a0, h, a1 = points[0:-1:2], points[1::2], points[2::2]
+        a0, h = points[0:-1:2], points[1::2]
         # An anchor point is considered the end of a path
         # if its following handle is sitting on top of it.
-        # To disambiguate this from cases with many null
-        # curves in a row, we also check that the following
-        # anchor is genuinely distinct
-        is_end = np.empty(len(points) // 2 + 1, dtype=bool)
-        is_end[:-1] = (a0 == h).all(1) & (abs(h - a1) > atol).any(1)
-        is_end[-1] = True
-        # If the curve immediately after an end marker is also an
-        # end marker, don't mark the second one
-        is_end[:-1] = is_end[:-1] & ~is_end[1:]
-        return np.array([2 * n for n, end in enumerate(is_end) if end])
+        is_end = (a0 == h).all(1)
+        end_indices = (2 * n for n, end in enumerate(is_end) if end)
+        return np.array([*end_indices, len(points) - 1])
 
     def get_subpath_end_indices(self) -> np.ndarray:
         if self.subpath_end_indices is None:
@@ -1207,6 +1199,8 @@ class VMobject(Mobject):
         ends = self.get_subpath_end_indices()
         starts = [0, *(e + 2 for e in ends[:-1])]
         for start, end in zip(starts, ends):
+            if start >= end - 2:
+                continue
             if self.consider_points_equal(points[start], points[end]):
                 v_in[start] = v_out[end - 1]
                 v_out[end] = v_in[start + 1]
