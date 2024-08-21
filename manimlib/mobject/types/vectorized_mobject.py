@@ -35,6 +35,7 @@ from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.iterables import arrays_match
+from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import cross
 from manimlib.utils.space_ops import cross2d
@@ -1185,32 +1186,33 @@ class VMobject(Mobject):
         a0_to_h = h - a0
         h_to_a1 = a1 - h
 
-        vect_to_vert = np.zeros(points.shape)
-        vect_from_vert = np.zeros(points.shape)
+        # Tangent vectors into each vertex
+        v_in = np.zeros(points.shape)
+        # Tangent vectors out of each vertex
+        v_out = np.zeros(points.shape)
 
-        vect_to_vert[1::2] = a0_to_h
-        vect_to_vert[2::2] = h_to_a1
-        vect_from_vert[0:-1:2] = a0_to_h
-        vect_from_vert[1::2] = h_to_a1
+        v_in[1::2] = a0_to_h
+        v_in[2::2] = h_to_a1
+        v_out[0:-1:2] = a0_to_h
+        v_out[1::2] = h_to_a1
 
         # Joint up closed loops, or mark unclosed paths as such
         ends = self.get_subpath_end_indices()
         starts = [0, *(e + 2 for e in ends[:-1])]
         for start, end in zip(starts, ends):
             if self.consider_points_equal(points[start], points[end]):
-                vect_to_vert[start] = vect_from_vert[end - 1]
-                vect_from_vert[end] = vect_to_vert[start + 1]
+                v_in[start] = v_out[end - 1]
+                v_out[end] = v_in[start + 1]
             else:
-                vect_to_vert[start] = vect_from_vert[start]
-                vect_from_vert[end] = vect_to_vert[end]
+                v_in[start] = v_out[start]
+                v_out[end] = v_in[end]
 
         # Compute dot and cross products
-        to_dot_from = (vect_to_vert * vect_from_vert).sum(1)
-        to_norm = np.sqrt((vect_to_vert * vect_to_vert).sum(1))
-        from_norm = np.sqrt((vect_from_vert * vect_from_vert).sum(1))
-        angles = np.arccos(to_dot_from / (to_norm * from_norm))
+        in_dot_out = (v_in * v_out).sum(1)
+        norm_product = np.sqrt((v_in * v_in).sum(1) * (v_out * v_out).sum(1))
+        angles = np.arccos(fdiv(in_dot_out, norm_product, zero_over_zero_value=1))
 
-        crosses = cross(vect_to_vert, vect_from_vert)
+        crosses = cross(v_in, v_out)
         unit_normal = self.get_unit_normal()
         angles[(crosses * unit_normal[np.newaxis, :]).sum(1) < 0] *= -1
         self.data["joint_angle"][:, 0] = angles
