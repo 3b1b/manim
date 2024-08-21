@@ -513,10 +513,10 @@ class VMobject(Mobject):
         self.append_points([handle, anchor])
         return self
 
-    def add_line_to(self, point: Vect3) -> Self:
+    def add_line_to(self, point: Vect3, allow_null_line: bool = False) -> Self:
         self.throw_error_if_no_points()
         last_point = self.get_last_point()
-        if self.consider_points_equal(last_point, point):
+        if not allow_null_line and self.consider_points_equal(last_point, point):
             return self
         alphas = np.linspace(0, 1, 5 if self.long_lines else 3)
         self.append_points(outer_interpolate(last_point, point, alphas[1:]))
