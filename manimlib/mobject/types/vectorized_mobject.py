@@ -654,9 +654,9 @@ class VMobject(Mobject):
         self.make_smooth(approx=approx)
         return self
 
-    def is_smooth(self) -> bool:
-        dots = np.cos(self.get_joint_angles()[0::2])
-        return bool((dots > 1 - 1e-3).all())
+    def is_smooth(self, angle_tol=1 * DEGREES) -> bool:
+        angles = np.abs(self.get_joint_angles()[0::2])
+        return (angles < angle_tol).all()
 
     def change_anchor_mode(self, mode: str) -> Self:
         assert mode in ("jagged", "approx_smooth", "true_smooth")
