@@ -279,7 +279,7 @@ class Scene(object):
             shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
             if self.embed_error_sound:
                 os.system("printf '\a'")
-            rect = FullScreenRectangle().set_stroke(RED, 30).set_fill(opacity=0)
+            rect = FullScreenRectangle().set_stroke(RED, 30, flat=True).set_fill(opacity=0)
             rect.fix_in_frame()
             self.play(VFadeInThenOut(rect, run_time=0.5))
 
