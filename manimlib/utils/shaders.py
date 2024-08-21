@@ -7,8 +7,6 @@ import moderngl
 from PIL import Image
 import numpy as np
 
-from manimlib.config import parse_cli
-from manimlib.config import get_configuration
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
 
@@ -133,74 +131,3 @@ def get_colormap_code(rgb_list: Sequence[float]) -> str:
         for rgb in rgb_list
     )
     return f"vec3[{len(rgb_list)}]({data})"
-
-
-@lru_cache()
-def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray]:
-    """
-    Because VMobjects with fill are rendered in a funny way, using
-    alpha blending to effectively compute the winding number around
-    each pixel, they need to be rendered to a separate texture, which
-    is then composited onto the ordinary frame buffer.
-
-    This returns a texture, loaded into a frame buffer, and a vao
-    which can display that texture as a simple quad onto a screen,
-    along with the rgb value which is meant to be discarded.
-    """
-    cam_config = get_configuration(parse_cli())['camera_config']
-    size = (cam_config['pixel_width'], cam_config['pixel_height'])
-
-    # Important to make sure dtype is floating point (not fixed point)
-    # so that alpha values can be negative and are not clipped
-    fill_texture = ctx.texture(size=size, components=4, dtype='f2')
-    # Use another one to keep track of depth
-    depth_texture = ctx.texture(size=size, components=1, dtype='f4')
-
-    fill_texture_fbo = ctx.framebuffer(fill_texture)
-    depth_texture_fbo = ctx.framebuffer(depth_texture)
-
-    simple_vert = '''
-        #version 330
-
-        in vec2 texcoord;
-        out vec2 uv;
-
-        void main() {
-            gl_Position = vec4((2.0 * texcoord - 1.0), 0.0, 1.0);
-            uv = texcoord;
-        }
-    '''
-    alpha_adjust_frag = '''
-        #version 330
-
-        uniform sampler2D Texture;
-        uniform sampler2D DepthTexture;
-
-        in vec2 uv;
-        out vec4 color;
-
-        void main() {
-            color = texture(Texture, uv);
-            if(color.a == 0) discard;
-
-            // Counteract scaling in fill frag
-            color *= 1.06;
-
-            gl_FragDepth = texture(DepthTexture, uv)[0];
-        }
-    '''
-    fill_program = ctx.program(
-        vertex_shader=simple_vert,
-        fragment_shader=alpha_adjust_frag,
-    )
-
-    fill_program['Texture'].value = get_texture_id(fill_texture)
-    fill_program['DepthTexture'].value = get_texture_id(depth_texture)
-
-    verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    simple_vbo = ctx.buffer(verts.astype('f4').tobytes())
-    fill_texture_vao = ctx.simple_vertex_array(
-        fill_program, simple_vbo, 'texcoord',
-        mode=moderngl.TRIANGLE_STRIP
-    )
-    return (fill_texture_fbo, fill_texture_vao, depth_texture_fbo)
