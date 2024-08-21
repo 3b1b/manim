@@ -67,7 +67,7 @@ class VMobject(Mobject):
         ('point', np.float32, (3,)),
         ('stroke_rgba', np.float32, (4,)),
         ('stroke_width', np.float32, (1,)),
-        ('joint_product', np.float32, (4,)),
+        ('joint_angle', np.float32, (1,)),
         ('fill_rgba', np.float32, (4,)),
         ('base_normal', np.float32, (3,)),  # Base points and unit normal vectors are interleaved in this array
         ('fill_border_width', np.float32, (1,)),
@@ -115,7 +115,7 @@ class VMobject(Mobject):
 
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
-        self.needs_new_joint_products = True
+        self.needs_new_joint_angles = True
         self.outer_vert_indices = np.zeros(0, dtype='i4')
 
         super().__init__(**kwargs)
@@ -647,7 +647,7 @@ class VMobject(Mobject):
         return self
 
     def is_smooth(self) -> bool:
-        dots = self.get_joint_products()[::2, 3]
+        dots = np.cos(self.get_joint_angles()[0::2, :])
         return bool((dots > 1 - 1e-3).all())
 
     def change_anchor_mode(self, mode: str) -> Self:
@@ -926,7 +926,7 @@ class VMobject(Mobject):
             if match_tris:
                 vmobject.triangulation = self.triangulation
             for mob in [self, vmobject]:
-                mob.get_joint_products()
+                mob.get_joint_angles()
             return self
 
         for mob in self, vmobject:
@@ -972,7 +972,7 @@ class VMobject(Mobject):
             new_points = np.vstack(paths)
             mob.resize_points(len(new_points), resize_func=resize_preserving_order)
             mob.set_points(new_points)
-            mob.get_joint_products()
+            mob.get_joint_angles()
         return self
 
     def insert_n_curves(self, n: int, recurse: bool = True) -> Self:
@@ -1028,7 +1028,7 @@ class VMobject(Mobject):
     def pointwise_become_partial(self, vmobject: VMobject, a: float, b: float) -> Self:
         assert isinstance(vmobject, VMobject)
         vm_points = vmobject.get_points()
-        self.data["joint_product"] = vmobject.data["joint_product"]
+        self.data["joint_angle"] = vmobject.data["joint_angle"]
         if a <= 0 and b >= 1:
             self.set_points(vm_points, refresh_joints=False)
             return self
@@ -1063,8 +1063,8 @@ class VMobject(Mobject):
             # Keep new_points i2:i3 as they are
             new_points[i3:i4] = high_tup
             new_points[i4:] = high_tup[2]
-        self.data["joint_product"][:i1] = [0, 0, 0, 1]
-        self.data["joint_product"][i4:] = [0, 0, 0, 1]
+        self.data["joint_angle"][:i1] = 0
+        self.data["joint_angle"][i4:] = 0
         self.set_points(new_points, refresh_joints=False)
         return self
 
@@ -1118,7 +1118,6 @@ class VMobject(Mobject):
         if not np.isclose(normal_vector, OUT).all():
             points = np.dot(points, z_to_vector(normal_vector))
 
-
         v01s = points[1::2] - points[0:-1:2]
         v12s = points[2::2] - points[1::2]
         curve_orientations = np.sign(cross2d(v01s, v12s))
@@ -1155,29 +1154,29 @@ class VMobject(Mobject):
         self.needs_new_triangulation = False
         return tri_indices
 
-    def refresh_joint_products(self) -> Self:
+    def refresh_joint_angles(self) -> Self:
         for mob in self.get_family():
-            mob.needs_new_joint_products = True
+            mob.needs_new_joint_angles = True
         return self
 
-    def get_joint_products(self, refresh: bool = False) -> np.ndarray:
+    def get_joint_angles(self, refresh: bool = False) -> np.ndarray:
         """
         The 'joint product' is a 4-vector holding the cross and dot
         product between tangent vectors at a joint
         """
-        if not self.needs_new_joint_products and not refresh:
-            return self.data["joint_product"]
+        if not self.needs_new_joint_angles and not refresh:
+            return self.data["joint_angle"]
 
-        if "joint_product" in self.locked_data_keys:
-            return self.data["joint_product"]
+        if "joint_angle" in self.locked_data_keys:
+            return self.data["joint_angle"]
 
-        self.needs_new_joint_products = False
+        self.needs_new_joint_angles = False
         self._data_has_changed = True
 
         points = self.get_points()
 
         if len(points) < 3:
-            return self.data["joint_product"]
+            return self.data["joint_angle"]
 
         # Find all the unit tangent vectors at each joint
         a0, h, a1 = points[0:-1:2], points[1::2], points[2::2]
@@ -1204,16 +1203,20 @@ class VMobject(Mobject):
                 vect_from_vert[end] = vect_to_vert[end]
 
         # Compute dot and cross products
-        cross(
-            vect_to_vert, vect_from_vert,
-            out=self.data["joint_product"][:, :3]
-        )
-        self.data["joint_product"][:, 3] = (vect_to_vert * vect_from_vert).sum(1)
-        return self.data["joint_product"]
+        to_dot_from = (vect_to_vert * vect_from_vert).sum(1)
+        to_norm = np.sqrt((vect_to_vert * vect_to_vert).sum(1))
+        from_norm = np.sqrt((vect_from_vert * vect_from_vert).sum(1))
+        angles = np.arccos(to_dot_from / (to_norm * from_norm))
+
+        crosses = cross(vect_to_vert, vect_from_vert)
+        unit_normal = self.get_unit_normal()
+        angles[(crosses * unit_normal[np.newaxis, :]).sum(1) < 0] *= -1
+        self.data["joint_angle"][:, 0] = angles
+        return self.data["joint_angle"]
 
     def lock_matching_data(self, vmobject1: VMobject, vmobject2: VMobject) -> Self:
         for mob in [self, vmobject1, vmobject2]:
-            mob.get_joint_products()
+            mob.get_joint_angles()
         super().lock_matching_data(vmobject1, vmobject2)
         return self
 
@@ -1223,7 +1226,7 @@ class VMobject(Mobject):
             func(self, *args, **kwargs)
             if refresh:
                 self.refresh_triangulation()
-                self.refresh_joint_products()
+                self.refresh_joint_angles()
             return self
         return wrapper
 
@@ -1232,7 +1235,7 @@ class VMobject(Mobject):
         super().set_points(points)
         self.refresh_triangulation()
         if refresh_joints:
-            self.get_joint_products(refresh=True)
+            self.get_joint_angles(refresh=True)
             self.get_unit_normal()
         return self
 
@@ -1240,6 +1243,7 @@ class VMobject(Mobject):
     def append_points(self, points: Vect3Array) -> Self:
         assert len(points) % 2 == 0
         super().append_points(points)
+        self.get_unit_normal()
         return self
 
     @triggers_refreshed_triangulation
@@ -1275,13 +1279,13 @@ class VMobject(Mobject):
 
     def apply_points_function(self, *args, **kwargs) -> Self:
         super().apply_points_function(*args, **kwargs)
-        self.refresh_joint_products()
+        self.refresh_joint_angles()
         return self
 
     def set_animating_status(self, is_animating: bool, recurse: bool = True):
         super().set_animating_status(is_animating, recurse)
         for submob in self.get_family(recurse):
-            submob.get_joint_products(refresh=True)
+            submob.get_joint_angles(refresh=True)
             if not submob._use_winding_fill:
                 submob.get_triangulation()
         return self
@@ -1307,7 +1311,7 @@ class VMobject(Mobject):
 
     def get_shader_data(self) -> Iterable[np.ndarray]:
         # Do we want this elsewhere? Say whenever points are refreshed or something?
-        self.get_joint_products()
+        self.get_joint_angles()
         self.data["base_normal"][0::2] = self.data["point"][0]
         return [self.data, self.data[-1:]]
 

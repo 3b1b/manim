@@ -106,7 +106,7 @@ class DrawBorderThenFill(Animation):
 
     def finish(self) -> None:
         super().finish()
-        self.mobject.refresh_joint_products()
+        self.mobject.refresh_joint_angles()
 
     def get_outline(self) -> VMobject:
         outline = self.mobject.copy()
