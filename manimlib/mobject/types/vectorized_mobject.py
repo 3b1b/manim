@@ -502,10 +502,10 @@ class VMobject(Mobject):
         self.append_points(quad_approx[1:])
         return self
 
-    def add_quadratic_bezier_curve_to(self, handle: Vect3, anchor: Vect3) -> Self:
+    def add_quadratic_bezier_curve_to(self, handle: Vect3, anchor: Vect3, allow_null_curve=True) -> Self:
         self.throw_error_if_no_points()
         last_point = self.get_last_point()
-        if self.consider_points_equal(last_point, anchor):
+        if not allow_null_curve and self.consider_points_equal(last_point, anchor):
             return self
         if self.consider_points_equal(handle, last_point):
             # This is to prevent subpaths from accidentally being marked closed
@@ -513,7 +513,7 @@ class VMobject(Mobject):
         self.append_points([handle, anchor])
         return self
 
-    def add_line_to(self, point: Vect3, allow_null_line: bool = False) -> Self:
+    def add_line_to(self, point: Vect3, allow_null_line: bool = True) -> Self:
         self.throw_error_if_no_points()
         last_point = self.get_last_point()
         if not allow_null_line and self.consider_points_equal(last_point, point):

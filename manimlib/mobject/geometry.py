@@ -687,7 +687,7 @@ class Arrow(Line):
         if self.path_arc > 0 and self.buff > 0:
             self.insert_n_curves(10)  # Is this needed?
         self.pointwise_become_partial(self, 0.0, 1.0 - alpha)
-        self.add_line_to(self.get_end(), allow_null_line=True)
+        self.add_line_to(self.get_end())
         self.add_line_to(prev_end)
         self.n_tip_points = 3
         return self

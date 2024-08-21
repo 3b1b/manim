@@ -321,8 +321,8 @@ class VMobjectFromSVGPath(VMobject):
         segment_class_to_func_map = {
             se.Move: (self.start_new_path, ("end",)),
             se.Close: (self.close_path, ()),
-            se.Line: (self.add_line_to, ("end",)),
-            se.QuadraticBezier: (self.add_quadratic_bezier_curve_to, ("control", "end")),
+            se.Line: (lambda p: self.add_line_to(p, allow_null_line=False), ("end",)),
+            se.QuadraticBezier: (lambda c, e: self.add_quadratic_bezier_curve_to(c, e, allow_null_curve=False), ("control", "end")),
             se.CubicBezier: (self.add_cubic_bezier_curve_to, ("control1", "control2", "end"))
         }
         for segment in self.path_obj:
