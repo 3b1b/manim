@@ -13,6 +13,7 @@ from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import DEGREES
 from manimlib.constants import JOINT_TYPE_MAP
 from manimlib.constants import ORIGIN, OUT
+from manimlib.constants import PI
 from manimlib.constants import TAU
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
@@ -654,7 +655,7 @@ class VMobject(Mobject):
         return self
 
     def is_smooth(self) -> bool:
-        dots = np.cos(self.get_joint_angles()[0::2, :])
+        dots = np.cos(self.get_joint_angles()[0::2])
         return bool((dots > 1 - 1e-3).all())
 
     def change_anchor_mode(self, mode: str) -> Self:
@@ -1167,18 +1168,19 @@ class VMobject(Mobject):
         product between tangent vectors at a joint
         """
         if not self.needs_new_joint_angles and not refresh:
-            return self.data["joint_angle"]
+            return self.data["joint_angle"][:, 0]
 
         if "joint_angle" in self.locked_data_keys:
-            return self.data["joint_angle"]
+            return self.data["joint_angle"][:, 0]
 
         self.needs_new_joint_angles = False
         self._data_has_changed = True
 
-        points = self.get_points()
+        # Rotate points such that positive z direction is the normal
+        points = self.get_points() @ rotation_between_vectors(OUT, self.get_unit_normal())
 
         if len(points) < 3:
-            return self.data["joint_angle"]
+            return self.data["joint_angle"][:, 0]
 
         # Find all the unit tangent vectors at each joint
         a0, h, a1 = points[0:-1:2], points[1::2], points[2::2]
@@ -1201,23 +1203,19 @@ class VMobject(Mobject):
         for start, end in zip(starts, ends):
             if start >= end - 2:
                 continue
-            if self.consider_points_equal(points[start], points[end]):
+            if (points[start] == points[end]).all():
                 v_in[start] = v_out[end - 1]
                 v_out[end] = v_in[start + 1]
             else:
                 v_in[start] = v_out[start]
                 v_out[end] = v_in[end]
 
-        # Compute dot and cross products
-        in_dot_out = (v_in * v_out).sum(1)
-        norm_product = np.sqrt((v_in * v_in).sum(1) * (v_out * v_out).sum(1))
-        angles = np.arccos(fdiv(in_dot_out, norm_product, zero_over_zero_value=1))
-
-        crosses = cross(v_in, v_out)
-        unit_normal = self.get_unit_normal()
-        angles[(crosses * unit_normal[np.newaxis, :]).sum(1) < 0] *= -1
-        self.data["joint_angle"][:, 0] = angles
-        return self.data["joint_angle"]
+        # Find the angles between vectors into each vertex, and out of it
+        angles_in = np.arctan2(v_in[:, 1], v_in[:, 0])
+        angles_out = np.arctan2(v_out[:, 1], v_out[:, 0])
+        angle_diffs = angles_out - angles_in
+        self.data["joint_angle"][:, 0] = (angle_diffs + PI) % TAU - PI
+        return self.data["joint_angle"][:, 0]
 
     def lock_matching_data(self, vmobject1: VMobject, vmobject2: VMobject) -> Self:
         for mob in [self, vmobject1, vmobject2]:
