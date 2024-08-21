@@ -82,7 +82,7 @@ vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, float joint_angl
     float alignment = abs(dot(normalize(tangent), unit_normal));
     float alignment_threshold = 0.97;  // This could maybe be chosen in a more principled way based on stroke width
     if (alignment > alignment_threshold) {
-        vec3 perp = normalize(cross(unit_normal, tangent));
+        vec3 perp = normalize(cross(v_unit_normal[1], tangent));
         step = mix(step, project(step, perp), smoothstep(alignment_threshold, 1.0, alignment));
     }
 
