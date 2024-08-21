@@ -1040,7 +1040,7 @@ class VMobject(Mobject):
         vm_points = vmobject.get_points()
         self.data["joint_angle"] = vmobject.data["joint_angle"]
         if a <= 0 and b >= 1:
-            self.set_points(vm_points, refresh_joints=False)
+            self.set_points(vm_points, refresh=False)
             return self
         num_curves = vmobject.get_num_curves()
 
@@ -1075,7 +1075,7 @@ class VMobject(Mobject):
             new_points[i4:] = high_tup[2]
         self.data["joint_angle"][:i1] = 0
         self.data["joint_angle"][i4:] = 0
-        self.set_points(new_points, refresh_joints=False)
+        self.set_points(new_points, refresh=False)
         return self
 
     def get_subcurve(self, a: float, b: float) -> Self:
@@ -1244,15 +1244,7 @@ class VMobject(Mobject):
         return wrapper
 
     @triggers_refresh
-    def resize_points(
-        self,
-        new_length: int,
-        resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
-    ) -> Self:
-        return super().resize_points(new_length, resize_func)
-
-    @triggers_refresh
-    def set_points(self, points: Vect3Array, refresh_joints: bool = True) -> Self:
+    def set_points(self, points: Vect3Array) -> Self:
         assert len(points) == 0 or len(points) % 2 == 1
         return super().set_points(points)
 
@@ -1261,7 +1253,6 @@ class VMobject(Mobject):
         assert len(points) % 2 == 0
         return super().append_points(points)
 
-    @triggers_refresh
     def reverse_points(self, recurse: bool = True) -> Self:
         # This will reset which anchors are
         # considered path ends
@@ -1271,6 +1262,7 @@ class VMobject(Mobject):
             inner_ends = mob.get_subpath_end_indices()[:-1]
             mob.data["point"][inner_ends + 1] = mob.data["point"][inner_ends + 2]
             mob.data["base_normal"][1::2] *= -1
+            self.subpath_end_indices = None
         return super().reverse_points()
 
     @triggers_refresh
