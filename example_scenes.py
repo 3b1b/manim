@@ -630,7 +630,9 @@ class SurfaceExample(ThreeDScene):
 
         self.play(FadeTransform(surface_text, light_text))
         light = self.camera.light_source
-        self.add(light)
+        light_dot = GlowDot(color=WHITE, radius=0.5)
+        light_dot.always.move_to(light)
+        self.add(light, light_dot)
         light.save_state()
         self.play(light.animate.move_to(3 * IN), run_time=5)
         self.play(light.animate.shift(10 * OUT), run_time=5)
