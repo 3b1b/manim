@@ -1,12 +1,13 @@
 #version 330
 
 in vec3 point;
-in vec3 normal;
+in vec3 du_point;
+in vec3 dv_point;
 in vec2 im_coords;
 in float opacity;
 
 out vec3 v_point;
-out vec3 v_normal;
+out vec3 v_unit_normal;
 out vec2 v_im_coords;
 out float v_opacity;
 
@@ -15,7 +16,10 @@ out float v_opacity;
 
 void main(){
     v_point = point;
-    v_normal = normal;
+    v_unit_normal = normalize(cross(
+        normalize(du_point - point),
+        normalize(dv_point - point)
+    ));
     v_im_coords = im_coords;
     v_opacity = opacity;
     emit_gl_Position(point);

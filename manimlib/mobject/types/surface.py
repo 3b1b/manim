@@ -28,9 +28,11 @@ class Surface(Mobject):
     shader_folder: str = "surface"
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
-        ('normal', np.float32, (3,)),
+        ('du_point', np.float32, (3,)),
+        ('dv_point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ])
+    pointlike_data_keys = ['point', 'du_point', 'dv_point']
 
     def __init__(
         self,
@@ -46,7 +48,7 @@ class Surface(Mobject):
         prefered_creation_axis: int = 1,
         # For du and dv steps.  Much smaller and numerical error
         # can crop up in the shaders.
-        epsilon: float = 1e-5,
+        epsilon: float = 1e-4,
         **kwargs
     ):
         self.u_range = u_range
@@ -95,10 +97,8 @@ class Surface(Mobject):
             for grid in (uv_grid, uv_plus_du, uv_plus_dv)
         ]
         self.set_points(points)
-        self.data["normal"] = normalize_along_axis(cross(
-            (du_points - points) / self.epsilon,
-            (dv_points - points) / self.epsilon,
-        ), 1)
+        self.data['du_point'][:] = du_points
+        self.data['dv_point'][:] = dv_points
 
     def apply_points_function(self, *args, **kwargs) -> Self:
         super().apply_points_function(*args, **kwargs)
@@ -128,36 +128,12 @@ class Surface(Mobject):
         return self.triangle_indices
 
     def get_unit_normals(self) -> Vect3Array:
-        nu, nv = self.resolution
-        indices = np.arange(nu * nv)
-        if len(indices) == 0:
-            return np.zeros((3, 0))
-
-        # For each point, find two adjacent points at indices
-        # step1 and step2, such that crossing points[step1] - points
-        # with points[step1] - points gives a normal vector
-        step1 = indices + 1
-        step2 = indices + nu
-
-        # Right edge
-        step1[nu - 1::nu] = indices[nu - 1::nu] + nu
-        step2[nu - 1::nu] = indices[nu - 1::nu] - 1
-
-        # Bottom edge
-        step1[-nu:] = indices[-nu:] - nu
-        step2[-nu:] = indices[-nu:] + 1
-
-        # Lower right point
-        step1[-1] = indices[-1] - 1
-        step2[-1] = indices[-1] - nu
-
         points = self.get_points()
         crosses = cross(
-            points[step2] - points,
-            points[step1] - points,
+            self.data['du_point'] - points,
+            self.data['dv_point'] - points,
         )
-        self.data["normal"] = normalize_along_axis(crosses, 1)
-        return self.data["normal"]
+        return normalize_along_axis(crosses, 1)
 
     @Mobject.affects_data
     def pointwise_become_partial(
@@ -291,7 +267,8 @@ class TexturedSurface(Surface):
     shader_folder: str = "textured_surface"
     data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
-        ('normal', np.float32, (3,)),
+        ('du_point', np.float32, (3,)),
+        ('dv_point', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ]
@@ -335,7 +312,8 @@ class TexturedSurface(Surface):
         self.resize_points(surf.get_num_points())
         self.resolution = surf.resolution
         self.data['point'][:] = surf.data['point']
-        self.data['normal'][:] = surf.data['normal']
+        self.data['du_point'][:] = surf.data['du_point']
+        self.data['dv_point'][:] = surf.data['dv_point']
         self.data['opacity'][:, 0] = surf.data["rgba"][:, 3]
         self.data["im_coords"] = np.array([
             [u, v]
