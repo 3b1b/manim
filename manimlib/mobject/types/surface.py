@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 class Surface(Mobject):
     render_primitive: int = moderngl.TRIANGLES
     shader_folder: str = "surface"
-    shader_dtype: np.dtype = np.dtype([
+    data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('normal', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
@@ -289,7 +289,7 @@ class SGroup(Surface):
 
 class TexturedSurface(Surface):
     shader_folder: str = "textured_surface"
-    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
         ('normal', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),

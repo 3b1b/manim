@@ -65,7 +65,7 @@ DEFAULT_FILL_COLOR = GREY_C
 
 
 class VMobject(Mobject):
-    shader_dtype: np.dtype = np.dtype([
+    data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('stroke_rgba', np.float32, (4,)),
         ('stroke_width', np.float32, (1,)),
