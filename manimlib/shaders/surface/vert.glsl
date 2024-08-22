@@ -5,7 +5,6 @@ uniform vec4 clip_plane;
 in vec3 point;
 in vec3 du_point;
 in vec3 dv_point;
-// in vec3 normal;
 in vec4 rgba;
 
 out vec4 v_color;
