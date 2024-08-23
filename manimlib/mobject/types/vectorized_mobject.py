@@ -1221,7 +1221,9 @@ class VMobject(Mobject):
         angles_in = np.arctan2(v_in[:, 1], v_in[:, 0])
         angles_out = np.arctan2(v_out[:, 1], v_out[:, 0])
         angle_diffs = angles_out - angles_in
-        self.data["joint_angle"][:, 0] = (angle_diffs + PI) % TAU - PI
+        angle_diffs[angle_diffs < -PI] += TAU
+        angle_diffs[angle_diffs > PI] -= TAU
+        self.data["joint_angle"][:, 0] = angle_diffs
         return self.data["joint_angle"][:, 0]
 
     def lock_matching_data(self, vmobject1: VMobject, vmobject2: VMobject) -> Self:
