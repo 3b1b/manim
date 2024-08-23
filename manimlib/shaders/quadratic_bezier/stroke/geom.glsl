@@ -91,7 +91,7 @@ vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, float joint_angl
     float cos_angle = cos(joint_angle);
     float sin_angle = sin(joint_angle);
 
-    if (cos_angle > COS_THRESHOLD) return step;
+    if (abs(cos_angle) > COS_THRESHOLD) return step;
 
     // Below here, figure out the adjustment to bevel or miter a joint
     if (flat_stroke == 0){
