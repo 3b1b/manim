@@ -87,7 +87,7 @@ class VMobject(Mobject):
         stroke_color: ManimColor = None,
         stroke_opacity: float | Iterable[float] | None = 1.0,
         stroke_width: float | Iterable[float] | None = DEFAULT_STROKE_WIDTH,
-        stroke_behind: Optional[bool] = None,
+        stroke_behind: bool = False,
         background_image_file: str | None = None,
         long_lines: bool = False,
         # Could also be "no_joint", "bevel", "miter"
@@ -164,8 +164,6 @@ class VMobject(Mobject):
             for mob in self.get_family(recurse):
                 data = mob.data if mob.has_points() > 0 else mob._data_defaults
                 data["fill_border_width"] = border_width
-        if self.has_fill() and not self.has_stroke():
-            self.set_stroke(behind=True)
         return self
 
     def set_stroke(
@@ -188,8 +186,6 @@ class VMobject(Mobject):
                     data['stroke_width'][:, 0] = resize_with_interpolation(
                         np.array(width), len(data)
                     ).flatten()
-        if behind is None and self.has_stroke() and not self.has_fill():
-            behind = False
 
         if behind is not None:
             for mob in self.get_family(recurse):
