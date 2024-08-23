@@ -116,7 +116,6 @@ class VMobject(Mobject):
         self.needs_new_joint_angles = True
         self.needs_new_unit_normal = True
         self.subpath_end_indices = None
-        self.outer_vert_indices = np.zeros(0, dtype='i4')
 
         super().__init__(**kwargs)
 
@@ -1045,23 +1044,13 @@ class VMobject(Mobject):
         vmob.pointwise_become_partial(self, a, b)
         return vmob
 
-    def resize_points(
-        self,
-        new_length: int,
-        resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
-    ) -> Self:
-        super().resize_points(new_length, resize_func)
-
-        n_curves = self.get_num_curves()
-        # Creates the pattern (0, 1, 2, 2, 3, 4, 4, 5, 6, ...)
-        self.outer_vert_indices = (np.arange(1, 3 * n_curves + 1) * 2) // 3
-        return self
-
     def get_outer_vert_indices(self) -> np.ndarray:
         """
         Returns the pattern (0, 1, 2, 2, 3, 4, 4, 5, 6, ...)
         """
-        return self.outer_vert_indices
+        n_curves = self.get_num_curves()
+        # Creates the pattern (0, 1, 2, 2, 3, 4, 4, 5, 6, ...)
+        return (np.arange(1, 3 * n_curves + 1) * 2) // 3
 
     # Data for shaders that may need refreshing
 
