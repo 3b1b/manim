@@ -97,7 +97,6 @@ class VMobject(Mobject):
         # Measured in pixel widths
         anti_alias_width: float = 1.5,
         fill_border_width: float = 0.5,
-        use_winding_fill: bool = True,
         **kwargs
     ):
         self.fill_color = fill_color or color or DEFAULT_FILL_COLOR
@@ -113,10 +112,7 @@ class VMobject(Mobject):
         self.use_simple_quadratic_approx = use_simple_quadratic_approx
         self.anti_alias_width = anti_alias_width
         self.fill_border_width = fill_border_width
-        self._use_winding_fill = use_winding_fill
 
-        self.needs_new_triangulation = True
-        self.triangulation = np.zeros(0, dtype='i4')
         self.needs_new_joint_angles = True
         self.needs_new_unit_normal = True
         self.subpath_end_indices = None
@@ -432,12 +428,8 @@ class VMobject(Mobject):
         self.set_anti_alias_width(anti_alias_width)
         return self
 
-    @Mobject.affects_family_data
     def use_winding_fill(self, value: bool = True, recurse: bool = True) -> Self:
-        for submob in self.get_family(recurse):
-            submob._use_winding_fill = value
-            if not value and submob.has_points():
-                submob.subdivide_intersections()
+        # Only keeping this here because some old scene call it
         return self
 
     # Points
@@ -920,21 +912,7 @@ class VMobject(Mobject):
 
     # Alignment
     def align_points(self, vmobject: VMobject) -> Self:
-        winding = self._use_winding_fill and vmobject._use_winding_fill
-        if winding != self._use_winding_fill:
-            self.use_winding_fill(winding)
-        if winding != vmobject._use_winding_fill:
-            vmobject.use_winding_fill(winding)
         if self.get_num_points() == len(vmobject.get_points()):
-            # If both have fill, and they have the same shape, just
-            # give them the same triangulation so that it's not recalculated
-            # needlessly throughout an animation
-            match_tris = not self._use_winding_fill and \
-                         self.has_fill() and \
-                         vmobject.has_fill() and \
-                         self.has_same_shape_as(vmobject)
-            if match_tris:
-                vmobject.triangulation = self.triangulation
             for mob in [self, vmobject]:
                 mob.get_joint_angles()
             return self
@@ -1019,22 +997,6 @@ class VMobject(Mobject):
                 new_points.extend(partial_quadratic_bezier_points(tup, a1, a2)[1:])
         return np.vstack(new_points)
 
-    def interpolate(
-        self,
-        mobject1: VMobject,
-        mobject2: VMobject,
-        alpha: float,
-        *args, **kwargs
-    ) -> Self:
-        super().interpolate(mobject1, mobject2, alpha, *args, **kwargs)
-
-        if not self._use_winding_fill and self.has_fill():
-            tri1 = mobject1.get_triangulation()
-            tri2 = mobject2.get_triangulation()
-            if not arrays_match(tri1, tri2):
-                self.refresh_triangulation()
-        return self
-
     def pointwise_become_partial(self, vmobject: VMobject, a: float, b: float) -> Self:
         assert isinstance(vmobject, VMobject)
         vm_points = vmobject.get_points()
@@ -1103,24 +1065,14 @@ class VMobject(Mobject):
 
     # Data for shaders that may need refreshing
 
-    def refresh_triangulation(self) -> Self:
-        for mob in self.get_family():
-            mob.needs_new_triangulation = True
-        return self
-
     def get_triangulation(self) -> np.ndarray:
         # Figure out how to triangulate the interior to know
         # how to send the points as to the vertex shader.
         # First triangles come directly from the points
-        if not self.needs_new_triangulation:
-            return self.triangulation
-
         points = self.get_points()
 
         if len(points) <= 1:
-            self.triangulation = np.zeros(0, dtype='i4')
-            self.needs_new_triangulation = False
-            return self.triangulation
+            return np.zeros(0, dtype='i4')
 
         normal_vector = self.get_unit_normal()
 
@@ -1160,8 +1112,6 @@ class VMobject(Mobject):
 
         ovi = self.get_outer_vert_indices()
         tri_indices = np.hstack([ovi, inner_tri_indices])
-        self.triangulation = tri_indices
-        self.needs_new_triangulation = False
         return tri_indices
 
     def refresh_joint_angles(self) -> Self:
@@ -1238,7 +1188,6 @@ class VMobject(Mobject):
             func(self, *args, **kwargs)
             if refresh:
                 self.subpath_end_indices = None
-                self.refresh_triangulation()
                 self.refresh_joint_angles()
                 self.refresh_unit_normal()
             return self
@@ -1314,8 +1263,6 @@ class VMobject(Mobject):
         super().set_animating_status(is_animating, recurse)
         for submob in self.get_family(recurse):
             submob.get_joint_angles(refresh=True)
-            if not submob._use_winding_fill:
-                submob.get_triangulation()
         return self
 
     # For shaders
