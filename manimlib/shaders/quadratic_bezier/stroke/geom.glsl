@@ -4,7 +4,7 @@ layout (triangles) in;
 layout (triangle_strip, max_vertices = 64) out;  // Related to MAX_STEPS below
 
 uniform float anti_alias_width;
-uniform float flat_stroke;
+uniform float flat_stroke_float;
 uniform float pixel_size;
 uniform float joint_type;
 uniform float frame_scale;
@@ -63,13 +63,13 @@ vec3 rotate_vector(vec3 vect, vec3 unit_normal, float angle){
 }
 
 
-vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, float joint_angle, bool inside_curve){
+vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, float joint_angle, bool inside_curve, bool flat_stroke){
     /*
     Step the the left of a curve.
     First a perpendicular direction is calculated, then it is adjusted
     so as to make a joint.
     */
-    vec3 unit_tan = normalize(flat_stroke == 0.0 ? project(tangent, unit_normal) : tangent);
+    vec3 unit_tan = normalize(flat_stroke ? tangent : project(tangent, unit_normal));
 
     // Step to stroke width bound should be perpendicular
     // both to the tangent and the normal direction
@@ -94,7 +94,7 @@ vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, float joint_angl
     if (abs(cos_angle) > COS_THRESHOLD) return step;
 
     // Below here, figure out the adjustment to bevel or miter a joint
-    if (flat_stroke == 0){
+    if (!flat_stroke){
         // Figure out what joint product would be for everything projected onto
         // the plane perpendicular to the normal direction (which here would be to_camera)
         step = normalize(cross(unit_normal, unit_tan));  // Back to original step
@@ -128,17 +128,18 @@ void emit_point_with_width(
     float joint_angle,
     float width,
     vec4 joint_color,
-    bool inside_curve
+    bool inside_curve,
+    bool flat_stroke
 ){
     // Find unit normal
-    vec3 unit_normal = bool(flat_stroke) ? v_unit_normal[1] : normalize(camera_position - point);
+    vec3 unit_normal = flat_stroke ? v_unit_normal[1] : normalize(camera_position - point);
 
     // Set styling
     color = finalize_color(joint_color, point, unit_normal);
 
     // Figure out the step from the point to the corners of the
     // triangle strip around the polyline
-    vec3 step = step_to_corner(point, tangent, unit_normal, joint_angle, inside_curve);
+    vec3 step = step_to_corner(point, tangent, unit_normal, joint_angle, inside_curve, flat_stroke);
     float aaw = max(anti_alias_width * pixel_size, 1e-8);
 
     // Emit two corners
@@ -167,6 +168,7 @@ void main() {
     if (vec3(v_stroke_width[0], v_stroke_width[1], v_stroke_width[2]) == vec3(0.0, 0.0, 0.0)) return;
     if (vec3(v_color[0].a, v_color[1].a, v_color[2].a) == vec3(0.0, 0.0, 0.0)) return;
 
+    bool flat_stroke = bool(flat_stroke_float) || bool(is_fixed_in_frame);
 
     // Coefficients such that the quadratic bezier is c0 + c1 * t  + c2 * t^2
     vec3 c0 = verts[0];
@@ -210,7 +212,7 @@ void main() {
         emit_point_with_width(
             point, tangent, joint_angle,
             stroke_width, color,
-            inside_curve
+            inside_curve, flat_stroke
         );
     }
     EndPrimitive();
