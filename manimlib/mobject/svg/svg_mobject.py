@@ -27,7 +27,6 @@ if TYPE_CHECKING:
     from manimlib.typing import ManimColor, Vect3Array
 
 
-
 SVG_HASH_TO_MOB_MAP: dict[int, list[VMobject]] = {}
 PATH_TO_POINTS: dict[str, Vect3Array] = {}
 
