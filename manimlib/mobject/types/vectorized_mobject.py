@@ -1278,6 +1278,29 @@ class VMobject(Mobject):
     def apply_points_function(self, *args, **kwargs) -> Self:
         return super().apply_points_function(*args, **kwargs)
 
+    # General calls to apply_points_function should trigger a refresh
+    # to the joint angles, but these common ones shouldn't
+    def dont_refresh_joint_angles(func: Callable):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            nnja = self.needs_new_joint_angles
+            result = func(self, *args, **kwargs)
+            self.needs_new_joint_angles = nnja
+            return result
+        return wrapper
+
+    @dont_refresh_joint_angles
+    def shift(self, *args, **kwargs) -> Self:
+        return super().shift(*args, **kwargs)
+
+    @dont_refresh_joint_angles
+    def scale(self, *args, **kwargs) -> Self:
+        return super().scale(*args, **kwargs)
+
+    @dont_refresh_joint_angles
+    def rotate(self, *args, **kwargs) -> Self:
+        return super().rotate(*args, **kwargs)
+
     def set_animating_status(self, is_animating: bool, recurse: bool = True):
         super().set_animating_status(is_animating, recurse)
         for submob in self.get_family(recurse):
