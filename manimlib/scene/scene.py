@@ -394,7 +394,7 @@ class Scene(object):
         for group in self.render_groups:
             group.clear()
         self.render_groups = [
-            batch[0].get_group_class()(*batch) if len(batch) > 1 else batch[0]
+            batch[0].get_group_class()(*batch)
             for batch, key in batches
         ]
 
