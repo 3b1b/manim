@@ -579,7 +579,8 @@ class VMobject(Mobject):
     def close_path(self, smooth: bool = False) -> Self:
         if self.is_closed():
             return self
-        last_path_start = self.get_subpaths()[-1][0]
+        ends = self.get_subpath_end_indices()
+        last_path_start = self.get_points()[0 if len(ends) == 1 else ends[-2] + 2]
         if smooth:
             self.add_smooth_curve_to(last_path_start)
         else:
@@ -588,7 +589,9 @@ class VMobject(Mobject):
 
     def is_closed(self) -> bool:
         points = self.get_points()
-        return self.consider_points_equal(points[0], points[-1])
+        ends = self.get_subpath_end_indices()
+        last_path_start = points[0 if len(ends) == 1 else ends[-2] + 2]
+        return self.consider_points_equal(last_path_start, points[-1])
 
     def subdivide_curves_by_condition(
         self,
