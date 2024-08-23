@@ -388,13 +388,13 @@ class Scene(object):
         """
         batches = batch_by_property(
             self.mobjects,
-            lambda m: m.get_shader_wrapper(self.camera.ctx).get_id()
+            lambda m: str(type(m)) + str(m.get_shader_wrapper(self.camera.ctx).get_id())
         )
 
         for group in self.render_groups:
             group.clear()
         self.render_groups = [
-            batch[0].get_group_class()(*batch)
+            batch[0].get_group_class()(*batch) if len(batch) > 1 else batch[0]
             for batch, key in batches
         ]
 
