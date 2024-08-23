@@ -105,7 +105,7 @@ class ShaderWrapper(object):
     def bind_to_mobject_uniforms(self, mobject_uniforms: UniformDict):
         self.mobject_uniforms = mobject_uniforms
 
-    def get_id(self) -> str:
+    def get_id(self) -> int:
         return self.id
 
     def refresh_id(self) -> None:
