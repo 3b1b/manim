@@ -62,9 +62,6 @@ class Animation(object):
         if self.time_span is not None:
             start, end = self.time_span
             self.run_time = max(end, self.run_time)
-            self.rate_func = squish_rate_func(
-                self.rate_func, start / self.run_time, end / self.run_time,
-            )
         self.mobject.set_animating_status(True)
         self.starting_mobject = self.create_starting_mobject()
         if self.suspend_mobject_updating:
@@ -150,9 +147,15 @@ class Animation(object):
         """
         self.interpolate(alpha)
 
+    def time_spanned_alpha(self, alpha: float) -> float:
+        if self.time_span is not None:
+            start, end = self.time_span
+            return clip(alpha * self.run_time - start, 0, end - start) / (end - start)
+        return alpha
+
     def interpolate_mobject(self, alpha: float) -> None:
         for i, mobs in enumerate(self.families):
-            sub_alpha = self.get_sub_alpha(alpha, i, len(self.families))
+            sub_alpha = self.get_sub_alpha(self.time_spanned_alpha(alpha), i, len(self.families))
             self.interpolate_submobject(*mobs, sub_alpha)
 
     def interpolate_submobject(
