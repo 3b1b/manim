@@ -793,14 +793,13 @@ class Scene(object):
             indent = " " * lines[0].index(lines[0].strip())
             pasted = "\n".join([
                 # Remove self from function signature
-                re.sub(r"self(,\s*)?", "", lines[0]), 
+                re.sub(r"self(,\s*)?", "", lines[0]),
                 *lines[1:],
                 # Attach to scene via self.func_name = func_name
                 f"{indent}self.{method_name} = {method_name}"
             ])
 
         # Keep track of skipping and progress bar status
-        prev_skipping = self.skip_animations
         self.skip_animations = skip
 
         prev_progress = self.show_animation_progress
@@ -816,7 +815,7 @@ class Scene(object):
             self.file_writer.end_insert()
             self.camera.use_window_fbo(True)
 
-        self.skip_animations = prev_skipping
+        self.stop_skipping()
         self.show_animation_progress = prev_progress
 
     def checkpoint(self, key: str):
