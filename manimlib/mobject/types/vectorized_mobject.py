@@ -726,7 +726,7 @@ class VMobject(Mobject):
         return self.get_bezier_tuples_from_points(self.get_points())
 
     def get_subpath_end_indices_from_points(self, points: Vect3Array) -> np.ndarray:
-        atol = self.tolerance_for_point_equality
+        atol = 1e-4  # TODO, this is too unsystematic
         a0, h, a1 = points[0:-1:2], points[1::2], points[2::2]
         # An anchor point is considered the end of a path
         # if its following handle is sitting on top of it.
