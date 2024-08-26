@@ -720,7 +720,7 @@ class VMobject(Mobject):
     # Information about the curve
     def get_bezier_tuples_from_points(self, points: Vect3Array) -> Iterable[Vect3Array]:
         n_curves = (len(points) - 1) // 2
-        return (points[2 * i : 2 * i + 3] for i in range(n_curves))
+        return (points[2 * i:2 * i + 3] for i in range(n_curves))
 
     def get_bezier_tuples(self) -> Iterable[Vect3Array]:
         return self.get_bezier_tuples_from_points(self.get_points())
