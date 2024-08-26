@@ -1239,7 +1239,8 @@ class VMobject(Mobject):
             about_point,
             **kwargs
         )
-        self.data["base_normal"][1::2] = np.dot(self.data["base_normal"][1::2], rot_matrix_T)
+        for mob in self.get_family():
+            mob.get_unit_normal(refresh=True)
         return self
 
     def set_animating_status(self, is_animating: bool, recurse: bool = True):
