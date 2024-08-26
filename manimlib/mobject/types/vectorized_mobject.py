@@ -1196,7 +1196,7 @@ class VMobject(Mobject):
                 continue
             inner_ends = mob.get_subpath_end_indices()[:-1]
             mob.data["point"][inner_ends + 1] = mob.data["point"][inner_ends + 2]
-            mob.data["base_normal"][1::2] *= -1
+            mob.data["base_normal"][1::2] *= -1  # Invert normal vector
             self.subpath_end_indices = None
         return super().reverse_points()
 
