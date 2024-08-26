@@ -72,12 +72,13 @@ class CameraFrame(Mobject):
             warnings.simplefilter('ignore', UserWarning)  # Ignore UserWarnings
             angles = orientation.as_euler(self.euler_axes)[::-1]
         # Handle Gimble lock case
-        if np.isclose(angles[1], 0, atol=1e-2):
-            angles[0] = angles[0] + angles[2]
-            angles[2] = 0
-        if np.isclose(angles[1], PI, atol=1e-2):
-            angles[0] = angles[0] - angles[2]
-            angles[2] = 0
+        if self.euler_axes == "zxz":
+            if np.isclose(angles[1], 0, atol=1e-2):
+                angles[0] = angles[0] + angles[2]
+                angles[2] = 0
+            if np.isclose(angles[1], PI, atol=1e-2):
+                angles[0] = angles[0] - angles[2]
+                angles[2] = 0
         return angles
 
     def get_theta(self):
@@ -153,7 +154,13 @@ class CameraFrame(Mobject):
     ):
         angles = self.get_euler_angles()
         new_angles = angles + np.array([dtheta, dphi, dgamma]) * units
-        new_angles[1] = clip(new_angles[1], 0, PI)  # Limit range for phi
+
+        # Limit range for phi
+        if self.euler_axes == "zxz":
+            new_angles[1] = clip(new_angles[1], 0, PI)
+        elif self.euler_axes == "zxy":
+            new_angles[1] = clip(new_angles[1], -PI / 2, PI / 2)
+
         new_rot = Rotation.from_euler(self.euler_axes, new_angles[::-1])
         self.set_orientation(new_rot)
         return self
