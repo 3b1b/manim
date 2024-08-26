@@ -46,6 +46,7 @@ from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import line_intersects_path
 from manimlib.utils.space_ops import midpoint
 from manimlib.utils.space_ops import rotation_between_vectors
+from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.space_ops import poly_line_length
 from manimlib.utils.space_ops import z_to_vector
 from manimlib.shader_wrapper import ShaderWrapper
@@ -865,11 +866,11 @@ class VMobject(Mobject):
             (sums[:, 0] * diffs[:, 1]).sum(),  # Add up (x0 + x1)*(y1 - y0)
         ])
 
-    def get_unit_normal(self) -> Vect3:
+    def get_unit_normal(self, refresh: bool = False) -> Vect3:
         if self.get_num_points() < 3:
             return OUT
 
-        if not self.needs_new_unit_normal:
+        if not self.needs_new_unit_normal and not refresh:
             return self.data["base_normal"][1, :]
 
         area_vect = self.get_area_vector()
@@ -1218,31 +1219,28 @@ class VMobject(Mobject):
         return self
 
     @triggers_refresh
-    def apply_points_function(self, *args, **kwargs) -> Self:
-        return super().apply_points_function(*args, **kwargs)
+    def stretch(self, *args, **kwargs) -> Self:
+        return super().stretch(*args, **kwargs)
 
-    # General calls to apply_points_function should trigger a refresh
-    # to the joint angles, but these common ones shouldn't
-    def dont_refresh_joint_angles(func: Callable):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            nnja = self.needs_new_joint_angles
-            result = func(self, *args, **kwargs)
-            self.needs_new_joint_angles = nnja
-            return result
-        return wrapper
+    @triggers_refresh
+    def apply_matrix(self, *args, **kwargs) -> Self:
+        return super().apply_matrix(*args, **kwargs)
 
-    @dont_refresh_joint_angles
-    def shift(self, *args, **kwargs) -> Self:
-        return super().shift(*args, **kwargs)
-
-    @dont_refresh_joint_angles
-    def scale(self, *args, **kwargs) -> Self:
-        return super().scale(*args, **kwargs)
-
-    @dont_refresh_joint_angles
-    def rotate(self, *args, **kwargs) -> Self:
-        return super().rotate(*args, **kwargs)
+    def rotate(
+        self,
+        angle: float,
+        axis: Vect3 = OUT,
+        about_point: Vect3 | None = None,
+        **kwargs
+    ) -> Self:
+        rot_matrix_T = rotation_matrix_transpose(angle, axis)
+        self.apply_points_function(
+            lambda points: np.dot(points, rot_matrix_T),
+            about_point,
+            **kwargs
+        )
+        self.data["base_normal"][1::2] = np.dot(self.data["base_normal"][1::2], rot_matrix_T)
+        return self
 
     def set_animating_status(self, is_animating: bool, recurse: bool = True):
         super().set_animating_status(is_animating, recurse)
