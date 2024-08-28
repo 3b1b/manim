@@ -29,6 +29,7 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotate_vector
 from manimlib.utils.space_ops import rotation_matrix_transpose
+from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import rotation_about_z
 
 from typing import TYPE_CHECKING
@@ -880,6 +881,16 @@ class Arrow(Line):
     def set_path_arc(self, path_arc: float) -> Self:
         self.path_arc = path_arc
         self.reset_points_around_ends()
+        return self
+
+    def set_perpendicular_to_camera(self, camera_frame):
+        to_cam = camera_frame.get_implied_camera_location() - self.get_center()
+        normal = self.get_unit_normal()
+        axis = normalize(self.get_vector())
+        # Project to be perpendicular to axis
+        trg_normal = to_cam - np.dot(to_cam, axis) * axis
+        mat = rotation_between_vectors(normal, trg_normal)
+        self.apply_matrix(mat)
         return self
 
 
