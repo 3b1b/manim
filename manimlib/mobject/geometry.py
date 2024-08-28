@@ -890,7 +890,7 @@ class Arrow(Line):
         # Project to be perpendicular to axis
         trg_normal = to_cam - np.dot(to_cam, axis) * axis
         mat = rotation_between_vectors(normal, trg_normal)
-        self.apply_matrix(mat)
+        self.apply_matrix(mat, about_point=self.get_start())
         return self
 
 
