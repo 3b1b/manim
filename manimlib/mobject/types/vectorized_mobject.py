@@ -1144,7 +1144,7 @@ class VMobject(Mobject):
         ends = self.get_subpath_end_indices()
         starts = [0, *(e + 2 for e in ends[:-1])]
         for start, end in zip(starts, ends):
-            if start >= end - 2:
+            if start == end:
                 continue
             if (points[start] == points[end]).all():
                 v_in[start] = v_out[end - 1]
