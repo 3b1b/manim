@@ -805,6 +805,8 @@ class VMobject(Mobject):
             return self.get_start()
         elif alpha >= 1:
             return self.get_end()
+        if self.get_num_points() == 0:
+            return self.get_center()
         index, residue = self.curve_and_prop_of_partial_point(alpha)
         return self.get_nth_curve_function(index)(residue)
 
