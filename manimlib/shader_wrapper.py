@@ -395,10 +395,11 @@ class VShaderWrapper(ShaderWrapper):
         """
         cam_config = get_configuration(parse_cli())['camera_config']
         size = (cam_config['pixel_width'], cam_config['pixel_height'])
+        double_size = (2 * size[0], 2 * size[1])
 
         # Important to make sure dtype is floating point (not fixed point)
         # so that alpha values can be negative and are not clipped
-        fill_texture = ctx.texture(size=size, components=4, dtype='f2')
+        fill_texture = ctx.texture(size=double_size, components=4, dtype='f2')
         # Use another one to keep track of depth
         depth_texture = ctx.texture(size=size, components=1, dtype='f4')
 
