@@ -117,10 +117,12 @@ class Animation(object):
         # The surrounding scene typically handles
         # updating of self.mobject.  Besides, in
         # most cases its updating is suspended anyway
-        return list(filter(
+        items = list(filter(
             lambda m: m is not self.mobject,
             self.get_all_mobjects()
         ))
+        items = list(set(items))
+        return items
 
     def copy(self):
         return deepcopy(self)
