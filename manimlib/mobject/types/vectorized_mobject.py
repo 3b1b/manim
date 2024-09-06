@@ -97,7 +97,7 @@ class VMobject(Mobject):
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
         anti_alias_width: float = 1.5,
-        fill_border_width: float = 0.5,
+        fill_border_width: float = 0.0,
         **kwargs
     ):
         self.fill_color = fill_color or color or DEFAULT_FILL_COLOR
