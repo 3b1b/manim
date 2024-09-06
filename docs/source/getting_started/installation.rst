@@ -11,6 +11,32 @@ System requirements are：
 - `Pango <https://pango.org>`__ (only for Linux)
 
 
+Install FFmpeg
+--------------
+
+
+
+Install FFmpeg Windows
+------------------------
+.. code-block:: cmd
+
+   choco install ffmpeg
+
+
+# Install FFmepeg Linux
+----------------------------
+.. code-block:: sh
+
+   $ sudo apt update
+   $ sudo apt install ffmpeg
+   $ ffmpeg -version
+  
+# Install FFmpeg MacOS
+----------------------------
+- Download This ZIP file `https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z`(if the link is not working download this zip file from there original website)
+
+
+
 Directly
 --------
 

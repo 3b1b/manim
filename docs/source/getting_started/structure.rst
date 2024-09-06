@@ -96,7 +96,7 @@ Below is the directory structure of manim:
     └── utils/ # Some useful utility functions
         ├── bezier.py             # For bezier curve
         ├── color.py              # For color
-        ├── config_ops.py         # Process CONFIG
+        ├── dict_ops.py           # Functions related to dictionary processing
         ├── customization.py      # Read from custom_config.yml
         ├── debug.py              # Utilities for debugging in program
         ├── directories.py        # Read directories from config file

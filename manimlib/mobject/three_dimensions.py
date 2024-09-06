@@ -4,9 +4,10 @@ import math
 
 import numpy as np
 
-from manimlib.constants import BLUE, BLUE_D, BLUE_E
+from manimlib.constants import BLUE, BLUE_D, BLUE_E, GREY_A, BLACK
 from manimlib.constants import IN, ORIGIN, OUT, RIGHT
 from manimlib.constants import PI, TAU
+from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.surface import SGroup
 from manimlib.mobject.types.surface import Surface
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -14,27 +15,42 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.geometry import Polygon
 from manimlib.mobject.geometry import Square
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.space_ops import compass_directions
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import z_to_vector
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import Tuple, TypeVar
+    from manimlib.typing import ManimColor, Vect3, Sequence
+
+    T = TypeVar("T", bound=Mobject)
+
 
 class SurfaceMesh(VGroup):
-    CONFIG = {
-        "resolution": (21, 11),
-        "stroke_width": 1,
-        "normal_nudge": 1e-2,
-        "depth_test": True,
-        "flat_stroke": False,
-    }
-
-    def __init__(self, uv_surface: Surface, **kwargs):
-        if not isinstance(uv_surface, Surface):
-            raise Exception("uv_surface must be of type Surface")
+    def __init__(
+        self,
+        uv_surface: Surface,
+        resolution: Tuple[int, int] = (21, 11),
+        stroke_width: float = 1,
+        stroke_color: ManimColor = GREY_A,
+        normal_nudge: float = 1e-2,
+        depth_test: bool = True,
+        joint_type: str = 'no_joint',
+        **kwargs
+    ):
         self.uv_surface = uv_surface
-        super().__init__(**kwargs)
+        self.resolution = resolution
+        self.normal_nudge = normal_nudge
+
+        super().__init__(
+            stroke_color=stroke_color,
+            stroke_width=stroke_width,
+            depth_test=depth_test,
+            joint_type=joint_type,
+            **kwargs
+        )
 
     def init_points(self) -> None:
         uv_surface = self.uv_surface
@@ -47,7 +63,7 @@ class SurfaceMesh(VGroup):
         u_indices = np.linspace(0, full_nu - 1, part_nu)
         v_indices = np.linspace(0, full_nv - 1, part_nv)
 
-        points, du_points, dv_points = uv_surface.get_surface_points_and_nudged_points()
+        points = uv_surface.get_points()
         normals = uv_surface.get_unit_normals()
         nudge = self.normal_nudge
         nudged_points = points + nudge * normals
@@ -75,196 +91,273 @@ class SurfaceMesh(VGroup):
 # 3D shapes
 
 class Sphere(Surface):
-    CONFIG = {
-        "resolution": (101, 51),
-        "radius": 1,
-        "u_range": (0, TAU),
-        "v_range": (0, PI),
-    }
+    def __init__(
+        self,
+        u_range: Tuple[float, float] = (0, TAU),
+        v_range: Tuple[float, float] = (1e-5, PI - 1e-5),
+        resolution: Tuple[int, int] = (101, 51),
+        radius: float = 1.0,
+        **kwargs,
+    ):
+        self.radius = radius
+        super().__init__(
+            u_range=u_range,
+            v_range=v_range,
+            resolution=resolution,
+            **kwargs
+        )
 
     def uv_func(self, u: float, v: float) -> np.ndarray:
         return self.radius * np.array([
-            np.cos(u) * np.sin(v),
-            np.sin(u) * np.sin(v),
-            -np.cos(v)
+            math.cos(u) * math.sin(v),
+            math.sin(u) * math.sin(v),
+            -math.cos(v)
         ])
 
 
 class Torus(Surface):
-    CONFIG = {
-        "u_range": (0, TAU),
-        "v_range": (0, TAU),
-        "r1": 3,
-        "r2": 1,
-    }
+    def __init__(
+        self,
+        u_range: Tuple[float, float] = (0, TAU),
+        v_range: Tuple[float, float] = (0, TAU),
+        r1: float = 3.0,
+        r2: float = 1.0,
+        **kwargs,
+    ):
+        self.r1 = r1
+        self.r2 = r2
+        super().__init__(
+            u_range=u_range,
+            v_range=v_range,
+            **kwargs,
+        )
 
     def uv_func(self, u: float, v: float) -> np.ndarray:
         P = np.array([math.cos(u), math.sin(u), 0])
-        return (self.r1 - self.r2 * math.cos(v)) * P - math.sin(v) * OUT
+        return (self.r1 - self.r2 * math.cos(v)) * P - self.r2 * math.sin(v) * OUT
 
 
 class Cylinder(Surface):
-    CONFIG = {
-        "height": 2,
-        "radius": 1,
-        "axis": OUT,
-        "u_range": (0, TAU),
-        "v_range": (-1, 1),
-        "resolution": (101, 11),
-    }
+    def __init__(
+        self,
+        u_range: Tuple[float, float] = (0, TAU),
+        v_range: Tuple[float, float] = (-1, 1),
+        resolution: Tuple[int, int] = (101, 11),
+        height: float = 2,
+        radius: float = 1,
+        axis: Vect3 = OUT,
+        **kwargs,
+    ):
+        self.height = height
+        self.radius = radius
+        self.axis = axis
+        super().__init__(
+            u_range=u_range,
+            v_range=v_range,
+            resolution=resolution,
+            **kwargs
+        )
+
 
     def init_points(self):
         super().init_points()
         self.scale(self.radius)
         self.set_depth(self.height, stretch=True)
         self.apply_matrix(z_to_vector(self.axis))
-        return self
 
     def uv_func(self, u: float, v: float) -> np.ndarray:
         return np.array([np.cos(u), np.sin(u), v])
 
 
 class Line3D(Cylinder):
-    CONFIG = {
-        "width": 0.05,
-        "resolution": (21, 25)
-    }
-
-    def __init__(self, start: np.ndarray, end: np.ndarray, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(
+        self,
+        start: Vect3,
+        end: Vect3,
+        width: float = 0.05,
+        resolution: Tuple[int, int] = (21, 25),
+        **kwargs
+    ):
         axis = end - start
         super().__init__(
             height=get_norm(axis),
-            radius=self.width / 2,
-            axis=axis
+            radius=width / 2,
+            axis=axis,
+            resolution=resolution,
+            **kwargs
         )
         self.shift((start + end) / 2)
 
 
 class Disk3D(Surface):
-    CONFIG = {
-        "radius": 1,
-        "u_range": (0, 1),
-        "v_range": (0, TAU),
-        "resolution": (2, 25),
-    }
-
-    def init_points(self) -> None:
-        super().init_points()
-        self.scale(self.radius)
+    def __init__(
+        self,
+        radius: float = 1,
+        u_range: Tuple[float, float] = (0, 1),
+        v_range: Tuple[float, float] = (0, TAU),
+        resolution: Tuple[int, int] = (2, 100),
+        **kwargs
+    ):
+        super().__init__(
+            u_range=u_range,
+            v_range=v_range,
+            resolution=resolution,
+            **kwargs,
+        )
+        self.scale(radius)
 
     def uv_func(self, u: float, v: float) -> np.ndarray:
         return np.array([
-            u * np.cos(v),
-            u * np.sin(v),
+            u * math.cos(v),
+            u * math.sin(v),
             0
         ])
 
 
 class Square3D(Surface):
-    CONFIG = {
-        "side_length": 2,
-        "u_range": (-1, 1),
-        "v_range": (-1, 1),
-        "resolution": (2, 2),
-    }
-
-    def init_points(self) -> None:
-        super().init_points()
-        self.scale(self.side_length / 2)
+    def __init__(
+        self,
+        side_length: float = 2.0,
+        u_range: Tuple[float, float] = (-1, 1),
+        v_range: Tuple[float, float] = (-1, 1),
+        resolution: Tuple[int, int] = (2, 2),
+        **kwargs,
+    ):
+        super().__init__(
+            u_range=u_range, 
+            v_range=v_range, 
+            resolution=resolution, 
+            **kwargs
+        )
+        self.scale(side_length / 2)
 
     def uv_func(self, u: float, v: float) -> np.ndarray:
         return np.array([u, v, 0])
 
 
+def square_to_cube_faces(square: T) -> list[T]:
+    radius = square.get_height() / 2
+    square.move_to(radius * OUT)
+    result = [square.copy()]
+    result.extend([
+        square.copy().rotate(PI / 2, axis=vect, about_point=ORIGIN)
+        for vect in compass_directions(4)
+    ])
+    result.append(square.copy().rotate(PI, RIGHT, about_point=ORIGIN))
+    return result
+
+
 class Cube(SGroup):
-    CONFIG = {
-        "color": BLUE,
-        "opacity": 1,
-        "gloss": 0.5,
-        "square_resolution": (2, 2),
-        "side_length": 2,
-        "square_class": Square3D,
-    }
-
-    def init_points(self) -> None:
+    def __init__(
+        self,
+        color: ManimColor = BLUE,
+        opacity: float = 1,
+        shading: Tuple[float, float, float] = (0.1, 0.5, 0.1),
+        square_resolution: Tuple[int, int] = (2, 2),
+        side_length: float = 2,
+        **kwargs,
+    ):
         face = Square3D(
-            resolution=self.square_resolution,
-            side_length=self.side_length,
+            resolution=square_resolution,
+            side_length=side_length,
+            color=color,
+            opacity=opacity,
+            shading=shading,
         )
-        self.add(*self.square_to_cube_faces(face))
-
-    @staticmethod
-    def square_to_cube_faces(square: Square3D) -> list[Square3D]:
-        radius = square.get_height() / 2
-        square.move_to(radius * OUT)
-        result = [square]
-        result.extend([
-            square.copy().rotate(PI / 2, axis=vect, about_point=ORIGIN)
-            for vect in compass_directions(4)
-        ])
-        result.append(square.copy().rotate(PI, RIGHT, about_point=ORIGIN))
-        return result
-
-    def _get_face(self) -> Square3D:
-        return Square3D(resolution=self.square_resolution)
+        super().__init__(*square_to_cube_faces(face), **kwargs)
 
 
 class Prism(Cube):
-    def __init__(self, width: float = 3.0, height: float = 2.0, depth: float = 1.0, **kwargs):
+    def __init__(
+        self,
+        width: float = 3.0,
+        height: float = 2.0,
+        depth: float = 1.0,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         for dim, value in enumerate([width, height, depth]):
             self.rescale_to_fit(value, dim, stretch=True)
 
 
-class VCube(VGroup):
-    CONFIG = {
-        "fill_color": BLUE_D,
-        "fill_opacity": 1,
-        "stroke_width": 0,
-        "gloss": 0.5,
-        "shadow": 0.5,
-        "joint_type": "round",
-    }
+class VGroup3D(VGroup):
+    def __init__(
+        self,
+        *vmobjects: VMobject,
+        depth_test: bool = True,
+        shading: Tuple[float, float, float] = (0.2, 0.2, 0.2),
+        joint_type: str = "no_joint",
+        **kwargs
+    ):
+        super().__init__(*vmobjects, **kwargs)
+        self.set_shading(*shading)
+        self.set_joint_type(joint_type)
+        if depth_test:
+            self.apply_depth_test()
 
-    def __init__(self, side_length: float = 2.0, **kwargs):
-        face = Square(side_length=side_length)
-        super().__init__(*Cube.square_to_cube_faces(face), **kwargs)
-        self.init_colors()
-        self.set_joint_type(self.joint_type)
-        self.apply_depth_test()
-        self.refresh_unit_normal()
+
+class VCube(VGroup3D):
+    def __init__(
+        self,
+        side_length: float = 2.0,
+        fill_color: ManimColor = BLUE_D,
+        fill_opacity: float = 1,
+        stroke_width: float = 0,
+        **kwargs
+    ):
+        style = dict(
+            fill_color=fill_color,
+            fill_opacity=fill_opacity,
+            stroke_width=stroke_width,
+            **kwargs
+        )
+        face = Square(side_length=side_length, **style)
+        super().__init__(*square_to_cube_faces(face), **style)
 
 
 class VPrism(VCube):
-    def __init__(self, width: float = 3.0, height: float = 2.0, depth: float = 1.0, **kwargs):
+    def __init__(
+        self,
+        width: float = 3.0,
+        height: float = 2.0,
+        depth: float = 1.0,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         for dim, value in enumerate([width, height, depth]):
             self.rescale_to_fit(value, dim, stretch=True)
 
 
-class Dodecahedron(VGroup):
-    CONFIG = {
-        "fill_color": BLUE_E,
-        "fill_opacity": 1,
-        "stroke_width": 1,
-        "reflectiveness": 0.2,
-        "gloss": 0.3,
-        "shadow": 0.2,
-        "depth_test": True,
-    }
+class Dodecahedron(VGroup3D):
+    def __init__(
+        self,
+        fill_color: ManimColor = BLUE_E,
+        fill_opacity: float = 1,
+        stroke_color: ManimColor = BLUE_E,
+        stroke_width: float = 1,
+        shading: Tuple[float, float, float] = (0.2, 0.2, 0.2),
+        **kwargs,
+    ):
+        style = dict(
+            fill_color=fill_color,
+            fill_opacity=fill_opacity,
+            stroke_color=stroke_color,
+            stroke_width=stroke_width,
+            shading=shading,
+            **kwargs
+        )
 
-    def init_points(self) -> None:
-        # Star by creating two of the pentagons, meeting
+        # Start by creating two of the pentagons, meeting
         # back to back on the positive x-axis
         phi = (1 + math.sqrt(5)) / 2
         x, y, z = np.identity(3)
         pentagon1 = Polygon(
-            [phi, 1 / phi, 0],
-            [1, 1, 1],
-            [1 / phi, 0, phi],
-            [1, -1, 1],
-            [phi, -1 / phi, 0],
+            np.array([phi, 1 / phi, 0]),
+            np.array([1, 1, 1]),
+            np.array([1 / phi, 0, phi]),
+            np.array([1, -1, 1]),
+            np.array([phi, -1 / phi, 0]),
+            **style
         )
         pentagon2 = pentagon1.copy().stretch(-1, 2, about_point=ORIGIN)
         pentagon2.reverse_points()
@@ -272,38 +365,29 @@ class Dodecahedron(VGroup):
         z_pair = x_pair.copy().apply_matrix(np.array([z, -x, -y]).T)
         y_pair = x_pair.copy().apply_matrix(np.array([y, z, x]).T)
 
-        self.add(*x_pair, *y_pair, *z_pair)
-        for pentagon in list(self):
+        pentagons = [*x_pair, *y_pair, *z_pair]
+        for pentagon in list(pentagons):
             pc = pentagon.copy()
             pc.apply_function(lambda p: -p)
             pc.reverse_points()
-            self.add(pc)
+            pentagons.append(pc)
 
-        # # Rotate those two pentagons by all the axis permuations to fill
-        # # out the dodecahedron
-        # Id = np.identity(3)
-        # for i in range(3):
-        #     perm = [j % 3 for j in range(i, i + 3)]
-        #     for b in [1, -1]:
-        #         matrix = b * np.array([Id[0][perm], Id[1][perm], Id[2][perm]])
-        #         self.add(pentagon1.copy().apply_matrix(matrix, about_point=ORIGIN))
-        #         self.add(pentagon2.copy().apply_matrix(matrix, about_point=ORIGIN))
+        super().__init__(*pentagons, **style)
 
 
-class Prismify(VGroup):
-    CONFIG = {
-        "apply_depth_test": True,
-    }
-
+class Prismify(VGroup3D):
     def __init__(self, vmobject, depth=1.0, direction=IN, **kwargs):
         # At the moment, this assume stright edges
-        super().__init__(**kwargs)
         vect = depth * direction
-        self.add(vmobject.copy())
-        points = vmobject.get_points()[::vmobject.n_points_per_curve]
+        pieces = [vmobject.copy()]
+        points = vmobject.get_anchors()
         for p1, p2 in adjacent_pairs(points):
             wall = VMobject()
             wall.match_style(vmobject)
             wall.set_points_as_corners([p1, p2, p2 + vect, p1 + vect])
-            self.add(wall)
-        self.add(vmobject.copy().shift(vect).reverse_points())
+            pieces.append(wall)
+        top = vmobject.copy()
+        top.shift(vect)
+        top.reverse_points()
+        pieces.append(top)
+        super().__init__(*pieces, **kwargs)

@@ -2,6 +2,11 @@ import pkg_resources
 
 __version__ = pkg_resources.get_distribution("manimgl").version
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from manimlib.typing import *
+
 from manimlib.constants import *
 
 from manimlib.window import *
@@ -38,9 +43,9 @@ from manimlib.mobject.probability import *
 from manimlib.mobject.shape_matchers import *
 from manimlib.mobject.svg.brace import *
 from manimlib.mobject.svg.drawings import *
-from manimlib.mobject.svg.mtex_mobject import *
 from manimlib.mobject.svg.string_mobject import *
 from manimlib.mobject.svg.svg_mobject import *
+from manimlib.mobject.svg.special_tex import *
 from manimlib.mobject.svg.tex_mobject import *
 from manimlib.mobject.svg.text_mobject import *
 from manimlib.mobject.three_dimensions import *
@@ -54,11 +59,10 @@ from manimlib.mobject.vector_field import *
 
 from manimlib.scene.interactive_scene import *
 from manimlib.scene.scene import *
-from manimlib.scene.three_d_scene import *
 
 from manimlib.utils.bezier import *
 from manimlib.utils.color import *
-from manimlib.utils.config_ops import *
+from manimlib.utils.dict_ops import *
 from manimlib.utils.customization import *
 from manimlib.utils.debug import *
 from manimlib.utils.directories import *
@@ -68,5 +72,7 @@ from manimlib.utils.iterables import *
 from manimlib.utils.paths import *
 from manimlib.utils.rate_functions import *
 from manimlib.utils.simple_functions import *
+from manimlib.utils.shaders import *
 from manimlib.utils.sounds import *
 from manimlib.utils.space_ops import *
+from manimlib.utils.tex import *

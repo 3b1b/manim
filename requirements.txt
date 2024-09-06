@@ -1,6 +1,7 @@
 colour
-ipython
+ipython>=8.18.0
 isosurfaces
+fontTools
 manimpango>=0.4.0.post0,<0.5.0
 mapbox-earcut
 matplotlib
@@ -12,12 +13,14 @@ pydub
 pygments
 PyOpenGL
 pyperclip
+pyrr
 pyyaml
 rich
 scipy
 screeninfo
 skia-pathops
-svgelements
+svgelements>=1.8.1
 sympy
 tqdm
+typing-extensions; python_version < "3.11"
 validators

@@ -1,47 +1,36 @@
 #version 330
 
-uniform vec3 light_source_position;
-uniform vec3 camera_position;
-uniform float reflectiveness;
-uniform float gloss;
-uniform float shadow;
-uniform float anti_alias_width;
-uniform float focal_distance;
 uniform float glow_factor;
+uniform mat4 perspective;
 
 in vec4 color;
+in float scaled_aaw;
+in vec3 point;
+in vec3 to_cam;
+in vec3 center;
 in float radius;
-in vec2 center;
-in vec2 point;
+in vec2 uv_coords;
 
 out vec4 frag_color;
 
+// This include a delaration of uniform vec3 shading
 #INSERT finalize_color.glsl
 
 void main() {
-    vec2 diff = point - center;
-    float dist = length(diff);
-    float signed_dist = dist - radius;
-    if (signed_dist > 0.5 * anti_alias_width){
-        discard;
-    }
+    float r = length(uv_coords.xy);
+    if(r > 1.0) discard;
+
     frag_color = color;
-    if(gloss > 0 || shadow > 0){
-        vec3 normal = vec3(diff / radius, sqrt(1 - (dist * dist) / (radius * radius)));
-        frag_color = finalize_color(
-            frag_color,
-            vec3(point.xy, 0.0),
-            normal,
-            light_source_position,
-            camera_position,
-            reflectiveness,
-            gloss,
-            shadow
-        );
-    }
+
     if(glow_factor > 0){
-        frag_color.a *= pow(1 - dist / radius, glow_factor);
+        frag_color.a *= pow(1 - r, glow_factor);
     }
 
-    frag_color.a *= smoothstep(0.5, -0.5, signed_dist / anti_alias_width);
+    if(shading != vec3(0.0)){
+        vec3 point_3d = point + radius * sqrt(1 - r * r) * to_cam;
+        vec3 normal = normalize(point_3d - center);
+        frag_color = finalize_color(frag_color, point_3d, normal);
+    }
+
+    frag_color.a *= smoothstep(1.0, 1.0 - scaled_aaw, r);
 }

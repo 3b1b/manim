@@ -1,12 +1,5 @@
 #version 330
 
-uniform vec3 light_source_position;
-uniform vec3 camera_position;
-uniform float reflectiveness;
-uniform float gloss;
-uniform float shadow;
-uniform float focal_distance;
-
 uniform vec2 parameter;
 uniform float opacity;
 uniform float n_steps;
@@ -21,8 +14,6 @@ uniform vec3 color5;
 uniform vec3 color6;
 uniform vec3 color7;
 uniform vec3 color8;
-
-uniform vec2 frame_shape;
 
 in vec3 xyz_coords;
 
@@ -71,11 +62,6 @@ void main() {
     frag_color = finalize_color(
         vec4(color, opacity),
         xyz_coords,
-        vec3(0.0, 0.0, 1.0),
-        light_source_position,
-        camera_position,
-        reflectiveness,
-        gloss,
-        shadow
+        vec3(0.0, 0.0, 1.0)
     );
  }

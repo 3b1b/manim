@@ -9,7 +9,7 @@ from rich import box
 from rich.console import Console
 from rich.prompt import Confirm
 from rich.prompt import Prompt
-from rich.rule import Rule 
+from rich.rule import Rule
 from rich.table import Table
 
 from typing import TYPE_CHECKING
@@ -42,14 +42,9 @@ def init_customization() -> None:
             "sounds": "",
             "temporary_storage": "",
         },
-        "tex": {
-            "executable": "",
-            "template_file": "",
-            "intermediate_filetype": "",
-            "text_to_replace": "[tex_expression]",
-        },
         "universal_import_line": "from manimlib import *",
         "style": {
+            "tex_template": "",
             "font": "Consolas",
             "background_color": "",
         },
@@ -57,25 +52,14 @@ def init_customization() -> None:
         "window_monitor": 0,
         "full_screen": False,
         "break_into_partial_movies": False,
-        "camera_qualities": {
-            "low": {
-                "resolution": "854x480",
-                "frame_rate": 15,
-            },
-            "medium": {
-                "resolution": "1280x720",
-                "frame_rate": 30,
-            },
-            "high": {
-                "resolution": "1920x1080",
-                "frame_rate": 60,
-            },
-            "ultra_high": {
-                "resolution": "3840x2160",
-                "frame_rate": 60,
-            },
-            "default_quality": "",
-        }
+        "camera_resolutions": {
+            "low": "854x480",
+            "medium": "1280x720",
+            "high": "1920x1080",
+            "4k": "3840x2160",
+            "default_resolution": "",
+        },
+        "fps": 30,
     }
 
     console = Console()
@@ -83,7 +67,7 @@ def init_customization() -> None:
     # print("Initialize configuration")
     try:
         scope = Prompt.ask(
-            "  Select the scope of the configuration", 
+            "  Select the scope of the configuration",
             choices=["global", "local"],
             default="local"
         )
@@ -96,48 +80,38 @@ def init_customization() -> None:
             show_default=False
         )
         dir_config["raster_images"] = Prompt.ask(
-            "  Which folder should manim find [bold]raster images[/bold] (.jpg .png .gif) in "
+            "  Which folder should manim find [bold]raster images[/bold] (.jpg .png .gif) in " + \
             "[prompt.default](optional, default is none)",
             default="",
             show_default=False
         )
         dir_config["vector_images"] = Prompt.ask(
-            "  Which folder should manim find [bold]vector images[/bold] (.svg .xdv) in "
+            "  Which folder should manim find [bold]vector images[/bold] (.svg .xdv) in " + \
             "[prompt.default](optional, default is none)",
             default="",
             show_default=False
         )
         dir_config["sounds"] = Prompt.ask(
-            "  Which folder should manim find [bold]sound files[/bold] (.mp3 .wav) in "
+            "  Which folder should manim find [bold]sound files[/bold] (.mp3 .wav) in " + \
             "[prompt.default](optional, default is none)",
             default="",
             show_default=False
         )
         dir_config["temporary_storage"] = Prompt.ask(
-            "  Which folder should manim storage [bold]temporary files[/bold] "
+            "  Which folder should manim storage [bold]temporary files[/bold] " + \
             "[prompt.default](recommended, use system temporary folder by default)",
             default="",
             show_default=False
         )
 
-        console.print("[bold]LaTeX:[/bold]")
-        tex_config = configuration["tex"]
-        tex = Prompt.ask(
-            "  Select an executable program to use to compile a LaTeX source file",
-            choices=["latex", "xelatex"],
-            default="latex"
-        )
-        if tex == "latex":
-            tex_config["executable"] = "latex"
-            tex_config["template_file"] = "tex_template.tex"
-            tex_config["intermediate_filetype"] = "dvi"
-        else:
-            tex_config["executable"] = "xelatex -no-pdf"
-            tex_config["template_file"] = "ctex_template.tex"
-            tex_config["intermediate_filetype"] = "xdv"
-        
         console.print("[bold]Styles:[/bold]")
-        configuration["style"]["background_color"] = Prompt.ask(
+        style_config = configuration["style"]
+        tex_template = Prompt.ask(
+            "  Select a TeX template to compile a LaTeX source file",
+            default="default"
+        )
+        style_config["tex_template"] = tex_template
+        style_config["background_color"] = Prompt.ask(
             "  Which [bold]background color[/bold] do you want [italic](hex code)",
             default="#333333"
         )
@@ -150,7 +124,7 @@ def init_customization() -> None:
         )
         table.add_row("480p15", "720p30", "1080p60", "2160p60")
         console.print(table)
-        configuration["camera_qualities"]["default_quality"] = Prompt.ask(
+        configuration["camera_resolutions"]["default_resolution"] = Prompt.ask(
             "  Which one to choose as the default rendering quality",
             choices=["low", "medium", "high", "ultra_high"],
             default="high"
@@ -172,7 +146,7 @@ def init_customization() -> None:
             file_name = os.path.join(os.getcwd(), "custom_config.yml")
         with open(file_name, "w", encoding="utf-8") as f:
             yaml.dump(configuration, f)
-        
+
         console.print(f"\n:rocket: You have successfully set up a {scope} configuration file!")
         console.print(f"You can manually modify it in: [cyan]`{file_name}`[/cyan]")
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from colour import Color
 
 import numpy as np
+import random
 
 from typing import TYPE_CHECKING
 
@@ -13,19 +14,12 @@ if TYPE_CHECKING:
     S = TypeVar("S")
 
 
-def remove_list_redundancies(l: Sequence[T]) -> list[T]:
+def remove_list_redundancies(lst: Sequence[T]) -> list[T]:
     """
     Used instead of list(set(l)) to maintain order
     Keeps the last occurrence of each element
     """
-    reversed_result = []
-    used = set()
-    for x in reversed(l):
-        if x not in used:
-            reversed_result.append(x)
-            used.add(x)
-    reversed_result.reverse()
-    return reversed_result
+    return list(reversed(dict.fromkeys(reversed(lst))))
 
 
 def list_update(l1: Iterable[T], l2: Iterable[T]) -> list[T]:
@@ -33,14 +27,14 @@ def list_update(l1: Iterable[T], l2: Iterable[T]) -> list[T]:
     Used instead of list(set(l1).update(l2)) to maintain order,
     making sure duplicates are removed from l1, not l2.
     """
-    return [e for e in l1 if e not in l2] + list(l2)
+    return remove_list_redundancies([*l1, *l2])
 
 
 def list_difference_update(l1: Iterable[T], l2: Iterable[T]) -> list[T]:
     return [e for e in l1 if e not in l2]
 
 
-def adjacent_n_tuples(objects: Sequence[T], n: int) -> zip[tuple[T, T]]:
+def adjacent_n_tuples(objects: Sequence[T], n: int) -> zip[tuple[T, ...]]:
     return zip(*[
         [*objects[k:], *objects[:k]]
         for k in range(n)
@@ -90,6 +84,12 @@ def listify(obj: object) -> list:
         return [obj]
 
 
+def shuffled(iterable: Iterable) -> list:
+    as_list = list(iterable)
+    random.shuffle(as_list)
+    return as_list
+
+
 def resize_array(nparray: np.ndarray, length: int) -> np.ndarray:
     if len(nparray) == length:
         return nparray
@@ -98,7 +98,7 @@ def resize_array(nparray: np.ndarray, length: int) -> np.ndarray:
 
 def resize_preserving_order(nparray: np.ndarray, length: int) -> np.ndarray:
     if len(nparray) == 0:
-        return np.zeros((length, *nparray.shape[1:]))
+        return np.resize(nparray, length)
     if len(nparray) == length:
         return nparray
     indices = np.arange(length) * len(nparray) // length
@@ -108,6 +108,8 @@ def resize_preserving_order(nparray: np.ndarray, length: int) -> np.ndarray:
 def resize_with_interpolation(nparray: np.ndarray, length: int) -> np.ndarray:
     if len(nparray) == length:
         return nparray
+    if len(nparray) == 1 or array_is_constant(nparray):
+        return nparray[:1].repeat(length, axis=0)
     if length == 0:
         return np.zeros((0, *nparray.shape[1:]))
     cont_indices = np.linspace(0, len(nparray) - 1, length)
@@ -119,9 +121,9 @@ def resize_with_interpolation(nparray: np.ndarray, length: int) -> np.ndarray:
 
 
 def make_even(
-    iterable_1: Sequence[T], 
+    iterable_1: Sequence[T],
     iterable_2: Sequence[S]
-) -> tuple[list[T], list[S]]:
+) -> tuple[Sequence[T], Sequence[S]]:
     len1 = len(iterable_1)
     len2 = len(iterable_2)
     if len1 == len2:
@@ -131,6 +133,26 @@ def make_even(
         [iterable_1[(n * len1) // new_len] for n in range(new_len)],
         [iterable_2[(n * len2) // new_len] for n in range(new_len)]
     )
+
+
+def arrays_match(arr1: np.ndarray, arr2: np.ndarray) -> bool:
+    return arr1.shape == arr2.shape and (arr1 == arr2).all()
+
+
+def array_is_constant(arr: np.ndarray) -> bool:
+    return len(arr) > 0 and (arr == arr[0]).all()
+
+
+def cartesian_product(*arrays: np.ndarray):
+    """
+    Copied from https://stackoverflow.com/a/11146645
+    """
+    la = len(arrays)
+    dtype = np.result_type(*arrays)
+    arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
+    for i, a in enumerate(np.ix_(*arrays)):
+        arr[..., i] = a
+    return arr.reshape(-1, la)
 
 
 def hash_obj(obj: object) -> int:

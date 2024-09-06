@@ -1,60 +1,68 @@
 from __future__ import annotations
 
-from functools import reduce
-import operator as op
 import re
 
-from manimlib.constants import BLACK, WHITE
-from manimlib.constants import DOWN, LEFT, RIGHT, UP
-from manimlib.constants import FRAME_WIDTH
-from manimlib.constants import MED_LARGE_BUFF, MED_SMALL_BUFF, SMALL_BUFF
-from manimlib.mobject.geometry import Line
-from manimlib.mobject.svg.svg_mobject import SVGMobject
+from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.config_ops import digest_config
-from manimlib.utils.tex_file_writing import display_during_execution
-from manimlib.utils.tex_file_writing import get_tex_config
-from manimlib.utils.tex_file_writing import tex_to_svg_file
+from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.utils.color import color_to_hex
+from manimlib.utils.color import hex_to_int
+from manimlib.utils.tex_file_writing import tex_content_to_svg_file
+from manimlib.utils.tex import num_tex_symbols
+from manimlib.logger import log
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
-    from typing import Iterable, Union
-
-    ManimColor = Union[str, Color]
+    from manimlib.typing import ManimColor, Span, Selector
 
 
 SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
-class SingleStringTex(SVGMobject):
-    CONFIG = {
-        "height": None,
-        "fill_opacity": 1.0,
-        "stroke_width": 0,
-        "svg_default": {
-            "color": WHITE,
-        },
-        "path_string_config": {
-            "should_subdivide_sharp_curves": True,
-            "should_remove_null_curves": True,
-        },
-        "font_size": 48,
-        "alignment": "\\centering",
-        "math_mode": True,
-        "organize_left_to_right": False,
-    }
+class Tex(StringMobject):
+    tex_environment: str = "align*"
 
-    def __init__(self, tex_string: str, **kwargs):
-        assert isinstance(tex_string, str)
+    def __init__(
+        self,
+        *tex_strings: str,
+        font_size: int = 48,
+        alignment: str = R"\centering",
+        template: str = "",
+        additional_preamble: str = "",
+        tex_to_color_map: dict = dict(),
+        t2c: dict = dict(),
+        isolate: Selector = [],
+        use_labelled_svg: bool = True,
+        **kwargs
+    ):
+        # Combine multi-string arg, but mark them to isolate
+        if len(tex_strings) > 1:
+            if isinstance(isolate, (str, re.Pattern, tuple)):
+                isolate = [isolate]
+            isolate = [*isolate, *tex_strings]
+
+        tex_string = (" ".join(tex_strings)).strip()
+
+        # Prevent from passing an empty string.
+        if not tex_string.strip():
+            tex_string = R"\\"
+
         self.tex_string = tex_string
-        super().__init__(**kwargs)
+        self.alignment = alignment
+        self.template = template
+        self.additional_preamble = additional_preamble
+        self.tex_to_color_map = dict(**t2c, **tex_to_color_map)
 
-        if self.height is None:
-            self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
-        if self.organize_left_to_right:
-            self.organize_submobjects_left_to_right()
+        super().__init__(
+            tex_string,
+            use_labelled_svg=use_labelled_svg,
+            isolate=isolate,
+            **kwargs
+        )
+
+        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
+        self.scale(SCALE_FACTOR_PER_FONT_POINT * font_size)
 
     @property
     def hash_seed(self) -> tuple:
@@ -62,335 +70,213 @@ class SingleStringTex(SVGMobject):
             self.__class__.__name__,
             self.svg_default,
             self.path_string_config,
+            self.base_color,
+            self.isolate,
+            self.protect,
             self.tex_string,
             self.alignment,
-            self.math_mode
+            self.tex_environment,
+            self.tex_to_color_map,
+            self.template,
+            self.additional_preamble
         )
 
-    def get_file_path(self) -> str:
-        full_tex = self.get_tex_file_body(self.tex_string)
-        with display_during_execution(f"Writing \"{self.tex_string}\""):
-            file_path = tex_to_svg_file(full_tex)
-        return file_path
-
-    def get_tex_file_body(self, tex_string: str) -> str:
-        new_tex = self.get_modified_expression(tex_string)
-        if self.math_mode:
-            new_tex = "\\begin{align*}\n" + new_tex + "\n\\end{align*}"
-
-        new_tex = self.alignment + "\n" + new_tex
-
-        tex_config = get_tex_config()
-        return tex_config["tex_body"].replace(
-            tex_config["text_to_replace"],
-            new_tex
+    def get_file_path_by_content(self, content: str) -> str:
+        return tex_content_to_svg_file(
+            content, self.template, self.additional_preamble, self.tex_string
         )
 
-    def get_modified_expression(self, tex_string: str) -> str:
-        return self.modify_special_strings(tex_string.strip())
+    # Parsing
 
-    def modify_special_strings(self, tex: str) -> str:
-        tex = tex.strip()
-        should_add_filler = reduce(op.or_, [
-            # Fraction line needs something to be over
-            tex == "\\over",
-            tex == "\\overline",
-            # Makesure sqrt has overbar
-            tex == "\\sqrt",
-            tex == "\\sqrt{",
-            # Need to add blank subscript or superscript
-            tex.endswith("_"),
-            tex.endswith("^"),
-            tex.endswith("dot"),
-        ])
-        if should_add_filler:
-            filler = "{\\quad}"
-            tex += filler
+    @staticmethod
+    def get_command_matches(string: str) -> list[re.Match]:
+        # Lump together adjacent brace pairs
+        pattern = re.compile(r"""
+            (?P<command>\\(?:[a-zA-Z]+|.))
+            |(?P<open>{+)
+            |(?P<close>}+)
+        """, flags=re.X | re.S)
+        result = []
+        open_stack = []
+        for match_obj in pattern.finditer(string):
+            if match_obj.group("open"):
+                open_stack.append((match_obj.span(), len(result)))
+            elif match_obj.group("close"):
+                close_start, close_end = match_obj.span()
+                while True:
+                    if not open_stack:
+                        raise ValueError("Missing '{' inserted")
+                    (open_start, open_end), index = open_stack.pop()
+                    n = min(open_end - open_start, close_end - close_start)
+                    result.insert(index, pattern.fullmatch(
+                        string, pos=open_end - n, endpos=open_end
+                    ))
+                    result.append(pattern.fullmatch(
+                        string, pos=close_start, endpos=close_start + n
+                    ))
+                    close_start += n
+                    if close_start < close_end:
+                        continue
+                    open_end -= n
+                    if open_start < open_end:
+                        open_stack.append(((open_start, open_end), index))
+                    break
+            else:
+                result.append(match_obj)
+        if open_stack:
+            raise ValueError("Missing '}' inserted")
+        return result
 
-        should_add_double_filler = reduce(op.or_, [
-            tex == "\\overset",
-            # TODO: these can't be used since they change
-            # the latex draw order.
-            # tex == "\\frac", # you can use \\over as a alternative 
-            # tex == "\\dfrac",
-            # tex == "\\binom",
-        ])
-        if should_add_double_filler:
-            filler = "{\\quad}{\\quad}"
-            tex += filler
+    @staticmethod
+    def get_command_flag(match_obj: re.Match) -> int:
+        if match_obj.group("open"):
+            return 1
+        if match_obj.group("close"):
+            return -1
+        return 0
 
-        if tex == "\\substack":
-            tex = "\\quad"
+    @staticmethod
+    def replace_for_content(match_obj: re.Match) -> str:
+        return match_obj.group()
 
-        if tex == "":
-            tex = "\\quad"
+    @staticmethod
+    def replace_for_matching(match_obj: re.Match) -> str:
+        if match_obj.group("command"):
+            return match_obj.group()
+        return ""
 
-        # To keep files from starting with a line break
-        if tex.startswith("\\\\"):
-            tex = tex.replace("\\\\", "\\quad\\\\")
+    @staticmethod
+    def get_attr_dict_from_command_pair(
+        open_command: re.Match, close_command: re.Match
+    ) -> dict[str, str] | None:
+        if len(open_command.group()) >= 2:
+            return {}
+        return None
 
-        tex = self.balance_braces(tex)
-
-        # Handle imbalanced \left and \right
-        num_lefts, num_rights = [
-            len([
-                s for s in tex.split(substr)[1:]
-                if s and s[0] in "(){}[]|.\\"
-            ])
-            for substr in ("\\left", "\\right")
+    def get_configured_items(self) -> list[tuple[Span, dict[str, str]]]:
+        return [
+            (span, {})
+            for selector in self.tex_to_color_map
+            for span in self.find_spans_by_selector(selector)
         ]
-        if num_lefts != num_rights:
-            tex = tex.replace("\\left", "\\big")
-            tex = tex.replace("\\right", "\\big")
 
-        for context in ["array"]:
-            begin_in = ("\\begin{%s}" % context) in tex
-            end_in = ("\\end{%s}" % context) in tex
-            if begin_in ^ end_in:
-                # Just turn this into a blank string,
-                # which means caller should leave a
-                # stray \\begin{...} with other symbols
-                tex = ""
-        return tex
+    @staticmethod
+    def get_color_command(rgb_hex: str) -> str:
+        rgb = hex_to_int(rgb_hex)
+        rg, b = divmod(rgb, 256)
+        r, g = divmod(rg, 256)
+        return f"\\color[RGB]{{{r}, {g}, {b}}}"
 
-    def balance_braces(self, tex: str) -> str:
-        """
-        Makes Tex resiliant to unmatched braces
-        """
-        num_unclosed_brackets = 0
-        for i in range(len(tex)):
-            if i > 0 and tex[i - 1] == "\\":
-                # So as to not count '\{' type expressions
-                continue
-            char = tex[i]
-            if char == "{":
-                num_unclosed_brackets += 1
-            elif char == "}":
-                if num_unclosed_brackets == 0:
-                    tex = "{" + tex
-                else:
-                    num_unclosed_brackets -= 1
-        tex += num_unclosed_brackets * "}"
-        return tex
+    @staticmethod
+    def get_command_string(
+        attr_dict: dict[str, str], is_end: bool, label_hex: str | None
+    ) -> str:
+        if label_hex is None:
+            return ""
+        if is_end:
+            return "}}"
+        return "{{" + Tex.get_color_command(label_hex)
 
-    def get_tex(self) -> str:
-        return self.tex_string
-
-    def organize_submobjects_left_to_right(self):
-        self.sort(lambda p: p[0])
-        return self
-
-
-class Tex(SingleStringTex):
-    CONFIG = {
-        "arg_separator": "",
-        "isolate": [],
-        "tex_to_color_map": {},
-    }
-
-    def __init__(self, *tex_strings: str, **kwargs):
-        digest_config(self, kwargs)
-        self.tex_strings = self.break_up_tex_strings(tex_strings)
-        full_string = self.arg_separator.join(self.tex_strings)
-        super().__init__(full_string, **kwargs)
-        self.break_up_by_substrings()
-        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
-
-        if self.organize_left_to_right:
-            self.organize_submobjects_left_to_right()
-
-    def break_up_tex_strings(self, tex_strings: Iterable[str]) -> Iterable[str]:
-        # Separate out any strings specified in the isolate
-        # or tex_to_color_map lists.
-        substrings_to_isolate = [*self.isolate, *self.tex_to_color_map.keys()]
-        if len(substrings_to_isolate) == 0:
-            return tex_strings
-        patterns = (
-            "({})".format(re.escape(ss))
-            for ss in substrings_to_isolate
+    def get_content_prefix_and_suffix(
+        self, is_labelled: bool
+    ) -> tuple[str, str]:
+        prefix_lines = []
+        suffix_lines = []
+        if not is_labelled:
+            prefix_lines.append(self.get_color_command(
+                color_to_hex(self.base_color)
+            ))
+        if self.alignment:
+            prefix_lines.append(self.alignment)
+        if self.tex_environment:
+            prefix_lines.append(f"\\begin{{{self.tex_environment}}}")
+            suffix_lines.append(f"\\end{{{self.tex_environment}}}")
+        return (
+            "".join([line + "\n" for line in prefix_lines]),
+            "".join(["\n" + line for line in suffix_lines])
         )
-        pattern = "|".join(patterns)
-        pieces = []
-        for s in tex_strings:
-            if pattern:
-                pieces.extend(re.split(pattern, s))
-            else:
-                pieces.append(s)
-        return list(filter(lambda s: s, pieces))
 
-    def break_up_by_substrings(self):
-        """
-        Reorganize existing submojects one layer
-        deeper based on the structure of tex_strings (as a list
-        of tex_strings)
-        """
-        if len(self.tex_strings) == 1:
-            submob = self.copy()
-            self.set_submobjects([submob])
-            return self
-        new_submobjects = []
-        curr_index = 0
-        config = dict(self.CONFIG)
-        config["alignment"] = ""
-        for tex_string in self.tex_strings:
-            tex_string = tex_string.strip()
-            if len(tex_string) == 0:
-                continue
-            sub_tex_mob = SingleStringTex(tex_string, **config)
-            num_submobs = len(sub_tex_mob)
-            if num_submobs == 0:
-                continue
-            new_index = curr_index + num_submobs
-            sub_tex_mob.set_submobjects(self[curr_index:new_index])
-            new_submobjects.append(sub_tex_mob)
-            curr_index = new_index
-        self.set_submobjects(new_submobjects)
-        return self
+    # Method alias
 
-    def get_parts_by_tex(
-        self,
-        tex: str,
-        substring: bool = True,
-        case_sensitive: bool = True
-    ) -> VGroup:
-        def test(tex1, tex2):
-            if not case_sensitive:
-                tex1 = tex1.lower()
-                tex2 = tex2.lower()
-            if substring:
-                return tex1 in tex2
-            else:
-                return tex1 == tex2
+    def get_parts_by_tex(self, selector: Selector) -> VGroup:
+        return self.select_parts(selector)
 
-        return VGroup(*filter(
-            lambda m: isinstance(m, SingleStringTex) and test(tex, m.get_tex()),
-            self.submobjects
-        ))
+    def get_part_by_tex(self, selector: Selector, index: int = 0) -> VMobject:
+        return self.select_part(selector, index)
 
-    def get_part_by_tex(self, tex: str, **kwargs) -> SingleStringTex | None:
-        all_parts = self.get_parts_by_tex(tex, **kwargs)
-        return all_parts[0] if all_parts else None
-
-    def set_color_by_tex(self, tex: str, color: ManimColor, **kwargs):
-        self.get_parts_by_tex(tex, **kwargs).set_color(color)
-        return self
+    def set_color_by_tex(self, selector: Selector, color: ManimColor):
+        return self.set_parts_color(selector, color)
 
     def set_color_by_tex_to_color_map(
-        self,
-        tex_to_color_map: dict[str, ManimColor],
-        **kwargs
+        self, color_map: dict[Selector, ManimColor]
     ):
-        for tex, color in list(tex_to_color_map.items()):
-            self.set_color_by_tex(tex, color, **kwargs)
-        return self
+        return self.set_parts_color_by_dict(color_map)
 
-    def index_of_part(self, part: SingleStringTex, start: int = 0) -> int:
-        return self.submobjects.index(part, start)
+    def get_tex(self) -> str:
+        return self.get_string()
 
-    def index_of_part_by_tex(self, tex: str, start: int = 0, **kwargs) -> int:
-        part = self.get_part_by_tex(tex, **kwargs)
-        return self.index_of_part(part, start)
+    # Specific to Tex
+    def substr_to_path_count(self, substr: str) -> int:
+        tex = self.get_tex()
+        if len(self) != num_tex_symbols(tex):
+            log.warning(f"Estimated size of {tex} does not match true size")
+        return num_tex_symbols(substr)
 
-    def slice_by_tex(
+    def get_symbol_substrings(self):
+        pattern = "|".join((
+            # Tex commands
+            r"\\[a-zA-Z]+",
+            # And most single characters, with these exceptions
+            r"[^\^\{\}\s\_\$\\\&]",
+        ))
+        return re.findall(pattern, self.string)
+
+    def make_number_changeable(
         self,
-        start_tex: str | None = None,
-        stop_tex: str | None = None,
-        **kwargs
-    ) -> VGroup:
-        if start_tex is None:
-            start_index = 0
-        else:
-            start_index = self.index_of_part_by_tex(start_tex, **kwargs)
+        value: float | int | str,
+        index: int = 0,
+        replace_all: bool = False,
+        **config,
+    ) -> VMobject:
+        substr = str(value)
+        parts = self.select_parts(substr)
+        if len(parts) == 0:
+            log.warning(f"{value} not found in Tex.make_number_changeable call")
+            return VMobject()
+        if index > len(parts) - 1:
+            log.warning(f"Requested {index}th occurance of {value}, but only {len(parts)} exist")
+            return VMobject()
+        if not replace_all:
+            parts = [parts[index]]
 
-        if stop_tex is None:
-            return self[start_index:]
-        else:
-            stop_index = self.index_of_part_by_tex(stop_tex, start=start_index, **kwargs)
-            return self[start_index:stop_index]
+        from manimlib.mobject.numbers import DecimalNumber
 
-    def sort_alphabetically(self) -> None:
-        self.submobjects.sort(key=lambda m: m.get_tex())
+        decimal_mobs = []
+        for part in parts:
+            if "." in substr:
+                num_decimal_places = len(substr.split(".")[1])
+            else:
+                num_decimal_places = 0
+            decimal_mob = DecimalNumber(
+                float(value),
+                num_decimal_places=num_decimal_places,
+                **config,
+            )
+            decimal_mob.replace(part)
+            decimal_mob.match_style(part)
+            if len(part) > 1:
+                self.remove(*part[1:])
+            self.replace_submobject(self.submobjects.index(part[0]), decimal_mob)
+            decimal_mobs.append(decimal_mob)
 
-    def set_bstroke(self, color: ManimColor = BLACK, width: float = 4):
-        self.set_stroke(color, width, background=True)
-        return self
+            # Replace substr with something that looks like a tex command. This
+            # is to ensure Tex.substr_to_path_count counts it correctly.
+            self.string = self.string.replace(substr, R"\decimalmob", 1)
+
+        if replace_all:
+            return VGroup(*decimal_mobs)
+        return decimal_mobs[index]
 
 
 class TexText(Tex):
-    CONFIG = {
-        "math_mode": False,
-        "arg_separator": "",
-    }
-
-
-class BulletedList(TexText):
-    CONFIG = {
-        "buff": MED_LARGE_BUFF,
-        "dot_scale_factor": 2,
-        "alignment": "",
-    }
-
-    def __init__(self, *items: str, **kwargs):
-        line_separated_items = [s + "\\\\" for s in items]
-        TexText.__init__(self, *line_separated_items, **kwargs)
-        for part in self:
-            dot = Tex("\\cdot").scale(self.dot_scale_factor)
-            dot.next_to(part[0], LEFT, SMALL_BUFF)
-            part.add_to_back(dot)
-        self.arrange(
-            DOWN,
-            aligned_edge=LEFT,
-            buff=self.buff
-        )
-
-    def fade_all_but(self, index_or_string: int | str, opacity: float = 0.5) -> None:
-        arg = index_or_string
-        if isinstance(arg, str):
-            part = self.get_part_by_tex(arg)
-        elif isinstance(arg, int):
-            part = self.submobjects[arg]
-        else:
-            raise Exception("Expected int or string, got {0}".format(arg))
-        for other_part in self.submobjects:
-            if other_part is part:
-                other_part.set_fill(opacity=1)
-            else:
-                other_part.set_fill(opacity=opacity)
-
-
-class TexFromPresetString(Tex):
-    CONFIG = {
-        # To be filled by subclasses
-        "tex": None,
-        "color": None,
-    }
-
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        Tex.__init__(self, self.tex, **kwargs)
-        self.set_color(self.color)
-
-
-class Title(TexText):
-    CONFIG = {
-        "scale_factor": 1,
-        "include_underline": True,
-        "underline_width": FRAME_WIDTH - 2,
-        # This will override underline_width
-        "match_underline_width_to_text": False,
-        "underline_buff": MED_SMALL_BUFF,
-    }
-
-    def __init__(self, *text_parts: str, **kwargs):
-        TexText.__init__(self, *text_parts, **kwargs)
-        self.scale(self.scale_factor)
-        self.to_edge(UP)
-        if self.include_underline:
-            underline = Line(LEFT, RIGHT)
-            underline.next_to(self, DOWN, buff=self.underline_buff)
-            if self.match_underline_width_to_text:
-                underline.match_width(self)
-            else:
-                underline.set_width(self.underline_width)
-            self.add(underline)
-            self.underline = underline
+    tex_environment: str = ""

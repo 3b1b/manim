@@ -5,46 +5,39 @@ import inspect
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.constants import DEFAULT_POINTWISE_FUNCTION_RUN_TIME
 from manimlib.constants import DEGREES
 from manimlib.constants import OUT
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.paths import path_along_arc
 from manimlib.utils.paths import straight_path
-from manimlib.utils.rate_functions import smooth
-from manimlib.utils.rate_functions import squish_rate_func
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
-    from typing import Callable, Union
-
+    from typing import Callable
     import numpy.typing as npt
-
     from manimlib.scene.scene import Scene
-
-    ManimColor = Union[str, Color]
+    from manimlib.typing import ManimColor
 
 
 class Transform(Animation):
-    CONFIG = {
-        "path_arc": 0,
-        "path_arc_axis": OUT,
-        "path_func": None,
-        "replace_mobject_with_target_in_scene": False,
-    }
+    replace_mobject_with_target_in_scene: bool = False
 
     def __init__(
         self,
         mobject: Mobject,
         target_mobject: Mobject | None = None,
+        path_arc: float = 0.0,
+        path_arc_axis: np.ndarray = OUT,
+        path_func: Callable | None = None,
         **kwargs
     ):
-        super().__init__(mobject, **kwargs)
         self.target_mobject = target_mobject
+        self.path_arc = path_arc
+        self.path_arc_axis = path_arc_axis
+        self.path_func = path_func
+        super().__init__(mobject, **kwargs)
         self.init_path_func()
 
     def init_path_func(self) -> None:
@@ -61,17 +54,22 @@ class Transform(Animation):
     def begin(self) -> None:
         self.target_mobject = self.create_target()
         self.check_target_mobject_validity()
-        # Use a copy of target_mobject for the align_data_and_family
-        # call so that the actual target_mobject stays
-        # preserved, since calling allign_data will potentially
-        # change the structure of both arguments
-        self.target_copy = self.target_mobject.copy()
+
+        if self.mobject.is_aligned_with(self.target_mobject):
+            self.target_copy = self.target_mobject
+        else:
+            # Use a copy of target_mobject for the align_data_and_family
+            # call so that the actual target_mobject stays
+            # preserved, since calling align_data will potentially
+            # change the structure of both arguments
+            self.target_copy = self.target_mobject.copy()
         self.mobject.align_data_and_family(self.target_copy)
         super().begin()
-        self.mobject.lock_matching_data(
-            self.starting_mobject,
-            self.target_copy,
-        )
+        if not self.mobject.has_updaters():
+            self.mobject.lock_matching_data(
+                self.starting_mobject,
+                self.target_copy,
+            )
 
     def finish(self) -> None:
         super().finish()
@@ -132,33 +130,14 @@ class Transform(Animation):
 
 
 class ReplacementTransform(Transform):
-    CONFIG = {
-        "replace_mobject_with_target_in_scene": True,
-    }
+    replace_mobject_with_target_in_scene: bool = True
 
 
 class TransformFromCopy(Transform):
-    """
-    Performs a reversed Transform
-    """
+    replace_mobject_with_target_in_scene: bool = True
 
     def __init__(self, mobject: Mobject, target_mobject: Mobject, **kwargs):
-        super().__init__(target_mobject, mobject, **kwargs)
-
-    def interpolate(self, alpha: float) -> None:
-        super().interpolate(1 - alpha)
-
-
-class ClockwiseTransform(Transform):
-    CONFIG = {
-        "path_arc": -np.pi
-    }
-
-
-class CounterclockwiseTransform(Transform):
-    CONFIG = {
-        "path_arc": np.pi
-    }
+        super().__init__(mobject.copy(), target_mobject, **kwargs)
 
 
 class MoveToTarget(Transform):
@@ -169,15 +148,14 @@ class MoveToTarget(Transform):
     def check_validity_of_input(self, mobject: Mobject) -> None:
         if not hasattr(mobject, "target"):
             raise Exception(
-                "MoveToTarget called on mobject"
-                "without attribute 'target'"
+                "MoveToTarget called on mobject without attribute 'target'"
             )
 
 
 class _MethodAnimation(MoveToTarget):
-    def __init__(self, mobject: Mobject, methods: Callable):
+    def __init__(self, mobject: Mobject, methods: list[Callable], **kwargs):
         self.methods = methods
-        super().__init__(mobject)
+        super().__init__(mobject, **kwargs)
 
 
 class ApplyMethod(Transform):
@@ -201,7 +179,7 @@ class ApplyMethod(Transform):
                 "Whoops, looks like you accidentally invoked "
                 "the method you want to animate"
             )
-        assert(isinstance(method.__self__, Mobject))
+        assert isinstance(method.__self__, Mobject)
 
     def create_target(self) -> Mobject:
         method = self.method
@@ -218,20 +196,17 @@ class ApplyMethod(Transform):
 
 
 class ApplyPointwiseFunction(ApplyMethod):
-    CONFIG = {
-        "run_time": DEFAULT_POINTWISE_FUNCTION_RUN_TIME
-    }
-
     def __init__(
         self,
         function: Callable[[np.ndarray], np.ndarray],
         mobject: Mobject,
+        run_time: float = 3.0,
         **kwargs
     ):
-        super().__init__(mobject.apply_function, function, **kwargs)
+        super().__init__(mobject.apply_function, function, run_time=run_time, **kwargs)
 
 
-class ApplyPointwiseFunctionToCenter(ApplyPointwiseFunction):
+class ApplyPointwiseFunctionToCenter(Transform):
     def __init__(
         self,
         function: Callable[[np.ndarray], np.ndarray],
@@ -239,13 +214,10 @@ class ApplyPointwiseFunctionToCenter(ApplyPointwiseFunction):
         **kwargs
     ):
         self.function = function
-        super().__init__(mobject.move_to, **kwargs)
+        super().__init__(mobject, **kwargs)
 
-    def begin(self) -> None:
-        self.method_args = [
-            self.function(self.mobject.get_center())
-        ]
-        super().begin()
+    def create_target(self) -> Mobject:
+        return self.mobject.copy().move_to(self.function(self.mobject.get_center()))
 
 
 class FadeToColor(ApplyMethod):
@@ -273,9 +245,11 @@ class ShrinkToCenter(ScaleInPlace):
         super().__init__(mobject, 0, **kwargs)
 
 
-class Restore(ApplyMethod):
+class Restore(Transform):
     def __init__(self, mobject: Mobject, **kwargs):
-        super().__init__(mobject.restore, **kwargs)
+        if not hasattr(mobject, "saved_state") or mobject.saved_state is None:
+            raise Exception("Trying to restore without having saved")
+        super().__init__(mobject, mobject.saved_state, **kwargs)
 
 
 class ApplyFunction(Transform):
@@ -340,54 +314,18 @@ class ApplyComplexFunction(ApplyMethod):
 
 
 class CyclicReplace(Transform):
-    CONFIG = {
-        "path_arc": 90 * DEGREES,
-    }
-
-    def __init__(self, *mobjects: Mobject, **kwargs):
-        self.group = Group(*mobjects)
-        super().__init__(self.group, **kwargs)
+    def __init__(self, *mobjects: Mobject, path_arc=90 * DEGREES, **kwargs):
+        super().__init__(Group(*mobjects), path_arc=path_arc, **kwargs)
 
     def create_target(self) -> Mobject:
-        target = self.group.copy()
+        group = self.mobject
+        target = group.copy()
         cycled_targets = [target[-1], *target[:-1]]
-        for m1, m2 in zip(cycled_targets, self.group):
+        for m1, m2 in zip(cycled_targets, group):
             m1.move_to(m2)
         return target
 
 
 class Swap(CyclicReplace):
-    pass  # Renaming, more understandable for two entries
-
-
-# TODO, this may be deprecated...worth reimplementing?
-class TransformAnimations(Transform):
-    CONFIG = {
-        "rate_func": squish_rate_func(smooth)
-    }
-
-    def __init__(self, start_anim: Animation, end_anim: Animation, **kwargs):
-        digest_config(self, kwargs, locals())
-        if "run_time" in kwargs:
-            self.run_time = kwargs.pop("run_time")
-        else:
-            self.run_time = max(start_anim.run_time, end_anim.run_time)
-        for anim in start_anim, end_anim:
-            anim.set_run_time(self.run_time)
-
-        if start_anim.starting_mobject.get_num_points() != end_anim.starting_mobject.get_num_points():
-            start_anim.starting_mobject.align_data_and_family(end_anim.starting_mobject)
-            for anim in start_anim, end_anim:
-                if hasattr(anim, "target_mobject"):
-                    anim.starting_mobject.align_data_and_family(anim.target_mobject)
-
-        Transform.__init__(self, start_anim.mobject,
-                           end_anim.mobject, **kwargs)
-        # Rewire starting and ending mobjects
-        start_anim.mobject = self.starting_mobject
-        end_anim.mobject = self.target_mobject
-
-    def interpolate(self, alpha: float) -> None:
-        self.start_anim.interpolate(alpha)
-        self.end_anim.interpolate(alpha)
-        Transform.interpolate(self, alpha)
+    """Alternate name for CyclicReplace"""
+    pass

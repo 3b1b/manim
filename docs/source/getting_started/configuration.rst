@@ -32,10 +32,11 @@ Some useful flags
 All supported flags
 ^^^^^^^^^^^^^^^^^^^
 
-========================================================== ====== =================================================================================================================================================================================================
+========================================================== ====== =====================================================================================================================================================================================================
 flag                                                       abbr   function
-========================================================== ====== =================================================================================================================================================================================================
+========================================================== ====== =====================================================================================================================================================================================================
 ``--help``                                                 ``-h`` Show the help message and exit
+``--version``                                              ``-v`` Display the version of manimgl
 ``--write_file``                                           ``-w`` Render the scene as a movie file
 ``--skip_animations``                                      ``-s`` Skip to the last frame
 ``--low_quality``                                          ``-l`` Render at a low quality (for faster rendering)
@@ -45,7 +46,7 @@ flag                                                       abbr   function
 ``--full_screen``                                          ``-f`` Show window in full screen
 ``--presenter_mode``                                       ``-p`` Scene will stay paused during wait calls until space bar or right arrow is hit, like a slide show
 ``--save_pngs``                                            ``-g`` Save each frame as a png
-``--save_as_gif``                                          ``-i`` Save the video as gif
+``--gif``                                                  ``-i`` Save the video as gif
 ``--transparent``                                          ``-t`` Render to a movie file with an alpha channel
 ``--quiet``                                                ``-q``
 ``--write_all``                                            ``-a`` Write all the scenes from a file
@@ -54,14 +55,15 @@ flag                                                       abbr   function
 ``--config``                                                      Guide for automatic configuration
 ``--file_name FILE_NAME``                                         Name for the movie or image file
 ``--start_at_animation_number START_AT_ANIMATION_NUMBER``  ``-n`` Start rendering not from the first animation, but from another, specified by its index. If you passing two comma separated values, e.g. "3,6", it will end the rendering at the second value.
-``--embed LINENO``                                         ``-e`` Takes a line number as an argument, and results in the scene being called as if the line ``self.embed()`` was inserted into the scene code at that line number
+``--embed [EMBED]``                                        ``-e`` Creates a new file where the line ``self.embed`` is inserted into the Scenes construct method. If a string is passed in, the line will be inserted below the last line of code including that string.
 ``--resolution RESOLUTION``                                ``-r`` Resolution, passed as "WxH", e.g. "1920x1080"
-``--frame_rate FRAME_RATE``                                       Frame rate, as an integer
+``--fps FPS``                                                     Frame rate, as an integer
 ``--color COLOR``                                          ``-c`` Background color
 ``--leave_progress_bars``                                         Leave progress bars displayed in terminal
 ``--video_dir VIDEO_DIR``                                         Directory to write video
 ``--config_file CONFIG_FILE``                                     Path to the custom configuration file
-========================================================== ====== =================================================================================================================================================================================================
+``--log-level LOG_LEVEL``                                         Level of messages to Display, can be DEBUG / INFO / WARNING / ERROR / CRITICAL
+========================================================== ====== =====================================================================================================================================================================================================
 
 custom_config
 --------------

@@ -1,16 +1,22 @@
+from __future__ import annotations
+
 import argparse
+from argparse import Namespace
 import colour
-from contextlib import contextmanager
 import importlib
 import inspect
 import os
-from screeninfo import get_monitors
+import screeninfo
 import sys
 import yaml
 
 from manimlib.logger import log
-from manimlib.utils.config_ops import merge_dicts_recursively
+from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.init_config import init_customization
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    Module = importlib.util.types.ModuleType
 
 
 __config_file__ = "custom_config.yml"
@@ -68,7 +74,7 @@ def parse_cli():
         parser.add_argument(
             "-p", "--presenter_mode",
             action="store_true",
-            help="Scene will stay paused during wait calls until "
+            help="Scene will stay paused during wait calls until " + \
                  "space bar or right arrow is hit, like a slide show"
         )
         parser.add_argument(
@@ -85,6 +91,14 @@ def parse_cli():
             "-t", "--transparent",
             action="store_true",
             help="Render to a movie file with an alpha channel",
+        )
+        parser.add_argument(
+            "--vcodec",
+            help="Video codec to use with ffmpeg",
+        )
+        parser.add_argument(
+            "--pix_fmt",
+            help="Pixel format to use for the output of ffmpeg, defaults to `yuv420p`",
         )
         parser.add_argument(
             "-q", "--quiet",
@@ -117,18 +131,18 @@ def parse_cli():
         )
         parser.add_argument(
             "-n", "--start_at_animation_number",
-            help="Start rendering not from the first animation, but "
-                 "from another, specified by its index.  If you pass "
-                 "in two comma separated values, e.g. \"3,6\", it will end "
+            help="Start rendering not from the first animation, but " + \
+                 "from another, specified by its index.  If you pass " + \
+                 "in two comma separated values, e.g. \"3,6\", it will end " + \
                  "the rendering at the second value",
         )
         parser.add_argument(
             "-e", "--embed",
             nargs="?",
             const="",
-            help="Creates a new file where the line `self.embed` is inserted "
-                 "into the Scenes construct method. "
-                 "If a string is passed in, the line will be inserted below the "
+            help="Creates a new file where the line `self.embed` is inserted " + \
+                 "into the Scenes construct method. " + \
+                 "If a string is passed in, the line will be inserted below the " + \
                  "last line of code including that string."
         )
         parser.add_argument(
@@ -136,7 +150,7 @@ def parse_cli():
             help="Resolution, passed as \"WxH\", e.g. \"1920x1080\"",
         )
         parser.add_argument(
-            "--frame_rate",
+            "--fps",
             help="Frame rate, as an integer",
         )
         parser.add_argument(
@@ -147,6 +161,17 @@ def parse_cli():
             "--leave_progress_bars",
             action="store_true",
             help="Leave progress bars displayed in terminal",
+        )
+        parser.add_argument(
+            "--show_animation_progress",
+            action="store_true",
+            help="Show progress bar for each animation",
+        )
+        parser.add_argument(
+            "--prerun",
+            action="store_true",
+            help="Calculate total framecount, to display in a progress bar, by doing " + \
+                 "an initial run of the scene which skips animations."
         )
         parser.add_argument(
             "--video_dir",
@@ -166,6 +191,7 @@ def parse_cli():
             help="Level of messages to Display, can be DEBUG / INFO / WARNING / ERROR / CRITICAL"
         )
         args = parser.parse_args()
+        args.write_file = any([args.write_file, args.open, args.finder])
         return args
     except argparse.ArgumentError as err:
         log.error(str(err))
@@ -178,7 +204,7 @@ def get_manim_dir():
     return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
-def get_module(file_name):
+def get_module(file_name: str | None) -> Module:
     if file_name is None:
         return None
     module_name = file_name.replace(os.sep, ".").replace(".py", "")
@@ -192,8 +218,9 @@ def get_indent(line: str):
     return len(line) - len(line.lstrip())
 
 
-@contextmanager
-def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
+def get_module_with_inserted_embed_line(
+    file_name: str, scene_name: str, line_marker: str
+):
     """
     This is hacky, but convenient. When user includes the argument "-e", it will try
     to recreate a file that inserts the line `self.embed()` into the end of the scene's
@@ -210,8 +237,9 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
         )
     except StopIteration:
         log.error(f"No scene {scene_name}")
+        return
 
-    prev_line_num = None
+    prev_line_num = -1
     n_spaces = None
     if len(line_marker) == 0:
         # Find the end of the construct method
@@ -222,9 +250,11 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
                 in_construct = True
                 n_spaces = get_indent(line) + 4
             elif in_construct:
-                if len(line.strip()) > 0 and get_indent(line) < n_spaces:
-                    prev_line_num = index - 2
+                if len(line.strip()) > 0 and get_indent(line) < (n_spaces or 0):
+                    prev_line_num = index - 1
                     break
+        if prev_line_num < 0:
+            prev_line_num = len(lines) - 1
     elif line_marker.isdigit():
         # Treat the argument as a line number
         prev_line_num = int(line_marker) - 1
@@ -233,25 +263,41 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
         try:
             prev_line_num = next(
                 i
-                for i in range(len(lines) - 1, scene_line_number, -1)
+                for i in range(scene_line_number, len(lines) - 1)
                 if line_marker in lines[i]
             )
         except StopIteration:
             log.error(f"No lines matching {line_marker}")
             sys.exit(2)
 
-    # Insert and write new file
+    # Insert the embed line, rewrite file, then write it back when done
     if n_spaces is None:
         n_spaces = get_indent(lines[prev_line_num])
+    inserted_line = " " * n_spaces + "self.embed()\n"
     new_lines = list(lines)
-    new_lines.insert(prev_line_num + 1, " " * n_spaces + "self.embed()\n")
-    alt_file = file_name.replace(".py", "_insert_embed.py")
-    with open(alt_file, 'w') as fp:
+    new_lines.insert(prev_line_num + 1, inserted_line)
+    new_file = file_name.replace(".py", "_insert_embed.py")
+
+    with open(new_file, 'w') as fp:
         fp.writelines(new_lines)
-    try:
-        yield alt_file
-    finally:
-        os.remove(alt_file)
+
+    module = get_module(new_file)
+    # This is to pretend the module imported from the edited lines
+    # of code actually comes from the original file.
+    module.__file__ = file_name
+
+    os.remove(new_file)
+
+    return module
+
+
+def get_scene_module(args: Namespace) -> Module:
+    if args.embed is None:
+        return get_module(args.file)
+    else:
+        return get_module_with_inserted_embed_line(
+            args.file, args.scene_names[0], args.embed
+        )
 
 
 def get_custom_config():
@@ -261,50 +307,49 @@ def get_custom_config():
 
     if os.path.exists(global_defaults_file):
         with open(global_defaults_file, "r") as file:
-            config = yaml.safe_load(file)
+            custom_config = yaml.safe_load(file)
 
         if os.path.exists(__config_file__):
             with open(__config_file__, "r") as file:
                 local_defaults = yaml.safe_load(file)
             if local_defaults:
-                config = merge_dicts_recursively(
-                    config,
+                custom_config = merge_dicts_recursively(
+                    custom_config,
                     local_defaults,
                 )
     else:
         with open(__config_file__, "r") as file:
-            config = yaml.safe_load(file)
+            custom_config = yaml.safe_load(file)
 
-    return config
-
-
-def check_temporary_storage(config):
-    if config["directories"]["temporary_storage"] == "" and sys.platform == "win32":
+    # Check temporary storage(custom_config)
+    if custom_config["directories"]["temporary_storage"] == "" and sys.platform == "win32":
         log.warning(
-            "You may be using Windows platform and have not specified the path of"
-            " `temporary_storage`, which may cause OSError. So it is recommended"
+            "You may be using Windows platform and have not specified the path of" + \
+            " `temporary_storage`, which may cause OSError. So it is recommended" + \
             " to specify the `temporary_storage` in the config file (.yml)"
         )
 
+    return custom_config
 
-def get_configuration(args):
+
+def init_global_config(config_file):
     global __config_file__
 
     # ensure __config_file__ always exists
-    if args.config_file is not None:
-        if not os.path.exists(args.config_file):
-            log.error(f"Can't find {args.config_file}.")
+    if config_file is not None:
+        if not os.path.exists(config_file):
+            log.error(f"Can't find {config_file}.")
             if sys.platform == 'win32':
-                log.info(f"Copying default configuration file to {args.config_file}...")
-                os.system(f"copy default_config.yml {args.config_file}")
+                log.info(f"Copying default configuration file to {config_file}...")
+                os.system(f"copy default_config.yml {config_file}")
             elif sys.platform in ["linux2", "darwin"]:
-                log.info(f"Copying default configuration file to {args.config_file}...")
-                os.system(f"cp default_config.yml {args.config_file}")
+                log.info(f"Copying default configuration file to {config_file}...")
+                os.system(f"cp default_config.yml {config_file}")
             else:
                 log.info("Please create the configuration file manually.")
             log.info("Read configuration from default_config.yml.")
         else:
-            __config_file__ = args.config_file
+            __config_file__ = config_file
 
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
 
@@ -315,114 +360,124 @@ def get_configuration(args):
     elif not os.path.exists(__config_file__):
         log.info(f"Using the default configuration file, which you can modify in `{global_defaults_file}`")
         log.info(
-            "If you want to create a local configuration file, you can create a file named"
+            "If you want to create a local configuration file, you can create a file named" + \
             f" `{__config_file__}`, or run `manimgl --config`"
         )
 
-    custom_config = get_custom_config()
-    check_temporary_storage(custom_config)
 
-    write_file = any([args.write_file, args.open, args.finder])
+def get_file_ext(args: Namespace) -> str:
     if args.transparent:
         file_ext = ".mov"
     elif args.gif:
         file_ext = ".gif"
     else:
         file_ext = ".mp4"
+    return file_ext
 
-    file_writer_config = {
-        "write_to_movie": not args.skip_animations and write_file,
-        "break_into_partial_movies": custom_config["break_into_partial_movies"],
-        "save_last_frame": args.skip_animations and write_file,
+
+def get_animations_numbers(args: Namespace) -> tuple[int | None, int | None]:
+    stan = args.start_at_animation_number
+    if stan is None:
+        return (None, None)
+    elif "," in stan:
+        return tuple(map(int, stan.split(",")))
+    else:
+        return int(stan), None
+
+
+def get_output_directory(args: Namespace, custom_config: dict) -> str:
+    dir_config = custom_config["directories"]
+    output_directory = args.video_dir or dir_config["output"]
+    if dir_config["mirror_module_path"] and args.file:
+        to_cut = dir_config["removed_mirror_prefix"]
+        ext = os.path.abspath(args.file)
+        ext = ext.replace(to_cut, "").replace(".py", "")
+        if ext.startswith("_"):
+            ext = ext[1:]
+        output_directory = os.path.join(output_directory, ext)
+    return output_directory
+
+
+def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
+    result = {
+        "write_to_movie": not args.skip_animations and args.write_file,
+        "save_last_frame": args.skip_animations and args.write_file,
         "save_pngs": args.save_pngs,
         # If -t is passed in (for transparent), this will be RGBA
         "png_mode": "RGBA" if args.transparent else "RGB",
-        "movie_file_extension": file_ext,
-        "mirror_module_path": custom_config["directories"]["mirror_module_path"],
-        "output_directory": args.video_dir or custom_config["directories"]["output"],
+        "movie_file_extension": get_file_ext(args),
+        "output_directory": get_output_directory(args, custom_config),
         "file_name": args.file_name,
         "input_file_path": args.file or "",
         "open_file_upon_completion": args.open,
         "show_file_location_upon_completion": args.finder,
         "quiet": args.quiet,
+        **custom_config["file_writer_config"],
     }
 
-    module = get_module(args.file)
+    if args.vcodec:
+        result["video_codec"] = args.vcodec
+    elif args.transparent:
+        result["video_codec"] = 'prores_ks'
+        result["pixel_format"] = ''
+    elif args.gif:
+        result["video_codec"] = ''
 
-    if args.embed is not None:
-        with insert_embed_line(args.file, args.scene_names[0], args.embed) as alt_file:
-            module = get_module(alt_file)
+    if args.pix_fmt:
+        result["pixel_format"] = args.pix_fmt
 
-    config = {
-        "module": module,
-        "scene_names": args.scene_names,
-        "file_writer_config": file_writer_config,
-        "quiet": args.quiet or args.write_all,
-        "write_all": args.write_all,
-        "skip_animations": args.skip_animations,
-        "start_at_animation_number": args.start_at_animation_number,
-        "end_at_animation_number": None,
-        "preview": not write_file,
-        "presenter_mode": args.presenter_mode,
-        "leave_progress_bars": args.leave_progress_bars,
-    }
+    return result
 
-    # Camera configuration
-    config["camera_config"] = get_camera_configuration(args, custom_config)
 
+def get_window_config(args: Namespace, custom_config: dict, camera_config: dict) -> dict:
     # Default to making window half the screen size
     # but make it full screen if -f is passed in
-    monitors = get_monitors()
+    try:
+        monitors = screeninfo.get_monitors()
+    except screeninfo.ScreenInfoError:
+        pass
     mon_index = custom_config["window_monitor"]
     monitor = monitors[min(mon_index, len(monitors) - 1)]
+    aspect_ratio = camera_config["pixel_width"] / camera_config["pixel_height"]
     window_width = monitor.width
     if not (args.full_screen or custom_config["full_screen"]):
         window_width //= 2
-    window_height = window_width * 9 // 16
-    config["window_config"] = {
-        "size": (window_width, window_height),
-    }
-
-    # Arguments related to skipping
-    stan = config["start_at_animation_number"]
-    if stan is not None:
-        if "," in stan:
-            start, end = stan.split(",")
-            config["start_at_animation_number"] = int(start)
-            config["end_at_animation_number"] = int(end)
-        else:
-            config["start_at_animation_number"] = int(stan)
-
-    return config
+    window_height = int(window_width / aspect_ratio)
+    return dict(size=(window_width, window_height))
 
 
-def get_camera_configuration(args, custom_config):
+def get_camera_config(args: Namespace, custom_config: dict) -> dict:
     camera_config = {}
-    camera_qualities = get_custom_config()["camera_qualities"]
-    if args.low_quality:
-        quality = camera_qualities["low"]
-    elif args.medium_quality:
-        quality = camera_qualities["medium"]
-    elif args.hd:
-        quality = camera_qualities["high"]
-    elif args.uhd:
-        quality = camera_qualities["ultra_high"]
-    else:
-        quality = camera_qualities[camera_qualities["default_quality"]]
-
+    camera_resolutions = custom_config["camera_resolutions"]
     if args.resolution:
-        quality["resolution"] = args.resolution
-    if args.frame_rate:
-        quality["frame_rate"] = int(args.frame_rate)
+        resolution = args.resolution
+    elif args.low_quality:
+        resolution = camera_resolutions["low"]
+    elif args.medium_quality:
+        resolution = camera_resolutions["med"]
+    elif args.hd:
+        resolution = camera_resolutions["high"]
+    elif args.uhd:
+        resolution = camera_resolutions["4k"]
+    else:
+        resolution = camera_resolutions[camera_resolutions["default_resolution"]]
 
-    width_str, height_str = quality["resolution"].split("x")
+    if args.fps:
+        fps = int(args.fps)
+    else:
+        fps = custom_config["fps"]
+
+    width_str, height_str = resolution.split("x")
     width = int(width_str)
     height = int(height_str)
 
     camera_config.update({
         "pixel_width": width,
         "pixel_height": height,
-        "frame_rate": quality["frame_rate"],
+        "frame_config": {
+            "frame_shape": ((width / height) * get_frame_height(), get_frame_height()),
+        },
+        "fps": fps,
     })
 
     try:
@@ -439,3 +494,50 @@ def get_camera_configuration(args, custom_config):
         camera_config["background_opacity"] = 0
 
     return camera_config
+
+
+def get_configuration(args: Namespace) -> dict:
+    init_global_config(args.config_file)
+    custom_config = get_custom_config()
+    camera_config = get_camera_config(args, custom_config)
+    window_config = get_window_config(args, custom_config, camera_config)
+    start, end = get_animations_numbers(args)
+
+    return {
+        "module": get_scene_module(args),
+        "scene_names": args.scene_names,
+        "file_writer_config": get_file_writer_config(args, custom_config),
+        "camera_config": camera_config,
+        "window_config": window_config,
+        "quiet": args.quiet or args.write_all,
+        "write_all": args.write_all,
+        "skip_animations": args.skip_animations,
+        "start_at_animation_number": start,
+        "end_at_animation_number": end,
+        "preview": not args.write_file,
+        "presenter_mode": args.presenter_mode,
+        "leave_progress_bars": args.leave_progress_bars,
+        "show_animation_progress": args.show_animation_progress,
+        "prerun": args.prerun,
+        "embed_exception_mode": custom_config["embed_exception_mode"],
+        "embed_error_sound": custom_config["embed_error_sound"],
+    }
+
+
+def get_frame_height():
+    return 8.0
+
+
+def get_aspect_ratio():
+    cam_config = get_camera_config(parse_cli(), get_custom_config())
+    return cam_config['pixel_width'] / cam_config['pixel_height']
+
+
+def get_default_pixel_width():
+    cam_config = get_camera_config(parse_cli(), get_custom_config())
+    return cam_config['pixel_width']
+
+
+def get_default_pixel_height():
+    cam_config = get_camera_config(parse_cli(), get_custom_config())
+    return cam_config['pixel_height']
