@@ -91,7 +91,7 @@ class Mobject(object):
         self.texture_paths = texture_paths
         self._is_fixed_in_frame = is_fixed_in_frame
         self.depth_test = depth_test
-        self.zorder = zorder
+        self.z_index = z_index
         self._scene_order = 0
 
         # Internal state
