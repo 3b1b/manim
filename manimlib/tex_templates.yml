@@ -45,6 +45,9 @@ ctex:
     \usepackage{physics}
     \usepackage{xcolor}
     \usepackage{microtype}
+    \usepackage{fontspec}
+    \usepackage{xeCJK}
+    \setmainfont{Microsoft YaHei}
     \linespread{1}
 
 # Simplified TeX templates
