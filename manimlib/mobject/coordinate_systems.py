@@ -130,14 +130,16 @@ class CoordinateSystem(ABC):
         axis: Vect3,
         edge: Vect3,
         direction: Vect3,
-        buff: float = MED_SMALL_BUFF
+        buff: float = MED_SMALL_BUFF,
+        ensure_on_screen: bool = False
     ) -> Tex:
         label = Tex(label_tex)
         label.next_to(
             axis.get_edge_center(edge), direction,
             buff=buff
         )
-        label.shift_onto_screen(buff=MED_SMALL_BUFF)
+        if ensure_on_screen:
+            label.shift_onto_screen(buff=MED_SMALL_BUFF)
         return label
 
     def get_axis_labels(
