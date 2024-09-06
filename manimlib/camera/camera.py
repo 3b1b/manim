@@ -6,9 +6,11 @@ import OpenGL.GL as gl
 from PIL import Image
 
 from manimlib.camera.camera_frame import CameraFrame
+from manimlib.constants import ASPECT_RATIO
 from manimlib.constants import BLACK
 from manimlib.constants import DEFAULT_FPS
 from manimlib.constants import DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH
+from manimlib.constants import FRAME_HEIGHT
 from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
@@ -244,8 +246,12 @@ class Camera(object):
 
         self.uniforms.update(
             view=tuple(view_matrix.T.flatten()),
-            focal_distance=frame.get_focal_distance() / frame.get_scale(),
             frame_scale=frame.get_scale(),
+            frame_rescale_factors=(
+                2.0 / FRAME_WIDTH,
+                2.0 / FRAME_HEIGHT,
+                frame.get_scale() / frame.get_focal_distance(),
+            ),
             pixel_size=self.get_pixel_size(),
             camera_position=tuple(cam_pos),
             light_position=tuple(light_pos),

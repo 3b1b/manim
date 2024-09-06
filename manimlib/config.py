@@ -523,16 +523,20 @@ def get_configuration(args: Namespace) -> dict:
         "embed_error_sound": custom_config["embed_error_sound"],
     }
 
+
 def get_frame_height():
     return 8.0
+
 
 def get_aspect_ratio():
     cam_config = get_camera_config(parse_cli(), get_custom_config())
     return cam_config['pixel_width'] / cam_config['pixel_height']
 
+
 def get_default_pixel_width():
     cam_config = get_camera_config(parse_cli(), get_custom_config())
     return cam_config['pixel_width']
+
 
 def get_default_pixel_height():
     cam_config = get_camera_config(parse_cli(), get_custom_config())

@@ -1,7 +1,10 @@
 from __future__ import annotations
 import numpy as np
 
-from manimlib.config import get_aspect_ratio,get_default_pixel_width,get_default_pixel_height,get_frame_height
+from manimlib.config import get_aspect_ratio
+from manimlib.config import get_default_pixel_width
+from manimlib.config import get_default_pixel_height
+from manimlib.config import get_frame_height
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
