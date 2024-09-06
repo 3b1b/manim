@@ -234,6 +234,7 @@ class Camera(object):
             self.window.swap_buffers()
             if self.fbo is not self.window_fbo:
                 self.blit(self.fbo, self.window_fbo)
+                self.window.swap_buffers()
 
     def refresh_uniforms(self) -> None:
         frame = self.frame
