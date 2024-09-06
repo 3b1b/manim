@@ -106,7 +106,7 @@ class DrawBorderThenFill(Animation):
 
     def finish(self) -> None:
         super().finish()
-        self.mobject.refresh_joint_products()
+        self.mobject.refresh_joint_angles()
 
     def get_outline(self) -> VMobject:
         outline = self.mobject.copy()
@@ -115,6 +115,7 @@ class DrawBorderThenFill(Animation):
             sm.set_stroke(
                 color=self.stroke_color or sm.get_stroke_color(),
                 width=self.stroke_width,
+                behind=self.mobject.stroke_behind,
             )
         return outline
 
@@ -139,8 +140,6 @@ class DrawBorderThenFill(Animation):
             submob.pointwise_become_partial(outline, 0, subalpha)
         else:
             submob.interpolate(outline, start, subalpha)
-        submob.note_changed_stroke()
-        submob.note_changed_fill()
 
 
 class Write(DrawBorderThenFill):
@@ -150,9 +149,11 @@ class Write(DrawBorderThenFill):
         run_time: float = -1,  # If negative, this will be reassigned
         lag_ratio: float = -1,  # If negative, this will be reassigned
         rate_func: Callable[[float], float] = linear,
-        stroke_color: ManimColor = WHITE,
+        stroke_color: ManimColor = None,
         **kwargs
     ):
+        if stroke_color is None:
+            stroke_color = vmobject.get_color()
         family_size = len(vmobject.family_members_with_points())
         super().__init__(
             vmobject,

@@ -4,21 +4,22 @@ layout (triangles) in;
 layout (triangle_strip, max_vertices = 64) out;  // Related to MAX_STEPS below
 
 uniform float anti_alias_width;
-uniform float flat_stroke;
+uniform float flat_stroke_float;
 uniform float pixel_size;
 uniform float joint_type;
 uniform float frame_scale;
 
 in vec3 verts[3];
 
-in vec4 v_joint_product[3];
+in float v_joint_angle[3];
 in float v_stroke_width[3];
 in vec4 v_color[3];
+in vec3 v_unit_normal[3];
+in int v_vert_index[3];
 
 out vec4 color;
-out float dist_to_curve;
-out float half_stroke_width;
-out float half_anti_alias_width;
+out float dist_to_aaw;
+out float half_width_to_aaw;
 
 // Codes for joint types
 const int NO_JOINT = 0;
@@ -33,29 +34,11 @@ const float COS_THRESHOLD = 0.999;
 // Used to determine how many lines to break the curve into
 const float POLYLINE_FACTOR = 100;
 const int MAX_STEPS = 32;
-const float MITER_COS_ANGLE_THRESHOLD = -0.8;
+const float MITER_COS_ANGLE_THRESHOLD = -0.9;
 
 #INSERT emit_gl_Position.glsl
 #INSERT finalize_color.glsl
 
-
-vec3 get_joint_unit_normal(vec4 joint_product){
-    float tol = 1e-8;
-    if (length(joint_product.xyz) > tol){
-        return normalize(joint_product.xyz);
-    }
-    if (length(v_joint_product[1].xyz) > tol){
-        return normalize(v_joint_product[1].xyz);
-    }
-    return vec3(0.0, 0.0, 1.0);
-}
-
-
-vec4 unit_joint_product(vec4 joint_product){
-    float tol = 1e-8;
-    float norm = length(joint_product);
-    return (norm < tol) ? vec4(0.0, 0.0, 0.0, 1.0) : joint_product / norm;
-}
 
 
 vec3 point_on_quadratic(float t, vec3 c0, vec3 c1, vec3 c2){
@@ -68,32 +51,25 @@ vec3 tangent_on_quadratic(float t, vec3 c1, vec3 c2){
 }
 
 
-vec4 get_joint_product(vec3 v1, vec3 v2){
-    return vec4(cross(v1, v2), dot(v1, v2));
-}
-
-
 vec3 project(vec3 vect, vec3 unit_normal){
     /* Project the vector onto the plane perpendicular to a given unit normal */
     return vect - dot(vect, unit_normal) * unit_normal;
 }
 
-vec3 inverse_vector_product(vec3 vect, vec3 cross_product, float dot_product){
-    /* 
-    Suppose cross(v1, v2) = cross_product and dot(v1, v2) = dot_product.
-    Given v1, this function return v2.
-    */
-    return (vect * dot_product - cross(vect, cross_product)) / dot(vect, vect);
+
+vec3 rotate_vector(vec3 vect, vec3 unit_normal, float angle){
+    vec3 perp = cross(unit_normal, vect);
+    return cos(angle) * vect + sin(angle) * perp;
 }
 
 
-vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, vec4 joint_product, bool inside_curve){
+vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, float joint_angle, bool inside_curve, bool flat_stroke){
     /*
     Step the the left of a curve.
     First a perpendicular direction is calculated, then it is adjusted
     so as to make a joint.
     */
-    vec3 unit_tan = normalize(flat_stroke == 0.0 ? project(tangent, unit_normal) : tangent);
+    vec3 unit_tan = normalize(flat_stroke ? tangent : project(tangent, unit_normal));
 
     // Step to stroke width bound should be perpendicular
     // both to the tangent and the normal direction
@@ -106,26 +82,26 @@ vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, vec4 joint_produ
     float alignment = abs(dot(normalize(tangent), unit_normal));
     float alignment_threshold = 0.97;  // This could maybe be chosen in a more principled way based on stroke width
     if (alignment > alignment_threshold) {
-        vec3 perp = normalize(cross(get_joint_unit_normal(joint_product), tangent));
+        vec3 perp = normalize(cross(v_unit_normal[1], tangent));
         step = mix(step, project(step, perp), smoothstep(alignment_threshold, 1.0, alignment));
     }
 
     if (inside_curve || int(joint_type) == NO_JOINT) return step;
 
-    vec4 unit_jp = unit_joint_product(joint_product);
-    float cos_angle = unit_jp.w;
+    float cos_angle = cos(joint_angle);
+    float sin_angle = sin(joint_angle);
 
-    if (cos_angle > COS_THRESHOLD) return step;
+    if (abs(cos_angle) > COS_THRESHOLD) return step;
 
     // Below here, figure out the adjustment to bevel or miter a joint
-    if (flat_stroke == 0){
+    if (!flat_stroke){
         // Figure out what joint product would be for everything projected onto
         // the plane perpendicular to the normal direction (which here would be to_camera)
         step = normalize(cross(unit_normal, unit_tan));  // Back to original step
-        vec3 adj_tan = inverse_vector_product(tangent, unit_jp.xyz, unit_jp.w);
+        vec3 adj_tan = rotate_vector(tangent, v_unit_normal[1], joint_angle);
         adj_tan = project(adj_tan, unit_normal);
-        vec4 flat_jp = get_joint_product(unit_tan, adj_tan);
-        cos_angle = unit_joint_product(flat_jp).w;
+        cos_angle = dot(unit_tan, normalize(adj_tan));
+        sin_angle = sqrt(1 - cos_angle * cos_angle) * sign(joint_angle) * sign(dot(unit_normal, v_unit_normal[1]));
     }
 
     // If joint type is auto, it will bevel for cos(angle) > MITER_COS_ANGLE_THRESHOLD,
@@ -137,13 +113,11 @@ vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, vec4 joint_produ
         miter_factor = 1.0;
     }else {
         float mcat1 = MITER_COS_ANGLE_THRESHOLD;
-        float mcat2 = 0.5 * (mcat1 - 1.0);
+        float mcat2 = mix(mcat1, -1.0, 0.5);
         miter_factor = smoothstep(mcat1, mcat2, cos_angle);
     }
 
-    float sin_angle = sqrt(1 - cos_angle * cos_angle) * sign(dot(joint_product.xyz, unit_normal));
     float shift = (cos_angle + mix(-1, 1, miter_factor)) / sin_angle;
-
     return step + shift * unit_tan;
 }
 
@@ -151,45 +125,50 @@ vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, vec4 joint_produ
 void emit_point_with_width(
     vec3 point,
     vec3 tangent,
-    vec4 joint_product,
+    float joint_angle,
     float width,
     vec4 joint_color,
-    bool inside_curve
+    bool inside_curve,
+    bool flat_stroke
 ){
     // Find unit normal
-    vec3 to_camera = camera_position - point;
-    vec3 unit_normal;
-    if (flat_stroke == 0.0){
-        unit_normal = normalize(to_camera);
-    }else{
-        unit_normal = get_joint_unit_normal(joint_product);
-        unit_normal *= sign(dot(unit_normal, to_camera));  // Choose the "outward" normal direction
-    }
+    vec3 unit_normal = flat_stroke ? v_unit_normal[1] : normalize(camera_position - point);
 
     // Set styling
     color = finalize_color(joint_color, point, unit_normal);
-    half_anti_alias_width = 0.5 * anti_alias_width * pixel_size;
-    half_stroke_width = 0.5 * width;
 
     // Figure out the step from the point to the corners of the
     // triangle strip around the polyline
-    vec3 step = step_to_corner(point, tangent, unit_normal, joint_product, inside_curve);
+    vec3 step = step_to_corner(point, tangent, unit_normal, joint_angle, inside_curve, flat_stroke);
+    float aaw = max(anti_alias_width * pixel_size, 1e-8);
 
     // Emit two corners
     // The frag shader will receive a value from -1 to 1,
     // reflecting where in the stroke that point is
     for (int sign = -1; sign <= 1; sign += 2){
-        dist_to_curve = sign * (half_stroke_width + half_anti_alias_width);
+        float dist_to_curve = sign * 0.5 * (width + aaw);
         emit_gl_Position(point + dist_to_curve * step);
+        half_width_to_aaw = 0.5 * width / aaw;
+        dist_to_aaw = dist_to_curve / aaw;
         EmitVertex();
     }
 }
 
 
 void main() {
+    // Vector graphic shaders use TRIANGLE_STRIP, but only
+    // every other one needs to be rendered
+    if (v_vert_index[0] % 2 != 0) return;
+
     // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;
+
+    // Check null stroke
+    if (vec3(v_stroke_width[0], v_stroke_width[1], v_stroke_width[2]) == vec3(0.0, 0.0, 0.0)) return;
+    if (vec3(v_color[0].a, v_color[1].a, v_color[2].a) == vec3(0.0, 0.0, 0.0)) return;
+
+    bool flat_stroke = bool(flat_stroke_float) || bool(is_fixed_in_frame);
 
     // Coefficients such that the quadratic bezier is c0 + c1 * t  + c2 * t^2
     vec3 c0 = verts[0];
@@ -198,7 +177,7 @@ void main() {
 
     // Estimate how many line segment the curve should be divided into
     // based on the area of the triangle defined by these control points
-    float area = 0.5 * length(v_joint_product[1].xzy);
+    float area = 0.5 * length(cross(verts[1] - verts[0], verts[2] - verts[0]));
     int count = int(round(POLYLINE_FACTOR * sqrt(area) / frame_scale));
     int n_steps = min(2 + count, MAX_STEPS);
 
@@ -219,15 +198,21 @@ void main() {
         bool inside_curve = (i > 0 && i < n_steps - 1);
 
         // Use middle joint product for inner points, flip sign for first one's cross product component
-        vec4 joint_product;
-        if (i == 0)            joint_product = v_joint_product[0] * vec4(-1, -1, -1, 1);
-        else if (inside_curve) joint_product = v_joint_product[1];
-        else                   joint_product = v_joint_product[2];
+        float joint_angle;
+        if (i == 0){
+            joint_angle = -v_joint_angle[0];
+        }
+        else if (inside_curve){
+            joint_angle = 0;
+        }
+        else {
+            joint_angle = v_joint_angle[2];
+        }
 
         emit_point_with_width(
-            point, tangent, joint_product,
+            point, tangent, joint_angle,
             stroke_width, color,
-            inside_curve
+            inside_curve, flat_stroke
         );
     }
     EndPrimitive();

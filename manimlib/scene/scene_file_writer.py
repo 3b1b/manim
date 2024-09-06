@@ -264,8 +264,8 @@ class SceneFileWriter(object):
         width, height = self.scene.camera.get_pixel_shape()
 
         vf_arg = 'vflip'
-        if self.pixel_format.startswith("yuv"):
-            vf_arg += f',eq=saturation={self.saturation}:gamma={self.gamma}'
+        # if self.pixel_format.startswith("yuv"):
+        vf_arg += f',eq=saturation={self.saturation}:gamma={self.gamma}'
 
         command = [
             FFMPEG_BIN,

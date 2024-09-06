@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from manimlib.typing import Vect3
 
 
-
 class Fade(Transform):
     def __init__(
         self,
@@ -104,7 +103,7 @@ class FadeTransform(Transform):
         self.dim_to_match = dim_to_match
 
         mobject.save_state()
-        super().__init__(Group(mobject, target_mobject.copy()), **kwargs)
+        super().__init__(mobject.get_group_class()(mobject, target_mobject.copy()), **kwargs)
 
     def begin(self) -> None:
         self.ending_mobject = self.mobject.copy()

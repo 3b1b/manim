@@ -38,6 +38,7 @@ class CameraFrame(Mobject):
 
         self.default_orientation = Rotation.identity()
         self.view_matrix = np.identity(4)
+        self.id4x4 = np.identity(4)
         self.camera_location = OUT  # This will be updated by set_points
         self.euler_axes = euler_axes
 
@@ -71,12 +72,13 @@ class CameraFrame(Mobject):
             warnings.simplefilter('ignore', UserWarning)  # Ignore UserWarnings
             angles = orientation.as_euler(self.euler_axes)[::-1]
         # Handle Gimble lock case
-        if np.isclose(angles[1], 0, atol=1e-2):
-            angles[0] = angles[0] + angles[2]
-            angles[2] = 0
-        if np.isclose(angles[1], PI, atol=1e-2):
-            angles[0] = angles[0] - angles[2]
-            angles[2] = 0
+        if self.euler_axes == "zxz":
+            if np.isclose(angles[1], 0, atol=1e-2):
+                angles[0] = angles[0] + angles[2]
+                angles[2] = 0
+            if np.isclose(angles[1], PI, atol=1e-2):
+                angles[0] = angles[0] - angles[2]
+                angles[2] = 0
         return angles
 
     def get_theta(self):
@@ -100,17 +102,15 @@ class CameraFrame(Mobject):
         into the camera's internal coordinate system
         """
         if self._data_has_changed:
-            shift = np.identity(4)
-            rotation = np.identity(4)
-            scale_mat = np.identity(4)
+            shift = self.id4x4.copy()
+            rotation = self.id4x4.copy()
 
+            scale = self.get_scale()
             shift[:3, 3] = -self.get_center()
             rotation[:3, :3] = self.get_inverse_camera_rotation_matrix()
-            scale = self.get_scale()
+            np.dot(rotation, shift, out=self.view_matrix)
             if scale > 0:
-                scale_mat[:3, :3] /= self.get_scale()
-
-            self.view_matrix = np.dot(scale_mat, np.dot(rotation, shift))
+                self.view_matrix[:3, :4] /= scale
 
         return self.view_matrix
 
@@ -154,7 +154,13 @@ class CameraFrame(Mobject):
     ):
         angles = self.get_euler_angles()
         new_angles = angles + np.array([dtheta, dphi, dgamma]) * units
-        new_angles[1] = clip(new_angles[1], 0, PI)  # Limit range for phi
+
+        # Limit range for phi
+        if self.euler_axes == "zxz":
+            new_angles[1] = clip(new_angles[1], 0, PI)
+        elif self.euler_axes == "zxy":
+            new_angles[1] = clip(new_angles[1], -PI / 2, PI / 2)
+
         new_rot = Rotation.from_euler(self.euler_axes, new_angles[::-1])
         self.set_orientation(new_rot)
         return self

@@ -27,7 +27,6 @@ if TYPE_CHECKING:
     from manimlib.typing import ManimColor, Vect3Array
 
 
-
 SVG_HASH_TO_MOB_MAP: dict[int, list[VMobject]] = {}
 PATH_TO_POINTS: dict[str, Vect3Array] = {}
 
@@ -309,8 +308,6 @@ class VMobjectFromSVGPath(VMobject):
         path_string = self.path_obj.d()
         if path_string not in PATH_TO_POINTS:
             self.handle_commands()
-            if not self._use_winding_fill:
-                self.subdivide_intersections()
             # Save for future use
             PATH_TO_POINTS[path_string] = self.get_points().copy()
         else:
@@ -321,8 +318,8 @@ class VMobjectFromSVGPath(VMobject):
         segment_class_to_func_map = {
             se.Move: (self.start_new_path, ("end",)),
             se.Close: (self.close_path, ()),
-            se.Line: (self.add_line_to, ("end",)),
-            se.QuadraticBezier: (self.add_quadratic_bezier_curve_to, ("control", "end")),
+            se.Line: (lambda p: self.add_line_to(p, allow_null_line=False), ("end",)),
+            se.QuadraticBezier: (lambda c, e: self.add_quadratic_bezier_curve_to(c, e, allow_null_curve=False), ("control", "end")),
             se.CubicBezier: (self.add_cubic_bezier_curve_to, ("control1", "control2", "end"))
         }
         for segment in self.path_obj:

@@ -29,17 +29,14 @@ void main() {
     cap is to make sure the original fragment color can be recovered even after
     blending with an (alpha = 1) color.
     */
-    if(winding){
-        float a = 0.95 * frag_color.a;
-        if(orientation < 0) a = -a / (1 - a);
-        frag_color.a = a;
-    }
+    float a = 0.95 * frag_color.a;
+    if(orientation < 0) a = -a / (1 - a);
+    frag_color.a = a;
 
     if (bool(fill_all)) return;
 
     float x = uv_coords.x;
     float y = uv_coords.y;
     float Fxy = (y - x * x);
-    if(!winding && orientation < 0) Fxy *= -1;
     if(Fxy < 0) discard;
 }

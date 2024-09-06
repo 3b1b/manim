@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 class ImageMobject(Mobject):
     shader_folder: str = "image"
-    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),

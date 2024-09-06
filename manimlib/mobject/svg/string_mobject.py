@@ -69,7 +69,6 @@ class StringMobject(SVGMobject, ABC):
         super().__init__(**kwargs)
         self.set_stroke(stroke_color, stroke_width)
         self.set_fill(fill_color, border_width=fill_border_width)
-        self.note_changed_stroke()
         self.labels = [submob.label for submob in self.submobjects]
 
     def get_file_path(self, is_labelled: bool = False) -> str:

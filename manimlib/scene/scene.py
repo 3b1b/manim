@@ -216,7 +216,7 @@ class Scene(object):
             # Embed is only relevant with a preview
             return
         self.stop_skipping()
-        self.update_frame()
+        self.update_frame(force_draw=True)
         self.save_state()
         self.show_animation_progress = show_animation_progress
 
@@ -388,7 +388,7 @@ class Scene(object):
         """
         batches = batch_by_property(
             self.mobjects,
-            lambda m: str(type(m)) + str(m.get_uniforms())
+            lambda m: str(type(m)) + str(m.get_shader_wrapper(self.camera.ctx).get_id())
         )
 
         for group in self.render_groups:
@@ -793,14 +793,13 @@ class Scene(object):
             indent = " " * lines[0].index(lines[0].strip())
             pasted = "\n".join([
                 # Remove self from function signature
-                re.sub(r"self(,\s*)?", "", lines[0]), 
+                re.sub(r"self(,\s*)?", "", lines[0]),
                 *lines[1:],
                 # Attach to scene via self.func_name = func_name
                 f"{indent}self.{method_name} = {method_name}"
             ])
 
         # Keep track of skipping and progress bar status
-        prev_skipping = self.skip_animations
         self.skip_animations = skip
 
         prev_progress = self.show_animation_progress
@@ -816,7 +815,7 @@ class Scene(object):
             self.file_writer.end_insert()
             self.camera.use_window_fbo(True)
 
-        self.skip_animations = prev_skipping
+        self.stop_skipping()
         self.show_animation_progress = prev_progress
 
     def checkpoint(self, key: str):
@@ -1049,8 +1048,10 @@ class ThreeDScene(Scene):
     default_frame_orientation = (-30, 70)
     always_depth_test = True
 
-    def add(self, *mobjects: Mobject, set_depth_test: bool = True):
+    def add(self, *mobjects: Mobject, set_depth_test: bool = True, perp_stroke: bool = True):
         for mob in mobjects:
             if set_depth_test and not mob.is_fixed_in_frame() and self.always_depth_test:
                 mob.apply_depth_test()
+            if isinstance(mob, VMobject) and mob.has_stroke() and perp_stroke:
+                mob.set_flat_stroke(False)
         super().add(*mobjects)

@@ -29,6 +29,7 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotate_vector
 from manimlib.utils.space_ops import rotation_matrix_transpose
+from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import rotation_about_z
 
 from typing import TYPE_CHECKING
@@ -635,14 +636,13 @@ class Elbow(VMobject):
         self.rotate(angle, about_point=ORIGIN)
 
 
-class Arrow(Line):
+class StrokeArrow(Line):
     def __init__(
         self,
         start: Vect3 | Mobject,
         end: Vect3 | Mobject,
         stroke_color: ManimColor = GREY_A,
         stroke_width: float = 5,
-        flat_stroke: bool = True,
         buff: float = 0.25,
         tip_width_ratio: float = 5,
         tip_len_to_width: float = 0.0075,
@@ -660,7 +660,6 @@ class Arrow(Line):
             start, end,
             stroke_color=stroke_color,
             stroke_width=stroke_width,
-            flat_stroke=flat_stroke,
             buff=buff,
             **kwargs
         )
@@ -733,16 +732,19 @@ class Arrow(Line):
         return self
 
 
-class FillArrow(Line):
+class Arrow(Line):
+    tickness_multiplier = 0.015
+
     def __init__(
         self,
         start: Vect3 | Mobject = LEFT,
         end: Vect3 | Mobject = LEFT,
+        buff: float = MED_SMALL_BUFF,
+        path_arc: float = 0,
         fill_color: ManimColor = GREY_A,
         fill_opacity: float = 1.0,
         stroke_width: float = 0.0,
-        buff: float = MED_SMALL_BUFF,
-        thickness: float = 0.05,
+        thickness: float = 3.0,
         tip_width_ratio: float = 5,
         tip_angle: float = PI / 3,
         max_tip_length_to_length_ratio: float = 0.5,
@@ -760,8 +762,24 @@ class FillArrow(Line):
             fill_opacity=fill_opacity,
             stroke_width=stroke_width,
             buff=buff,
+            path_arc=path_arc,
             **kwargs
         )
+
+    def get_key_dimensions(self, length):
+        width = self.thickness * self.tickness_multiplier
+        w_ratio = fdiv(self.max_width_to_length_ratio, fdiv(width, length))
+        if w_ratio < 1:
+            width *= w_ratio
+
+        tip_width = self.tip_width_ratio * width
+        tip_length = tip_width / (2 * np.tan(self.tip_angle / 2))
+        t_ratio = fdiv(self.max_tip_length_to_length_ratio, fdiv(tip_length, length))
+        if t_ratio < 1:
+            tip_length *= t_ratio
+            tip_width *= t_ratio
+
+        return width, tip_width, tip_length
 
     def set_points_by_ends(
         self,
@@ -770,40 +788,39 @@ class FillArrow(Line):
         buff: float = 0,
         path_arc: float = 0
     ) -> Self:
-        # Find the right tip length and thickness
         vect = end - start
-        length = max(get_norm(vect), 1e-8)
-        thickness = self.thickness
-        w_ratio = fdiv(self.max_width_to_length_ratio, fdiv(thickness, length))
-        if w_ratio < 1:
-            thickness *= w_ratio
+        length = max(get_norm(vect), 1e-8)  # More systematic min?
+        unit_vect = normalize(vect)
 
-        tip_width = self.tip_width_ratio * thickness
-        tip_length = tip_width / (2 * np.tan(self.tip_angle / 2))
-        t_ratio = fdiv(self.max_tip_length_to_length_ratio, fdiv(tip_length, length))
-        if t_ratio < 1:
-            tip_length *= t_ratio
-            tip_width *= t_ratio
+        # Find the right tip length and thickness
+        width, tip_width, tip_length = self.get_key_dimensions(length - buff)
 
-        # Find points for the stem
+        # Adjust start and end based on buff
+        if path_arc == 0:
+            start = start + buff * unit_vect
+            end = end - buff * unit_vect
+        else:
+            R = length / 2 / math.sin(path_arc / 2)
+            midpoint = 0.5 * (start + end)
+            center = midpoint + rotate_vector(0.5 * vect, PI / 2) / math.tan(path_arc / 2)
+            sign = 1
+            start = center + rotate_vector(start - center, buff / R)
+            end = center + rotate_vector(end - center, -buff / R)
+            path_arc -= (2 * buff + tip_length) / R
+        vect = end - start
+        length = get_norm(vect)
+
+        # Find points for the stem, imagining an arrow pointed to the left
         if path_arc == 0:
             points1 = (length - tip_length) * np.array([RIGHT, 0.5 * RIGHT, ORIGIN])
-            points1 += thickness * UP / 2
-            points2 = points1[::-1] + thickness * DOWN
+            points1 += width * UP / 2
+            points2 = points1[::-1] + width * DOWN
         else:
-            # Solve for radius so that the tip-to-tail length matches |end - start|
-            a = 2 * (1 - np.cos(path_arc))
-            b = -2 * tip_length * np.sin(path_arc)
-            c = tip_length**2 - length**2
-            R = (-b + np.sqrt(b**2 - 4 * a * c)) / (2 * a)
-
             # Find arc points
             points1 = quadratic_bezier_points_for_arc(path_arc)
             points2 = np.array(points1[::-1])
-            points1 *= (R + thickness / 2)
-            points2 *= (R - thickness / 2)
-            if path_arc < 0:
-                tip_length *= -1
+            points1 *= (R + width / 2)
+            points2 *= (R - width / 2)
             rot_T = rotation_matrix_transpose(PI / 2 - path_arc, OUT)
             for points in points1, points2:
                 points[:] = np.dot(points, rot_T)
@@ -820,10 +837,7 @@ class FillArrow(Line):
         self.add_subpath(points2)
         self.add_line_to(points1[0])
 
-        if length > 0 and self.get_length() > 0:
-            # Final correction
-            super().scale(length / self.get_length())
-
+        # Reposition to match proper start and end
         self.rotate(angle_of_vector(vect) - self.get_angle())
         self.rotate(
             PI / 2 - np.arccos(normalize(vect)[2]),
@@ -847,6 +861,9 @@ class FillArrow(Line):
     def get_end(self) -> Vect3:
         return self.get_points()[self.tip_index]
 
+    def get_start_and_end(self):
+        return (self.get_start(), self.get_end())
+
     def put_start_and_end_on(self, start: Vect3, end: Vect3) -> Self:
         self.set_points_by_ends(start, end, buff=0, path_arc=self.path_arc)
         return self
@@ -864,6 +881,16 @@ class FillArrow(Line):
     def set_path_arc(self, path_arc: float) -> Self:
         self.path_arc = path_arc
         self.reset_points_around_ends()
+        return self
+
+    def set_perpendicular_to_camera(self, camera_frame):
+        to_cam = camera_frame.get_implied_camera_location() - self.get_center()
+        normal = self.get_unit_normal()
+        axis = normalize(self.get_vector())
+        # Project to be perpendicular to axis
+        trg_normal = to_cam - np.dot(to_cam, axis) * axis
+        mat = rotation_between_vectors(normal, trg_normal)
+        self.apply_matrix(mat, about_point=self.get_start())
         return self
 
 

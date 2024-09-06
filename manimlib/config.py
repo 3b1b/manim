@@ -402,7 +402,6 @@ def get_output_directory(args: Namespace, custom_config: dict) -> str:
 def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
     result = {
         "write_to_movie": not args.skip_animations and args.write_file,
-        "break_into_partial_movies": custom_config["break_into_partial_movies"],
         "save_last_frame": args.skip_animations and args.write_file,
         "save_pngs": args.save_pngs,
         # If -t is passed in (for transparent), this will be RGBA
@@ -414,6 +413,7 @@ def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
         "open_file_upon_completion": args.open,
         "show_file_location_upon_completion": args.finder,
         "quiet": args.quiet,
+        **custom_config["file_writer_config"],
     }
 
     if args.vcodec:

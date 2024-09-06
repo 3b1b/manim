@@ -150,10 +150,10 @@ def get_colormap_list(
     twilight_shifted
     turbo
     """
-    from matplotlib.cm import get_cmap
+    from matplotlib.cm import cmaps_listed
 
     if map_name == "3b1b_colormap":
         rgbs = np.array([color_to_rgb(color) for color in COLORMAP_3B1B])
     else:
-        rgbs = get_cmap(map_name).colors  # Make more general?
+        rgbs = cmaps_listed[map_name].colors  # Make more general?
     return resize_with_interpolation(np.array(rgbs), n_colors)

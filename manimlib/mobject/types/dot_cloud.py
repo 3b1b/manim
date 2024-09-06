@@ -26,7 +26,7 @@ DEFAULT_BUFF_RATIO = 0.5
 class DotCloud(PMobject):
     shader_folder: str = "true_dot"
     render_primitive: int = moderngl.POINTS
-    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
         ('radius', np.float32, (1,)),
         ('rgba', np.float32, (4,)),
