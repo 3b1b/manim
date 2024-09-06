@@ -47,6 +47,7 @@ class StringMobject(SVGMobject, ABC):
         self,
         string: str,
         fill_color: ManimColor = WHITE,
+        fill_border_width: float = 0.5,
         stroke_color: ManimColor = WHITE,
         stroke_width: float = 0,
         base_color: ManimColor = WHITE,
@@ -65,12 +66,9 @@ class StringMobject(SVGMobject, ABC):
         self.use_labelled_svg = use_labelled_svg
 
         self.parse()
-        super().__init__(
-            stroke_color=stroke_color,
-            fill_color=fill_color,
-            stroke_width=stroke_width,
-            **kwargs
-        )
+        super().__init__(**kwargs)
+        self.set_stroke(stroke_color, stroke_width)
+        self.set_fill(fill_color, border_width=fill_border_width)
         self.labels = [submob.label for submob in self.submobjects]
 
     def get_file_path(self, is_labelled: bool = False) -> str:

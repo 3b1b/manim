@@ -42,6 +42,7 @@ class SceneFileWriter(object):
         # Where should this be written
         output_directory: str | None = None,
         file_name: str | None = None,
+        subdirectory_for_videos: bool = False,
         open_file_upon_completion: bool = False,
         show_file_location_upon_completion: bool = False,
         quiet: bool = False,
@@ -49,8 +50,8 @@ class SceneFileWriter(object):
         progress_description_len: int = 40,
         video_codec: str = "libx264",
         pixel_format: str = "yuv420p",
-        saturation: float = 1.7,
-        gamma: float = 1.2,
+        saturation: float = 1.0,
+        gamma: float = 1.0,
     ):
         self.scene: Scene = scene
         self.write_to_movie = write_to_movie
@@ -63,6 +64,7 @@ class SceneFileWriter(object):
         self.output_directory = output_directory
         self.file_name = file_name
         self.open_file_upon_completion = open_file_upon_completion
+        self.subdirectory_for_videos = subdirectory_for_videos
         self.show_file_location_upon_completion = show_file_location_upon_completion
         self.quiet = quiet
         self.total_frames = total_frames
@@ -88,7 +90,10 @@ class SceneFileWriter(object):
             image_file = add_extension_if_not_present(scene_name, ".png")
             self.image_file_path = os.path.join(image_dir, image_file)
         if self.write_to_movie:
-            movie_dir = guarantee_existence(os.path.join(out_dir, "videos"))
+            if self.subdirectory_for_videos:
+                movie_dir = guarantee_existence(os.path.join(out_dir, "videos"))
+            else:
+                movie_dir = guarantee_existence(out_dir)
             movie_file = add_extension_if_not_present(scene_name, self.movie_file_extension)
             self.movie_file_path = os.path.join(movie_dir, movie_file)
             if self.break_into_partial_movies:
@@ -245,7 +250,7 @@ class SceneFileWriter(object):
                 self.add_sound_to_video()
             self.print_file_ready_message(self.get_movie_file_path())
         if self.save_last_frame:
-            self.scene.update_frame(ignore_skipping=True)
+            self.scene.update_frame(force_draw=True)
             self.save_final_image(self.scene.get_image())
         if self.should_open_file():
             self.open_file()
@@ -259,8 +264,8 @@ class SceneFileWriter(object):
         width, height = self.scene.camera.get_pixel_shape()
 
         vf_arg = 'vflip'
-        if self.pixel_format.startswith("yuv"):
-            vf_arg += f',eq=saturation={self.saturation}:gamma={self.gamma}'
+        # if self.pixel_format.startswith("yuv"):
+        vf_arg += f',eq=saturation={self.saturation}:gamma={self.gamma}'
 
         command = [
             FFMPEG_BIN,

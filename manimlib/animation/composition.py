@@ -13,7 +13,8 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.simple_functions import clip
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, Iterable
+AnimationType = Union[Animation, _AnimationBuilder]
 
 if TYPE_CHECKING:
     from typing import Callable, Optional
@@ -26,14 +27,16 @@ DEFAULT_LAGGED_START_LAG_RATIO = 0.05
 
 
 class AnimationGroup(Animation):
-    def __init__(self,
-        *animations: Animation | _AnimationBuilder,
+    def __init__(
+        self,
+        *args: AnimationType | Iterable[AnimationType],
         run_time: float = -1,  # If negative, default to sum of inputed animation runtimes
         lag_ratio: float = 0.0,
         group: Optional[Mobject] = None,
         group_type: Optional[type] = None,
         **kwargs
     ):
+        animations = args[0] if isinstance(args[0], Iterable) else args
         self.animations = [prepare_animation(anim) for anim in animations]
         self.build_animations_with_timings(lag_ratio)
         self.max_end_time = max((awt[2] for awt in self.anims_with_timings), default=0)
@@ -130,7 +133,7 @@ class Succession(AnimationGroup):
         super().__init__(*animations, lag_ratio=lag_ratio, **kwargs)
 
     def begin(self) -> None:
-        assert(len(self.animations) > 0)
+        assert len(self.animations) > 0
         self.active_animation = self.animations[0]
         self.active_animation.begin()
 
@@ -167,7 +170,6 @@ class LaggedStartMap(LaggedStart):
         self,
         anim_func: Callable[[Mobject], Animation],
         group: Mobject,
-        arg_creator: Callable[[Mobject], tuple] | None = None,
         run_time: float = 2.0,
         lag_ratio: float = DEFAULT_LAGGED_START_LAG_RATIO,
         **kwargs
@@ -178,4 +180,5 @@ class LaggedStartMap(LaggedStart):
             *(anim_func(submob, **anim_kwargs) for submob in group),
             run_time=run_time,
             lag_ratio=lag_ratio,
+            group=group
         )

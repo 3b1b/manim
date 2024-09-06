@@ -12,6 +12,7 @@ from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import double_smooth
 from manimlib.utils.rate_functions import smooth
+from manimlib.utils.simple_functions import clip
 
 from typing import TYPE_CHECKING
 
@@ -83,7 +84,7 @@ class DrawBorderThenFill(Animation):
         fill_animation_config: dict = {},
         **kwargs
     ):
-        assert(isinstance(vmobject, VMobject))
+        assert isinstance(vmobject, VMobject)
         self.sm_to_index = {hash(sm): 0 for sm in vmobject.get_family()}
         self.stroke_width = stroke_width
         self.stroke_color = stroke_color
@@ -105,7 +106,7 @@ class DrawBorderThenFill(Animation):
 
     def finish(self) -> None:
         super().finish()
-        self.mobject.refresh_joint_products()
+        self.mobject.refresh_joint_angles()
 
     def get_outline(self) -> VMobject:
         outline = self.mobject.copy()
@@ -114,6 +115,7 @@ class DrawBorderThenFill(Animation):
             sm.set_stroke(
                 color=self.stroke_color or sm.get_stroke_color(),
                 width=self.stroke_width,
+                behind=self.mobject.stroke_behind,
             )
         return outline
 
@@ -147,9 +149,11 @@ class Write(DrawBorderThenFill):
         run_time: float = -1,  # If negative, this will be reassigned
         lag_ratio: float = -1,  # If negative, this will be reassigned
         rate_func: Callable[[float], float] = linear,
-        stroke_color: ManimColor = WHITE,
+        stroke_color: ManimColor = None,
         **kwargs
     ):
+        if stroke_color is None:
+            stroke_color = vmobject.get_color()
         family_size = len(vmobject.family_members_with_points())
         super().__init__(
             vmobject,
@@ -189,6 +193,7 @@ class ShowIncreasingSubsets(Animation):
 
     def interpolate_mobject(self, alpha: float) -> None:
         n_submobs = len(self.all_submobs)
+        alpha = self.rate_func(alpha)
         index = int(self.int_func(alpha * n_submobs))
         self.update_submobject_list(index)
 
@@ -206,7 +211,7 @@ class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
         super().__init__(group, int_func=int_func, **kwargs)
 
     def update_submobject_list(self, index: int) -> None:
-        # N = len(self.all_submobs)
+        index = int(clip(index, 0, len(self.all_submobs) - 1))
         if index == 0:
             self.mobject.set_submobjects([])
         else:

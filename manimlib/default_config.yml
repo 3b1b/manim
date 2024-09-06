@@ -28,13 +28,18 @@ style:
 window_position: UR
 window_monitor: 0
 full_screen: False
-# If break_into_partial_movies is set to True, then many small
-# files will be written corresponding to each Scene.play and
-# Scene.wait call, and these files will then be combined
-# to form the full scene.  Sometimes video-editing is made
-# easier when working with the broken up scene, which
-# effectively has cuts at all the places you might want.
-break_into_partial_movies: False
+file_writer_config:
+  # If break_into_partial_movies is set to True, then many small
+  # files will be written corresponding to each Scene.play and
+  # Scene.wait call, and these files will then be combined
+  # to form the full scene.  Sometimes video-editing is made
+  # easier when working with the broken up scene, which
+  # effectively has cuts at all the places you might want.
+  break_into_partial_movies: False
+  video_codec: "libx264"
+  pixel_format: "yuv420p"
+  saturation: 1.0
+  gamma: 1.0
 camera_resolutions:
   low: "854x480"
   med: "1280x720"

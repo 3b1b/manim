@@ -99,7 +99,7 @@ class Camera(object):
         self.light_source = Point(self.light_source_position)
 
     def use_window_fbo(self, use: bool = True):
-        assert(self.window is not None)
+        assert self.window is not None
         if use:
             self.fbo = self.window_fbo
         else:
@@ -124,6 +124,8 @@ class Camera(object):
 
     def clear(self) -> None:
         self.fbo.clear(*self.background_rgba)
+        if self.window:
+            self.window.clear()
 
     def blit(self, src_fbo, dst_fbo):
         """
@@ -227,8 +229,12 @@ class Camera(object):
         self.fbo.use()
         for mobject in mobjects:
             mobject.render(self.ctx, self.uniforms)
-        if self.window is not None and self.fbo is not self.window_fbo:
-            self.blit(self.fbo, self.window_fbo)
+
+        if self.window:
+            self.window.swap_buffers()
+            if self.fbo is not self.window_fbo:
+                self.blit(self.fbo, self.window_fbo)
+                self.window.swap_buffers()
 
     def refresh_uniforms(self) -> None:
         frame = self.frame

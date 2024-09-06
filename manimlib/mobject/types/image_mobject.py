@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from PIL import Image
+from moderngl import TRIANGLES
 
 from manimlib.constants import DL, DR, UL, UR
 from manimlib.mobject.mobject import Mobject
@@ -19,13 +20,14 @@ if TYPE_CHECKING:
 
 class ImageMobject(Mobject):
     shader_folder: str = "image"
-    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ]
+    render_primitive: int = TRIANGLES
 
-    def __init__(        
+    def __init__(
         self,
         filename: str,
         height: float = 4.0,
@@ -37,9 +39,9 @@ class ImageMobject(Mobject):
         super().__init__(texture_paths={"Texture": self.image_path}, **kwargs)
 
     def init_data(self) -> None:
-        super().init_data(length=4)
-        self.data["point"][:] = [UL, DL, UR, DR]
-        self.data["im_coords"][:] = [(0, 0), (0, 1), (1, 0), (1, 1)]
+        super().init_data(length=6)
+        self.data["point"][:] = [UL, DL, UR, DR, UR, DL]
+        self.data["im_coords"][:] = [(0, 0), (0, 1), (1, 0), (1, 1), (1, 0), (0, 1)]
         self.data["opacity"][:] = self.opacity
 
     def init_points(self) -> None:
@@ -71,5 +73,5 @@ class ImageMobject(Mobject):
         rgb = self.image.getpixel((
             int((pw - 1) * x_alpha),
             int((ph - 1) * y_alpha),
-        ))
+        ))[:3]
         return np.array(rgb) / 255

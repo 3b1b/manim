@@ -16,7 +16,7 @@ from manimlib.utils.simple_functions import fdiv
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable
+    from typing import Iterable, Optional
     from manimlib.typing import ManimColor, Vect3, Vect3Array, VectN, RangeSpecifier
 
 
@@ -28,13 +28,14 @@ class NumberLine(Line):
         stroke_width: float = 2.0,
         # How big is one one unit of this number line in terms of absolute spacial distance
         unit_size: float = 1.0,
-        width: float | None = None,
+        width: Optional[float] = None,
         include_ticks: bool = True,
         tick_size: float = 0.1,
         longer_tick_multiple: float = 1.5,
         tick_offset: float = 0.0,
         # Change name
-        numbers_with_elongated_ticks: list[float] = [],
+        big_tick_spacing: Optional[float] = None,
+        big_tick_numbers: list[float] = [],
         include_numbers: bool = False,
         line_to_number_direction: Vect3 = DOWN,
         line_to_number_buff: float = MED_SMALL_BUFF,
@@ -54,7 +55,14 @@ class NumberLine(Line):
         self.tick_size = tick_size
         self.longer_tick_multiple = longer_tick_multiple
         self.tick_offset = tick_offset
-        self.numbers_with_elongated_ticks = list(numbers_with_elongated_ticks)
+        if big_tick_spacing is not None:
+            self.big_tick_numbers = np.arange(
+                x_range[0],
+                x_range[1] + big_tick_spacing,
+                big_tick_spacing,
+            )
+        else:
+            self.big_tick_numbers = list(big_tick_numbers)
         self.line_to_number_direction = line_to_number_direction
         self.line_to_number_buff = line_to_number_buff
         self.include_tip = include_tip
@@ -94,13 +102,14 @@ class NumberLine(Line):
             x_max = self.x_max
         else:
             x_max = self.x_max + self.x_step
-        return np.arange(self.x_min, x_max, self.x_step)
+        result = np.arange(self.x_min, x_max, self.x_step)
+        return result[result <= self.x_max]
 
     def add_ticks(self) -> None:
         ticks = VGroup()
         for x in self.get_tick_range():
             size = self.tick_size
-            if np.isclose(self.numbers_with_elongated_ticks, x).any():
+            if np.isclose(self.big_tick_numbers, x).any():
                 size *= self.longer_tick_multiple
             ticks.add(self.get_tick(x, size))
         self.add(ticks)
@@ -209,7 +218,7 @@ class UnitInterval(NumberLine):
         self,
         x_range: RangeSpecifier = (0, 1, 0.1),
         unit_size: float = 10,
-        numbers_with_elongated_ticks: list[float] = [0, 1],
+        big_tick_numbers: list[float] = [0, 1],
         decimal_number_config: dict = dict(
             num_decimal_places=1,
         )
@@ -217,6 +226,6 @@ class UnitInterval(NumberLine):
         super().__init__(
             x_range=x_range,
             unit_size=unit_size,
-            numbers_with_elongated_ticks=numbers_with_elongated_ticks,
+            big_tick_numbers=big_tick_numbers,
             decimal_number_config=decimal_number_config,
         )

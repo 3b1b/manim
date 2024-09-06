@@ -22,10 +22,11 @@ DEFAULT_GLOW_DOT_RADIUS = 0.2
 DEFAULT_GRID_HEIGHT = 6
 DEFAULT_BUFF_RATIO = 0.5
 
+
 class DotCloud(PMobject):
     shader_folder: str = "true_dot"
     render_primitive: int = moderngl.POINTS
-    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
         ('radius', np.float32, (1,)),
         ('rgba', np.float32, (4,)),
@@ -115,6 +116,10 @@ class DotCloud(PMobject):
 
     def get_radius(self) -> float:
         return self.get_radii().max()
+
+    def scale_radii(self, scale_factor: float) -> Self:
+        self.set_radius(scale_factor * self.get_radii())
+        return self
 
     def set_glow_factor(self, glow_factor: float) -> Self:
         self.uniforms["glow_factor"] = glow_factor

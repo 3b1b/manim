@@ -26,11 +26,13 @@ if TYPE_CHECKING:
 class Surface(Mobject):
     render_primitive: int = moderngl.TRIANGLES
     shader_folder: str = "surface"
-    shader_dtype: np.dtype = np.dtype([
+    data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
-        ('normal', np.float32, (3,)),
+        ('du_point', np.float32, (3,)),
+        ('dv_point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ])
+    pointlike_data_keys = ['point', 'du_point', 'dv_point']
 
     def __init__(
         self,
@@ -46,7 +48,7 @@ class Surface(Mobject):
         prefered_creation_axis: int = 1,
         # For du and dv steps.  Much smaller and numerical error
         # can crop up in the shaders.
-        epsilon: float = 1e-5,
+        epsilon: float = 1e-4,
         **kwargs
     ):
         self.u_range = u_range
@@ -95,10 +97,8 @@ class Surface(Mobject):
             for grid in (uv_grid, uv_plus_du, uv_plus_dv)
         ]
         self.set_points(points)
-        self.data["normal"] = normalize_along_axis(cross(
-            (du_points - points) / self.epsilon,
-            (dv_points - points) / self.epsilon,
-        ), 1)
+        self.data['du_point'][:] = du_points
+        self.data['dv_point'][:] = dv_points
 
     def apply_points_function(self, *args, **kwargs) -> Self:
         super().apply_points_function(*args, **kwargs)
@@ -128,26 +128,12 @@ class Surface(Mobject):
         return self.triangle_indices
 
     def get_unit_normals(self) -> Vect3Array:
-        nu, nv = self.resolution
-        indices = np.arange(nu * nv)
-
-        left  = indices - 1
-        right = indices + 1
-        up    = indices - nv
-        down  = indices + nv
-
-        left[0] = indices[0]
-        right[-1] = indices[-1]
-        up[:nv] = indices[:nv]
-        down[-nv:] = indices[-nv:]
-
         points = self.get_points()
         crosses = cross(
-            points[right] - points[left],
-            points[up] - points[down],
+            self.data['du_point'] - points,
+            self.data['dv_point'] - points,
         )
-        self.data["normal"] = normalize_along_axis(crosses, 1)
-        return self.data["normal"]
+        return normalize_along_axis(crosses, 1)
 
     @Mobject.affects_data
     def pointwise_become_partial(
@@ -157,7 +143,7 @@ class Surface(Mobject):
         b: float,
         axis: int | None = None
     ) -> Self:
-        assert(isinstance(smobject, Surface))
+        assert isinstance(smobject, Surface)
         if axis is None:
             axis = self.prefered_creation_axis
         if a <= 0 and b >= 1:
@@ -166,7 +152,7 @@ class Surface(Mobject):
 
         nu, nv = smobject.resolution
         self.data['point'][:] = self.get_partial_points_array(
-            self.data['point'], a, b,
+            smobject.data['point'], a, b,
             (nu, nv, 3),
             axis=axis
         )
@@ -183,7 +169,7 @@ class Surface(Mobject):
         if len(points) == 0:
             return points
         nu, nv = resolution[:2]
-        points = points.reshape(resolution)
+        points = points.reshape(resolution).copy()
         max_index = resolution[axis] - 1
         lower_index, lower_residue = integer_interpolate(0, max_index, a)
         upper_index, upper_residue = integer_interpolate(0, max_index, b)
@@ -279,9 +265,10 @@ class SGroup(Surface):
 
 class TexturedSurface(Surface):
     shader_folder: str = "textured_surface"
-    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
-        ('normal', np.float32, (3,)),
+        ('du_point', np.float32, (3,)),
+        ('dv_point', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ]
@@ -325,7 +312,8 @@ class TexturedSurface(Surface):
         self.resize_points(surf.get_num_points())
         self.resolution = surf.resolution
         self.data['point'][:] = surf.data['point']
-        self.data['normal'][:] = surf.data['normal']
+        self.data['du_point'][:] = surf.data['du_point']
+        self.data['dv_point'][:] = surf.data['dv_point']
         self.data['opacity'][:, 0] = surf.data["rgba"][:, 3]
         self.data["im_coords"] = np.array([
             [u, v]

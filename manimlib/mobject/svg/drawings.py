@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import numpy as np
+import itertools as it
+import random
 
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.rotation import Rotating
@@ -14,6 +16,7 @@ from manimlib.constants import DOWN
 from manimlib.constants import FRAME_WIDTH
 from manimlib.constants import GREEN
 from manimlib.constants import GREEN_SCREEN
+from manimlib.constants import GREEN_E
 from manimlib.constants import GREY
 from manimlib.constants import GREY_A
 from manimlib.constants import GREY_B
@@ -22,10 +25,12 @@ from manimlib.constants import LEFT
 from manimlib.constants import LEFT
 from manimlib.constants import MED_LARGE_BUFF
 from manimlib.constants import MED_SMALL_BUFF
+from manimlib.constants import LARGE_BUFF
 from manimlib.constants import ORIGIN
 from manimlib.constants import OUT
 from manimlib.constants import PI
 from manimlib.constants import RED
+from manimlib.constants import RED_E
 from manimlib.constants import RIGHT
 from manimlib.constants import SMALL_BUFF
 from manimlib.constants import SMALL_BUFF
@@ -36,7 +41,9 @@ from manimlib.constants import DL
 from manimlib.constants import DR
 from manimlib.constants import WHITE
 from manimlib.constants import YELLOW
+from manimlib.constants import TAU
 from manimlib.mobject.boolean_ops import Difference
+from manimlib.mobject.boolean_ops import Union
 from manimlib.mobject.geometry import Arc
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Dot
@@ -44,8 +51,10 @@ from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Polygon
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import Square
+from manimlib.mobject.geometry import AnnularSector
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.numbers import Integer
+from manimlib.mobject.shape_matchers import SurroundingRectangle
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import TexText
@@ -54,9 +63,13 @@ from manimlib.mobject.three_dimensions import Prismify
 from manimlib.mobject.three_dimensions import VCube
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.mobject.svg.text_mobject import Text
+from manimlib.utils.bezier import interpolate
+from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import compass_directions
+from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import midpoint
 from manimlib.utils.space_ops import rotate_vector
 
@@ -339,83 +352,93 @@ class ClockPassesTime(AnimationGroup):
         )
 
 
-class Bubble(SVGMobject):
+class Bubble(VGroup):
     file_name: str = "Bubbles_speech.svg"
+    bubble_center_adjustment_factor = 0.125
 
     def __init__(
         self,
+        content: str | VMobject | None = None,
+        buff: float = 1.0,
+        filler_shape: Tuple[float, float] = (3.0, 2.0),
+        pin_point: Vect3 | None = None,
         direction: Vect3 = LEFT,
-        center_point: Vect3 = ORIGIN,
-        content_scale_factor: float = 0.7,
-        height: float = 4.0,
-        width: float = 8.0,
-        max_height: float | None = None,
-        max_width: float | None = None,
-        bubble_center_adjustment_factor: float = 0.125,
+        add_content: bool = True,
         fill_color: ManimColor = BLACK,
         fill_opacity: float = 0.8,
         stroke_color: ManimColor = WHITE,
         stroke_width: float = 3.0,
         **kwargs
     ):
+        super().__init__(**kwargs)
         self.direction = direction
-        self.bubble_center_adjustment_factor = bubble_center_adjustment_factor
-        self.content_scale_factor = content_scale_factor
 
-        super().__init__(
-            fill_color=fill_color,
-            fill_opacity=fill_opacity,
-            stroke_color=stroke_color,
-            stroke_width=stroke_width,
-            **kwargs
-        )
+        if content is None:
+            content = Rectangle(*filler_shape)
+            content.set_fill(opacity=0)
+            content.set_stroke(width=0)
+        elif isinstance(content, str):
+            content = Text(content)
+        self.content = content
 
-        self.center()
-        self.set_height(height, stretch=True)
-        self.set_width(width, stretch=True)
-        if max_height:
-            self.set_max_height(max_height)
-        if max_width:
-            self.set_max_width(max_width)
+        self.body = self.get_body(content, direction, buff)
+        self.body.set_fill(fill_color, fill_opacity)
+        self.body.set_stroke(stroke_color, stroke_width)
+        self.add(self.body)
+
+        if add_content:
+            self.add(self.content)
+
+        if pin_point is not None:
+            self.pin_to(pin_point)
+
+    def get_body(self, content: VMobject, direction: Vect3, buff: float) -> VMobject:
+        body = SVGMobject(self.file_name)
         if direction[0] > 0:
-            self.flip()
-
-        self.content = Mobject()
+            body.flip()
+        # Resize
+        width = content.get_width()
+        height = content.get_height()
+        target_width = width + min(buff, height)
+        target_height = 1.35 * (height + buff)  # Magic number?
+        body.set_shape(target_width, target_height)
+        body.move_to(content)
+        body.shift(self.bubble_center_adjustment_factor * body.get_height() * DOWN)
+        return body
 
     def get_tip(self):
-        # TODO, find a better way
-        return self.get_corner(DOWN + self.direction) - 0.6 * self.direction
+        return self.get_corner(DOWN + self.direction)
 
     def get_bubble_center(self):
         factor = self.bubble_center_adjustment_factor
         return self.get_center() + factor * self.get_height() * UP
 
     def move_tip_to(self, point):
-        mover = VGroup(self)
-        if self.content is not None:
-            mover.add(self.content)
-        mover.shift(point - self.get_tip())
+        self.shift(point - self.get_tip())
         return self
 
-    def flip(self, axis=UP):
-        super().flip(axis=axis)
+    def flip(self, axis=UP, only_body=True, **kwargs):
+        super().flip(axis=axis, **kwargs)
+        if only_body:
+            # Flip in place, don't use kwargs
+            self.content.flip(axis=axis)  
         if abs(axis[1]) > 0:
             self.direction = -np.array(self.direction)
         return self
 
-    def pin_to(self, mobject):
+    def pin_to(self, mobject, auto_flip=False):
         mob_center = mobject.get_center()
         want_to_flip = np.sign(mob_center[0]) != np.sign(self.direction[0])
-        if want_to_flip:
+        if want_to_flip and auto_flip:
             self.flip()
         boundary_point = mobject.get_bounding_box_point(UP - self.direction)
         vector_from_center = 1.0 * (boundary_point - mob_center)
         self.move_tip_to(mob_center + vector_from_center)
         return self
 
-    def position_mobject_inside(self, mobject):
-        mobject.set_max_width(self.content_scale_factor * self.get_width())
-        mobject.set_max_height(self.content_scale_factor * self.get_height() / 1.5)
+    def position_mobject_inside(self, mobject, buff=MED_LARGE_BUFF):
+        mobject.set_max_width(self.body.get_width() - 2 * buff)
+        mobject.set_max_height(self.body.get_height() / 1.5 - 2 * buff)
         mobject.shift(self.get_bubble_center() - mobject.get_center())
         return mobject
 
@@ -424,26 +447,110 @@ class Bubble(SVGMobject):
         self.content = mobject
         return self.content
 
-    def write(self, *text):
-        self.add_content(TexText(*text))
+    def write(self, text):
+        self.add_content(Text(text))
         return self
 
-    def resize_to_content(self, buff=0.75):
-        width = self.content.get_width()
-        height = self.content.get_height()
-        target_width = width + min(buff, height)
-        target_height = 1.35 * (self.content.get_height() + buff)
-        tip_point = self.get_tip()
-        self.stretch_to_fit_width(target_width, about_point=tip_point)
-        self.stretch_to_fit_height(target_height, about_point=tip_point)
-        self.position_mobject_inside(self.content)
+    def resize_to_content(self, buff=1.0):  # TODO
+        self.body.match_points(self.get_body(
+            self.content, self.direction, buff
+        ))
 
     def clear(self):
-        self.add_content(VMobject())
+        self.remove(self.content)
         return self
 
 
 class SpeechBubble(Bubble):
+    def __init__(
+        self,
+        content: str | VMobject | None = None,
+        buff: float = MED_SMALL_BUFF,
+        filler_shape: Tuple[float, float] = (2.0, 1.0),
+        stem_height_to_bubble_height: float = 0.5,
+        stem_top_x_props: Tuple[float, float] = (0.2, 0.3),
+        **kwargs
+    ):
+        self.stem_height_to_bubble_height = stem_height_to_bubble_height
+        self.stem_top_x_props = stem_top_x_props
+        super().__init__(content, buff, filler_shape, **kwargs)
+
+    def get_body(self, content: VMobject, direction: Vect3, buff: float) -> VMobject:
+        rect = SurroundingRectangle(content, buff=buff)
+        rect.round_corners()
+        lp = rect.get_corner(DL)
+        rp = rect.get_corner(DR)
+        stem_height = self.stem_height_to_bubble_height * rect.get_height()
+        low_prop, high_prop = self.stem_top_x_props
+        triangle = Polygon(
+            interpolate(lp, rp, low_prop),
+            interpolate(lp, rp, high_prop),
+            lp + stem_height * DOWN,
+        )
+        result = Union(rect, triangle)
+        result.insert_n_curves(20)
+        if direction[0] > 0:
+            result.flip()
+
+        return result
+
+
+class ThoughtBubble(Bubble):
+    def __init__(
+        self,
+        content: str | VMobject | None = None,
+        buff: float = SMALL_BUFF,
+        filler_shape: Tuple[float, float] = (2.0, 1.0),
+        bulge_radius: float = 0.35,
+        bulge_overlap: float = 0.25,
+        noise_factor: float = 0.1,
+        circle_radii: list[float] = [0.1, 0.15, 0.2],
+        **kwargs
+    ):
+        self.bulge_radius = bulge_radius
+        self.bulge_overlap = bulge_overlap
+        self.noise_factor = noise_factor
+        self.circle_radii = circle_radii
+        super().__init__(content, buff, filler_shape, **kwargs)
+
+    def get_body(self, content: VMobject, direction: Vect3, buff: float) -> VMobject:
+        rect = SurroundingRectangle(content, buff)
+        perimeter = rect.get_arc_length()
+        radius = self.bulge_radius
+        step = (1 - self.bulge_overlap) * (2 * radius)
+        nf = self.noise_factor
+        corners = [rect.get_corner(v) for v in [DL, UL, UR, DR]]
+        points = []
+        for c1, c2 in adjacent_pairs(corners):
+            n_alphas = int(get_norm(c1 - c2) / step) + 1
+            for alpha in np.linspace(0, 1, n_alphas):
+                points.append(interpolate(
+                    c1, c2, alpha + nf * (step / n_alphas) * (random.random() - 0.5)
+                ))
+
+        cloud = Union(rect, *(
+            # Add bulges
+            Circle(radius=radius * (1 + nf * random.random())).move_to(point)
+            for point in points
+        ))
+        cloud.set_stroke(WHITE, 2)
+
+        circles = VGroup(Circle(radius=radius) for radius in self.circle_radii)
+        circ_buff = 0.25 * self.circle_radii[0]
+        circles.arrange(UR, buff=circ_buff)
+        circles[1].shift(circ_buff * DR)
+        circles.next_to(cloud, DOWN, 4 * circ_buff, aligned_edge=LEFT)
+        circles.set_stroke(WHITE, 2)
+
+        result = VGroup(*circles, cloud)
+
+        if direction[0] > 0:
+            result.flip()
+
+        return result
+
+
+class OldSpeechBubble(Bubble):
     file_name: str = "Bubbles_speech.svg"
 
 
@@ -451,17 +558,16 @@ class DoubleSpeechBubble(Bubble):
     file_name: str = "Bubbles_double_speech.svg"
 
 
-class ThoughtBubble(Bubble):
+class OldThoughtBubble(Bubble):
     file_name: str = "Bubbles_thought.svg"
 
-    def __init__(self, **kwargs):
-        Bubble.__init__(self, **kwargs)
-        self.submobjects.sort(
-            key=lambda m: m.get_bottom()[1]
-        )
+    def get_body(self, content: VMobject, direction: Vect3, buff: float) -> VMobject:
+        body = super().get_body(content, direction, buff)
+        body.sort(lambda p: p[1])
+        return body
 
     def make_green_screen(self):
-        self.submobjects[-1].set_fill(GREEN_SCREEN, opacity=1)
+        self.body[-1].set_fill(GREEN_SCREEN, opacity=1)
         return self
 
 
@@ -579,7 +685,6 @@ class Piano3D(VGroup):
                 key.set_color(BLACK)
 
 
-
 class DieFace(VGroup):
     def __init__(
         self,
@@ -590,7 +695,7 @@ class DieFace(VGroup):
         stroke_width: float = 2.0,
         fill_color: ManimColor = GREY_E,
         dot_radius: float = 0.08,
-        dot_color: ManimColor = BLUE_B,
+        dot_color: ManimColor = WHITE,
         dot_coalesce_factor: float = 0.5
     ):
         dot = Dot(radius=dot_radius, fill_color=dot_color)
@@ -622,5 +727,50 @@ class DieFace(VGroup):
         arrangement.space_out_submobjects(dot_coalesce_factor)
 
         super().__init__(square, arrangement)
+        self.dots = arrangement
         self.value = value
         self.index = value
+
+
+class Dartboard(VGroup):
+    radius = 3
+    n_sectors = 20
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        n_sectors = self.n_sectors
+        angle = TAU / n_sectors
+
+        segments = VGroup(*[
+            VGroup(*[
+                AnnularSector(
+                    inner_radius=in_r,
+                    outer_radius=out_r,
+                    start_angle=n * angle,
+                    angle=angle,
+                    fill_color=color,
+                )
+                for n, color in zip(
+                    range(n_sectors),
+                    it.cycle(colors)
+                )
+            ])
+            for colors, in_r, out_r in [
+                ([GREY_B, GREY_E], 0, 1),
+                ([GREEN_E, RED_E], 0.5, 0.55),
+                ([GREEN_E, RED_E], 0.95, 1),
+            ]
+        ])
+        segments.rotate(-angle / 2)
+        bullseyes = VGroup(*[
+            Circle(radius=r)
+            for r in [0.07, 0.035]
+        ])
+        bullseyes.set_fill(opacity=1)
+        bullseyes.set_stroke(width=0)
+        bullseyes[0].set_color(GREEN_E)
+        bullseyes[1].set_color(RED_E)
+
+        self.bullseye = bullseyes[1]
+        self.add(*segments, *bullseyes)
+        self.scale(self.radius)

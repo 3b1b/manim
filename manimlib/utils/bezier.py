@@ -171,6 +171,16 @@ def match_interpolate(
     )
 
 
+def quadratic_bezier_points_for_arc(angle: float, n_components: int = 8):
+    n_points = 2 * n_components + 1
+    angles = np.linspace(0, angle, n_points)
+    points = np.array([np.cos(angles), np.sin(angles), np.zeros(n_points)]).T
+    # Adjust handles
+    theta = angle / n_components
+    points[1::2] /= np.cos(theta / 2)
+    return points
+
+
 def approx_smooth_quadratic_bezier_handles(
     points: FloatArray
 ) -> FloatArray:
@@ -188,7 +198,9 @@ def approx_smooth_quadratic_bezier_handles(
     another that would produce a parabola passing through P0, call it smooth_to_left,
     and use the midpoint between the two.
     """
-    if len(points) == 2:
+    if len(points) == 1:
+        return points[0]
+    elif len(points) == 2:
         return midpoint(*points)
     smooth_to_right, smooth_to_left = [
         0.25 * ps[0:-2] + ps[1:-1] - 0.25 * ps[2:]

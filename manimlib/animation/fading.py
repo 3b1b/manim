@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from manimlib.typing import Vect3
 
 
-
 class Fade(Transform):
     def __init__(
         self,
@@ -104,7 +103,7 @@ class FadeTransform(Transform):
         self.dim_to_match = dim_to_match
 
         mobject.save_state()
-        super().__init__(Group(mobject, target_mobject.copy()), **kwargs)
+        super().__init__(mobject.get_group_class()(mobject, target_mobject.copy()), **kwargs)
 
     def begin(self) -> None:
         self.ending_mobject = self.mobject.copy()
@@ -118,6 +117,7 @@ class FadeTransform(Transform):
 
     def ghost_to(self, source: Mobject, target: Mobject) -> None:
         source.replace(target, stretch=self.stretch, dim_to_match=self.dim_to_match)
+        source.set_uniform(**target.get_uniforms())
         source.set_opacity(0)
 
     def get_all_mobjects(self) -> list[Mobject]:
@@ -134,7 +134,8 @@ class FadeTransform(Transform):
         Animation.clean_up_from_scene(self, scene)
         scene.remove(self.mobject)
         self.mobject[0].restore()
-        scene.add(self.to_add_on_completion)
+        if not self.remover:
+            scene.add(self.to_add_on_completion)
 
 
 class FadeTransformPieces(FadeTransform):

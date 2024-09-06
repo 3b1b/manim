@@ -27,13 +27,22 @@ class SurroundingRectangle(Rectangle):
         color: ManimColor = YELLOW,
         **kwargs
     ):
-        super().__init__(
-            width=mobject.get_width() + 2 * buff,
-            height=mobject.get_height() + 2 * buff,
-            color=color,
-            **kwargs
-        )
-        self.move_to(mobject)
+        super().__init__(color=color, **kwargs)
+        self.buff = buff
+        self.surround(mobject)
+        if mobject.is_fixed_in_frame():
+            self.fix_in_frame()
+
+    def surround(self, mobject, buff=None) -> Self:
+        self.mobject = mobject
+        self.buff = buff if buff is not None else self.buff
+        super().surround(mobject, self.buff)
+        return self
+
+    def set_buff(self, buff) -> Self:
+        self.buff = buff
+        self.surround(self.mobject)
+        return self
 
 
 class BackgroundRectangle(SurroundingRectangle):
@@ -110,14 +119,12 @@ class Underline(Line):
         buff: float = SMALL_BUFF,
         stroke_color=WHITE,
         stroke_width: float | Sequence[float] = [0, 3, 3, 0],
+        stretch_factor=1.2,
         **kwargs
     ):
-        super().__init__(
-            LEFT, RIGHT,
-            stroke_color=stroke_color,
-            stroke_width=stroke_width,
-            **kwargs
-        )
-        self.insert_n_curves(30)
-        self.match_width(mobject)
+        super().__init__(LEFT, RIGHT, **kwargs)
+        if not isinstance(stroke_width, (float, int)):
+            self.insert_n_curves(len(stroke_width) - 2)
+        self.set_stroke(stroke_color, stroke_width)
+        self.set_width(mobject.get_width() * stretch_factor)
         self.next_to(mobject, DOWN, buff=buff)

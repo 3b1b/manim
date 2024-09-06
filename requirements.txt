@@ -1,5 +1,5 @@
 colour
-ipython
+ipython>=8.18.0
 isosurfaces
 fontTools
 manimpango>=0.4.0.post0,<0.5.0

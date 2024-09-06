@@ -3,6 +3,7 @@ from __future__ import annotations
 from colour import Color
 
 import numpy as np
+import random
 
 from typing import TYPE_CHECKING
 
@@ -83,6 +84,12 @@ def listify(obj: object) -> list:
         return [obj]
 
 
+def shuffled(iterable: Iterable) -> list:
+    as_list = list(iterable)
+    random.shuffle(as_list)
+    return as_list
+
+
 def resize_array(nparray: np.ndarray, length: int) -> np.ndarray:
     if len(nparray) == length:
         return nparray
@@ -134,6 +141,18 @@ def arrays_match(arr1: np.ndarray, arr2: np.ndarray) -> bool:
 
 def array_is_constant(arr: np.ndarray) -> bool:
     return len(arr) > 0 and (arr == arr[0]).all()
+
+
+def cartesian_product(*arrays: np.ndarray):
+    """
+    Copied from https://stackoverflow.com/a/11146645
+    """
+    la = len(arrays)
+    dtype = np.result_type(*arrays)
+    arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
+    for i, a in enumerate(np.ix_(*arrays)):
+        arr[..., i] = a
+    return arr.reshape(-1, la)
 
 
 def hash_obj(obj: object) -> int:

@@ -18,9 +18,9 @@ if TYPE_CHECKING:
 
 
 def assert_is_mobject_method(method):
-    assert(inspect.ismethod(method))
+    assert inspect.ismethod(method)
     mobject = method.__self__
-    assert(isinstance(mobject, Mobject))
+    assert isinstance(mobject, Mobject)
 
 
 def always(method, *args, **kwargs):
