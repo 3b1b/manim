@@ -7,6 +7,9 @@ import moderngl
 from PIL import Image
 import numpy as np
 
+from manimlib.config import parse_cli
+from manimlib.config import get_configuration
+from manimlib.constants import ASPECT_RATIO
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
 
@@ -95,6 +98,8 @@ def get_shader_code_from_file(filename: str) -> str | None:
 
     with open(filepath, "r") as f:
         result = f.read()
+        
+        result = re.sub(r"\s+ASPECT_RATIO\s+=\s+[\s0-9/.]+", f" ASPECT_RATIO = {ASPECT_RATIO}", result)
 
     # To share functionality between shaders, some functions are read in
     # from other files an inserted into the relevant strings before
