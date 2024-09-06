@@ -420,7 +420,7 @@ class Scene(object):
             m._scene_order = scene_order+idx
             idx += 1
         self.mobjects += new_mobjects
-        self.mobjects = [self.mobjects[0]]+sorted(self.mobjects[1:], key=lambda m:(m.zorder,m._scene_order))
+        self.mobjects = [self.mobjects[0]]+sorted(self.mobjects[1:], key=lambda m:(m.z_index, m._scene_order))
         self.id_to_mobject_map.update({
             id(sm): sm
             for m in new_mobjects
