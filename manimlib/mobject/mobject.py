@@ -94,7 +94,6 @@ class Mobject(object):
         self.texture_paths = texture_paths
         self.depth_test = depth_test
         self.z_index = z_index
-        self._scene_order = 0
 
         # Internal state
         self.submobjects: list[Mobject] = []
@@ -1245,6 +1244,10 @@ class Mobject(object):
 
     def set_z(self, z: float, direction: Vect3 = ORIGIN) -> Self:
         return self.set_coord(z, 2, direction)
+
+    def set_z_index(self, z_index: int) -> Self:
+        self.z_index = z_index
+        return self
 
     def space_out_submobjects(self, factor: float = 1.5, **kwargs) -> Self:
         self.scale(factor, **kwargs)

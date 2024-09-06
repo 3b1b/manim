@@ -414,13 +414,12 @@ class Scene(object):
         foreground in the order with which they are added.
         """
         self.remove(*new_mobjects)
-        idx = 0
-        scene_order = len(self.mobjects)
-        for m in new_mobjects:
-            m._scene_order = scene_order+idx
-            idx += 1
         self.mobjects += new_mobjects
-        self.mobjects = [self.mobjects[0]]+sorted(self.mobjects[1:], key=lambda m:(m.z_index, m._scene_order))
+
+        # Reorder based on z_index
+        id_to_scene_order = {id(m): idx for idx, m in enumerate(self.mobjects)}
+        self.mobjects.sort(key=lambda m: (m.z_index, id_to_scene_order[id(m)]))
+
         self.id_to_mobject_map.update({
             id(sm): sm
             for m in new_mobjects

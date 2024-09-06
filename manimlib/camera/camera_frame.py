@@ -29,9 +29,11 @@ class CameraFrame(Mobject):
         # Field of view in the y direction
         fovy: float = 45 * DEGREES,
         euler_axes: str = "zxz",
+        # This keeps it ordered first in a scene
+        z_index=-1,
         **kwargs,
     ):
-        super().__init__(**kwargs)
+        super().__init__(z_index=z_index, **kwargs)
 
         self.uniforms["orientation"] = Rotation.identity().as_quat()
         self.uniforms["fovy"] = fovy
