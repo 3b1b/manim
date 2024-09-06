@@ -19,8 +19,7 @@ if TYPE_CHECKING:
     from moderngl.framebuffer import Framebuffer
 
 
-# Global maps updated as textures are allocated
-ID_TO_TEXTURE: dict[int, moderngl.Texture] = dict()
+# Global maps to reflect uniform status
 PROGRAM_UNIFORM_MIRRORS: dict[int, dict[str, float | tuple]] = dict()
 
 
@@ -32,21 +31,6 @@ def image_path_to_texture(path: str, ctx: moderngl.Context) -> moderngl.Texture:
         components=len(im.getbands()),
         data=im.tobytes(),
     )
-
-
-def get_texture_id(texture: moderngl.Texture) -> int:
-    tid = 0
-    while tid in ID_TO_TEXTURE:
-        tid += 1
-    ID_TO_TEXTURE[tid] = texture
-    texture.use(location=tid)
-    return tid
-
-
-def release_texture(texture_id: int):
-    texture = ID_TO_TEXTURE.pop(texture_id, None)
-    if texture is not None:
-        texture.release()
 
 
 @lru_cache()

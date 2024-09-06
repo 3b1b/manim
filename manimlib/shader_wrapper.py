@@ -15,8 +15,6 @@ from manimlib.utils.iterables import resize_array
 from manimlib.utils.shaders import get_shader_code_from_file
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
-from manimlib.utils.shaders import get_texture_id
-from manimlib.utils.shaders import release_texture
 from manimlib.utils.shaders import set_program_uniform
 
 from typing import TYPE_CHECKING
@@ -50,7 +48,7 @@ class ShaderWrapper(object):
         self.shader_folder = shader_folder
         self.depth_test = depth_test
         self.render_primitive = render_primitive
-        self.texture_names_to_ids = dict()
+        self.texture_paths = texture_paths or dict()
 
         self.program_uniform_mirror: UniformDict = dict()
         self.bind_to_mobject_uniforms(mobject_uniforms or dict())
@@ -59,8 +57,7 @@ class ShaderWrapper(object):
         for old, new in code_replacements.items():
             self.replace_code(old, new)
         self.init_program()
-        if texture_paths is not None:
-            self.init_textures(texture_paths)
+        self.init_textures()
         self.init_vertex_objects()
         self.refresh_id()
 
@@ -92,15 +89,23 @@ class ShaderWrapper(object):
         self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
         self.programs = [self.program]
 
-    def init_textures(self, texture_paths: dict[str, str]):
-        self.texture_names_to_ids = {
-            name: get_texture_id(image_path_to_texture(path, self.ctx))
-            for name, path in texture_paths.items()
-        }
+    def init_textures(self):
+        self.texture_names_to_ids = dict()
+        self.textures = []
+        for name, path in self.texture_paths.items():
+            self.add_texture(name, image_path_to_texture(path, self.ctx))
 
     def init_vertex_objects(self):
         self.vbo = None
         self.vaos = []
+
+    def add_texture(self, name: str, texture: moderngl.Texture):
+        max_units = self.ctx.info['GL_MAX_TEXTURE_IMAGE_UNITS']
+        if len(self.textures) >= max_units:
+            raise ValueError(f"Unable to use more than {max_units} textures for a program")
+        # The position in the list determines its id
+        self.texture_names_to_ids[name] = len(self.textures)
+        self.textures.append(texture)
 
     def bind_to_mobject_uniforms(self, mobject_uniforms: UniformDict):
         self.mobject_uniforms = mobject_uniforms
@@ -114,7 +119,7 @@ class ShaderWrapper(object):
             self.mobject_uniforms,
             self.depth_test,
             self.render_primitive,
-            self.texture_names_to_ids,
+            self.texture_paths,
         ])))
 
     def replace_code(self, old: str, new: str) -> None:
@@ -182,6 +187,8 @@ class ShaderWrapper(object):
     def pre_render(self):
         self.set_ctx_depth_test(self.depth_test)
         self.set_ctx_clip_plane(self.use_clip_plane())
+        for tid, texture in enumerate(self.textures):
+            texture.use(tid)
 
     def render(self):
         for vao in self.vaos:
@@ -200,6 +207,13 @@ class ShaderWrapper(object):
             if obj is not None:
                 obj.release()
         self.init_vertex_objects()
+
+    def release_textures(self):
+        for texture in self.textures:
+            texture.release()
+            del texture
+        self.textures = []
+        self.texture_names_to_ids = dict()
 
 
 class VShaderWrapper(ShaderWrapper):
@@ -227,6 +241,8 @@ class VShaderWrapper(ShaderWrapper):
             code_replacements=code_replacements,
         )
         self.fill_canvas = VShaderWrapper.get_fill_canvas(self.ctx)
+        self.add_texture('Texture', self.fill_canvas[0].color_attachments[0])
+        self.add_texture('DepthTexture', self.fill_canvas[2].color_attachments[0])
 
     def init_program_code(self) -> None:
         self.program_code = {
@@ -440,9 +456,6 @@ class VShaderWrapper(ShaderWrapper):
             vertex_shader=simple_vert,
             fragment_shader=alpha_adjust_frag,
         )
-
-        fill_program['Texture'].value = get_texture_id(fill_texture)
-        fill_program['DepthTexture'].value = get_texture_id(depth_texture)
 
         verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
         simple_vbo = ctx.buffer(verts.astype('f4').tobytes())
