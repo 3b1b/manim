@@ -149,9 +149,11 @@ class Write(DrawBorderThenFill):
         run_time: float = -1,  # If negative, this will be reassigned
         lag_ratio: float = -1,  # If negative, this will be reassigned
         rate_func: Callable[[float], float] = linear,
-        stroke_color: ManimColor = WHITE,
+        stroke_color: ManimColor = None,
         **kwargs
     ):
+        if stroke_color is None:
+            stroke_color = vmobject.get_color()
         family_size = len(vmobject.family_members_with_points())
         super().__init__(
             vmobject,
