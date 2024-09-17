@@ -142,6 +142,7 @@ class Mobject(object):
         self.uniforms: UniformDict = {
             "is_fixed_in_frame": 0.0,
             "shading": np.array(self.shading, dtype=float),
+            "clip_plane": np.zeros(4),
         }
 
     def init_colors(self):
@@ -1944,6 +1945,21 @@ class Mobject(object):
     def deactivate_depth_test(self, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):
             mob.depth_test = False
+        return self
+
+    def set_clip_plane(
+        self,
+        vect: Vect3 | None = None,
+        threshold: float | None = None
+    ) -> Self:
+        if vect is not None:
+            self.uniforms["clip_plane"][:3] = vect
+        if threshold is not None:
+            self.uniforms["clip_plane"][3] = threshold
+        return self
+
+    def deactivate_clip_plane(self) -> Self:
+        self.uniforms["clip_plane"][:] = 0
         return self
 
     # Shader code manipulation

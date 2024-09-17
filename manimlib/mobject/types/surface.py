@@ -65,10 +65,6 @@ class Surface(Mobject):
         )
         self.compute_triangle_indices()
 
-    def init_uniforms(self):
-        super().init_uniforms()
-        self.uniforms["clip_plane"] = np.zeros(4)
-
     def uv_func(self, u: float, v: float) -> tuple[float, float, float]:
         # To be implemented in subclasses
         return (u, v, 0.0)
@@ -214,21 +210,6 @@ class Surface(Mobject):
             vect = camera.get_location() - surface.get_center()
             surface.sort_faces_back_to_front(vect)
         self.add_updater(updater)
-        return self
-
-    def set_clip_plane(
-        self,
-        vect: Vect3 | None = None,
-        threshold: float | None = None
-    ) -> Self:
-        if vect is not None:
-            self.uniforms["clip_plane"][:3] = vect
-        if threshold is not None:
-            self.uniforms["clip_plane"][3] = threshold
-        return self
-
-    def deactivate_clip_plane(self) -> Self:
-        self.uniforms["clip_plane"][:] = 0
         return self
 
     def get_shader_vert_indices(self) -> np.ndarray:
