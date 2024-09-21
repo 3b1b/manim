@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 def remove_list_redundancies(lst: Sequence[T]) -> list[T]:
     """
-    Used instead of list(set(l)) to maintain order
+    Remove duplicate elements while preserving order.
     Keeps the last occurrence of each element
     """
     return list(reversed(dict.fromkeys(reversed(lst))))
