@@ -766,6 +766,8 @@ class VMobject(Mobject):
     def quick_point_from_proportion(self, alpha: float) -> Vect3:
         # Assumes all curves have the same length, so is inaccurate
         num_curves = self.get_num_curves()
+        if num_curves == 0:
+            return self.get_center()
         n, residue = integer_interpolate(0, num_curves, alpha)
         curve_func = self.get_nth_curve_function(n)
         return curve_func(residue)
