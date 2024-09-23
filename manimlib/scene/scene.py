@@ -552,7 +552,7 @@ class Scene(object):
         if self.skip_animations and not override_skip_animations:
             return [run_time]
 
-        times = np.arange(0, run_time, 1 / self.camera.fps)
+        times = np.arange(0, run_time, 1 / self.camera.fps) + 1 / self.camera.fps
 
         self.file_writer.set_progress_display_description(sub_desc=desc)
 
