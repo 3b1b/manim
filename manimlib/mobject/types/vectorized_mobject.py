@@ -1048,8 +1048,10 @@ class VMobject(Mobject):
         Returns the pattern (0, 1, 2, 2, 3, 4, 4, 5, 6, ...)
         """
         n_curves = self.get_num_curves()
-        # Creates the pattern (0, 1, 2, 2, 3, 4, 4, 5, 6, ...)
-        return (np.arange(1, 3 * n_curves + 1) * 2) // 3
+        if self.outer_vert_indices is None:
+            # Creates the pattern (0, 1, 2, 2, 3, 4, 4, 5, 6, ...)
+            self.outer_vert_indices = (np.arange(1, 3 * n_curves + 1) * 2) // 3
+        return self.outer_vert_indices
 
     # Data for shaders that may need refreshing
 
@@ -1206,6 +1208,14 @@ class VMobject(Mobject):
     @triggers_refresh
     def set_data(self, data: np.ndarray) -> Self:
         return super().set_data(data)
+
+    def resize_points(
+        self,
+        new_length: int,
+        resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
+    ) -> Self:
+        self.outer_vert_indices = None
+        return super().resize_points(new_length, resize_func)
 
     # TODO, how to be smart about tangents here?
     @triggers_refresh
