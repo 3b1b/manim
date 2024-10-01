@@ -1280,11 +1280,11 @@ class VMobject(Mobject):
         super().refresh_shader_wrapper_id()
         return self
 
-    def get_shader_data(self) -> Iterable[np.ndarray]:
+    def get_shader_data(self) -> np.ndarray:
         # Do we want this elsewhere? Say whenever points are refreshed or something?
         self.get_joint_angles()
         self.data["base_normal"][0::2] = self.data["point"][0]
-        return [self.data[self.get_outer_vert_indices()]]
+        return self.data[self.get_outer_vert_indices()]
 
 
 class VGroup(Group, VMobject, Generic[SubVmobjectType]):
