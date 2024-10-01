@@ -6,7 +6,6 @@ layout (triangle_strip, max_vertices = 6) out;
 in vec3 verts[3];
 in vec4 v_color[3];
 in vec3 v_base_normal[3];
-in int v_vert_index[3];
 
 out vec4 color;
 out float fill_all;
@@ -44,10 +43,6 @@ void emit_triangle(vec3 points[3], vec4 v_color[3], vec3 unit_normal){
 
 
 void main(){
-    // Vector graphic shaders use TRIANGLE_STRIP, but only
-    // every other one needs to be rendered
-    if (v_vert_index[0] % 2 != 0) return;
-
     // Curves are marked as ended when the handle after
     // the first anchor is set equal to that anchor
     if (verts[0] == verts[1]) return;

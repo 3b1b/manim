@@ -2029,17 +2029,17 @@ class Mobject(object):
         result = []
         for submobs, sid in batches:
             shader_wrapper = submobs[0].shader_wrapper
-            data_list = list(it.chain(*(sm.get_shader_data() for sm in submobs)))
+            data_list = [sm.get_shader_data() for sm in submobs]
             shader_wrapper.read_in(data_list)
             result.append(shader_wrapper)
         return result
 
-    def get_shader_data(self) -> Iterable[np.ndarray]:
+    def get_shader_data(self) -> np.ndarray:
         indices = self.get_shader_vert_indices()
         if indices is not None:
-            return [self.data[indices]]
+            return self.data[indices]
         else:
-            return [self.data]
+            return self.data
 
     def get_uniforms(self):
         return self.uniforms

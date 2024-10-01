@@ -7,11 +7,9 @@ in vec3 base_normal;
 out vec3 verts;  // Bezier control point
 out vec4 v_color;
 out vec3 v_base_normal;
-out int v_vert_index;
 
 void main(){
     verts = point;
     v_color = fill_rgba;
     v_base_normal = base_normal;
-    v_vert_index = gl_VertexID;
 }

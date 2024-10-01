@@ -16,7 +16,6 @@ out vec4 v_color;
 out float v_stroke_width;
 out float v_joint_angle;
 out vec3 v_unit_normal;
-out int v_vert_index;
 
 const float STROKE_WIDTH_CONVERSION = 0.01;
 
@@ -26,5 +25,4 @@ void main(){
     v_stroke_width = STROKE_WIDTH_CONVERSION * stroke_width * mix(frame_scale, 1, is_fixed_in_frame);
     v_joint_angle = joint_angle;
     v_unit_normal = unit_normal;
-    v_vert_index = gl_VertexID;
 }
