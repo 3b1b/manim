@@ -225,7 +225,7 @@ class VShaderWrapper(ShaderWrapper):
         mobject_uniforms: Optional[UniformDict] = None,  # A dictionary mapping names of uniform variables
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
-        render_primitive: int = moderngl.TRIANGLE_STRIP,
+        render_primitive: int = moderngl.TRIANGLES,
         code_replacements: dict[str, str] = dict(),
         stroke_behind: bool = False,
     ):

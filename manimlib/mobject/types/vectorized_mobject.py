@@ -117,6 +117,7 @@ class VMobject(Mobject):
         self.needs_new_joint_angles = True
         self.needs_new_unit_normal = True
         self.subpath_end_indices = None
+        self.outer_vert_indices = np.zeros(0, dtype=int)
 
         super().__init__(**kwargs)
 
@@ -1050,8 +1051,10 @@ class VMobject(Mobject):
         Returns the pattern (0, 1, 2, 2, 3, 4, 4, 5, 6, ...)
         """
         n_curves = self.get_num_curves()
-        # Creates the pattern (0, 1, 2, 2, 3, 4, 4, 5, 6, ...)
-        return (np.arange(1, 3 * n_curves + 1) * 2) // 3
+        if len(self.outer_vert_indices) != 3 * n_curves:
+            # Creates the pattern (0, 1, 2, 2, 3, 4, 4, 5, 6, ...)
+            self.outer_vert_indices = (np.arange(1, 3 * n_curves + 1) * 2) // 3
+        return self.outer_vert_indices
 
     # Data for shaders that may need refreshing
 
@@ -1272,11 +1275,14 @@ class VMobject(Mobject):
         super().refresh_shader_wrapper_id()
         return self
 
-    def get_shader_data(self) -> Iterable[np.ndarray]:
+    def get_shader_data(self) -> np.ndarray:
         # Do we want this elsewhere? Say whenever points are refreshed or something?
         self.get_joint_angles()
         self.data["base_normal"][0::2] = self.data["point"][0]
-        return [self.data, self.data[-1:]]
+        return super().get_shader_data()
+
+    def get_shader_vert_indices(self) -> Optional[np.ndarray]:
+        return self.get_outer_vert_indices()
 
 
 class VGroup(Group, VMobject, Generic[SubVmobjectType]):
