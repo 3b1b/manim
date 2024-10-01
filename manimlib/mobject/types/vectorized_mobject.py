@@ -1284,7 +1284,10 @@ class VMobject(Mobject):
         # Do we want this elsewhere? Say whenever points are refreshed or something?
         self.get_joint_angles()
         self.data["base_normal"][0::2] = self.data["point"][0]
-        return self.data[self.get_outer_vert_indices()]
+        return super().get_shader_data()
+
+    def get_shader_vert_indices(self) -> Optional[np.ndarray]:
+        return self.get_outer_vert_indices()
 
 
 class VGroup(Group, VMobject, Generic[SubVmobjectType]):
