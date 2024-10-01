@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     from manimlib.typing import ManimColor, Vect3
 
 
-
 class BulletedList(VGroup):
     def __init__(
         self,
