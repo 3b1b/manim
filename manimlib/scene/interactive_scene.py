@@ -507,6 +507,8 @@ class InteractiveScene(Scene):
             self.save_selection_to_file()
         elif char == "d" and modifiers == SHIFT_MODIFIER:
             self.copy_frame_positioning()
+        elif char == "c" and modifiers == SHIFT_MODIFIER:
+            self.copy_cursor_position()
         elif symbol in ARROW_SYMBOLS:
             self.nudge_selection(
                 vect=[LEFT, UP, RIGHT, DOWN][ARROW_SYMBOLS.index(symbol)],
@@ -631,3 +633,6 @@ class InteractiveScene(Scene):
             call += ", {:.2f}".format(height)
         call += ")"
         pyperclip.copy(call)
+
+    def copy_cursor_position(self):
+        pyperclip.copy(str(tuple(self.mouse_point.get_center().round(2))))
