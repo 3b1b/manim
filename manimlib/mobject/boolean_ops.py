@@ -11,15 +11,15 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 
 def _convert_vmobject_to_skia_path(vmobject: VMobject) -> pathops.Path:
     path = pathops.Path()
-    subpaths = vmobject.get_subpaths_from_points(vmobject.get_all_points())
-    for subpath in subpaths:
-        quads = vmobject.get_bezier_tuples_from_points(subpath)
-        start = subpath[0]
-        path.moveTo(*start[:2])
-        for p0, p1, p2 in quads:
-            path.quadTo(*p1[:2], *p2[:2])
-        if vmobject.consider_points_equal(subpath[0], subpath[-1]):
-            path.close()
+    for submob in vmobject.family_members_with_points():
+        for subpath in submob.get_subpaths():
+            quads = vmobject.get_bezier_tuples_from_points(subpath)
+            start = subpath[0]
+            path.moveTo(*start[:2])
+            for p0, p1, p2 in quads:
+                path.quadTo(*p1[:2], *p2[:2])
+            if vmobject.consider_points_equal(subpath[0], subpath[-1]):
+                path.close()
     return path
 
 
