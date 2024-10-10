@@ -67,7 +67,7 @@ def set_program_uniform(
     uniform_mirror = PROGRAM_UNIFORM_MIRRORS[pid]
 
     if type(value) is np.ndarray and value.ndim > 0:
-        value = tuple(value)
+        value = tuple(value.flatten())
     if uniform_mirror.get(name, None) == value:
         return False
 

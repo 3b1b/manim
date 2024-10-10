@@ -4,6 +4,7 @@ from copy import deepcopy
 
 from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Mobject
+from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.rate_functions import smooth
 from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.simple_functions import clip
@@ -37,7 +38,10 @@ class Animation(object):
         remover: bool = False,
         # What to enter into the update function upon completion
         final_alpha_value: float = 1.0,
-        suspend_mobject_updating: bool = True,
+        # If set to True, the mobject itself will have its internal updaters called,
+        # but the start or target mobjects would not be suspended. To completely suspend
+        # updating, call mobject.suspend_updating() before the animation
+        suspend_mobject_updating: bool = False,
     ):
         self.mobject = mobject
         self.run_time = run_time
@@ -65,12 +69,6 @@ class Animation(object):
         self.mobject.set_animating_status(True)
         self.starting_mobject = self.create_starting_mobject()
         if self.suspend_mobject_updating:
-            # All calls to self.mobject's internal updaters
-            # during the animation, either from this Animation
-            # or from the surrounding scene, should do nothing.
-            # It is, however, okay and desirable to call
-            # the internal updaters of self.starting_mobject,
-            # or any others among self.get_all_mobjects()
             self.mobject_was_updating = not self.mobject.updating_suspended
             self.mobject.suspend_updating()
         self.families = list(self.get_all_families_zipped())
@@ -105,23 +103,19 @@ class Animation(object):
     def update_mobjects(self, dt: float) -> None:
         """
         Updates things like starting_mobject, and (for
-        Transforms) target_mobject.  Note, since typically
-        (always?) self.mobject will have its updating
-        suspended during the animation, this will do
-        nothing to self.mobject.
+        Transforms) target_mobject.
         """
         for mob in self.get_all_mobjects_to_update():
             mob.update(dt)
 
     def get_all_mobjects_to_update(self) -> list[Mobject]:
         # The surrounding scene typically handles
-        # updating of self.mobject.  Besides, in
-        # most cases its updating is suspended anyway
+        # updating of self.mobject.
         items = list(filter(
             lambda m: m is not self.mobject,
             self.get_all_mobjects()
         ))
-        items = list(set(items))
+        items = remove_list_redundancies(items)
         return items
 
     def copy(self):

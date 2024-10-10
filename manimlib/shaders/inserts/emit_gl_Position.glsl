@@ -2,6 +2,7 @@ uniform float is_fixed_in_frame;
 uniform mat4 view;
 uniform float focal_distance;
 uniform vec3 frame_rescale_factors;
+uniform vec4 clip_plane;
 
 void emit_gl_Position(vec3 point){
     vec4 result = vec4(point, 1.0);
@@ -13,4 +14,8 @@ void emit_gl_Position(vec3 point){
     // Flip and scale to prevent premature clipping
     result.z *= -0.1;
     gl_Position = result;
+    
+    if(clip_plane.xyz != vec3(0.0, 0.0, 0.0)){
+        gl_ClipDistance[0] = dot(vec4(point, 1.0), clip_plane);
+    }
 }

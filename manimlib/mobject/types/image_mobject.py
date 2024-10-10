@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import numpy as np
+import moderngl
 from PIL import Image
-from moderngl import TRIANGLES
 
 from manimlib.constants import DL, DR, UL, UR
 from manimlib.mobject.mobject import Mobject
@@ -25,7 +25,7 @@ class ImageMobject(Mobject):
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ]
-    render_primitive: int = TRIANGLES
+    render_primitive: int = moderngl.TRIANGLES
 
     def __init__(
         self,

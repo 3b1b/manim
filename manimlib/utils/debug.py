@@ -27,6 +27,6 @@ def index_labels(
         label = Integer(n)
         label.set_height(label_height)
         label.move_to(submob)
-        label.set_stroke(BLACK, 5, background=True)
+        label.set_backstroke(BLACK, 5)
         labels.add(label)
     return labels

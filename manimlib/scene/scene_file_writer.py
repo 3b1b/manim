@@ -9,6 +9,7 @@ import sys
 import numpy as np
 from pydub import AudioSegment
 from tqdm.auto import tqdm as ProgressDisplay
+from pathlib import Path
 
 from manimlib.constants import FFMPEG_BIN
 from manimlib.logger import log
@@ -299,15 +300,21 @@ class SceneFileWriter(object):
         self.video_codec = "libx264rgb"
         self.pixel_format = "rgb32"
 
+    def get_insert_file_path(self, index: int) -> Path:
+        movie_path = Path(self.get_movie_file_path())
+        scene_name = movie_path.stem
+        insert_dir = Path(movie_path.parent, "inserts")
+        guarantee_existence(str(insert_dir))
+        return Path(insert_dir, f"{scene_name}_{index}{movie_path.suffix}")
+
     def begin_insert(self):
         # Begin writing process
         self.write_to_movie = True
         self.init_output_directories()
-        movie_path = self.get_movie_file_path()
-        count = 0
-        while os.path.exists(name := movie_path.replace(".", f"_insert_{count}.")):
-            count += 1
-        self.inserted_file_path = name
+        index = 0
+        while (insert_path := self.get_insert_file_path(index)).exists():
+            index += 1
+        self.inserted_file_path = str(insert_path)
         self.open_movie_pipe(self.inserted_file_path)
 
     def end_insert(self):

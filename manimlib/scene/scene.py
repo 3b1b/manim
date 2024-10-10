@@ -255,17 +255,6 @@ class Scene(object):
         pt_inputhooks.register("manim", inputhook)
         shell.enable_gui("manim")
 
-        # This is hacky, but there's an issue with ipython which is that
-        # when you define lambda's or list comprehensions during a shell session,
-        # they are not aware of local variables in the surrounding scope. Because
-        # That comes up a fair bit during scene construction, to get around this,
-        # we (admittedly sketchily) update the global namespace to match the local
-        # namespace, since this is just a shell session anyway.
-        shell.events.register(
-            "pre_run_cell",
-            lambda *args, **kwargs: shell.user_global_ns.update(shell.user_ns)
-        )
-
         # Operation to run after each ipython command
         def post_cell_func(*args, **kwargs):
             if not self.is_window_closing():
