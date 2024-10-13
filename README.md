@@ -68,7 +68,7 @@ manim-render example_scenes.py OpeningManimExample
     brew install ffmpeg mactex
     ```
 
-2. If you are using M1, install Cairo. 
+2. If you are using an ARM-based processor, install Cairo. 
     ```sh
     arch -arm64 brew install pkg-config cairo
     ```
