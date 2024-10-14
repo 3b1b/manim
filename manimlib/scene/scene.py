@@ -220,14 +220,14 @@ class Scene(object):
         self.save_state()
         self.show_animation_progress = show_animation_progress
 
-        # Create embedded IPython terminal to be configured
-        shell = InteractiveShellEmbed.instance()
-
-        # Use the locals namespace of the caller
+        # Create embedded IPython terminal configured to have access to
+        # the local namespace of the caller
         caller_frame = inspect.currentframe().f_back
-        local_ns = dict(caller_frame.f_locals)
+        module = get_module(caller_frame.f_globals["__file__"])
+        shell = InteractiveShellEmbed(user_module=module)
 
-        # Add a few custom shortcuts
+        # Add a few custom shortcuts to that local namespace
+        local_ns = dict(caller_frame.f_locals)
         local_ns.update(
             play=self.play,
             wait=self.wait,
@@ -243,6 +243,9 @@ class Scene(object):
             touch=lambda: shell.enable_gui("manim"),
             notouch=lambda: shell.enable_gui(None),
         )
+
+        # Update the shell module with the caller's locals + shortcuts
+        module.__dict__.update(local_ns)
 
         # Enables gui interactions during the embed
         def inputhook(context):
@@ -278,13 +281,7 @@ class Scene(object):
         shell.magic(f"xmode {self.embed_exception_mode}")
 
         # Launch shell
-        shell(
-            local_ns=local_ns,
-            # Pretend like we're embeding in the caller function, not here
-            stack_depth=2,
-            # Specify that the present module is the caller's, not here
-            module=get_module(caller_frame.f_globals["__file__"])
-        )
+        shell()
 
         # End scene when exiting an embed
         if close_scene_on_exit:
