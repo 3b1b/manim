@@ -2,7 +2,7 @@ colour
 ipython>=8.18.0
 isosurfaces
 fontTools
-manimpango>=0.4.0.post0,<0.5.0
+manimpango>=0.6.0
 mapbox-earcut
 matplotlib
 moderngl
