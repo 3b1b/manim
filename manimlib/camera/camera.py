@@ -6,7 +6,6 @@ import OpenGL.GL as gl
 from PIL import Image
 
 from manimlib.camera.camera_frame import CameraFrame
-from manimlib.constants import ASPECT_RATIO
 from manimlib.constants import BLACK
 from manimlib.constants import DEFAULT_FPS
 from manimlib.constants import DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH
@@ -127,7 +126,7 @@ class Camera(object):
     def clear(self) -> None:
         self.fbo.clear(*self.background_rgba)
         if self.window:
-            self.window.clear()
+            self.window.clear(*self.background_rgba)
 
     def blit(self, src_fbo, dst_fbo):
         """
@@ -221,8 +220,8 @@ class Camera(object):
             frame_height = frame_width / aspect_ratio
         else:
             frame_width = aspect_ratio * frame_height
-        self.frame.set_height(frame_height, stretch=true)
-        self.frame.set_width(frame_width, stretch=true)
+        self.frame.set_height(frame_height, stretch=True)
+        self.frame.set_width(frame_width, stretch=True)
 
     # Rendering
     def capture(self, *mobjects: Mobject) -> None:
