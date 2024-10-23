@@ -446,6 +446,11 @@ class VShaderWrapper(ShaderWrapper):
                 color = texture(Texture, uv);
                 if(color.a == 0) discard;
 
+                if(color.a < 0){
+                    color.a = -color.a / (1.0 - color.a);
+                    color.rgb *= (color.a - 1);
+                }
+
                 // Counteract scaling in fill frag
                 color *= 1.06;
 
