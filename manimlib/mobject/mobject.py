@@ -2039,16 +2039,11 @@ class Mobject(object):
         return self.shader_wrapper
 
     def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
-        family = self.family_members_with_points()
-        batches = batch_by_property(family, lambda sm: sm.get_shader_wrapper(ctx).get_id())
-
-        result = []
-        for submobs, sid in batches:
-            shader_wrapper = submobs[0].shader_wrapper
-            data_list = [sm.get_shader_data() for sm in submobs]
-            shader_wrapper.read_in(data_list)
-            result.append(shader_wrapper)
-        return result
+        if len(self.get_points()) == 0:
+            return []
+        shader_wrapper = self.get_shader_wrapper(ctx)
+        shader_wrapper.read_in([self.get_shader_data()])
+        return [shader_wrapper]
 
     def get_shader_data(self) -> np.ndarray:
         indices = self.get_shader_vert_indices()

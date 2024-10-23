@@ -14,6 +14,7 @@ from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.color import color_to_rgba
+from manimlib.utils.family_ops import extract_mobject_family_members
 
 from typing import TYPE_CHECKING
 
@@ -228,7 +229,7 @@ class Camera(object):
         self.clear()
         self.refresh_uniforms()
         self.fbo.use()
-        for mobject in mobjects:
+        for mobject in extract_mobject_family_members(mobjects, True):
             mobject.render(self.ctx, self.uniforms)
 
         if self.window:
