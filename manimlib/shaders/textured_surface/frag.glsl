@@ -26,6 +26,7 @@ void main() {
         float alpha = smoothstep(-dark_shift, dark_shift, dp);
         color = mix(dark_color, color, alpha);
     }
+    if (color.a == 0) discard;
 
     frag_color = finalize_color(
         color,
