@@ -92,10 +92,6 @@ COMMAND_SYMBOL: int = 65517
 DELETE_SYMBOL: int = 65288
 ARROW_SYMBOLS: list[int] = list(range(65361, 65365))
 
-SHIFT_MODIFIER: int = 1
-CTRL_MODIFIER: int = 2
-COMMAND_MODIFIER: int = 64
-
 # Colors
 
 BLUE_E: ManimColor = "#1C758A"

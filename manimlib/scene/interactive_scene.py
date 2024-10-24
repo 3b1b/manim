@@ -4,10 +4,10 @@ import itertools as it
 import numpy as np
 import pyperclip
 from IPython.core.getipython import get_ipython
+from pyglet.window import key as PygletWindowKeys
 
 from manimlib.animation.fading import FadeIn
 from manimlib.constants import ARROW_SYMBOLS, CTRL_SYMBOL, DELETE_SYMBOL, SHIFT_SYMBOL
-from manimlib.constants import COMMAND_MODIFIER, SHIFT_MODIFIER
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, RIGHT, UL, UP, UR
 from manimlib.constants import FRAME_WIDTH, FRAME_HEIGHT, SMALL_BUFF
 from manimlib.constants import PI
@@ -50,6 +50,7 @@ INFORMATION_KEY = 'i'
 CURSOR_KEY = 'k'
 COPY_FRAME_POSITION_KEY = 'p'
 
+ALL_MODIFIERS = PygletWindowKeys.MOD_CTRL | PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_SHIFT
 
 # Note, a lot of the functionality here is still buggy and very much a work in progress.
 
@@ -470,49 +471,49 @@ class InteractiveScene(Scene):
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
         char = chr(symbol)
-        if char == SELECT_KEY and modifiers == 0:
+        if char == SELECT_KEY and (modifiers & ALL_MODIFIERS) == 0:
             self.enable_selection()
         if char == UNSELECT_KEY:
             self.clear_selection()
-        elif char in GRAB_KEYS and modifiers == 0:
+        elif char in GRAB_KEYS and (modifiers & ALL_MODIFIERS) == 0:
             self.prepare_grab()
-        elif char == RESIZE_KEY and modifiers in [0, SHIFT_MODIFIER]:
-            self.prepare_resizing(about_corner=(modifiers == SHIFT_MODIFIER))
+        elif char == RESIZE_KEY and (modifiers & PygletWindowKeys.MOD_SHIFT):
+            self.prepare_resizing(about_corner=((modifiers & PygletWindowKeys.MOD_SHIFT) > 0))
         elif symbol == SHIFT_SYMBOL:
             if self.window.is_key_pressed(ord("t")):
                 self.prepare_resizing(about_corner=True)
-        elif char == COLOR_KEY and modifiers == 0:
+        elif char == COLOR_KEY and (modifiers & ALL_MODIFIERS) == 0:
             self.toggle_color_palette()
-        elif char == INFORMATION_KEY and modifiers == 0:
+        elif char == INFORMATION_KEY and (modifiers & ALL_MODIFIERS) == 0:
             self.display_information()
-        elif char == "c" and modifiers == COMMAND_MODIFIER:
+        elif char == "c" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.copy_selection()
-        elif char == "v" and modifiers == COMMAND_MODIFIER:
+        elif char == "v" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.paste_selection()
-        elif char == "x" and modifiers == COMMAND_MODIFIER:
+        elif char == "x" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.copy_selection()
             self.delete_selection()
         elif symbol == DELETE_SYMBOL:
             self.delete_selection()
-        elif char == "a" and modifiers == COMMAND_MODIFIER:
+        elif char == "a" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.clear_selection()
             self.add_to_selection(*self.mobjects)
-        elif char == "g" and modifiers == COMMAND_MODIFIER:
+        elif char == "g" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.group_selection()
-        elif char == "g" and modifiers == COMMAND_MODIFIER | SHIFT_MODIFIER:
+        elif char == "g" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL | PygletWindowKeys.MOD_SHIFT)):
             self.ungroup_selection()
-        elif char == "t" and modifiers == COMMAND_MODIFIER:
+        elif char == "t" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.toggle_selection_mode()
-        elif char == "s" and modifiers == COMMAND_MODIFIER:
+        elif char == "s" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.save_selection_to_file()
-        elif char == "d" and modifiers == SHIFT_MODIFIER:
+        elif char == "d" and (modifiers & PygletWindowKeys.MOD_SHIFT):
             self.copy_frame_positioning()
-        elif char == "c" and modifiers == SHIFT_MODIFIER:
+        elif char == "c" and (modifiers & PygletWindowKeys.MOD_SHIFT):
             self.copy_cursor_position()
         elif symbol in ARROW_SYMBOLS:
             self.nudge_selection(
                 vect=[LEFT, UP, RIGHT, DOWN][ARROW_SYMBOLS.index(symbol)],
-                large=(modifiers & SHIFT_MODIFIER),
+                large=(modifiers & PygletWindowKeys.MOD_SHIFT),
             )
         # Adding crosshair
         if char == CURSOR_KEY:
