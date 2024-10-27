@@ -373,8 +373,8 @@ class Scene(object):
         Groups of all clusters of adjacent Mobjects in the scene
         """
         batches = batch_by_property(
-            self.mobjects,
-            lambda m: str(type(m)) + str(m.get_shader_wrapper(self.camera.ctx).get_id())
+            sorted(self.mobjects, key=lambda m: m.z_index),
+            lambda m: str(type(m)) + str(m.get_shader_wrapper(self.camera.ctx).get_id()) + str(m.z_index)
         )
 
         for group in self.render_groups:
