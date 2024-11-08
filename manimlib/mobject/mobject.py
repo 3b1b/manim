@@ -1950,12 +1950,14 @@ class Mobject(object):
     def set_clip_plane(
         self,
         vect: Vect3 | None = None,
-        threshold: float | None = None
+        threshold: float | None = None,
+        recurse=True
     ) -> Self:
-        if vect is not None:
-            self.uniforms["clip_plane"][:3] = vect
-        if threshold is not None:
-            self.uniforms["clip_plane"][3] = threshold
+        for submob in self.get_family(recurse):
+            if vect is not None:
+                submob.uniforms["clip_plane"][:3] = vect
+            if threshold is not None:
+                submob.uniforms["clip_plane"][3] = threshold
         return self
 
     def deactivate_clip_plane(self) -> Self:
