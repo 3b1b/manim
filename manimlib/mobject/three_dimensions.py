@@ -169,6 +169,20 @@ class Cylinder(Surface):
         return np.array([np.cos(u), np.sin(u), v])
 
 
+class Cone(Cylinder):
+    def __init__(
+        self,
+        u_range: Tuple[float, float] = (0, TAU),
+        v_range: Tuple[float, float] = (0, 1),
+        *args,
+        **kwargs,
+    ):
+        super().__init__(u_range=u_range, v_range=v_range, *args, **kwargs)
+
+    def uv_func(self, u: float, v: float) -> np.ndarray:
+        return np.array([(1 - v) * np.cos(u), (1 - v) * np.sin(u), v])
+
+
 class Line3D(Cylinder):
     def __init__(
         self,
