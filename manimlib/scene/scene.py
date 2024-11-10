@@ -987,6 +987,9 @@ class Scene(object):
         pass
 
     def focus(self) -> None:
+        """
+        Puts focus on the ManimGL window.
+        """
         if not self.window:
             return
         self.window.focus()
