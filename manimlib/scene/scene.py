@@ -30,6 +30,7 @@ from manimlib.constants import RED
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
+from manimlib.main_run_manager import manager
 from manimlib.mobject.frame import FullScreenRectangle
 from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Group
@@ -292,24 +293,9 @@ class Scene(object):
         def custom_exc(shell, etype, evalue, tb, tb_offset=None):
             if isinstance(evalue, ReloadSceneException):
                 start_at_line = evalue.start_at_line
-                from_str = (
-                    str(start_at_line) if start_at_line else "the same line as before"
-                )
-                print(f"Reloading scene from {from_str}")
-                # shell.new_main_mod(file_name, module_name)
-                # shell.reset(new_session=False, aggressive=True)
-                # shell.clear_main_mod_cache()
-
-                # https://ipython.readthedocs.io/en/stable/api/generated/IPython.core.interactiveshell.html#IPython.core.interactiveshell.InteractiveShell.reset
-
-                # Close shell TODO
-                print("will ask exit")
-                # shell.should_raise = True
-                # shell.ask_exit()
-
-                from manimlib.__main__ import get_scenes_and_run
-
-                get_scenes_and_run(start_at_line)
+                shell.set_custom_exc((), None)  # disable custom exception handler
+                manager.set_new_start_at_line(start_at_line)
+                shell.run_line_magic("exit_raise", "")
                 return
 
             # Show the error don't just swallow it
