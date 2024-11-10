@@ -41,8 +41,6 @@ class Window(PygletWindow):
         self.size = size
         self.update_scene(scene)
 
-        mglw.activate_context(window=self)
-
     def reset_state(self):
         self.pressed_keys.clear()
         self._has_undrawn_event = True
