@@ -1030,14 +1030,14 @@ class Scene(object):
         Before reload, the scene is cleared and the entire state is reset, such
         that we can start from a clean slate.
         """
-        if self.window is None:
-            log.error("Cannot reload scene without a window")
-            return
+        # if self.window is None:
+        #     log.error("Cannot reload scene without a window")
+        #     return
 
         # self.clear()
-        self.stop_skipping()
-        # self.tear_down(destroy_window_if_present=True)
-        self.camera_config["window"] = None
+        # self.stop_skipping()
+        # self.tear_down()
+        # self.camera_config["window"] = None
         raise ReloadSceneException(start_at_line)
 
 

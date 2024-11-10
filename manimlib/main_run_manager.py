@@ -8,6 +8,8 @@ class MainRunManager:
         # Command line arguments
         self.args: Any = None
 
+        self.scenes: list[Any] = []
+
         # Last interactive window spawned
         self.window = None
 
@@ -21,8 +23,13 @@ class MainRunManager:
             try:
                 self.retrieve_scenes_and_run(self.start_at_line)
             except KillEmbedded:
+                # Requested via the `exit_raise` IPython runline magic
+                # by means of our scene.reload() command
                 print("KillEmbedded detected. Reloading scenes...")
-                continue
+                for scene in self.scenes:
+                    scene.clear()
+                    scene.tear_down()
+
             except KeyboardInterrupt:
                 break
 
@@ -45,13 +52,13 @@ class MainRunManager:
             config["existing_window"] = self.window
 
         # Scenes
-        scenes = manimlib.extract_scene.main(config)
-        if len(scenes) > 0:
-            first_window = scenes[0].window
+        self.scenes = manimlib.extract_scene.main(config)
+        if len(self.scenes) > 0:
+            first_window = self.scenes[0].window
             if first_window:
                 self.window = first_window
 
-        for scene in scenes:
+        for scene in self.scenes:
             scene.run()
 
 
