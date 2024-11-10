@@ -1,5 +1,5 @@
-from IPython.terminal.embed import KillEmbedded
 from typing import Any
+from IPython.terminal.embed import KillEmbedded
 
 
 class ReloadManager:
@@ -76,7 +76,7 @@ class ReloadManager:
             if scene.window is not None:
                 self.window = scene.window
                 break
-        
+
         for scene in self.scenes:
             scene.run()
 
