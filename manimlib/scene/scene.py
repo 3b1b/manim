@@ -996,17 +996,25 @@ class Scene(object):
 
     def reload(self, start_at_line: int | None = None) -> None:
         """
-        Reloads the scene as `manimgl` would do with the same arguments provided
-        for the initial startup. This is to avoid having to exit the IPython
-        kernel, then re-running the `manimgl` command. This way, the GUI can
-        also stay open during the reload.
+        Reloads the scene just like the `manimgl` command would do with the
+        same arguments that were provided for the initial startup. This allows
+        for quick iteration during scene development since we don't have to exit
+        the IPython kernel and re-run the `manimgl` command again. The GUI stays
+        open during the reload.
 
         If `start_at_line` is provided, the scene will be reloaded at that line
         number. This corresponds to the `linemarker` param of the
         `config.get_module_with_inserted_embed_line()` method.
 
         Before reload, the scene is cleared and the entire state is reset, such
-        that we can start from a clean slate.
+        that we can start from a clean slate. This is taken care of by the
+        ReloadManager, which will catch the error raised by the `exit_raise`
+        magic command that we invoke here.
+        Note that we cannot define a custom exception class for this error,
+        since the IPython kernel will swallow any exception. While we can catch
+        such an exception in our custom exception handler registered with the
+        `set_custom_exc` method, we cannot break out of the IPython shell by
+        this means.
         """
         reload_manager.set_new_start_at_line(start_at_line)
         self.shell.run_line_magic("exit_raise", "")
