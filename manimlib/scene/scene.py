@@ -29,7 +29,7 @@ from manimlib.constants import RED
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
-from manimlib.main_run_manager import manager
+from manimlib.reload_manager import reload_manager
 from manimlib.mobject.frame import FullScreenRectangle
 from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Group
@@ -1008,7 +1008,7 @@ class Scene(object):
         Before reload, the scene is cleared and the entire state is reset, such
         that we can start from a clean slate.
         """
-        manager.set_new_start_at_line(start_at_line)
+        reload_manager.set_new_start_at_line(start_at_line)
         self.shell.run_line_magic("exit_raise", "")
 
 

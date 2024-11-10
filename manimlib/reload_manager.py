@@ -2,7 +2,7 @@ from IPython.terminal.embed import KillEmbedded
 from typing import Any
 
 
-class MainRunManager:
+class ReloadManager:
     args: Any = None
     scenes: list[Any] = []
     window = None
@@ -39,7 +39,7 @@ class MainRunManager:
 
         # Args
         if self.args is None:
-            raise RuntimeError("Fatal error: No args were passed to the MainRunManager")
+            raise RuntimeError("Fatal error: No args were passed to the ReloadManager")
         if overwrite_start_at_line is not None:
             self.args.embed = str(overwrite_start_at_line)  # type: ignore
 
@@ -61,4 +61,4 @@ class MainRunManager:
             scene.run()
 
 
-manager = MainRunManager()
+reload_manager = ReloadManager()
