@@ -12,7 +12,6 @@ from functools import wraps
 
 from IPython.terminal import pt_inputhooks
 from IPython.terminal.embed import InteractiveShellEmbed
-from IPython.core.getipython import get_ipython
 
 import numpy as np
 from tqdm.auto import tqdm as ProgressDisplay
@@ -244,6 +243,7 @@ class Scene(object):
         caller_frame = inspect.currentframe().f_back
         module = get_module(caller_frame.f_globals["__file__"])
         shell = InteractiveShellEmbed(user_module=module)
+        self.shell = shell
 
         # Add a few custom shortcuts to that local namespace
         local_ns = dict(caller_frame.f_locals)
@@ -788,8 +788,7 @@ class Scene(object):
         revert to the state of the scene the first time this function
         was called on a block of code starting with that comment.
         """
-        shell = get_ipython()
-        if shell is None or self.window is None:
+        if self.shell is None or self.window is None:
             raise Exception(
                 "Scene.checkpoint_paste cannot be called outside of " +
                 "an ipython shell"
@@ -830,7 +829,7 @@ class Scene(object):
             self.camera.use_window_fbo(False)
             self.file_writer.begin_insert()
 
-        shell.run_cell(pasted)
+        self.shell.run_cell(pasted)
 
         if record:
             self.file_writer.end_insert()
