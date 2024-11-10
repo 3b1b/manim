@@ -26,9 +26,12 @@ class MainRunManager:
                 # Requested via the `exit_raise` IPython runline magic
                 # by means of our scene.reload() command
                 print("KillEmbedded detected. Reloading scenes...")
+
                 for scene in self.scenes:
                     scene.clear()
                     scene.tear_down()
+
+                self.scenes = []
 
             except KeyboardInterrupt:
                 break
