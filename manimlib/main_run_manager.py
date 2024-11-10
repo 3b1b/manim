@@ -22,14 +22,6 @@ class MainRunManager:
                 print("KillEmbedded detected. Reloading scenes...")
 
                 for scene in self.scenes:
-                    # scene.stop_skipping()
-                    # scene.clear()
-                    # scene.file_writer.ended_with_interrupt = True
-                    # scene.post_play()
-                    # scene.emit_frame()
-                    # scene.window._window.dispatch_events()
-                    # scene.window.destroy()
-                    # scene.window.close()
                     scene.tear_down()
 
                 self.scenes = []
