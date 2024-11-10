@@ -109,7 +109,8 @@ class Scene(object):
             config["samples"] = self.samples
         self.file_writer_config = {**self.default_file_writer_config, **file_writer_config}
 
-        # Initialize window, if applicable
+        # Initialize window, if applicable (and reuse window if provided during
+        # reload by means of the ReloadManager)
         if self.preview:
             if existing_window:
                 self.window = existing_window
