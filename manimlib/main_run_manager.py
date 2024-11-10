@@ -3,17 +3,10 @@ from typing import Any
 
 
 class MainRunManager:
-
-    def __init__(self):
-        # Command line arguments
-        self.args: Any = None
-
-        self.scenes: list[Any] = []
-
-        # Last interactive window spawned
-        self.window = None
-
-        self.start_at_line = None
+    args: Any = None
+    scenes: list[Any] = []
+    window = None
+    start_at_line = None
 
     def set_new_start_at_line(self, start_at_line):
         self.start_at_line = start_at_line
