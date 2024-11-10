@@ -39,15 +39,18 @@ class Window(PygletWindow):
         self.pressed_keys = set()
         self.title = str(scene)
         self.size = size
+
         self.update_scene(scene)
 
     def reset_state(self):
         self.pressed_keys.clear()
         self._has_undrawn_event = True
 
-        mglw.activate_context(window=self)
+        self.init_mgl_context()
+
         self.timer = Timer()
         self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
+        mglw.activate_context(window=self, ctx=self.ctx)
         self.timer.start()
 
         self.to_default_position()
