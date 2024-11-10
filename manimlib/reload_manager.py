@@ -4,8 +4,8 @@ from typing import Any
 
 class ReloadManager:
     """
-    Manages the loading and running of scenes and serves is called directly
-    from the main entry point of ManimGL.
+    Manages the loading and running of scenes and is called directly from the
+    main entry point of ManimGL.
 
     The name "reload" comes from the fact that this class handles the
     reinitialization of scenes when requested by the user via the `reload()`
@@ -67,13 +67,16 @@ class ReloadManager:
 
         # Scenes
         self.scenes = manimlib.extract_scene.main(config)
-        if len(self.scenes) > 0:
-            for scene in self.scenes:
-                # Find first available window
-                if scene.window is not None:
-                    self.window = scene.window
-                    break
+        if len(self.scenes) == 0:
+            print("No scenes found to run")
+            return
 
+        # Find first available window
+        for scene in self.scenes:
+            if scene.window is not None:
+                self.window = scene.window
+                break
+        
         for scene in self.scenes:
             scene.run()
 
