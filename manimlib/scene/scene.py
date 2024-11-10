@@ -234,6 +234,7 @@ class Scene(object):
             add=self.add,
             remove=self.remove,
             clear=self.clear,
+            focus=self.focus,
             save_state=self.save_state,
             undo=self.undo,
             redo=self.redo,
@@ -984,6 +985,11 @@ class Scene(object):
 
     def on_close(self) -> None:
         pass
+
+    def focus(self) -> None:
+        if not self.window:
+            return
+        self.window.focus()
 
 
 class SceneState():
