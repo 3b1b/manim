@@ -56,6 +56,12 @@ if TYPE_CHECKING:
     from manimlib.animation.animation import Animation
 
 
+PAN_3D_KEY = "d"
+FRAME_SHIFT_KEY = "f"
+RESET_FRAME_KEY = "r"
+QUIT_KEY = "q"
+
+
 class ReloadSceneException(Exception):
     """
     Exception raised to indicate that we want to reload the scene.
