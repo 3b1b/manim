@@ -124,7 +124,7 @@ class Scene(object):
         if self.preview:
             if existing_window:
                 self.window = existing_window
-                existing_window.update_scene(self)
+                self.window.update_scene(self)
             else:
                 self.window = Window(scene=self, **self.window_config)
                 self.camera_config["fps"] = 30  # Where's that 30 from?
@@ -288,9 +288,12 @@ class Scene(object):
         # Flash border, and potentially play sound, on exceptions
         def custom_exc(shell, etype, evalue, tb, tb_offset=None):
             if isinstance(evalue, ReloadSceneException):
-                start_at_line = evalue.start_at_line
                 # shell.set_custom_exc((), None)  # disable custom exception handler
-                manager.set_new_start_at_line(start_at_line)
+                manager.set_new_start_at_line(evalue.start_at_line)
+
+                # unregister all shell events
+                shell.events.unregister("post_run_cell", post_cell_func)
+
                 shell.run_line_magic("exit_raise", "")
                 return
 
@@ -1034,6 +1037,7 @@ class Scene(object):
         # self.stop_skipping()
         # self.tear_down()
         # self.camera_config["window"] = None
+        # self.post_play()
         raise ReloadSceneException(start_at_line)
 
 
