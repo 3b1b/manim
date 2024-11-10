@@ -41,6 +41,7 @@ from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import recursive_mobject_remove
 from manimlib.utils.iterables import batch_by_property
+from manimlib.window import Window
 
 from typing import TYPE_CHECKING
 
@@ -55,10 +56,14 @@ if TYPE_CHECKING:
     from manimlib.animation.animation import Animation
 
 
-PAN_3D_KEY = 'd'
-FRAME_SHIFT_KEY = 'f'
-RESET_FRAME_KEY = 'r'
-QUIT_KEY = 'q'
+class ReloadSceneException(Exception):
+    """
+    Exception raised to indicate that we want to reload the scene.
+    """
+
+    def __init__(self, start_at_line: int | None):
+        self.start_at_line = start_at_line
+        super().__init__()
 
 
 class Scene(object):
@@ -89,6 +94,7 @@ class Scene(object):
         show_animation_progress: bool = False,
         embed_exception_mode: str = "",
         embed_error_sound: bool = False,
+        existing_window: Window | None = None,
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
@@ -107,14 +113,17 @@ class Scene(object):
             config["samples"] = self.samples
         self.file_writer_config = {**self.default_file_writer_config, **file_writer_config}
 
-        # Initialize window, if applicable
-        if self.preview:
-            from manimlib.window import Window
-            self.window = Window(scene=self, **self.window_config)
-            self.camera_config["window"] = self.window
-            self.camera_config["fps"] = 30  # Where's that 30 from?
+        if existing_window:
+            self.window = existing_window
+            existing_window.update_scene(self)
         else:
-            self.window = None
+            if self.preview:
+                self.window = Window(scene=self, **self.window_config)
+                self.camera_config["fps"] = 30  # Where's that 30 from?
+            else:
+                self.window = None
+
+        self.camera_config["window"] = self.window
 
         # Core state of the scene
         self.camera: Camera = Camera(**self.camera_config)
@@ -152,6 +161,9 @@ class Scene(object):
 
     def __str__(self) -> str:
         return self.__class__.__name__
+
+    def get_window(self) -> Window | None:
+        return self.window
 
     def run(self) -> None:
         self.virtual_animation_start_time: float = 0
@@ -223,8 +235,12 @@ class Scene(object):
         # Create embedded IPython terminal configured to have access to
         # the local namespace of the caller
         caller_frame = inspect.currentframe().f_back
-        module = get_module(caller_frame.f_globals["__file__"])
+        file_name = caller_frame.f_globals["__file__"]
+        module, module_name = get_module(file_name)
+        print(f"Embedding {module_name}")
+        # random_hash = {"random_hash": random.getrandbits(128)}
         shell = InteractiveShellEmbed(user_module=module)
+        # shell.prepare_user_module(module, random_hash)
 
         # Add a few custom shortcuts to that local namespace
         local_ns = dict(caller_frame.f_locals)
@@ -235,6 +251,7 @@ class Scene(object):
             remove=self.remove,
             clear=self.clear,
             save_state=self.save_state,
+            reload=self.reload,
             undo=self.undo,
             redo=self.redo,
             i2g=self.i2g,
@@ -267,6 +284,28 @@ class Scene(object):
 
         # Flash border, and potentially play sound, on exceptions
         def custom_exc(shell, etype, evalue, tb, tb_offset=None):
+            if isinstance(evalue, ReloadSceneException):
+                start_at_line = evalue.start_at_line
+                from_str = (
+                    str(start_at_line) if start_at_line else "the same line as before"
+                )
+                print(f"Reloading scene from {from_str}")
+                # shell.new_main_mod(file_name, module_name)
+                # shell.reset(new_session=False, aggressive=True)
+                # shell.clear_main_mod_cache()
+
+                # https://ipython.readthedocs.io/en/stable/api/generated/IPython.core.interactiveshell.html#IPython.core.interactiveshell.InteractiveShell.reset
+
+                # Close shell TODO
+                print("will ask exit")
+                # shell.should_raise = True
+                # shell.ask_exit()
+
+                from manimlib.__main__ import get_scenes_and_run
+
+                get_scenes_and_run(start_at_line)
+                return
+
             # Show the error don't just swallow it
             shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
             if self.embed_error_sound:
@@ -985,8 +1024,30 @@ class Scene(object):
     def on_close(self) -> None:
         pass
 
+    def reload(self, start_at_line: int | None = None) -> None:
+        """
+        Reloads the scene as `manimgl` would do with the same arguments provided
+        for the initial startup. This is to avoid having to exit the IPython
+        kernel, then re-running the `manimgl` command. This way, the GUI can
+        also stay open during the reload.
 
-class SceneState():
+        If `start_at_line` is provided, the scene will be reloaded at that line
+        number. This corresponds to the `linemarker` param of the
+        `config.get_module_with_inserted_embed_line()` method.
+
+        Before reload, the scene is cleared and the entire state is reset, such
+        that we can start from a clean slate.
+        """
+        if self.window is None:
+            log.error("Cannot reload scene without a window")
+            return
+
+        # self.clear()
+        self.stop_skipping()
+        # self.tear_down(destroy_window_if_present=True)
+        self.camera_config["window"] = None
+        raise ReloadSceneException(start_at_line)
+
     def __init__(self, scene: Scene, ignore: list[Mobject] | None = None):
         self.time = scene.time
         self.num_plays = scene.num_plays

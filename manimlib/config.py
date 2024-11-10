@@ -204,14 +204,14 @@ def get_manim_dir():
     return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
-def get_module(file_name: str | None) -> Module:
+def get_module(file_name: str | None) -> tuple[Module, str]:
     if file_name is None:
         return None
     module_name = file_name.replace(os.sep, ".").replace(".py", "")
     spec = importlib.util.spec_from_file_location(module_name, file_name)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module
+    return module, module_name
 
 
 def get_indent(line: str):
