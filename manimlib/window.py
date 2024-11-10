@@ -50,6 +50,9 @@ class Window(PygletWindow):
         self.pressed_keys.clear()
         self._has_undrawn_event = True
 
+        self.scene = scene
+        self.title = str(scene)
+
         self.init_mgl_context()
 
         self.timer = Timer()
@@ -58,8 +61,6 @@ class Window(PygletWindow):
         self.timer.start()
 
         self.to_default_position()
-        self.scene = scene
-        self.title = str(scene)
 
     def to_default_position(self):
         self.position = self.default_position
