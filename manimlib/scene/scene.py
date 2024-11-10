@@ -1048,6 +1048,8 @@ class Scene(object):
         self.camera_config["window"] = None
         raise ReloadSceneException(start_at_line)
 
+
+class SceneState():
     def __init__(self, scene: Scene, ignore: list[Mobject] | None = None):
         self.time = scene.time
         self.num_plays = scene.num_plays
