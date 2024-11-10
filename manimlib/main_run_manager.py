@@ -16,6 +16,7 @@ class MainRunManager:
             try:
                 # This call is blocking as a scene will init an IPython shell()
                 self.retrieve_scenes_and_run(self.start_at_line)
+                return
             except KillEmbedded:
                 # Requested via the `exit_raise` IPython runline magic
                 # by means of our scene.reload() command
