@@ -204,14 +204,14 @@ def get_manim_dir():
     return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
-def get_module(file_name: str | None) -> tuple[Module, str]:
+def get_module(file_name: str | None) -> Module:
     if file_name is None:
         return None
     module_name = file_name.replace(os.sep, ".").replace(".py", "")
     spec = importlib.util.spec_from_file_location(module_name, file_name)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module, module_name
+    return module
 
 
 def get_indent(line: str):
@@ -281,7 +281,7 @@ def get_module_with_inserted_embed_line(
     with open(new_file, 'w') as fp:
         fp.writelines(new_lines)
 
-    module, _ = get_module(new_file)
+    module = get_module(new_file)
     # This is to pretend the module imported from the edited lines
     # of code actually comes from the original file.
     module.__file__ = file_name

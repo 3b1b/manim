@@ -242,12 +242,8 @@ class Scene(object):
         # Create embedded IPython terminal configured to have access to
         # the local namespace of the caller
         caller_frame = inspect.currentframe().f_back
-        file_name = caller_frame.f_globals["__file__"]
-        module, module_name = get_module(file_name)
-        print(f"Embedding {module_name}")
-        # random_hash = {"random_hash": random.getrandbits(128)}
+        module = get_module(caller_frame.f_globals["__file__"])
         shell = InteractiveShellEmbed(user_module=module)
-        # shell.prepare_user_module(module, random_hash)
 
         # Add a few custom shortcuts to that local namespace
         local_ns = dict(caller_frame.f_locals)
