@@ -281,7 +281,7 @@ def get_module_with_inserted_embed_line(
     with open(new_file, 'w') as fp:
         fp.writelines(new_lines)
 
-    module = get_module(new_file)
+    module, _ = get_module(new_file)
     # This is to pretend the module imported from the edited lines
     # of code actually comes from the original file.
     module.__file__ = file_name
