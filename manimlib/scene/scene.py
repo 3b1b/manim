@@ -120,17 +120,17 @@ class Scene(object):
             config["samples"] = self.samples
         self.file_writer_config = {**self.default_file_writer_config, **file_writer_config}
 
-        if existing_window:
-            self.window = existing_window
-            existing_window.update_scene(self)
-        else:
-            if self.preview:
+        # Initialize window, if applicable
+        if self.preview:
+            if existing_window:
+                self.window = existing_window
+                existing_window.update_scene(self)
+            else:
                 self.window = Window(scene=self, **self.window_config)
                 self.camera_config["fps"] = 30  # Where's that 30 from?
-            else:
-                self.window = None
-
-        self.camera_config["window"] = self.window
+            self.camera_config["window"] = self.window
+        else:
+            self.window = None
 
         # Core state of the scene
         self.camera: Camera = Camera(**self.camera_config)
@@ -293,7 +293,7 @@ class Scene(object):
         def custom_exc(shell, etype, evalue, tb, tb_offset=None):
             if isinstance(evalue, ReloadSceneException):
                 start_at_line = evalue.start_at_line
-                shell.set_custom_exc((), None)  # disable custom exception handler
+                # shell.set_custom_exc((), None)  # disable custom exception handler
                 manager.set_new_start_at_line(start_at_line)
                 shell.run_line_magic("exit_raise", "")
                 return
