@@ -62,16 +62,6 @@ RESET_FRAME_KEY = 'r'
 QUIT_KEY = 'q'
 
 
-class ReloadSceneException(Exception):
-    """
-    Exception raised to indicate that we want to reload the scene.
-    """
-
-    def __init__(self, start_at_line: int | None):
-        self.start_at_line = start_at_line
-        super().__init__()
-
-
 class Scene(object):
     random_seed: int = 0
     pan_sensitivity: float = 0.5
@@ -287,16 +277,6 @@ class Scene(object):
 
         # Flash border, and potentially play sound, on exceptions
         def custom_exc(shell, etype, evalue, tb, tb_offset=None):
-            if isinstance(evalue, ReloadSceneException):
-                # shell.set_custom_exc((), None)  # disable custom exception handler
-                manager.set_new_start_at_line(evalue.start_at_line)
-
-                # unregister all shell events
-                shell.events.unregister("post_run_cell", post_cell_func)
-
-                shell.run_line_magic("exit_raise", "")
-                return
-
             # Show the error don't just swallow it
             shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
             if self.embed_error_sound:
@@ -1028,16 +1008,8 @@ class Scene(object):
         Before reload, the scene is cleared and the entire state is reset, such
         that we can start from a clean slate.
         """
-        # if self.window is None:
-        #     log.error("Cannot reload scene without a window")
-        #     return
-
-        # self.clear()
-        # self.stop_skipping()
-        # self.tear_down()
-        # self.camera_config["window"] = None
-        # self.post_play()
-        raise ReloadSceneException(start_at_line)
+        manager.set_new_start_at_line(start_at_line)
+        self.shell.run_line_magic("exit_raise", "")
 
 
 class SceneState():
