@@ -57,9 +57,11 @@ class MainRunManager:
         # Scenes
         self.scenes = manimlib.extract_scene.main(config)
         if len(self.scenes) > 0:
-            first_window = self.scenes[0].window
-            if first_window:
-                self.window = first_window
+            for scene in self.scenes:
+                # Find first available window
+                if scene.window is not None:
+                    self.window = scene.window
+                    break
 
         for scene in self.scenes:
             scene.run()
