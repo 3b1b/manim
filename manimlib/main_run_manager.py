@@ -44,10 +44,10 @@ class MainRunManager:
         import manimlib.extract_scene
 
         # Args
-        if overwrite_start_at_line is not None:
-            self.args.embed = str(overwrite_start_at_line)  # type: ignore
         if self.args is None:
             raise RuntimeError("Fatal error: No args were passed to the MainRunManager")
+        if overwrite_start_at_line is not None:
+            self.args.embed = str(overwrite_start_at_line)  # type: ignore
 
         # Args to Config
         config = manimlib.config.get_configuration(self.args)
