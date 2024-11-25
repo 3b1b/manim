@@ -5,6 +5,7 @@ from colour import hex2rgb
 from colour import rgb2hex
 import numpy as np
 import random
+from matplotlib import pyplot
 
 from manimlib.constants import COLORMAP_3B1B
 from manimlib.constants import WHITE
@@ -157,7 +158,7 @@ def get_colormap_from_colors(colors: Iterable[ManimColor]) -> Callable[[Sequence
 def get_color_map(map_name: str) -> Callable[[Sequence[float]], Vect4Array]:
     if map_name == "3b1b_colormap":
         return get_colormap_from_colors(COLORMAP_3B1B)
-    return plt.get_cmap(map_name)
+    return pyplot.get_cmap(map_name)
 
 
 # Delete this?
