@@ -22,7 +22,12 @@ if TYPE_CHECKING:
 
 @lru_cache()
 def char_to_cahced_mob(char: str, **text_config):
-    return Text(char, **text_config)
+    if "\\" in char:
+        # This is for when the "character" is a LaTeX command
+        # like ^\circ or \dots
+        return Tex(char, **text_config)
+    else:
+        return Text(char, **text_config)
 
 
 class DecimalNumber(VMobject):
