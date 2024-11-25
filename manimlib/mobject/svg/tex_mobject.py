@@ -48,6 +48,7 @@ class Tex(StringMobject):
         if not tex_string.strip():
             tex_string = R"\\"
 
+        self.font_size = font_size
         self.tex_string = tex_string
         self.alignment = alignment
         self.template = template
@@ -85,6 +86,10 @@ class Tex(StringMobject):
         return tex_content_to_svg_file(
             content, self.template, self.additional_preamble, self.tex_string
         )
+
+    def _handle_scale_side_effects(self, scale_factor: float) -> Self:
+        self.font_size *= scale_factor
+        return self
 
     # Parsing
 
