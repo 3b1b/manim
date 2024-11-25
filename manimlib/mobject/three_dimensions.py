@@ -94,7 +94,7 @@ class Sphere(Surface):
     def __init__(
         self,
         u_range: Tuple[float, float] = (0, TAU),
-        v_range: Tuple[float, float] = (1e-5, PI - 1e-5),
+        v_range: Tuple[float, float] = (0, PI),
         resolution: Tuple[int, int] = (101, 51),
         radius: float = 1.0,
         **kwargs,
@@ -157,7 +157,6 @@ class Cylinder(Surface):
             resolution=resolution,
             **kwargs
         )
-
 
     def init_points(self):
         super().init_points()
