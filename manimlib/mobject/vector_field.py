@@ -123,14 +123,21 @@ def move_points_along_vector_field(
 
 def get_sample_coords(
     coordinate_system: CoordinateSystem,
-    step_multiple: float = 1.0
+    density: float = 1.0
 ) -> it.product[tuple[Vect3, ...]]:
     ranges = []
     for range_args in coordinate_system.get_all_ranges():
         _min, _max, step = range_args
-        step *= step_multiple
+        step /= density
         ranges.append(np.arange(_min, _max + step, step))
     return np.array(list(it.product(*ranges)))
+
+
+def vectorize(pointwise_function: Callable[Tuple, Tuple]):
+    def v_func(coords_array: VectArray) -> VectArray:
+        return np.array([pointwise_function(*coords) for coords in coords_array])
+
+    return v_func
 
 
 # Mobjects
@@ -139,9 +146,11 @@ def get_sample_coords(
 class VectorField(VMobject):
     def __init__(
         self,
+        # Vectorized function: Takes in an array of coordinates, returns an array of outputs.
         func: Callable[[VectArray], VectArray],
+        # Typically a set of Axes or NumberPlane
         coordinate_system: CoordinateSystem,
-        step_multiple: float = 0.5,
+        density: float = 2.0,  # Describe as a density instead?
         magnitude_range: Optional[Tuple[float, float]] = None,
         color_map_name: Optional[str] = "3b1b_colormap",
         color_map: Optional[Callable[[Sequence[float]], Vect4Array]] = None,
@@ -163,7 +172,7 @@ class VectorField(VMobject):
         self.norm_to_opacity_func = norm_to_opacity_func
 
         # Search for sample_points
-        self.sample_coords = get_sample_coords(coordinate_system, step_multiple)
+        self.sample_coords = get_sample_coords(coordinate_system, density)
         self.update_sample_points()
 
         if max_vect_len is None:
@@ -326,7 +335,7 @@ class StreamLines(VGroup):
         self,
         func: Callable[[VectArray], VectArray],
         coordinate_system: CoordinateSystem,
-        step_multiple: float = 0.5,
+        density: float = 1.0,
         n_repeats: int = 1,
         noise_factor: float | None = None,
         # Config for drawing lines
@@ -349,7 +358,7 @@ class StreamLines(VGroup):
         super().__init__(**kwargs)
         self.func = func
         self.coordinate_system = coordinate_system
-        self.step_multiple = step_multiple
+        self.density = density
         self.n_repeats = n_repeats
         self.noise_factor = noise_factor
         self.solution_time = solution_time
@@ -393,11 +402,11 @@ class StreamLines(VGroup):
 
     def get_sample_coords(self):
         cs = self.coordinate_system
-        sample_coords = get_sample_coords(cs, self.step_multiple)
+        sample_coords = get_sample_coords(cs, self.density)
 
         noise_factor = self.noise_factor
         if noise_factor is None:
-            noise_factor = cs.get_x_unit_size() * self.step_multiple * 0.5
+            noise_factor = (cs.get_x_unit_size() / self.density) * 0.5
 
         return np.array([
             coords + noise_factor * np.random.random(coords.shape)
