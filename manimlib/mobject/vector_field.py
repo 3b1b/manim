@@ -318,13 +318,18 @@ class TimeVaryingVectorField(VectorField):
     def __init__(
         self,
         # Takes in an array of points and a float for time
-        time_func,
+        time_func: Callable[[VectArray, float], VectArray],
+        coordinate_system: CoordinateSystem,
         **kwargs
     ):
         self.time = 0
-        super().__init__(func=lambda p: time_func(p, self.time), **kwargs)
+
+        def func(coords):
+            return time_func(coords, self.time)
+
+        super().__init__(func, coordinate_system, **kwargs)
         self.add_updater(lambda m, dt: m.increment_time(dt))
-        always(self.update_vectors)
+        self.always.update_vectors()
 
     def increment_time(self, dt):
         self.time += dt
