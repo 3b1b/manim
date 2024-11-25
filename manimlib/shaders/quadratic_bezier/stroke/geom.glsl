@@ -78,11 +78,13 @@ vec3 step_to_corner(vec3 point, vec3 tangent, vec3 unit_normal, float joint_angl
     // lines up very closely with the direction to the camera, treated here
     // as the unit normal. To avoid those, this smoothly transitions to a step
     // direction perpendicular to the true curve normal.
-    float alignment = abs(dot(normalize(tangent), unit_normal));
-    float alignment_threshold = 0.97;  // This could maybe be chosen in a more principled way based on stroke width
-    if (alignment > alignment_threshold) {
-        vec3 perp = normalize(cross(v_unit_normal[1], tangent));
-        step = mix(step, project(step, perp), smoothstep(alignment_threshold, 1.0, alignment));
+    if(joint_angle != 0){
+        float alignment = abs(dot(normalize(tangent), unit_normal));
+        float alignment_threshold = 0.97;  // This could maybe be chosen in a more principled way based on stroke width
+        if (alignment > alignment_threshold) {
+            vec3 perp = normalize(cross(v_unit_normal[1], tangent));
+            step = mix(step, project(step, perp), smoothstep(alignment_threshold, 1.0, alignment));
+        }
     }
 
     if (inside_curve || int(joint_type) == NO_JOINT) return step;
