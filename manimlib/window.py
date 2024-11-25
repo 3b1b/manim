@@ -49,6 +49,18 @@ class Window(PygletWindow):
 
         self.to_default_position()
 
+    def focus(self):
+        """
+        Puts focus on this window by hiding and showing it again.
+
+        Note that the pyglet `activate()` method didn't work as expected here,
+        so that's why we have to use this workaround. This will produce a small
+        flicker on the window but at least reliably focuses it. It may also
+        offset the window position slightly.
+        """
+        self._window.set_visible(False)
+        self._window.set_visible(True)
+
     def to_default_position(self):
         self.position = self.default_position
         # Hack. Sometimes, namely when configured to open in a separate window,
