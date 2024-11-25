@@ -414,20 +414,6 @@ class StreamLines(VGroup):
             for coords in sample_coords
         ])
 
-    def get_start_points(self) -> Vect3Array:
-        cs = self.coordinate_system
-        sample_coords = get_sample_coords(cs, self.step_multiple)
-
-        noise_factor = self.noise_factor
-        if noise_factor is None:
-            noise_factor = cs.get_x_unit_size() * self.step_multiple * 0.5
-
-        return np.array([
-            cs.c2p(*coords) + noise_factor * np.random.random(3)
-            for n in range(self.n_repeats)
-            for coords in sample_coords
-        ])
-
     def init_style(self) -> None:
         if self.color_by_magnitude:
             values_to_rgbs = get_vectorized_rgb_gradient_function(
