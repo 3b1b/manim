@@ -12,6 +12,7 @@ from functools import wraps
 
 from IPython.terminal import pt_inputhooks
 from IPython.terminal.embed import InteractiveShellEmbed
+from pyglet.window import key as PygletWindowKeys
 
 import numpy as np
 from tqdm.auto import tqdm as ProgressDisplay
@@ -23,8 +24,6 @@ from manimlib.camera.camera_frame import CameraFrame
 from manimlib.config import get_module
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
-from manimlib.constants import COMMAND_MODIFIER
-from manimlib.constants import SHIFT_MODIFIER
 from manimlib.constants import RED
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
@@ -244,6 +243,7 @@ class Scene(object):
             add=self.add,
             remove=self.remove,
             clear=self.clear,
+            focus=self.focus,
             save_state=self.save_state,
             reload=self.reload,
             undo=self.undo,
@@ -972,12 +972,12 @@ class Scene(object):
 
         if char == RESET_FRAME_KEY:
             self.play(self.camera.frame.animate.to_default_state())
-        elif char == "z" and modifiers == COMMAND_MODIFIER:
+        elif char == "z" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.undo()
-        elif char == "z" and modifiers == COMMAND_MODIFIER | SHIFT_MODIFIER:
+        elif char == "z" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL | PygletWindowKeys.MOD_SHIFT)):
             self.redo()
         # command + q
-        elif char == QUIT_KEY and modifiers == COMMAND_MODIFIER:
+        elif char == QUIT_KEY and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.quit_interaction = True
         # Space or right arrow
         elif char == " " or symbol == ARROW_SYMBOLS[2]:
@@ -1019,6 +1019,14 @@ class Scene(object):
         """
         reload_manager.set_new_start_at_line(start_at_line)
         self.shell.run_line_magic("exit_raise", "")
+
+    def focus(self) -> None:
+        """
+        Puts focus on the ManimGL window.
+        """
+        if not self.window:
+            return
+        self.window.focus()
 
 
 class SceneState():

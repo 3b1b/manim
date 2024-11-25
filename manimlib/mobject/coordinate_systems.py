@@ -45,6 +45,12 @@ DEFAULT_X_RANGE = (-8.0, 8.0, 1.0)
 DEFAULT_Y_RANGE = (-4.0, 4.0, 1.0)
 
 
+def full_range_specifier(range_args):
+    if len(range_args) == 2:
+        return (*range_args, 1)
+    return range_args
+
+
 class CoordinateSystem(ABC):
     """
     Abstract class for Axes and NumberPlane
@@ -57,8 +63,8 @@ class CoordinateSystem(ABC):
         y_range: RangeSpecifier = DEFAULT_Y_RANGE,
         num_sampled_graph_points_per_tick: int = 5,
     ):
-        self.x_range = x_range
-        self.y_range = y_range
+        self.x_range = full_range_specifier(x_range)
+        self.y_range = full_range_specifier(y_range)
         self.num_sampled_graph_points_per_tick = num_sampled_graph_points_per_tick
 
     @abstractmethod
@@ -536,7 +542,7 @@ class ThreeDAxes(Axes):
     ):
         Axes.__init__(self, x_range, y_range, **kwargs)
 
-        self.z_range = z_range
+        self.z_range = full_range_specifier(z_range)
         self.z_axis = self.create_axis(
             self.z_range,
             axis_config=merge_dicts_recursively(

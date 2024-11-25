@@ -94,6 +94,7 @@ class VMobject(Mobject):
         # Could also be "no_joint", "bevel", "miter"
         joint_type: str = "auto",
         flat_stroke: bool = False,
+        scale_stroke_with_zoom: bool = False,
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
         anti_alias_width: float = 1.5,
@@ -110,6 +111,7 @@ class VMobject(Mobject):
         self.long_lines = long_lines
         self.joint_type = joint_type
         self.flat_stroke = flat_stroke
+        self.scale_stroke_with_zoom = scale_stroke_with_zoom
         self.use_simple_quadratic_approx = use_simple_quadratic_approx
         self.anti_alias_width = anti_alias_width
         self.fill_border_width = fill_border_width
@@ -126,9 +128,12 @@ class VMobject(Mobject):
 
     def init_uniforms(self):
         super().init_uniforms()
-        self.uniforms["anti_alias_width"] = self.anti_alias_width
-        self.uniforms["joint_type"] = JOINT_TYPE_MAP[self.joint_type]
-        self.uniforms["flat_stroke"] = float(self.flat_stroke)
+        self.uniforms.update(
+            anti_alias_width=self.anti_alias_width,
+            joint_type=JOINT_TYPE_MAP[self.joint_type],
+            flat_stroke=float(self.flat_stroke),
+            scale_stroke_with_zoom=float(self.scale_stroke_with_zoom)
+        )
 
     def add(self, *vmobjects: VMobject) -> Self:
         if not all((isinstance(m, VMobject) for m in vmobjects)):
@@ -397,6 +402,13 @@ class VMobject(Mobject):
         return self
 
     def get_flat_stroke(self) -> bool:
+        return self.uniforms["flat_stroke"] == 1.0
+
+    def set_scale_stroke_with_zoom(self, scale_stroke_with_zoom: bool = True, recurse: bool = True) -> Self:
+        self.set_uniform(recurse, scale_stroke_with_zoom=float(scale_stroke_with_zoom))
+        pass
+
+    def get_scale_stroke_with_zoom(self) -> bool:
         return self.uniforms["flat_stroke"] == 1.0
 
     def set_joint_type(self, joint_type: str, recurse: bool = True) -> Self:

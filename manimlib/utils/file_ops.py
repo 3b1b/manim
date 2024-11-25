@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
+import hashlib
 
 import numpy as np
 import validators
@@ -35,9 +37,11 @@ def find_file(
     if validators.url(file_name):
         import urllib.request
         from manimlib.utils.directories import get_downloads_dir
-        stem, name = os.path.split(file_name)
+        suffix = Path(file_name).suffix
+        file_hash = hashlib.sha256(file_name.encode('utf-8')).hexdigest()[:32]
         folder = get_downloads_dir()
-        path = os.path.join(folder, name)
+
+        path = Path(folder, file_hash).with_suffix(suffix)
         urllib.request.urlretrieve(file_name, path)
         return path
 

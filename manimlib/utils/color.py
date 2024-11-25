@@ -5,6 +5,7 @@ from colour import hex2rgb
 from colour import rgb2hex
 import numpy as np
 import random
+from matplotlib import pyplot
 
 from manimlib.constants import COLORMAP_3B1B
 from manimlib.constants import WHITE
@@ -14,8 +15,8 @@ from manimlib.utils.iterables import resize_with_interpolation
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable, Sequence
-    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array
+    from typing import Iterable, Sequence, Callable
+    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Vect4Array, NDArray
 
 
 def color_to_rgb(color: ManimColor) -> Vect3:
@@ -134,6 +135,33 @@ def random_bright_color(
     ))
 
 
+def get_colormap_from_colors(colors: Iterable[ManimColor]) -> Callable[[Sequence[float]], Vect4Array]:
+    """
+    Returns a funciton which takes in values between 0 and 1, and returns
+    a corresponding list of rgba values
+    """
+    rgbas = np.array([color_to_rgba(color) for color in colors])
+
+    def func(values):
+        alphas = np.clip(values, 0, 1)
+        scaled_alphas = alphas * (len(rgbas) - 1)
+        indices = scaled_alphas.astype(int)
+        next_indices = np.clip(indices + 1, 0, len(rgbas) - 1)
+        inter_alphas = scaled_alphas % 1
+        inter_alphas = inter_alphas.repeat(4).reshape((len(indices), 4))
+        result = interpolate(rgbas[indices], rgbas[next_indices], inter_alphas)
+        return result
+
+    return func
+
+
+def get_color_map(map_name: str) -> Callable[[Sequence[float]], Vect4Array]:
+    if map_name == "3b1b_colormap":
+        return get_colormap_from_colors(COLORMAP_3B1B)
+    return pyplot.get_cmap(map_name)
+
+
+# Delete this?
 def get_colormap_list(
     map_name: str = "viridis",
     n_colors: int = 9
