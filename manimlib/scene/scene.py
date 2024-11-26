@@ -12,7 +12,6 @@ from functools import wraps
 
 from IPython.terminal import pt_inputhooks
 from IPython.terminal.embed import InteractiveShellEmbed
-from IPython.core.getipython import get_ipython
 from pyglet.window import key as PygletWindowKeys
 
 import numpy as np
@@ -29,6 +28,7 @@ from manimlib.constants import RED
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
+from manimlib.reload_manager import reload_manager
 from manimlib.mobject.frame import FullScreenRectangle
 from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Group
@@ -40,6 +40,7 @@ from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import recursive_mobject_remove
 from manimlib.utils.iterables import batch_by_property
+from manimlib.window import Window
 
 from typing import TYPE_CHECKING
 
@@ -88,6 +89,7 @@ class Scene(object):
         show_animation_progress: bool = False,
         embed_exception_mode: str = "",
         embed_error_sound: bool = False,
+        existing_window: Window | None = None,
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
@@ -106,12 +108,16 @@ class Scene(object):
             config["samples"] = self.samples
         self.file_writer_config = {**self.default_file_writer_config, **file_writer_config}
 
-        # Initialize window, if applicable
+        # Initialize window, if applicable (and reuse window if provided during
+        # reload by means of the ReloadManager)
         if self.preview:
-            from manimlib.window import Window
-            self.window = Window(scene=self, **self.window_config)
+            if existing_window:
+                self.window = existing_window
+                self.window.update_scene(self)
+            else:
+                self.window = Window(scene=self, **self.window_config)
+                self.camera_config["fps"] = 30  # Where's that 30 from?
             self.camera_config["window"] = self.window
-            self.camera_config["fps"] = 30  # Where's that 30 from?
         else:
             self.window = None
 
@@ -151,6 +157,9 @@ class Scene(object):
 
     def __str__(self) -> str:
         return self.__class__.__name__
+
+    def get_window(self) -> Window | None:
+        return self.window
 
     def run(self) -> None:
         self.virtual_animation_start_time: float = 0
@@ -224,6 +233,7 @@ class Scene(object):
         caller_frame = inspect.currentframe().f_back
         module = get_module(caller_frame.f_globals["__file__"])
         shell = InteractiveShellEmbed(user_module=module)
+        self.shell = shell
 
         # Add a few custom shortcuts to that local namespace
         local_ns = dict(caller_frame.f_locals)
@@ -235,6 +245,7 @@ class Scene(object):
             clear=self.clear,
             focus=self.focus,
             save_state=self.save_state,
+            reload=self.reload,
             undo=self.undo,
             redo=self.redo,
             i2g=self.i2g,
@@ -758,8 +769,7 @@ class Scene(object):
         revert to the state of the scene the first time this function
         was called on a block of code starting with that comment.
         """
-        shell = get_ipython()
-        if shell is None or self.window is None:
+        if self.shell is None or self.window is None:
             raise Exception(
                 "Scene.checkpoint_paste cannot be called outside of " +
                 "an ipython shell"
@@ -800,7 +810,7 @@ class Scene(object):
             self.camera.use_window_fbo(False)
             self.file_writer.begin_insert()
 
-        shell.run_cell(pasted)
+        self.shell.run_cell(pasted)
 
         if record:
             self.file_writer.end_insert()
@@ -984,6 +994,31 @@ class Scene(object):
 
     def on_close(self) -> None:
         pass
+
+    def reload(self, start_at_line: int | None = None) -> None:
+        """
+        Reloads the scene just like the `manimgl` command would do with the
+        same arguments that were provided for the initial startup. This allows
+        for quick iteration during scene development since we don't have to exit
+        the IPython kernel and re-run the `manimgl` command again. The GUI stays
+        open during the reload.
+
+        If `start_at_line` is provided, the scene will be reloaded at that line
+        number. This corresponds to the `linemarker` param of the
+        `config.get_module_with_inserted_embed_line()` method.
+
+        Before reload, the scene is cleared and the entire state is reset, such
+        that we can start from a clean slate. This is taken care of by the
+        ReloadManager, which will catch the error raised by the `exit_raise`
+        magic command that we invoke here.
+        Note that we cannot define a custom exception class for this error,
+        since the IPython kernel will swallow any exception. While we can catch
+        such an exception in our custom exception handler registered with the
+        `set_custom_exc` method, we cannot break out of the IPython shell by
+        this means.
+        """
+        reload_manager.set_new_start_at_line(start_at_line)
+        self.shell.run_line_magic("exit_raise", "")
 
     def focus(self) -> None:
         """

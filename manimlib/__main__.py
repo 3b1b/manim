@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 from manimlib import __version__
 import manimlib.config
-import manimlib.extract_scene
 import manimlib.logger
 import manimlib.utils.init_config
+from manimlib.reload_manager import reload_manager
 
 
 def main():
+    """
+    Main entry point for ManimGL.
+    """
     print(f"ManimGL \033[32mv{__version__}\033[0m")
 
     args = manimlib.config.parse_cli()
@@ -17,12 +20,10 @@ def main():
 
     if args.config:
         manimlib.utils.init_config.init_customization()
-    else:
-        config = manimlib.config.get_configuration(args)
-        scenes = manimlib.extract_scene.main(config)
+        return
 
-        for scene in scenes:
-            scene.run()
+    reload_manager.args = args
+    reload_manager.run()
 
 
 if __name__ == "__main__":

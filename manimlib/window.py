@@ -35,16 +35,29 @@ class Window(PygletWindow):
 
         self.default_size = size
         self.default_position = self.find_initial_position(size)
-        self.scene = scene
         self.pressed_keys = set()
-        self.title = str(scene)
         self.size = size
 
+        self.update_scene(scene)
+
+    def update_scene(self, scene: Scene):
+        """
+        Resets the state and updates the scene associated to this window.
+
+        This is necessary when we want to reuse an *existing* window after a
+        `scene.reload()` was requested, which will create new scene instances.
+        """
+        self.pressed_keys.clear()
         self._has_undrawn_event = True
 
-        mglw.activate_context(window=self)
+        self.scene = scene
+        self.title = str(scene)
+
+        self.init_mgl_context()
+
         self.timer = Timer()
         self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
+        mglw.activate_context(window=self, ctx=self.ctx)
         self.timer.start()
 
         self.to_default_position()
