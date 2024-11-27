@@ -29,7 +29,7 @@ class ReloadManager:
 
     def delete_newly_loaded_modules(self, initial_modules):
         """
-        Deletes the modules that were loaded during the last scene run.
+        Deletes the modules that were loaded during the last scene run(s).
 
         These are the modules that were not present in the initial set of
         modules that were loaded when ManimGL was started. I.e. we delete
