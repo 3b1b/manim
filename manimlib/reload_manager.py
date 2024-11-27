@@ -1,17 +1,7 @@
+import sys
+
 from typing import Any
 from IPython.terminal.embed import KillEmbedded
-
-
-def restart_entirely():
-    """
-    Restarts the Python interpreter. The whole state will be lost as this is
-    equivalent to exiting the terminal, then issuing the ManimGL command again.
-    """
-    import os
-    import sys
-    print("Restarting...")
-    python = sys.executable
-    os.execv(python, [python] + sys.argv)
 
 
 class ReloadManager:
@@ -37,11 +27,29 @@ class ReloadManager:
         """
         self.start_at_line = start_at_line
 
+    def delete_newly_loaded_modules(self, initial_modules):
+        """
+        Deletes the modules that were loaded during the last scene run.
+
+        These are the modules that were not present in the initial set of
+        modules that were loaded when ManimGL was started. I.e. we delete
+        modules that the user imported in their own Python files such that
+        any changes to these files are reflected in the next scene run.
+        """
+        current_modules = set(sys.modules.keys())
+        session_modules = current_modules - initial_modules
+
+        for module_name in session_modules:
+            if module_name in sys.modules:
+                del sys.modules[module_name]
+
     def run(self):
         """
         Runs the scenes in a loop and detects when a scene reload is requested.
         """
         while True:
+            initial_modules = set(sys.modules.keys())
+
             try:
                 # blocking call since a scene will init an IPython shell()
                 self.retrieve_scenes_and_run(self.start_at_line)
@@ -56,7 +64,7 @@ class ReloadManager:
 
                 self.scenes = []
 
-                restart_entirely()
+                self.delete_newly_loaded_modules(initial_modules)
 
             except KeyboardInterrupt:
                 break
