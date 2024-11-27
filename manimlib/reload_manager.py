@@ -2,6 +2,18 @@ from typing import Any
 from IPython.terminal.embed import KillEmbedded
 
 
+def restart_entirely():
+    """
+    Restarts the Python interpreter. The whole state will be lost as this is
+    equivalent to exiting the terminal, then issuing the ManimGL command again.
+    """
+    import os
+    import sys
+    print("Restarting...")
+    python = sys.executable
+    os.execv(python, [python] + sys.argv)
+
+
 class ReloadManager:
     """
     Manages the loading and running of scenes and is called directly from the
@@ -43,6 +55,8 @@ class ReloadManager:
                     scene.tear_down()
 
                 self.scenes = []
+
+                restart_entirely()
 
             except KeyboardInterrupt:
                 break
