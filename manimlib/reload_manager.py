@@ -35,6 +35,9 @@ class ReloadManager:
         modules that were loaded when ManimGL was started. I.e. we delete
         modules that the user imported in their own Python files such that
         any changes to these files are reflected in the next scene run.
+
+        One can think of this "deletion" as "unloading" the modules to force
+        a proper re-reload of them later on.
         """
         current_modules = set(sys.modules.keys())
         session_modules = current_modules - initial_modules
