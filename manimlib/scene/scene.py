@@ -90,6 +90,7 @@ class Scene(object):
         embed_exception_mode: str = "",
         embed_error_sound: bool = False,
         existing_window: Window | None = None,
+        should_autoreload: bool = False,
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
@@ -101,6 +102,7 @@ class Scene(object):
         self.show_animation_progress = show_animation_progress
         self.embed_exception_mode = embed_exception_mode
         self.embed_error_sound = embed_error_sound
+        self.should_autoreload = should_autoreload
 
         self.camera_config = {**self.default_camera_config, **camera_config}
         self.window_config = {**self.default_window_config, **window_config}
@@ -290,6 +292,11 @@ class Scene(object):
 
         # Set desired exception mode
         shell.magic(f"xmode {self.embed_exception_mode}")
+
+        # Autoreload
+        if self.should_autoreload:
+            shell.magic("load_ext autoreload")
+            shell.magic("autoreload all")
 
         # Launch shell
         shell()
