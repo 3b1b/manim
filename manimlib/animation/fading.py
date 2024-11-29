@@ -5,9 +5,7 @@ import numpy as np
 from manimlib.animation.animation import Animation
 from manimlib.animation.transform import Transform
 from manimlib.constants import ORIGIN
-from manimlib.mobject.mobject import Group
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.rate_functions import there_and_back
 

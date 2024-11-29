@@ -14,7 +14,10 @@ from manimlib.utils.customization import get_customization
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Callable, TypeVar
     from manimlib.scene.scene import Scene
+
+    T = TypeVar("T")
 
 
 class Window(PygletWindow):

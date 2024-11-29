@@ -6,7 +6,6 @@ from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.rate_functions import smooth
-from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.simple_functions import clip
 
 from typing import TYPE_CHECKING

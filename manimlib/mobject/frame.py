@@ -37,6 +37,7 @@ class FullScreenRectangle(ScreenRectangle):
             fill_color=fill_color,
             fill_opacity=fill_opacity,
             stroke_width=stroke_width,
+            **kwargs
         )
 
 
