@@ -37,8 +37,6 @@ class ReloadManager:
             except KillEmbedded:
                 # Requested via the `exit_raise` IPython runline magic
                 # by means of our scene.reload() command
-                print("Reloading...")
-
                 for scene in self.scenes:
                     scene.tear_down()
 
