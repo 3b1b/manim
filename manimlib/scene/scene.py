@@ -622,8 +622,7 @@ class Scene(object):
             # animated mobjects that are in the family of
             # those on screen, this can result in a restructuring
             # of the scene.mobjects list, which is usually desired.
-            if animation.mobject not in self.mobjects:
-                self.add(animation.mobject)
+            animation.setup_scene(self)
 
     def progress_through_animations(self, animations: Iterable[Animation]) -> None:
         last_t = 0

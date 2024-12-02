@@ -73,6 +73,10 @@ class Animation(object):
             self.mobject.suspend_updating()
         self.families = list(self.get_all_families_zipped())
         self.interpolate(0)
+    
+    def setup_scene(self, scene: Scene) -> None:
+        if self.mobject not in scene.mobjects:
+            scene.add(self.mobject)
 
     def finish(self) -> None:
         self.interpolate(self.final_alpha_value)
