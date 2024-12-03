@@ -435,7 +435,8 @@ def get_window_config(args: Namespace, custom_config: dict, camera_config: dict)
     try:
         monitors = screeninfo.get_monitors()
     except screeninfo.ScreenInfoError:
-        pass
+        # Default fallback
+        monitors = [screeninfo.Monitor(width=1920, height=1080)]
     mon_index = custom_config["window_monitor"]
     monitor = monitors[min(mon_index, len(monitors) - 1)]
     aspect_ratio = camera_config["pixel_width"] / camera_config["pixel_height"]
