@@ -78,7 +78,7 @@ class ModuleLoader:
             module_name = module.__name__
             if module.__name__.endswith("_insert_embed"):
                 module_name = module_name[:-13]
-            log.debug('RReloading module "%s"', module_name)
+            log.debug('Reloading module "%s"', module_name)
 
             spec.loader.exec_module(module)
         finally:
