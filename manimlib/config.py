@@ -275,7 +275,6 @@ def get_module(file_name: str | None, is_during_reload=False) -> Module | None:
         imported_modules = exec_module_and_track_imports(spec, module)
         reloaded_modules_tracker = set()
         reload_modules(imported_modules, reloaded_modules_tracker)
-        print(f"📦 Reloaded modules: {reloaded_modules_tracker}")
     else:
         spec.loader.exec_module(module)
 
