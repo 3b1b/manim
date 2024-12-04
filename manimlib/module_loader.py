@@ -91,7 +91,7 @@ class ModuleLoader:
         """
         Out of the given modules, reloads the ones that were not already imported.
 
-        We skip module that are not user-defined.
+        We skip modules that are not user-defined (see `is_user_defined_module()`).
         """
         for mod in modules:
             if mod in reloaded_modules_tracker:
@@ -111,9 +111,9 @@ class ModuleLoader:
         """
         Returns whether the given module is user-defined or not.
 
-        A module is considered user-defined if it is not part of the standard
-        library, not an external library (site-packages or dist-packages), and
-        is located in the current working directory (or subdirectories).
+        A module is considered user-defined if
+        - it is not part of the standard library
+        - AND it is not an external library (site-packages or dist-packages)
         """
         if mod not in sys.modules:
             return False
@@ -127,13 +127,13 @@ class ModuleLoader:
             return False
         module_path = os.path.abspath(module_path)
 
+        # External libraries (site-packages or dist-packages), e.g. numpy
+        if "site-packages" in module_path or "dist-packages" in module_path:
+            return False
+
         # Standard lib
         standard_lib_path = sysconfig.get_path("stdlib")
         if module_path.startswith(standard_lib_path):
-            return False
-
-        # External libraries (site-packages or dist-packages), e.g. numpy
-        if "site-packages" in module_path or "dist-packages" in module_path:
             return False
 
         return True
