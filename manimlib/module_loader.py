@@ -43,15 +43,15 @@ class ModuleLoader:
         module = importlib.util.module_from_spec(spec)
 
         if is_during_reload:
-            imported_modules = ModuleLoader.exec_module_and_track_imports(spec, module)
+            imported_modules = ModuleLoader._exec_module_and_track_imports(spec, module)
             reloaded_modules_tracker = set()
-            ModuleLoader.reload_modules(imported_modules, reloaded_modules_tracker)
+            ModuleLoader._reload_modules(imported_modules, reloaded_modules_tracker)
 
         spec.loader.exec_module(module)
         return module
 
     @staticmethod
-    def exec_module_and_track_imports(spec, module: Module) -> set[str]:
+    def _exec_module_and_track_imports(spec, module: Module) -> set[str]:
         """
         Executes the given module (imports it) and returns all the modules that
         are imported during its execution.
@@ -89,7 +89,7 @@ class ModuleLoader:
         return imported_modules
 
     @staticmethod
-    def reload_modules(modules: set[str], reloaded_modules_tracker: set[str]):
+    def _reload_modules(modules: set[str], reloaded_modules_tracker: set[str]):
         """
         Out of the given modules, reloads the ones that were not already imported.
 
@@ -99,16 +99,16 @@ class ModuleLoader:
             if mod in reloaded_modules_tracker:
                 continue
 
-            if not ModuleLoader.is_user_defined_module(mod):
+            if not ModuleLoader._is_user_defined_module(mod):
                 continue
 
             module = sys.modules[mod]
-            ModuleLoader.deep_reload(module, reloaded_modules_tracker)
+            ModuleLoader._deep_reload(module, reloaded_modules_tracker)
 
             reloaded_modules_tracker.add(mod)
 
     @staticmethod
-    def is_user_defined_module(mod: str) -> bool:
+    def _is_user_defined_module(mod: str) -> bool:
         """
         Returns whether the given module is user-defined or not.
 
@@ -140,7 +140,7 @@ class ModuleLoader:
         return True
 
     @staticmethod
-    def deep_reload(module: Module, reloaded_modules_tracker: set[str]):
+    def _deep_reload(module: Module, reloaded_modules_tracker: set[str]):
         """
         Recursively reloads modules imported by the given module.
 
@@ -160,16 +160,16 @@ class ModuleLoader:
         # Recurse for all imported modules
         for _attr_name, attr_value in module.__dict__.items():
             if isinstance(attr_value, Module):
-                if ModuleLoader.is_user_defined_module(attr_value.__name__):
-                    ModuleLoader.deep_reload(attr_value, reloaded_modules_tracker)
+                if ModuleLoader._is_user_defined_module(attr_value.__name__):
+                    ModuleLoader._deep_reload(attr_value, reloaded_modules_tracker)
 
             # Also reload modules that are part of a class or function
             # e.g. when importing `from custom_module import CustomClass`
             elif hasattr(attr_value, "__module__"):
                 attr_module_name = attr_value.__module__
-                if ModuleLoader.is_user_defined_module(attr_module_name):
+                if ModuleLoader._is_user_defined_module(attr_module_name):
                     attr_module = sys.modules[attr_module_name]
-                    ModuleLoader.deep_reload(attr_module, reloaded_modules_tracker)
+                    ModuleLoader._deep_reload(attr_module, reloaded_modules_tracker)
 
         # Reload
         log.debug('Reloading module "%s"', module.__name__)
