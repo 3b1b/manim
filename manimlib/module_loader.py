@@ -4,6 +4,7 @@ import builtins
 import importlib
 import os
 import sys
+import sysconfig
 
 from manimlib.logger import log
 
@@ -85,36 +86,53 @@ class ModuleLoader:
         return imported_modules
 
     @staticmethod
-    def reload_modules(modules, reloaded_modules_tracker: set):
+    def reload_modules(modules: list[str], reloaded_modules_tracker: set[str]):
         """
         Out of the given modules, reloads the ones that were not already imported.
 
-        We also restrict ourselves to reloading only the modules that are not
-        built-in Python modules to avoid potential issues since they were mostly
-        not designed to be reloaded.
-
-        We also skip the module that are external libraries (site-packages or
-        dist-packages) since they are not user-defined, e.g. when importing numpy.
+        We skip module that are not user-defined.
         """
         for mod in modules:
             if mod in reloaded_modules_tracker:
                 continue
 
-            if mod not in sys.modules:
-                continue
-
-            if mod in sys.builtin_module_names:
-                continue
-
-            module = sys.modules[mod]
-
-            # Skip external libraries like numpy
-            if module.__file__ and (
-                "site-packages" in module.__file__ or "dist-packages" in module.__file__
-            ):
+            if not ModuleLoader.is_user_defined_module(mod):
                 continue
 
             log.debug('Reloading module "%s"', mod)
+            module = sys.modules[mod]
             importlib.reload(module)
 
             reloaded_modules_tracker.add(mod)
+
+    @staticmethod
+    def is_user_defined_module(mod: str) -> bool:
+        """
+        Returns whether the given module is user-defined or not.
+
+        A module is considered user-defined if it is not part of the standard
+        library, not an external library (site-packages or dist-packages), and
+        is located in the current working directory (or subdirectories).
+        """
+        if mod not in sys.modules:
+            return False
+
+        if mod in sys.builtin_module_names:
+            return False
+
+        module = sys.modules[mod]
+        module_path = getattr(module, "__file__", None)
+        if module_path is None:
+            return False
+        module_path = os.path.abspath(module_path)
+
+        # Standard lib
+        standard_lib_path = sysconfig.get_path("stdlib")
+        if module_path.startswith(standard_lib_path):
+            return False
+
+        # External libraries (site-packages or dist-packages), e.g. numpy
+        if "site-packages" in module_path or "dist-packages" in module_path:
+            return False
+
+        return True
