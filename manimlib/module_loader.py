@@ -157,20 +157,20 @@ class ModuleLoader:
             return
         reloaded_modules_tracker.add(module.__name__)
 
-        # Reload all imported user-defined modules
+        # Recurse for all imported modules
         for _attr_name, attr_value in module.__dict__.items():
             if isinstance(attr_value, Module):
                 if ModuleLoader.is_user_defined_module(attr_value.__name__):
                     ModuleLoader.deep_reload(attr_value, reloaded_modules_tracker)
 
             # Also reload modules that are part of a class or function
-            # e.g. when importing `from custom_module import Customclass`
+            # e.g. when importing `from custom_module import CustomClass`
             elif hasattr(attr_value, "__module__"):
                 attr_module_name = attr_value.__module__
                 if ModuleLoader.is_user_defined_module(attr_module_name):
                     attr_module = sys.modules[attr_module_name]
                     ModuleLoader.deep_reload(attr_module, reloaded_modules_tracker)
 
-        # Reload the current module itself
+        # Reload
         log.debug('Reloading module "%s"', module.__name__)
         importlib.reload(module)
