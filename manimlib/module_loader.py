@@ -72,6 +72,12 @@ class ModuleLoader:
         builtins.__import__ = tracked_import
 
         try:
+            # Remove the "_insert_embed" suffix from the module name
+            module_name = module.__name__
+            if module.__name__.endswith("_insert_embed"):
+                module_name = module_name[:-13]
+            log.debug('RReloading module "%s"', module_name)
+
             spec.loader.exec_module(module)
         finally:
             builtins.__import__ = original_import
@@ -85,9 +91,10 @@ class ModuleLoader:
 
         We also restrict ourselves to reloading only the modules that are not
         built-in Python modules to avoid potential issues since they were mostly
-        not designed to be reloaded. We also skip the ones that are external
-        libraries (site-packages or dist-packages) since they are not user-defined,
-        e.g. when importing numpy.
+        not designed to be reloaded.
+
+        We also skip the module that are external libraries (site-packages or
+        dist-packages) since they are not user-defined, e.g. when importing numpy.
         """
         for mod in modules:
             if mod in reloaded_modules_tracker:
