@@ -10,8 +10,7 @@ from manimlib.logger import log
 
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    Module = importlib.util.types.ModuleType
+Module = importlib.util.types.ModuleType
 
 
 class ModuleLoader:
@@ -100,9 +99,8 @@ class ModuleLoader:
             if not ModuleLoader.is_user_defined_module(mod):
                 continue
 
-            log.debug('Reloading module "%s"', mod)
             module = sys.modules[mod]
-            importlib.reload(module)
+            ModuleLoader.deep_reload(module, reloaded_modules_tracker)
 
             reloaded_modules_tracker.add(mod)
 
@@ -137,3 +135,25 @@ class ModuleLoader:
             return False
 
         return True
+
+    @staticmethod
+    def deep_reload(module, reloaded_modules_tracker: set[str]):
+        """
+        Recursively reloads modules imported by the given module.
+
+        Only user-defined modules are reloaded, see `is_user_defined_module()`.
+        """
+        if module.__name__ in reloaded_modules_tracker:
+            return
+
+        reloaded_modules_tracker.add(module.__name__)
+
+        for attr_name in dir(module):
+            attr = getattr(module, attr_name)
+            if isinstance(attr, Module) and ModuleLoader.is_user_defined_module(
+                attr.__name__
+            ):
+                ModuleLoader.deep_reload(attr, reloaded_modules_tracker)
+
+        log.debug('Reloading module "%s"', module.__name__)
+        importlib.reload(module)
