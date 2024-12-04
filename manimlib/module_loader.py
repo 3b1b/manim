@@ -30,7 +30,7 @@ class ModuleLoader:
         also track the imported modules and reload them as well (they would be
         cached otherwise). See the reload_manager where the reload parameter is set.
 
-        Note that exec_module is called twice when reloading a module:
+        Note that `exec_module()` is called twice when reloading a module:
         1. In exec_module_and_track_imports to track the imports
         2. Here to actually execute the module again with the respective
            imported modules reloaded.
