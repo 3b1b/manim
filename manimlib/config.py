@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 from argparse import Namespace
-import builtins
 import colour
 import importlib
 import inspect
