@@ -35,6 +35,7 @@ class ModuleLoader:
         """
         if file_name is None:
             return None
+
         module_name = file_name.replace(os.sep, ".").replace(".py", "")
         spec = importlib.util.spec_from_file_location(module_name, file_name)
         module = importlib.util.module_from_spec(spec)
@@ -48,7 +49,7 @@ class ModuleLoader:
         return module
 
     @staticmethod
-    def exec_module_and_track_imports(spec, module: Module):
+    def exec_module_and_track_imports(spec, module: Module) -> set[str]:
         """
         Executes the given module (imports it) and returns all the modules that
         are imported during its execution.
@@ -57,7 +58,7 @@ class ModuleLoader:
         that tracks the imported modules. At the end, the original __import__
         built-in function is restored.
         """
-        imported_modules = set()
+        imported_modules: set[str] = set()
         original_import = builtins.__import__
 
         def tracked_import(name, globals=None, locals=None, fromlist=(), level=0):
@@ -86,7 +87,7 @@ class ModuleLoader:
         return imported_modules
 
     @staticmethod
-    def reload_modules(modules: list[str], reloaded_modules_tracker: set[str]):
+    def reload_modules(modules: set[str], reloaded_modules_tracker: set[str]):
         """
         Out of the given modules, reloads the ones that were not already imported.
 
