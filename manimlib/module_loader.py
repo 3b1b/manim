@@ -62,7 +62,8 @@ class ModuleLoader:
         def tracked_import(name, globals=None, locals=None, fromlist=(), level=0):
             """
             Custom __import__ function that does exactly the same as the original
-            one, but also tracks the imported modules by means of a set.
+            one, but also tracks the imported modules by means of adding their
+            names to a set.
             """
             result = original_import(name, globals, locals, fromlist, level)
             imported_modules.add(name)
