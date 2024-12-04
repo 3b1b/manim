@@ -241,7 +241,7 @@ def reload_modules(modules, reloaded_modules_tracker: set):
         reloaded_modules_tracker.add(mod)
 
 
-def get_module(file_name: str | None) -> Module:
+def get_module(file_name: str | None) -> Module | None:
     if file_name is None:
         return None
     module_name = file_name.replace(os.sep, ".").replace(".py", "")
