@@ -12,6 +12,32 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     Module = importlib.util.types.ModuleType
 
+ADDITIONAL_EXCLUDED_MODULES = [
+    "pkg_resources",
+    "setuptools",
+    "numpy",
+    "sympy",
+    "matplotlib",
+    "pandas",
+    "networkx",
+    "sympy",
+    "scipy",
+    "scikit-learn",
+    "tensorflow",
+    "keras",
+    "pytorch",
+    "pipenv",
+]
+"""
+Additionally excluded modules that should not be reloaded.
+
+
+The choice of these modules is arbitrary and based on the fact that they are not
+meant to be reloaded. But most of the time, it is not an issue to reload them,
+so the fact that this list is incomplete should be fine in practice, but might
+cause some subtle issues in some cases.
+"""
+
 
 class ModuleLoader:
     """
@@ -85,11 +111,6 @@ class ModuleLoader:
         We also restrict ourselves to reloading only the modules that are not
         built-in Python modules to avoid potential issues since they were mostly
         not designed to be reloaded.
-
-        The choice of "pkg_resources" and other manually excluded modules is
-        arbitrary and based on the fact that they are not meant to be reloaded.
-        In most cases, the user will not even import them directly in their
-        script.
         """
         for mod in modules:
             if mod in reloaded_modules_tracker:
@@ -98,10 +119,7 @@ class ModuleLoader:
             if mod not in sys.modules:
                 continue
 
-            if mod in sys.builtin_module_names or mod in [
-                "pkg_resources",
-                "setuptools",
-            ]:
+            if mod in sys.builtin_module_names or mod in ADDITIONAL_EXCLUDED_MODULES:
                 continue
 
             log.debug('Reloading module "%s"', mod)
