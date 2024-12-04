@@ -225,7 +225,6 @@ def exec_module_and_track_imports(spec, module: Module):
     builtins.__import__ = tracked_import
 
     try:
-        log.debug("Importing %s and tracking its imports", module.__name__)
         spec.loader.exec_module(module)
     finally:
         builtins.__import__ = original_import
@@ -251,7 +250,7 @@ def reload_modules(modules, reloaded_modules_tracker: set):
         if mod in sys.builtin_module_names or mod in ["pkg_resources", "setuptools"]:
             continue
 
-        log.debug("Reloading module %s", mod)
+        log.debug('Reloading module "%s"', mod)
         importlib.reload(sys.modules[mod])
 
         reloaded_modules_tracker.add(mod)
