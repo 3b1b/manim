@@ -16,6 +16,9 @@ IGNORE_MANIMLIB_MODULES = True
 class ModuleLoader:
     """
     Utility class to load a module from a file and handle its imports.
+
+    Most parts of this class are only needed for the reload functionality,
+    while the `get_module` method is the main entry point to import a module.
     """
 
     @staticmethod
@@ -143,6 +146,9 @@ class ModuleLoader:
 
         Only user-defined modules are reloaded, see `is_user_defined_module()`.
         """
+        if IGNORE_MANIMLIB_MODULES and module.__name__.startswith("manimlib"):
+            return
+
         if not hasattr(module, "__dict__"):
             return
 
@@ -166,8 +172,5 @@ class ModuleLoader:
                     ModuleLoader.deep_reload(attr_module, reloaded_modules_tracker)
 
         # Reload the current module itself
-        if IGNORE_MANIMLIB_MODULES and module.__name__.startswith("manimlib"):
-            return
-
         log.debug('Reloading module "%s"', module.__name__)
         importlib.reload(module)
