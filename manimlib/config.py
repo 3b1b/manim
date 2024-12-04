@@ -206,6 +206,14 @@ def get_manim_dir():
 
 
 def exec_module_and_track_imports(spec, module: Module):
+    """
+    Executes the given module (imports it) and returns all the modules that
+    are imported during its execution.
+
+    This is achieved by replacing the __import__ function with a custom one that
+    tracks the imported modules. At the end, the original __import__ function is
+    restored.
+    """
     imported_modules = set()
     original_import = builtins.__import__
 
@@ -217,7 +225,7 @@ def exec_module_and_track_imports(spec, module: Module):
     builtins.__import__ = tracked_import
 
     try:
-        print(f"⭕ Importing {module.__name__}")
+        log.debug("Importing %s and tracking its imports", module.__name__)
         spec.loader.exec_module(module)
     finally:
         builtins.__import__ = original_import
@@ -226,6 +234,13 @@ def exec_module_and_track_imports(spec, module: Module):
 
 
 def reload_modules(modules, reloaded_modules_tracker: set):
+    """
+    Out of the given modules, reloads the ones that were not already imported.
+
+    We also restrict ourselves to reloading only the modules that are not
+    built-in Python modules to avoid potential issues since they were mostly
+    not designed to be reloaded.
+    """
     for mod in modules:
         if mod in reloaded_modules_tracker:
             continue
@@ -236,12 +251,20 @@ def reload_modules(modules, reloaded_modules_tracker: set):
         if mod in sys.builtin_module_names or mod in ["pkg_resources", "setuptools"]:
             continue
 
-        print(f"♻ Reloading {mod}")
+        log.debug("Reloading module %s", mod)
         importlib.reload(sys.modules[mod])
+
         reloaded_modules_tracker.add(mod)
 
 
 def get_module(file_name: str | None, is_during_reload=False) -> Module | None:
+    """
+    Imports a module from a file and returns it.
+
+    During reload (when the user calls `reload()` in the IPython shell), we
+    also track the imported modules and reload them as well (they would be
+    cached otherwise). See the reload_manager where the reload parameter is set.
+    """
     if file_name is None:
         return None
     module_name = file_name.replace(os.sep, ".").replace(".py", "")
