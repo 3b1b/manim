@@ -21,7 +21,7 @@ from manimlib.animation.animation import prepare_animation
 from manimlib.animation.fading import VFadeInThenOut
 from manimlib.camera.camera import Camera
 from manimlib.camera.camera_frame import CameraFrame
-from manimlib.config import get_module
+from manimlib.module_loader import ModuleLoader
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.constants import RED
@@ -231,7 +231,7 @@ class Scene(object):
         # Create embedded IPython terminal configured to have access to
         # the local namespace of the caller
         caller_frame = inspect.currentframe().f_back
-        module = get_module(caller_frame.f_globals["__file__"])
+        module = ModuleLoader.get_module(caller_frame.f_globals["__file__"])
         shell = InteractiveShellEmbed(user_module=module)
         self.shell = shell
 
