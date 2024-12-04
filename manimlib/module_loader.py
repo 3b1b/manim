@@ -91,7 +91,11 @@ class ModuleLoader:
             imported_modules = ModuleLoader.exec_module_and_track_imports(spec, module)
             reloaded_modules_tracker = set()
             ModuleLoader.reload_modules(imported_modules, reloaded_modules_tracker)
-        else:
-            spec.loader.exec_module(module)
+
+        # In the case of reloading, the following statement is executed twice:
+        # 1. to track the imports
+        # 2. to actually execute the module again with the respective
+        #    imports reloaded
+        spec.loader.exec_module(module)
 
         return module
