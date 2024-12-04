@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from argparse import Namespace
+import builtins
 import colour
 import importlib
 import inspect
@@ -9,7 +10,6 @@ import os
 import screeninfo
 import sys
 import yaml
-from IPython.lib import deepreload
 
 from manimlib.logger import log
 from manimlib.utils.dict_ops import merge_dicts_recursively
@@ -205,57 +205,29 @@ def get_manim_dir():
     return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
-# from https://stackoverflow.com/a/63865801/
-class ModuleFinder(importlib.abc.MetaPathFinder):
-
-    def __init__(self, path_map: dict):
-        self.path_map = path_map
-
-    def find_spec(self, fullname, path, target=None):
-        print(f"📦🔍 Finding {fullname}")
-        if not fullname in self.path_map:
-            return None
-        print(f"📦💥 Importing {fullname}")
-        return importlib.util.spec_from_file_location(fullname, self.path_map[fullname])
-
-
-def get_module(file_name: str | None) -> Module:
-    if file_name is None:
-        return None
-    module_name = file_name.replace(os.sep, ".").replace(".py", "")
-    my_module_paths = {module_name: file_name}
-    sys.meta_path.insert(0, ModuleFinder(my_module_paths))
-
-    spec = importlib.util.spec_from_file_location(module_name, file_name)
-    module = importlib.util.module_from_spec(spec)
-
-    print(f"⭕ Importing {module_name}")
-    spec.loader.exec_module(module)
-
-    import builtins
-
-    # Track imported modules
+def exec_module_and_track_imports(spec, module: Module):
     imported_modules = set()
     original_import = builtins.__import__
 
-    def custom_import(name, globals=None, locals=None, fromlist=(), level=0):
+    def tracked_import(name, globals=None, locals=None, fromlist=(), level=0):
         result = original_import(name, globals, locals, fromlist, level)
         imported_modules.add(name)
         return result
 
-    builtins.__import__ = custom_import
+    builtins.__import__ = tracked_import
 
     try:
+        print(f"⭕ Importing {module.__name__}")
         spec.loader.exec_module(module)
     finally:
         builtins.__import__ = original_import
 
-    print(f"📦👀 Imported modules during execution: {imported_modules}")
+    return imported_modules
 
-    reloaded_modules = set()
 
-    for mod in imported_modules:
-        if mod in reloaded_modules:
+def reload_modules(modules, reloaded_modules_tracker: set):
+    for mod in modules:
+        if mod in reloaded_modules_tracker:
             continue
 
         if mod not in sys.modules:
@@ -266,40 +238,20 @@ def get_module(file_name: str | None) -> Module:
 
         print(f"♻ Reloading {mod}")
         importlib.reload(sys.modules[mod])
-        reloaded_modules.add(mod)
-        # deepreload.reload(sys.modules[mod])
+        reloaded_modules_tracker.add(mod)
 
-    # Find out all dependencies of that module, e.g. other modules it imports
-    # imported_modules = {
-    #     name: mod
-    #     for name, mod in module.__dict__.items()
-    # if isinstance(mod, importlib.util.types.ModuleType)
-    # }
-    # print(f"❤ Imported modules: {imported_modules}")
 
-    # print(sys.builtin_module_names)
+def get_module(file_name: str | None) -> Module:
+    if file_name is None:
+        return None
+    module_name = file_name.replace(os.sep, ".").replace(".py", "")
+    spec = importlib.util.spec_from_file_location(module_name, file_name)
+    module = importlib.util.module_from_spec(spec)
 
-    # Reload all modules that are not built-in
-    # for name, mod in module.__dict__.items():
-    #     if not isinstance(mod, importlib.util.types.ModuleType):
-    #         continue
-
-    #     if mod.__name__ in sys.modules and not mod.__name__ in sys.builtin_module_names:
-    #         if mod.__name__ in ["pkg_resources", "setuptools"]:
-    #             continue
-    #         print(f"♻ Reloading {mod.__name__}")
-    #         deepreload.reload(importlib.reload(sys.modules[mod.__name__]))
-
-    #     if mod.__name__ in sys.modules and not mod.__name__.startswith("builtins"):
-    #         print(f"♻ Reloading {mod.__name__}")
-    #         deepreload.reload(sys.modules[mod.__name__])
-
-    # Find out all dependencies of that module, e.g. other modules it imports
-
-    # if module_name in sys.modules:
-    #     print(f"♻ Reloading {module_name}")
-    #     deepreload.reload(sys.modules[module_name])
-    # # deepreload.reload(module)
+    imported_modules = exec_module_and_track_imports(spec, module)
+    reloaded_modules_tracker = set()
+    reload_modules(imported_modules, reloaded_modules_tracker)
+    print(f"📦 Reloaded modules: {reloaded_modules_tracker}")
 
     return module
 
