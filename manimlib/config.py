@@ -286,8 +286,9 @@ def get_scene_module(args: Namespace) -> Module:
     if args.embed is None:
         return ModuleLoader.get_module(args.file)
     else:
+        is_reload = args.is_reload if hasattr(args, "is_reload") else False
         return get_module_with_inserted_embed_line(
-            args.file, args.scene_names[0], args.embed, args.is_reload
+            args.file, args.scene_names[0], args.embed, is_reload
         )
 
 
