@@ -264,7 +264,7 @@ def get_indent(line: str):
 
 
 def get_module_with_inserted_embed_line(
-    file_name: str, scene_name: str, line_marker: str, is_during_reload=False
+    file_name: str, scene_name: str, line_marker: str, is_during_reload
 ):
     """
     This is hacky, but convenient. When user includes the argument "-e", it will try
