@@ -8,9 +8,9 @@ import sysconfig
 
 from manimlib.logger import log
 
-from typing import TYPE_CHECKING
-
 Module = importlib.util.types.ModuleType
+
+IGNORE_MANIMLIB_MODULES = True
 
 
 class ModuleLoader:
@@ -157,6 +157,17 @@ class ModuleLoader:
                 if ModuleLoader.is_user_defined_module(attr_value.__name__):
                     ModuleLoader.deep_reload(attr_value, reloaded_modules_tracker)
 
+            # Also reload modules that are part of a class or function
+            # e.g. when importing `from custom_module import Customclass`
+            elif hasattr(attr_value, "__module__"):
+                attr_module_name = attr_value.__module__
+                if ModuleLoader.is_user_defined_module(attr_module_name):
+                    attr_module = sys.modules[attr_module_name]
+                    ModuleLoader.deep_reload(attr_module, reloaded_modules_tracker)
+
         # Reload the current module itself
-        log.debug('Reloading user-defined module "%s"', module.__name__)
+        if IGNORE_MANIMLIB_MODULES and module.__name__.startswith("manimlib"):
+            return
+
+        log.debug('Reloading module "%s"', module.__name__)
         importlib.reload(module)
