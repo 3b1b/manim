@@ -21,7 +21,6 @@ from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.utils.cache import cache_on_disk
 from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import int_to_hex
-from manimlib.utils.directories import get_downloads_dir
 from manimlib.utils.simple_functions import hash_string
 
 from typing import TYPE_CHECKING
@@ -493,20 +492,10 @@ def register_font(font_file: str | Path):
         method with previous releases will raise an :class:`AttributeError` on macOS.
     """
 
-    input_folder = Path(get_downloads_dir()).parent.resolve()
-    possible_paths = [
-        Path(font_file),
-        input_folder / font_file,
-    ]
-    for path in possible_paths:
-        path = path.resolve()
-        if path.exists():
-            file_path = path
-            break
-    else:
-        error = f"Can't find {font_file}." f"Tried these : {possible_paths}"
+    file_path = Path(font_file).resolve()
+    if not file_path.exists():
+        error = f"Can't find {font_file}."
         raise FileNotFoundError(error)
-
     try:
         assert manimpango.register_font(str(file_path))
         yield
