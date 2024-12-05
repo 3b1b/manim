@@ -3,14 +3,23 @@ directories:
   # to match the directory structure of the path to the
   # sourcecode generating that video
   mirror_module_path: False
-  # Where should manim output video and image files?
-  output: ""
-  # If you want to use images, manim will look to these folders to find them
-  raster_images: ""
-  vector_images: ""
-  # If you want to use sounds, manim will look here to find it.
-  sounds: ""
-  downloads: ""
+  # Manim may write to and read from teh file system, e.g.
+  # to render videos and to look for svg/png assets. This
+  # will specify where those assets live, with a base directory,
+  # and various subdirectory names within it
+  base: ""
+  subdirs:
+    # Where should manim output video and image files?
+    output: "videos"
+    # If you want to use images, manim will look to these folders to find them
+    raster_images: "raster_images"
+    vector_images: "vector_images"
+    # If you want to use sounds, manim will look here to find it.
+    sounds: "sounds"
+    # Place for other forms of data relevant to any projects, like csv's
+    data: "data"
+    # When downloading, say an image, where will it go?
+    downloads: "downloads"
   # For certain object types, especially Tex and Text, manim will save information
   # to file to prevent the need to re-compute, e.g. recompiling the latex. By default,
   # it stores this saved data to whatever directory appdirs.user_cache_dir("manim") returns,

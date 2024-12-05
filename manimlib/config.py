@@ -317,11 +317,18 @@ def load_yaml(file_path: str):
 def get_global_config():
     args = parse_cli()
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
-    return merge_dicts_recursively(
+    config = merge_dicts_recursively(
         load_yaml(global_defaults_file),
         load_yaml("custom_config.yml"),  # From current working directory
         load_yaml(args.config_file) if args.config_file else {},
     )
+
+    # Set the subdirectories
+    base = config['directories']['base']
+    for key, subdir in config['directories']['subdirs'].items():
+        config['directories'][key] = os.path.join(base, subdir)
+
+    return config
 
 
 def get_file_ext(args: Namespace) -> str:
