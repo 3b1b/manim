@@ -82,7 +82,7 @@ def get_scenes_to_render(all_scene_classes, scene_config, run_config):
     if run_config["write_all"]:
         return [sc(**scene_config) for sc in all_scene_classes]
 
-    names_to_classes = {sc.__name__ : sc for sc in all_scene_classes}
+    names_to_classes = {sc.__name__: sc for sc in all_scene_classes}
     scene_names = run_config["scene_names"]
 
     for name in set.difference(set(scene_names), names_to_classes):
@@ -116,11 +116,9 @@ def get_scene_classes_from_module(module):
 
 
 def main(scene_config, run_config):
-    module = run_config["module"]
-    if module is None:
+    if run_config["module"] is None:
         # If no module was passed in, just play the blank scene
         return [BlankScene(**scene_config)]
 
-    all_scene_classes = get_scene_classes_from_module(module)
-    scenes = get_scenes_to_render(all_scene_classes, scene_config, run_config)
-    return scenes
+    all_scene_classes = get_scene_classes_from_module(run_config["module"])
+    return get_scenes_to_render(all_scene_classes, scene_config, run_config)

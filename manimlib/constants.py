@@ -11,13 +11,12 @@ if TYPE_CHECKING:
 
 
 # TODO, it feels a bit unprincipled to have some global constants
-# depend on the output of this function, all for all that configuration
-# code to be run merely upon importing from this file
+# depend on the output of this function, and for all that configuration
+# code to be run merely upon importing from this file.
 CAMERA_CONFIG = get_camera_config()
 
 # Sizes relevant to default camera frame
 ASPECT_RATIO: float = CAMERA_CONFIG['pixel_width'] / CAMERA_CONFIG['pixel_height']
-# FRAME_HEIGHT: float = 8.0
 FRAME_WIDTH: float = FRAME_HEIGHT * ASPECT_RATIO
 FRAME_SHAPE: tuple[float, float] = (FRAME_WIDTH, FRAME_HEIGHT)
 FRAME_Y_RADIUS: float = FRAME_HEIGHT / 2
