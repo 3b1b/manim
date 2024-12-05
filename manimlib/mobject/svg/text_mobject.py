@@ -12,6 +12,7 @@ import pygments
 import pygments.formatters
 import pygments.lexers
 
+from manimlib.config import get_global_config
 from manimlib.constants import DEFAULT_PIXEL_WIDTH, FRAME_WIDTH
 from manimlib.constants import NORMAL
 from manimlib.logger import log
@@ -19,7 +20,6 @@ from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.utils.cache import cache_on_disk
 from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import int_to_hex
-from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_downloads_dir
 from manimlib.utils.simple_functions import hash_string
 
@@ -155,13 +155,14 @@ class MarkupText(StringMobject):
         isolate: Selector = re.compile(r"\w+", re.U),
         **kwargs
     ):
+        default_style = get_global_config()["style"]
         self.text = text
         self.font_size = font_size
         self.justify = justify
         self.indent = indent
-        self.alignment = alignment or get_customization()["style"]["text_alignment"]
+        self.alignment = alignment or default_style["text_alignment"]
         self.line_width = line_width
-        self.font = font or get_customization()["style"]["font"]
+        self.font = font or default_style["font"]
         self.slant = slant
         self.weight = weight
 
