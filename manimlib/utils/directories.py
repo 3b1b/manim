@@ -23,7 +23,7 @@ def get_temp_dir() -> str:
 
 
 def get_downloads_dir() -> str:
-    return guarantee_existence(os.path.join(get_temp_dir(), "manim_downloads"))
+    return get_directories()["downloads"] or appdirs.user_cache_dir("manim_downloads")
 
 
 def get_output_dir() -> str:
