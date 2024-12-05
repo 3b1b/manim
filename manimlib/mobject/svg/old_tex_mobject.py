@@ -77,11 +77,7 @@ class SingleStringTex(SVGMobject):
         )
 
     def get_svg_string_by_content(self, content: str) -> str:
-        return get_cached_value(
-            key=hash_string(str((content, self.template, self.additional_preamble))),
-            value_func=lambda: latex_to_svg(content, self.template, self.additional_preamble),
-            message=f"Writing {self.tex_string}..."
-        )
+        return latex_to_svg(content, self.template, self.additional_preamble)
 
     def get_tex_file_body(self, tex_string: str) -> str:
         new_tex = self.get_modified_expression(tex_string)

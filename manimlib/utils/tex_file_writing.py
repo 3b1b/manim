@@ -8,6 +8,7 @@ import subprocess
 from pathlib import Path
 import tempfile
 
+from manimlib.utils.cache import cache_on_disk
 from manimlib.config import get_custom_config
 from manimlib.config import get_manim_dir
 from manimlib.logger import log
@@ -62,10 +63,13 @@ def get_full_tex(content: str, preamble: str = ""):
     )) + "\n"
 
 
+@cache_on_disk
 def latex_to_svg(
     latex: str,
     template: str = "",
-    additional_preamble: str = ""
+    additional_preamble: str = "",
+    short_tex: str = "",
+    show_message_during_execution: bool = True,
 ) -> str:
     """Convert LaTeX string to SVG string.
 
@@ -81,6 +85,13 @@ def latex_to_svg(
         LatexError: If LaTeX compilation fails
         NotImplementedError: If compiler is not supported
     """
+    if show_message_during_execution:
+        max_message_len = 80
+        message = f"Writing {short_tex or latex}"
+        if len(message) > max_message_len:
+            message = message[:max_message_len - 3] + "..."
+        print(message, end="\r")
+
     tex_config = get_tex_config()
     if template and template != tex_config["template"]:
         tex_config = get_tex_template_config(template)
@@ -147,7 +158,12 @@ def latex_to_svg(
         )
 
         # Return SVG string
-        return process.stdout.decode('utf-8')
+        result = process.stdout.decode('utf-8')
+
+    if show_message_during_execution:
+        print(" " * len(message), end="\r")
+
+    return result
 
 
 class LatexError(Exception):

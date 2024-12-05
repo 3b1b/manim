@@ -11,7 +11,9 @@ CUSTOMIZATION = {}
 
 def get_customization():
     if not CUSTOMIZATION:
+        print(CUSTOMIZATION)
         CUSTOMIZATION.update(get_custom_config())
+        print(CUSTOMIZATION)
         directories = CUSTOMIZATION["directories"]
         # Unless user has specified otherwise, use the system default temp
         # directory for storing tex files, mobject_data, etc.
