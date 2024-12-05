@@ -22,10 +22,6 @@ def get_temp_dir() -> str:
     return get_directories()["temporary_storage"] or tempfile.gettempdir()
 
 
-def get_mobject_data_dir() -> str:
-    return guarantee_existence(os.path.join(get_temp_dir(), "mobject_data"))
-
-
 def get_downloads_dir() -> str:
     return guarantee_existence(os.path.join(get_temp_dir(), "manim_downloads"))
 
