@@ -405,7 +405,7 @@ class CoordinateSystem(ABC):
             stroke_width=stroke_width,
             stroke_color=stroke_color,
             fill_opacity=fill_opacity,
-            stroke_background=stroke_background
+            stroke_behind=stroke_background
         )
         for rect in result:
             if not rect.positive:
