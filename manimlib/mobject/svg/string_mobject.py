@@ -66,17 +66,18 @@ class StringMobject(SVGMobject, ABC):
         self.use_labelled_svg = use_labelled_svg
 
         self.parse()
-        super().__init__(**kwargs)
+        svg_string = self.get_svg_string()
+        super().__init__(svg_string=svg_string, **kwargs)
         self.set_stroke(stroke_color, stroke_width)
         self.set_fill(fill_color, border_width=fill_border_width)
         self.labels = [submob.label for submob in self.submobjects]
 
-    def get_file_path(self, is_labelled: bool = False) -> str:
-        is_labelled = is_labelled or self.use_labelled_svg
-        return self.get_file_path_by_content(self.get_content(is_labelled))
+    def get_svg_string(self, is_labelled: bool = False) -> str:
+        content = self.get_content(is_labelled or self.use_labelled_svg)
+        return self.get_svg_string_by_content(content)
 
     @abstractmethod
-    def get_file_path_by_content(self, content: str) -> str:
+    def get_svg_string_by_content(self, content: str) -> str:
         return ""
 
     def assign_labels_by_color(self, mobjects: list[VMobject]) -> None:
@@ -109,8 +110,8 @@ class StringMobject(SVGMobject, ABC):
                 )
             )
 
-    def mobjects_from_file(self, file_path: str) -> list[VMobject]:
-        submobs = super().mobjects_from_file(file_path)
+    def mobjects_from_svg_string(self, svg_string: str) -> list[VMobject]:
+        submobs = super().mobjects_from_svg_string(svg_string)
 
         if self.use_labelled_svg:
             # This means submobjects are colored according to spans

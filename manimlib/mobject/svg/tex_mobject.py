@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -82,10 +83,12 @@ class Tex(StringMobject):
             self.additional_preamble
         )
 
-    def get_file_path_by_content(self, content: str) -> str:
-        return tex_content_to_svg_file(
+    def get_svg_string_by_content(self, content: str) -> str:
+        # TODO, implement this without writing to a file
+        file_path = tex_content_to_svg_file(
             content, self.template, self.additional_preamble, self.tex_string
         )
+        return Path(file_path).read_text() 
 
     def _handle_scale_side_effects(self, scale_factor: float) -> Self:
         self.font_size *= scale_factor

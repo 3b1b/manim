@@ -4,6 +4,8 @@ from contextlib import contextmanager
 import os
 from pathlib import Path
 import re
+import tempfile
+import hashlib
 
 import manimpango
 import pygments
@@ -169,7 +171,8 @@ class MarkupText(StringMobject):
             self.disable_ligatures
         )
 
-    def get_file_path_by_content(self, content: str) -> str:
+    def get_svg_string_by_content(self, content: str) -> str:
+        # TODO, check the cache
         hash_content = str((
             content,
             self.justify,
@@ -177,14 +180,11 @@ class MarkupText(StringMobject):
             self.alignment,
             self.line_width
         ))
-        svg_file = os.path.join(
-            get_text_dir(), hash_string(hash_content) + ".svg"
-        )
-        if not os.path.exists(svg_file):
-            self.markup_to_svg(content, svg_file)
-        return svg_file
+        # hash_string(hash_content)
+        key = hashlib.sha256(hash_content.encode()).hexdigest()
+        return self.markup_to_svg_string(content)
 
-    def markup_to_svg(self, markup_str: str, file_name: str) -> str:
+    def markup_to_svg_string(self, markup_str: str) -> str:
         self.validate_markup_string(markup_str)
 
         # `manimpango` is under construction,
@@ -195,25 +195,30 @@ class MarkupText(StringMobject):
         else:
             pango_width = self.line_width / FRAME_WIDTH * DEFAULT_PIXEL_WIDTH
 
-        return manimpango.MarkupUtils.text2svg(
-            text=markup_str,
-            font="",                     # Already handled
-            slant="NORMAL",              # Already handled
-            weight="NORMAL",             # Already handled
-            size=1,                      # Already handled
-            _=0,                         # Empty parameter
-            disable_liga=False,
-            file_name=file_name,
-            START_X=0,
-            START_Y=0,
-            width=DEFAULT_CANVAS_WIDTH,
-            height=DEFAULT_CANVAS_HEIGHT,
-            justify=self.justify,
-            indent=self.indent,
-            line_spacing=None,           # Already handled
-            alignment=alignment,
-            pango_width=pango_width
-        )
+        with tempfile.NamedTemporaryFile(suffix='.svg', mode='r+') as tmp:
+            manimpango.MarkupUtils.text2svg(
+                text=markup_str,
+                font="",                     # Already handled
+                slant="NORMAL",              # Already handled
+                weight="NORMAL",             # Already handled
+                size=1,                      # Already handled
+                _=0,                         # Empty parameter
+                disable_liga=False,
+                file_name=tmp.name,
+                START_X=0,
+                START_Y=0,
+                width=DEFAULT_CANVAS_WIDTH,
+                height=DEFAULT_CANVAS_HEIGHT,
+                justify=self.justify,
+                indent=self.indent,
+                line_spacing=None,           # Already handled
+                alignment=alignment,
+                pango_width=pango_width
+            )
+
+            # Read the contents
+            tmp.seek(0)
+            return tmp.read()
 
     @staticmethod
     def validate_markup_string(markup_str: str) -> None:
