@@ -4,6 +4,7 @@ import os
 import re
 import yaml
 import subprocess
+from functools import lru_cache
 
 from pathlib import Path
 import tempfile
@@ -63,6 +64,7 @@ def get_full_tex(content: str, preamble: str = ""):
     )) + "\n"
 
 
+@lru_cache(maxsize=128)
 @cache_on_disk
 def latex_to_svg(
     latex: str,

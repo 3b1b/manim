@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import tempfile
 import hashlib
+from functools import lru_cache
 
 import manimpango
 import pygments
@@ -51,6 +52,7 @@ class _Alignment:
         self.value = _Alignment.VAL_DICT[s.upper()]
 
 
+@lru_cache(maxsize=128)
 @cache_on_disk
 def markup_to_svg(
     markup_str: str,
