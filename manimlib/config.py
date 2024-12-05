@@ -10,6 +10,8 @@ import screeninfo
 import sys
 import yaml
 
+from functools import lru_cache
+
 from manimlib.logger import log
 from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.init_config import init_customization
@@ -17,9 +19,6 @@ from manimlib.utils.init_config import init_customization
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     Module = importlib.util.types.ModuleType
-
-
-__config_file__ = "custom_config.yml"
 
 
 def parse_cli():
@@ -300,69 +299,27 @@ def get_scene_module(args: Namespace) -> Module:
         )
 
 
-def get_custom_config():
-    global __config_file__
+def load_yaml(file_path: str):
+    try:
+        with open(file_path, "r") as file:
+            return yaml.safe_load(file) or {}
+    except FileNotFoundError:
+        return {}
 
+
+@lru_cache
+def get_global_config():
+    args = parse_cli()
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
 
-    if os.path.exists(global_defaults_file):
-        with open(global_defaults_file, "r") as file:
-            custom_config = yaml.safe_load(file)
+    print(f"global_defaults_file = {global_defaults_file}")
+    print(f"args.config_file = {args.config_file}")
 
-        if os.path.exists(__config_file__):
-            with open(__config_file__, "r") as file:
-                local_defaults = yaml.safe_load(file)
-            if local_defaults:
-                custom_config = merge_dicts_recursively(
-                    custom_config,
-                    local_defaults,
-                )
-    else:
-        with open(__config_file__, "r") as file:
-            custom_config = yaml.safe_load(file)
-
-    # Check temporary storage(custom_config)
-    if custom_config["directories"]["temporary_storage"] == "" and sys.platform == "win32":
-        log.warning(
-            "You may be using Windows platform and have not specified the path of" + \
-            " `temporary_storage`, which may cause OSError. So it is recommended" + \
-            " to specify the `temporary_storage` in the config file (.yml)"
-        )
-
-    return custom_config
-
-
-def init_global_config(config_file):
-    global __config_file__
-
-    # ensure __config_file__ always exists
-    if config_file is not None:
-        if not os.path.exists(config_file):
-            log.error(f"Can't find {config_file}.")
-            if sys.platform == 'win32':
-                log.info(f"Copying default configuration file to {config_file}...")
-                os.system(f"copy default_config.yml {config_file}")
-            elif sys.platform in ["linux2", "darwin"]:
-                log.info(f"Copying default configuration file to {config_file}...")
-                os.system(f"cp default_config.yml {config_file}")
-            else:
-                log.info("Please create the configuration file manually.")
-            log.info("Read configuration from default_config.yml.")
-        else:
-            __config_file__ = config_file
-
-    global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
-
-    if not (os.path.exists(global_defaults_file) or os.path.exists(__config_file__)):
-        log.info("There is no configuration file detected. Switch to the config file initializer:")
-        init_customization()
-
-    elif not os.path.exists(__config_file__):
-        log.info(f"Using the default configuration file, which you can modify in `{global_defaults_file}`")
-        log.info(
-            "If you want to create a local configuration file, you can create a file named" + \
-            f" `{__config_file__}`, or run `manimgl --config`"
-        )
+    return merge_dicts_recursively(
+        load_yaml(global_defaults_file),
+        load_yaml("custom_config.yml"),  # From current working directory
+        load_yaml(args.config_file) if args.config_file else {},
+    )
 
 
 def get_file_ext(args: Namespace) -> str:
@@ -498,16 +455,15 @@ def get_camera_config(args: Namespace, custom_config: dict) -> dict:
 
 
 def get_configuration(args: Namespace) -> dict:
-    init_global_config(args.config_file)
-    custom_config = get_custom_config()
-    camera_config = get_camera_config(args, custom_config)
-    window_config = get_window_config(args, custom_config, camera_config)
+    global_config = get_global_config()
+    camera_config = get_camera_config(args, global_config)
+    window_config = get_window_config(args, global_config, camera_config)
     start, end = get_animations_numbers(args)
 
     return {
         "module": get_scene_module(args),
         "scene_names": args.scene_names,
-        "file_writer_config": get_file_writer_config(args, custom_config),
+        "file_writer_config": get_file_writer_config(args, global_config),
         "camera_config": camera_config,
         "window_config": window_config,
         "quiet": args.quiet or args.write_all,
@@ -520,8 +476,8 @@ def get_configuration(args: Namespace) -> dict:
         "leave_progress_bars": args.leave_progress_bars,
         "show_animation_progress": args.show_animation_progress,
         "prerun": args.prerun,
-        "embed_exception_mode": custom_config["embed_exception_mode"],
-        "embed_error_sound": custom_config["embed_error_sound"],
+        "embed_exception_mode": global_config["embed_exception_mode"],
+        "embed_error_sound": global_config["embed_error_sound"],
     }
 
 
@@ -530,15 +486,15 @@ def get_frame_height():
 
 
 def get_aspect_ratio():
-    cam_config = get_camera_config(parse_cli(), get_custom_config())
+    cam_config = get_camera_config(parse_cli(), get_global_config())
     return cam_config['pixel_width'] / cam_config['pixel_height']
 
 
 def get_default_pixel_width():
-    cam_config = get_camera_config(parse_cli(), get_custom_config())
+    cam_config = get_camera_config(parse_cli(), get_global_config())
     return cam_config['pixel_width']
 
 
 def get_default_pixel_height():
-    cam_config = get_camera_config(parse_cli(), get_custom_config())
+    cam_config = get_camera_config(parse_cli(), get_global_config())
     return cam_config['pixel_height']

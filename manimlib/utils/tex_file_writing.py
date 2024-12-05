@@ -9,7 +9,7 @@ from pathlib import Path
 import tempfile
 
 from manimlib.utils.cache import cache_on_disk
-from manimlib.config import get_custom_config
+from manimlib.config import get_global_config
 from manimlib.config import get_manim_dir
 from manimlib.logger import log
 from manimlib.utils.simple_functions import hash_string
@@ -43,7 +43,7 @@ def get_tex_config() -> dict[str, str]:
     """
     # Only load once, then save thereafter
     if not SAVED_TEX_CONFIG:
-        template_name = get_custom_config()["style"]["tex_template"]
+        template_name = get_global_config()["style"]["tex_template"]
         template_config = get_tex_template_config(template_name)
         SAVED_TEX_CONFIG.update({
             "template": template_name,
