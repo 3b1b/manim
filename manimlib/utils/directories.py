@@ -14,14 +14,6 @@ def get_temp_dir() -> str:
     return get_directories()["temporary_storage"]
 
 
-def get_tex_dir() -> str:
-    return guarantee_existence(os.path.join(get_temp_dir(), "Tex"))
-
-
-def get_text_dir() -> str:
-    return guarantee_existence(os.path.join(get_temp_dir(), "Text"))
-
-
 def get_mobject_data_dir() -> str:
     return guarantee_existence(os.path.join(get_temp_dir(), "mobject_data"))
 

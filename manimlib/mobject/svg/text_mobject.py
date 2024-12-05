@@ -21,7 +21,6 @@ from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import int_to_hex
 from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_downloads_dir
-from manimlib.utils.directories import get_text_dir
 from manimlib.utils.simple_functions import hash_string
 
 from typing import TYPE_CHECKING

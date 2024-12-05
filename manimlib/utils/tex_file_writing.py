@@ -11,7 +11,6 @@ import tempfile
 from manimlib.config import get_custom_config
 from manimlib.config import get_manim_dir
 from manimlib.logger import log
-from manimlib.utils.directories import get_tex_dir
 from manimlib.utils.simple_functions import hash_string
 
 
