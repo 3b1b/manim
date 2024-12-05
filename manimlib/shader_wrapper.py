@@ -10,7 +10,7 @@ import numpy as np
 from functools import lru_cache
 
 from manimlib.config import parse_cli
-from manimlib.config import get_configuration
+from manimlib.config import get_camera_config
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.shaders import get_shader_code_from_file
 from manimlib.utils.shaders import get_shader_program
@@ -409,7 +409,7 @@ class VShaderWrapper(ShaderWrapper):
         which can display that texture as a simple quad onto a screen,
         along with the rgb value which is meant to be discarded.
         """
-        cam_config = get_configuration(parse_cli())['camera_config']
+        cam_config = get_camera_config()
         size = (cam_config['pixel_width'], cam_config['pixel_height'])
         double_size = (2 * size[0], 2 * size[1])
 
