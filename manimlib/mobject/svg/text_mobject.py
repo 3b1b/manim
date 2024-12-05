@@ -197,34 +197,6 @@ class MarkupText(StringMobject):
         if height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
-    @property
-    def hash_seed(self) -> tuple:
-        return (
-            self.__class__.__name__,
-            self.svg_default,
-            self.path_string_config,
-            self.base_color,
-            self.isolate,
-            self.protect,
-            self.text,
-            self.font_size,
-            self.lsh,
-            self.justify,
-            self.indent,
-            self.alignment,
-            self.line_width,
-            self.font,
-            self.slant,
-            self.weight,
-            self.t2c,
-            self.t2f,
-            self.t2s,
-            self.t2w,
-            self.global_config,
-            self.local_configs,
-            self.disable_ligatures
-        )
-
     def get_svg_string_by_content(self, content: str) -> str:
         self.content = content
         return markup_to_svg(

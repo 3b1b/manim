@@ -67,23 +67,6 @@ class Tex(StringMobject):
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
         self.scale(SCALE_FACTOR_PER_FONT_POINT * font_size)
 
-    @property
-    def hash_seed(self) -> tuple:
-        return (
-            self.__class__.__name__,
-            self.svg_default,
-            self.path_string_config,
-            self.base_color,
-            self.isolate,
-            self.protect,
-            self.tex_string,
-            self.alignment,
-            self.tex_environment,
-            self.tex_to_color_map,
-            self.template,
-            self.additional_preamble
-        )
-
     def get_svg_string_by_content(self, content: str) -> str:
         return latex_to_svg(content, self.template, self.additional_preamble, short_tex=self.tex_string)
 
