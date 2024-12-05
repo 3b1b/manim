@@ -13,10 +13,7 @@ from manimlib.utils.file_ops import find_file
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Sequence, Optional, Tuple
-    from manimlib.typing import UniformDict
-    from moderngl.vertex_array import VertexArray
-    from moderngl.framebuffer import Framebuffer
+    from typing import Sequence, Optional
 
 
 # Global maps to reflect uniform status

@@ -6,28 +6,23 @@ import numpy as np
 from scipy.integrate import solve_ivp
 
 from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
-from manimlib.constants import BLUE, WHITE
-from manimlib.constants import ORIGIN
+from manimlib.constants import WHITE
 from manimlib.animation.indication import VShowPassingFlash
-from manimlib.mobject.geometry import Arrow
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.color import get_colormap_list
-from manimlib.utils.color import rgb_to_color
 from manimlib.utils.color import get_color_map
-from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.iterables import cartesian_product
 from manimlib.utils.rate_functions import linear
-from manimlib.utils.simple_functions import sigmoid
 from manimlib.utils.space_ops import get_norm
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence, TypeVar, Tuple
-    from manimlib.typing import ManimColor, Vect3, VectN, Vect2Array, Vect3Array, Vect4Array
+    from typing import Callable, Iterable, Sequence, TypeVar, Tuple, Optional
+    from manimlib.typing import ManimColor, Vect3, VectN, VectArray, Vect3Array, Vect4Array
 
     from manimlib.mobject.coordinate_systems import CoordinateSystem
     from manimlib.mobject.mobject import Mobject
@@ -113,8 +108,8 @@ def move_points_along_vector_field(
     cs = coordinate_system
     origin = cs.get_origin()
 
-    def apply_nudge(self, dt):
-        mobject.apply_function(
+    def apply_nudge(mob, dt):
+        mob.apply_function(
             lambda p: p + (cs.c2p(*func(*cs.p2c(p))) - origin) * dt
         )
     mobject.add_updater(apply_nudge)
@@ -133,7 +128,7 @@ def get_sample_coords(
     return np.array(list(it.product(*ranges)))
 
 
-def vectorize(pointwise_function: Callable[Tuple, Tuple]):
+def vectorize(pointwise_function: Callable[[Tuple], Tuple]):
     def v_func(coords_array: VectArray) -> VectArray:
         return np.array([pointwise_function(*coords) for coords in coords_array])
 
@@ -237,7 +232,7 @@ class VectorField(VMobject):
         arr[7::8] = 0
         self.base_stroke_width_array = arr
 
-    def set_sample_coords(self, sample_points: VectArray):
+    def set_sample_coords(self, sample_coords: VectArray):
         self.sample_coords = sample_coords
         return self
 
