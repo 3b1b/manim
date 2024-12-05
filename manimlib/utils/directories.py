@@ -10,6 +10,10 @@ def get_directories() -> dict[str, str]:
     return get_customization()["directories"]
 
 
+def get_cache_dir() -> str:
+    return get_directories()["cache"]
+
+
 def get_temp_dir() -> str:
     return get_directories()["temporary_storage"]
 

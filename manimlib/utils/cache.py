@@ -1,15 +1,15 @@
-import appdirs
 import os
 from diskcache import Cache
 from contextlib import contextmanager
+
+from manimlib.utils.directories import get_cache_dir
 
 
 CACHE_SIZE = 1e9  # 1 Gig
 
 
 def get_cached_value(key, value_func, message=""):
-    cache_dir = appdirs.user_cache_dir("manim")
-    cache = Cache(cache_dir, size_limit=CACHE_SIZE)
+    cache = Cache(get_cache_dir(), size_limit=CACHE_SIZE)
 
     value = cache.get(key)
     if value is None:

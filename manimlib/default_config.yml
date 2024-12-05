@@ -10,12 +10,12 @@ directories:
   vector_images: ""
   # If you want to use sounds, manim will look here to find it.
   sounds: ""
-  # Manim often generates tex_files or other kinds of serialized data
-  # to keep from having to generate the same thing too many times.  By
-  # default, these will be stored at tempfile.gettempdir(), e.g. this might
-  # return whatever is at to the TMPDIR environment variable.  If you want to
-  # specify them elsewhere,
   temporary_storage: ""
+  # For certain object types, especially Tex and Text, manim will save information
+  # to file to prevent the need to re-compute, e.g. recompiling the latex. By default,
+  # it stores this saved data to whatever directory appdirs.user_cache_dir("manim") returns,
+  # but here a user can specify a different cache location
+  cache: ""
 universal_import_line: "from manimlib import *"
 style:
   tex_template: "default"

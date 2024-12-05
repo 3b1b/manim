@@ -1,5 +1,6 @@
 import os
 import tempfile
+import appdirs
 
 from manimlib.config import get_custom_config
 from manimlib.config import get_manim_dir
@@ -16,6 +17,9 @@ def get_customization():
         # directory for storing tex files, mobject_data, etc.
         if not directories["temporary_storage"]:
             directories["temporary_storage"] = tempfile.gettempdir()
+
+        if not directories["cache"]:
+            directories["cache"] = appdirs.user_cache_dir("manim")
 
         # Assumes all shaders are written into manimlib/shaders
         directories["shaders"] = os.path.join(
