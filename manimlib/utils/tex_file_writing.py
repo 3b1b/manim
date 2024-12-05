@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from contextlib import contextmanager
 import os
 import re
 import yaml
+
+from pathlib import Path
+import tempfile
 
 from manimlib.config import get_custom_config
 from manimlib.config import get_manim_dir
@@ -51,9 +53,10 @@ def get_tex_config() -> dict[str, str]:
     return SAVED_TEX_CONFIG
 
 
-def tex_content_to_svg_file(
-    content: str, template: str, additional_preamble: str,
-    short_tex: str
+def tex_to_svg(
+    content: str,
+    template: str,
+    additional_preamble: str,
 ) -> str:
     tex_config = get_tex_config()
     if not template or template == tex_config["template"]:
@@ -74,14 +77,11 @@ def tex_content_to_svg_file(
         "\\end{document}"
     )) + "\n"
 
-    svg_file = os.path.join(
-        get_tex_dir(), hash_string(full_tex) + ".svg"
-    )
-    if not os.path.exists(svg_file):
-        # If svg doesn't exist, create it
-        with display_during_execution("Writing " + short_tex):
-            create_tex_svg(full_tex, svg_file, compiler)
-    return svg_file
+    with tempfile.NamedTemporaryFile(suffix='.svg', mode='r+') as tmp:
+        create_tex_svg(full_tex, tmp.name, compiler)
+        # Read the contents
+        tmp.seek(0)
+        return tmp.read()
 
 
 def create_tex_svg(full_tex: str, svg_file: str, compiler: str) -> None:
@@ -143,21 +143,6 @@ def create_tex_svg(full_tex: str, svg_file: str, compiler: str) -> None:
             os.remove(root + ext)
         except FileNotFoundError:
             pass
-
-
-# TODO, perhaps this should live elsewhere
-@contextmanager
-def display_during_execution(message: str):
-    # Merge into a single line
-    to_print = message.replace("\n", " ")
-    max_characters = os.get_terminal_size().columns - 1
-    if len(to_print) > max_characters:
-        to_print = to_print[:max_characters - 3] + "..."
-    try:
-        print(to_print, end="\r")
-        yield
-    finally:
-        print(" " * len(to_print), end="\r")
 
 
 class LatexError(Exception):

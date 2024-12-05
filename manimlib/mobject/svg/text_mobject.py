@@ -16,9 +16,10 @@ from manimlib.constants import DEFAULT_PIXEL_WIDTH, FRAME_WIDTH
 from manimlib.constants import NORMAL
 from manimlib.logger import log
 from manimlib.mobject.svg.string_mobject import StringMobject
-from manimlib.utils.customization import get_customization
+from manimlib.utils.cache import get_cached_value
 from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import int_to_hex
+from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_downloads_dir
 from manimlib.utils.directories import get_text_dir
 from manimlib.utils.simple_functions import hash_string
@@ -172,17 +173,14 @@ class MarkupText(StringMobject):
         )
 
     def get_svg_string_by_content(self, content: str) -> str:
-        # TODO, check the cache
-        hash_content = str((
+        key = hash_string(str((
             content,
             self.justify,
             self.indent,
             self.alignment,
             self.line_width
-        ))
-        # hash_string(hash_content)
-        key = hashlib.sha256(hash_content.encode()).hexdigest()
-        return self.markup_to_svg_string(content)
+        )))
+        return get_cached_value(key, lambda: self.markup_to_svg_string(content))
 
     def markup_to_svg_string(self, markup_str: str) -> str:
         self.validate_markup_string(markup_str)

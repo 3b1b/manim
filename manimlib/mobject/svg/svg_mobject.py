@@ -20,7 +20,6 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.directories import get_mobject_data_dir
 from manimlib.utils.images import get_full_vector_image_path
 from manimlib.utils.iterables import hash_obj
-from manimlib.utils.simple_functions import hash_string
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

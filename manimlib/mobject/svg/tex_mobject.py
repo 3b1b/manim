@@ -6,10 +6,12 @@ from pathlib import Path
 from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.utils.cache import get_cached_value
 from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import hex_to_int
-from manimlib.utils.tex_file_writing import tex_content_to_svg_file
+from manimlib.utils.tex_file_writing import tex_to_svg
 from manimlib.utils.tex import num_tex_symbols
+from manimlib.utils.simple_functions import hash_string
 from manimlib.logger import log
 
 from typing import TYPE_CHECKING
@@ -84,11 +86,11 @@ class Tex(StringMobject):
         )
 
     def get_svg_string_by_content(self, content: str) -> str:
-        # TODO, implement this without writing to a file
-        file_path = tex_content_to_svg_file(
-            content, self.template, self.additional_preamble, self.tex_string
+        return get_cached_value(
+            key=hash_string(str((content, self.template, self.additional_preamble))),
+            value_func=lambda: tex_to_svg(content, self.template, self.additional_preamble),
+            message=f"Writing {self.tex_string}..."
         )
-        return Path(file_path).read_text() 
 
     def _handle_scale_side_effects(self, scale_factor: float) -> Self:
         self.font_size *= scale_factor
