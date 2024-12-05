@@ -52,11 +52,11 @@ class _Alignment:
 
 
 @cache_on_disk
-def markup_to_svg_string(
+def markup_to_svg(
     markup_str: str,
     justify: bool = False,
     indent: float = 0,
-    alignment: str = "",
+    alignment: str = "CENTER",
     line_width: float | None = None,
 ) -> str:
     validate_error = manimpango.MarkupUtils.validate(markup_str)
@@ -225,7 +225,7 @@ class MarkupText(StringMobject):
 
     def get_svg_string_by_content(self, content: str) -> str:
         self.content = content
-        return markup_to_svg_string(
+        return markup_to_svg(
             content,
             justify=self.justify,
             indent=self.indent,
