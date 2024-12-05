@@ -27,7 +27,6 @@ from manimlib.mobject.types.vectorized_mobject import VHighlight
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene import Scene
 from manimlib.scene.scene import SceneState
-from manimlib.scene.scene import PAN_3D_KEY
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.tex_file_writing import LatexError

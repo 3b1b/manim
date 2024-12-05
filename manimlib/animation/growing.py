@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from manimlib.animation.transform import Transform
-from manimlib.constants import PI
 
 from typing import TYPE_CHECKING
 

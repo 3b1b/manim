@@ -5,7 +5,6 @@ import warnings
 
 import numpy as np
 from scipy.spatial.transform import Rotation
-from pyrr import Matrix44
 
 from manimlib.constants import DEGREES, RADIANS
 from manimlib.constants import FRAME_SHAPE

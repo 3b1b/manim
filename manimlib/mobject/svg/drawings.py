@@ -25,7 +25,6 @@ from manimlib.constants import LEFT
 from manimlib.constants import LEFT
 from manimlib.constants import MED_LARGE_BUFF
 from manimlib.constants import MED_SMALL_BUFF
-from manimlib.constants import LARGE_BUFF
 from manimlib.constants import ORIGIN
 from manimlib.constants import OUT
 from manimlib.constants import PI
@@ -52,12 +51,9 @@ from manimlib.mobject.geometry import Polygon
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.geometry import AnnularSector
-from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.numbers import Integer
 from manimlib.mobject.shape_matchers import SurroundingRectangle
 from manimlib.mobject.svg.svg_mobject import SVGMobject
-from manimlib.mobject.svg.tex_mobject import Tex
-from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.svg.special_tex import TexTextFromPresetString
 from manimlib.mobject.three_dimensions import Prismify
 from manimlib.mobject.three_dimensions import VCube
@@ -421,7 +417,7 @@ class Bubble(VGroup):
         super().flip(axis=axis, **kwargs)
         if only_body:
             # Flip in place, don't use kwargs
-            self.content.flip(axis=axis)  
+            self.content.flip(axis=axis)
         if abs(axis[1]) > 0:
             self.direction = -np.array(self.direction)
         return self

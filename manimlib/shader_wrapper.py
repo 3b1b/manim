@@ -11,7 +11,6 @@ from functools import lru_cache
 
 from manimlib.config import parse_cli
 from manimlib.config import get_camera_config
-from manimlib.utils.iterables import resize_array
 from manimlib.utils.shaders import get_shader_code_from_file
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
@@ -20,8 +19,10 @@ from manimlib.utils.shaders import set_program_uniform
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import List, Optional, Dict
+    from typing import Optional, Tuple, Iterable
     from manimlib.typing import UniformDict
+    from moderngl.vertex_array import VertexArray
+    from moderngl.framebuffer import Framebuffer
 
 # Mobjects that should be rendered with
 # the same shader will be organized and

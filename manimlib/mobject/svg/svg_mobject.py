@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from xml.etree import ElementTree as ET
 
 import numpy as np
@@ -22,7 +21,6 @@ from manimlib.utils.iterables import hash_obj
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from typing import Tuple
     from manimlib.typing import ManimColor, Vect3Array
 
 
