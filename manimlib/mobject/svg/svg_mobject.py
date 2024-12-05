@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from xml.etree import ElementTree as ET
 
 import numpy as np
@@ -16,14 +15,11 @@ from manimlib.mobject.geometry import Polyline
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import RoundedRectangle
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.directories import get_mobject_data_dir
 from manimlib.utils.images import get_full_vector_image_path
 from manimlib.utils.iterables import hash_obj
-from manimlib.utils.simple_functions import hash_string
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from typing import Tuple
     from manimlib.typing import ManimColor, Vect3Array
 
 

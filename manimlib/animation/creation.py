@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.constants import WHITE
 from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import integer_interpolate

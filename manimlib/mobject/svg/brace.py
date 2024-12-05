@@ -6,7 +6,7 @@ import copy
 import numpy as np
 
 from manimlib.constants import DEFAULT_MOBJECT_TO_MOBJECT_BUFFER, SMALL_BUFF
-from manimlib.constants import DOWN, LEFT, ORIGIN, RIGHT, UP, DL, DR, UL
+from manimlib.constants import DOWN, LEFT, ORIGIN, RIGHT, DL, DR, UL
 from manimlib.constants import PI
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.fading import FadeIn
