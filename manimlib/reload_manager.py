@@ -37,8 +37,6 @@ class ReloadManager:
             except KillEmbedded:
                 # Requested via the `exit_raise` IPython runline magic
                 # by means of our scene.reload() command
-                print("Reloading...")
-
                 for scene in self.scenes:
                     scene.tear_down()
 
@@ -61,12 +59,14 @@ class ReloadManager:
             self.args.embed = str(overwrite_start_at_line)
 
         # Args to Config
-        config = manimlib.config.get_configuration(self.args)
+        scene_config = manimlib.config.get_scene_config(self.args)
         if self.window:
-            config["existing_window"] = self.window  # see scene initialization
+            scene_config["existing_window"] = self.window  # see scene initialization
+
+        run_config = manimlib.config.get_run_config(self.args)
 
         # Scenes
-        self.scenes = manimlib.extract_scene.main(config)
+        self.scenes = manimlib.extract_scene.main(scene_config, run_config)
         if len(self.scenes) == 0:
             print("No scenes found to run")
             return
@@ -78,7 +78,13 @@ class ReloadManager:
                 break
 
         for scene in self.scenes:
+            if self.args.embed:
+                print(" ".join([
+                    "Loading interactive session for",
+                    f"\033[96m{self.args.scene_names[0]}\033[0m",
+                    f"in \033[96m{self.args.file}\033[0m",
+                    f"at line \033[96m{self.args.embed}\033[0m"
+                ]))
             scene.run()
-
 
 reload_manager = ReloadManager()

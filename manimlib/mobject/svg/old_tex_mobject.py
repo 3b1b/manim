@@ -7,7 +7,7 @@ import re
 from manimlib.constants import BLACK, WHITE
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.tex_file_writing import tex_content_to_svg_file
+from manimlib.utils.tex_file_writing import latex_to_svg
 
 from typing import TYPE_CHECKING
 
@@ -76,12 +76,8 @@ class SingleStringTex(SVGMobject):
             self.additional_preamble
         )
 
-    def get_file_path(self) -> str:
-        content = self.get_tex_file_body(self.tex_string)
-        file_path = tex_content_to_svg_file(
-            content, self.template, self.additional_preamble, self.tex_string
-        )
-        return file_path
+    def get_svg_string_by_content(self, content: str) -> str:
+        return latex_to_svg(content, self.template, self.additional_preamble)
 
     def get_tex_file_body(self, tex_string: str) -> str:
         new_tex = self.get_modified_expression(tex_string)

@@ -96,7 +96,6 @@ def binary_search(function: Callable[[float], float],
     return mh
 
 
-def hash_string(string: str) -> str:
-    # Truncating at 16 bytes for cleanliness
+def hash_string(string: str, n_bytes=16) -> str:
     hasher = hashlib.sha256(string.encode())
-    return hasher.hexdigest()[:16]
+    return hasher.hexdigest()[:n_bytes]

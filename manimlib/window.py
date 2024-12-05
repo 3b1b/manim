@@ -8,8 +8,8 @@ from moderngl_window.timers.clock import Timer
 from screeninfo import get_monitors
 from functools import wraps
 
+from manimlib.config import get_global_config
 from manimlib.constants import FRAME_SHAPE
-from manimlib.utils.customization import get_customization
 
 from typing import TYPE_CHECKING
 
@@ -86,9 +86,10 @@ class Window(PygletWindow):
         self.size = (w, h)
 
     def find_initial_position(self, size: tuple[int, int]) -> tuple[int, int]:
-        custom_position = get_customization()["window_position"]
+        global_config = get_global_config()
+        custom_position = global_config["window_position"]
+        mon_index = global_config["window_monitor"]
         monitors = get_monitors()
-        mon_index = get_customization()["window_monitor"]
         monitor = monitors[min(mon_index, len(monitors) - 1)]
         window_width, window_height = size
         # Position might be specified with a string of the form
