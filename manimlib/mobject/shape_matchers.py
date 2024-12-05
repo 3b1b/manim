@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from colour import Color
 
+from manimlib.config import get_global_config
 from manimlib.constants import BLACK, RED, YELLOW, WHITE
 from manimlib.constants import DL, DOWN, DR, LEFT, RIGHT, UL, UR
 from manimlib.constants import SMALL_BUFF
@@ -9,7 +10,6 @@ from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.customization import get_customization
 
 from typing import TYPE_CHECKING
 
@@ -57,7 +57,7 @@ class BackgroundRectangle(SurroundingRectangle):
         **kwargs
     ):
         if color is None:
-            color = get_customization()['style']['background_color']
+            color = get_global_config()['style']['background_color']
         super().__init__(
             mobject,
             color=color,

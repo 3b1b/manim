@@ -6,6 +6,10 @@ import hashlib
 
 import numpy as np
 import validators
+import urllib.request
+
+import manimlib.utils.directories
+from manimlib.utils.simple_functions import hash_string
 
 from typing import TYPE_CHECKING
 
@@ -35,11 +39,9 @@ def find_file(
     # Check if this is a file online first, and if so, download
     # it to a temporary directory
     if validators.url(file_name):
-        import urllib.request
-        from manimlib.utils.directories import get_downloads_dir
         suffix = Path(file_name).suffix
-        file_hash = hashlib.sha256(file_name.encode('utf-8')).hexdigest()[:32]
-        folder = get_downloads_dir()
+        file_hash = hash_string(file_name)
+        folder = manimlib.utils.directories.get_downloads_dir()
 
         path = Path(folder, file_hash).with_suffix(suffix)
         urllib.request.urlretrieve(file_name, path)

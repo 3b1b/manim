@@ -1,20 +1,22 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import hex_to_int
-from manimlib.utils.tex_file_writing import tex_content_to_svg_file
+from manimlib.utils.tex_file_writing import latex_to_svg
 from manimlib.utils.tex import num_tex_symbols
+from manimlib.utils.simple_functions import hash_string
 from manimlib.logger import log
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.typing import ManimColor, Span, Selector
+    from manimlib.typing import ManimColor, Span, Selector, Self
 
 
 SCALE_FACTOR_PER_FONT_POINT = 0.001
@@ -65,27 +67,8 @@ class Tex(StringMobject):
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
         self.scale(SCALE_FACTOR_PER_FONT_POINT * font_size)
 
-    @property
-    def hash_seed(self) -> tuple:
-        return (
-            self.__class__.__name__,
-            self.svg_default,
-            self.path_string_config,
-            self.base_color,
-            self.isolate,
-            self.protect,
-            self.tex_string,
-            self.alignment,
-            self.tex_environment,
-            self.tex_to_color_map,
-            self.template,
-            self.additional_preamble
-        )
-
-    def get_file_path_by_content(self, content: str) -> str:
-        return tex_content_to_svg_file(
-            content, self.template, self.additional_preamble, self.tex_string
-        )
+    def get_svg_string_by_content(self, content: str) -> str:
+        return latex_to_svg(content, self.template, self.additional_preamble, short_tex=self.tex_string)
 
     def _handle_scale_side_effects(self, scale_factor: float) -> Self:
         self.font_size *= scale_factor

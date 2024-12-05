@@ -14,7 +14,8 @@ from manimlib.utils.bezier import interpolate
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import TypeVar
+    from typing import TypeVar, Callable
+    from manimlib.mobject.mobject import Mobject
     from manimlib.typing import ManimColor, Vect3, Self
 
     T = TypeVar("T", bound=VMobject)

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import os
 from xml.etree import ElementTree as ET
 
 import numpy as np
 import svgelements as se
 import io
+from pathlib import Path
 
 from manimlib.constants import RIGHT
 from manimlib.logger import log
@@ -16,14 +16,11 @@ from manimlib.mobject.geometry import Polyline
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import RoundedRectangle
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.directories import get_mobject_data_dir
 from manimlib.utils.images import get_full_vector_image_path
 from manimlib.utils.iterables import hash_obj
-from manimlib.utils.simple_functions import hash_string
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from typing import Tuple
     from manimlib.typing import ManimColor, Vect3Array
 
 
@@ -43,6 +40,7 @@ class SVGMobject(VMobject):
     def __init__(
         self,
         file_name: str = "",
+        svg_string: str = "",
         should_center: bool = True,
         height: float | None = None,
         width: float | None = None,
@@ -67,11 +65,19 @@ class SVGMobject(VMobject):
         path_string_config: dict = dict(),
         **kwargs
     ):
-        self.file_name = file_name or self.file_name
+        if svg_string != "":
+            self.svg_string = svg_string
+        elif file_name != "":
+            self.svg_string = self.file_name_to_svg_string(file_name)
+        elif self.file_name != "":
+            self.file_name_to_svg_string(self.file_name)
+        else:
+            raise Exception("Must specify either a file_name or svg_string SVGMobject")
+
         self.svg_default = dict(svg_default)
         self.path_string_config = dict(path_string_config)
 
-        super().__init__(**kwargs )
+        super().__init__(**kwargs)
         self.init_svg_mobject()
         self.ensure_positive_orientation()
 
@@ -101,7 +107,7 @@ class SVGMobject(VMobject):
         if hash_val in SVG_HASH_TO_MOB_MAP:
             submobs = [sm.copy() for sm in SVG_HASH_TO_MOB_MAP[hash_val]]
         else:
-            submobs = self.mobjects_from_file(self.get_file_path())
+            submobs = self.mobjects_from_svg_string(self.svg_string)
             SVG_HASH_TO_MOB_MAP[hash_val] = [sm.copy() for sm in submobs]
 
         self.add(*submobs)
@@ -115,11 +121,11 @@ class SVGMobject(VMobject):
             self.__class__.__name__,
             self.svg_default,
             self.path_string_config,
-            self.file_name
+            self.svg_string
         )
 
-    def mobjects_from_file(self, file_path: str) -> list[VMobject]:
-        element_tree = ET.parse(file_path)
+    def mobjects_from_svg_string(self, svg_string: str) -> list[VMobject]:
+        element_tree = ET.ElementTree(ET.fromstring(svg_string))
         new_tree = self.modify_xml_tree(element_tree)
 
         # New svg based on tree contents
@@ -131,10 +137,8 @@ class SVGMobject(VMobject):
 
         return self.mobjects_from_svg(svg)
 
-    def get_file_path(self) -> str:
-        if self.file_name is None:
-            raise Exception("Must specify file for SVGMobject")
-        return get_full_vector_image_path(self.file_name)
+    def file_name_to_svg_string(self, file_name: str) -> str:
+        return Path(get_full_vector_image_path(file_name)).read_text()
 
     def modify_xml_tree(self, element_tree: ET.ElementTree) -> ET.ElementTree:
         config_style_attrs = self.generate_config_style_dict()

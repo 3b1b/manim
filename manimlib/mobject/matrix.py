@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import itertools as it
-
 import numpy as np
 
 from manimlib.constants import DOWN, LEFT, RIGHT, ORIGIN
@@ -14,7 +12,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Sequence, Union, Tuple, Optional
+    from typing import Sequence, Union, Optional
     from manimlib.typing import ManimColor, Vect3, VectNArray, Self
 
     StringMatrixType = Union[Sequence[Sequence[str]], np.ndarray[int, np.dtype[np.str_]]]

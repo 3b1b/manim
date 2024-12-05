@@ -4,21 +4,23 @@ from contextlib import contextmanager
 import os
 from pathlib import Path
 import re
+import tempfile
+import hashlib
+from functools import lru_cache
 
 import manimpango
 import pygments
 import pygments.formatters
 import pygments.lexers
 
+from manimlib.config import get_global_config
 from manimlib.constants import DEFAULT_PIXEL_WIDTH, FRAME_WIDTH
 from manimlib.constants import NORMAL
 from manimlib.logger import log
 from manimlib.mobject.svg.string_mobject import StringMobject
-from manimlib.utils.customization import get_customization
+from manimlib.utils.cache import cache_on_disk
 from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import int_to_hex
-from manimlib.utils.directories import get_downloads_dir
-from manimlib.utils.directories import get_text_dir
 from manimlib.utils.simple_functions import hash_string
 
 from typing import TYPE_CHECKING
@@ -47,6 +49,58 @@ class _Alignment:
 
     def __init__(self, s: str):
         self.value = _Alignment.VAL_DICT[s.upper()]
+
+
+@lru_cache(maxsize=128)
+@cache_on_disk
+def markup_to_svg(
+    markup_str: str,
+    justify: bool = False,
+    indent: float = 0,
+    alignment: str = "CENTER",
+    line_width: float | None = None,
+) -> str:
+    validate_error = manimpango.MarkupUtils.validate(markup_str)
+    if validate_error:
+        raise ValueError(
+            f"Invalid markup string \"{markup_str}\"\n" + \
+            f"{validate_error}"
+        )
+
+    # `manimpango` is under construction,
+    # so the following code is intended to suit its interface
+    alignment = _Alignment(alignment)
+    if line_width is None:
+        pango_width = -1
+    else:
+        pango_width = line_width / FRAME_WIDTH * DEFAULT_PIXEL_WIDTH
+
+    # Write the result to a temporary svg file, and return it's contents.
+    # TODO, better would be to have this not write to file at all
+    with tempfile.NamedTemporaryFile(suffix='.svg', mode='r+') as tmp:
+        manimpango.MarkupUtils.text2svg(
+            text=markup_str,
+            font="",                     # Already handled
+            slant="NORMAL",              # Already handled
+            weight="NORMAL",             # Already handled
+            size=1,                      # Already handled
+            _=0,                         # Empty parameter
+            disable_liga=False,
+            file_name=tmp.name,
+            START_X=0,
+            START_Y=0,
+            width=DEFAULT_CANVAS_WIDTH,
+            height=DEFAULT_CANVAS_HEIGHT,
+            justify=justify,
+            indent=indent,
+            line_spacing=None,           # Already handled
+            alignment=alignment,
+            pango_width=pango_width
+        )
+
+        # Read the contents
+        tmp.seek(0)
+        return tmp.read()
 
 
 class MarkupText(StringMobject):
@@ -102,13 +156,14 @@ class MarkupText(StringMobject):
         isolate: Selector = re.compile(r"\w+", re.U),
         **kwargs
     ):
+        default_style = get_global_config()["style"]
         self.text = text
         self.font_size = font_size
         self.justify = justify
         self.indent = indent
-        self.alignment = alignment or get_customization()["style"]["text_alignment"]
+        self.alignment = alignment or default_style["text_alignment"]
         self.line_width = line_width
-        self.font = font or get_customization()["style"]["font"]
+        self.font = font or default_style["font"]
         self.slant = slant
         self.weight = weight
 
@@ -141,88 +196,14 @@ class MarkupText(StringMobject):
         if height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
-    @property
-    def hash_seed(self) -> tuple:
-        return (
-            self.__class__.__name__,
-            self.svg_default,
-            self.path_string_config,
-            self.base_color,
-            self.isolate,
-            self.protect,
-            self.text,
-            self.font_size,
-            self.lsh,
-            self.justify,
-            self.indent,
-            self.alignment,
-            self.line_width,
-            self.font,
-            self.slant,
-            self.weight,
-            self.t2c,
-            self.t2f,
-            self.t2s,
-            self.t2w,
-            self.global_config,
-            self.local_configs,
-            self.disable_ligatures
-        )
-
-    def get_file_path_by_content(self, content: str) -> str:
-        hash_content = str((
+    def get_svg_string_by_content(self, content: str) -> str:
+        self.content = content
+        return markup_to_svg(
             content,
-            self.justify,
-            self.indent,
-            self.alignment,
-            self.line_width
-        ))
-        svg_file = os.path.join(
-            get_text_dir(), hash_string(hash_content) + ".svg"
-        )
-        if not os.path.exists(svg_file):
-            self.markup_to_svg(content, svg_file)
-        return svg_file
-
-    def markup_to_svg(self, markup_str: str, file_name: str) -> str:
-        self.validate_markup_string(markup_str)
-
-        # `manimpango` is under construction,
-        # so the following code is intended to suit its interface
-        alignment = _Alignment(self.alignment)
-        if self.line_width is None:
-            pango_width = -1
-        else:
-            pango_width = self.line_width / FRAME_WIDTH * DEFAULT_PIXEL_WIDTH
-
-        return manimpango.MarkupUtils.text2svg(
-            text=markup_str,
-            font="",                     # Already handled
-            slant="NORMAL",              # Already handled
-            weight="NORMAL",             # Already handled
-            size=1,                      # Already handled
-            _=0,                         # Empty parameter
-            disable_liga=False,
-            file_name=file_name,
-            START_X=0,
-            START_Y=0,
-            width=DEFAULT_CANVAS_WIDTH,
-            height=DEFAULT_CANVAS_HEIGHT,
             justify=self.justify,
             indent=self.indent,
-            line_spacing=None,           # Already handled
-            alignment=alignment,
-            pango_width=pango_width
-        )
-
-    @staticmethod
-    def validate_markup_string(markup_str: str) -> None:
-        validate_error = manimpango.MarkupUtils.validate(markup_str)
-        if not validate_error:
-            return
-        raise ValueError(
-            f"Invalid markup string \"{markup_str}\"\n" + \
-            f"{validate_error}"
+            alignment=self.alignment,
+            line_width=self.line_width
         )
 
     # Toolkits
@@ -511,20 +492,10 @@ def register_font(font_file: str | Path):
         method with previous releases will raise an :class:`AttributeError` on macOS.
     """
 
-    input_folder = Path(get_downloads_dir()).parent.resolve()
-    possible_paths = [
-        Path(font_file),
-        input_folder / font_file,
-    ]
-    for path in possible_paths:
-        path = path.resolve()
-        if path.exists():
-            file_path = path
-            break
-    else:
-        error = f"Can't find {font_file}." f"Tried these : {possible_paths}"
+    file_path = Path(font_file).resolve()
+    if not file_path.exists():
+        error = f"Can't find {font_file}."
         raise FileNotFoundError(error)
-
     try:
         assert manimpango.register_font(str(file_path))
         yield

@@ -36,11 +36,15 @@ def init_customization() -> None:
     configuration = {
         "directories": {
             "mirror_module_path": False,
-            "output": "",
-            "raster_images": "",
-            "vector_images": "",
-            "sounds": "",
-            "temporary_storage": "",
+            "base": "",
+            "subdirs": {
+                "output": "videos",
+                "raster_images": "raster_images",
+                "vector_images": "vector_images",
+                "sounds": "sounds",
+                "data": "data",
+                "downloads": "downloads",
+            }
         },
         "universal_import_line": "from manimlib import *",
         "style": {
@@ -74,33 +78,39 @@ def init_customization() -> None:
 
         console.print("[bold]Directories:[/bold]")
         dir_config = configuration["directories"]
-        dir_config["output"] = Prompt.ask(
-            "  Where should manim [bold]output[/bold] video and image files place [prompt.default](optional, default is none)",
+        dir_config["base"] = Prompt.ask(
+            "  What base directory should manim use for reading/writing video and images? [prompt.default](optional, default is none)",
             default="",
             show_default=False
         )
-        dir_config["raster_images"] = Prompt.ask(
-            "  Which folder should manim find [bold]raster images[/bold] (.jpg .png .gif) in " + \
-            "[prompt.default](optional, default is none)",
-            default="",
+        dir_config["subdirs"]["output"] = Prompt.ask(
+            "  Within that base directory, which subdirectory should manim [bold]output[/bold] video and image files to?" + \
+            " [prompt.default](optional, default is \"videos\")",
+            default="videos",
             show_default=False
         )
-        dir_config["vector_images"] = Prompt.ask(
-            "  Which folder should manim find [bold]vector images[/bold] (.svg .xdv) in " + \
-            "[prompt.default](optional, default is none)",
-            default="",
+        dir_config["subdirs"]["raster_images"] = Prompt.ask(
+            "  Within that base directory, which subdirectory should manim look for raster images (.png, .jpg)" + \
+            " [prompt.default](optional, default is \"raster_images\")",
+            default="raster_images",
             show_default=False
         )
-        dir_config["sounds"] = Prompt.ask(
-            "  Which folder should manim find [bold]sound files[/bold] (.mp3 .wav) in " + \
-            "[prompt.default](optional, default is none)",
-            default="",
+        dir_config["subdirs"]["vector_images"] = Prompt.ask(
+            "  Within that base directory, which subdirectory should manim look for raster images (.svg, .xdv)" + \
+            " [prompt.default](optional, default is \"vector_images\")",
+            default="vector_images",
             show_default=False
         )
-        dir_config["temporary_storage"] = Prompt.ask(
-            "  Which folder should manim storage [bold]temporary files[/bold] " + \
-            "[prompt.default](recommended, use system temporary folder by default)",
-            default="",
+        dir_config["subdirs"]["sounds"] = Prompt.ask(
+            "  Within that base directory, which subdirectory should manim look for sound files (.mp3, .wav)" + \
+            " [prompt.default](optional, default is \"sounds\")",
+            default="sounds",
+            show_default=False
+        )
+        dir_config["subdirs"]["downloads"] = Prompt.ask(
+            "  Within that base directory, which subdirectory should manim output downloaded files" + \
+            " [prompt.default](optional, default is \"downloads\")",
+            default="downloads",
             show_default=False
         )
 

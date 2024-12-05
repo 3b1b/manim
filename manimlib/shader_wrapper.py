@@ -10,8 +10,7 @@ import numpy as np
 from functools import lru_cache
 
 from manimlib.config import parse_cli
-from manimlib.config import get_configuration
-from manimlib.utils.iterables import resize_array
+from manimlib.config import get_camera_config
 from manimlib.utils.shaders import get_shader_code_from_file
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
@@ -20,8 +19,10 @@ from manimlib.utils.shaders import set_program_uniform
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import List, Optional, Dict
+    from typing import Optional, Tuple, Iterable
     from manimlib.typing import UniformDict
+    from moderngl.vertex_array import VertexArray
+    from moderngl.framebuffer import Framebuffer
 
 # Mobjects that should be rendered with
 # the same shader will be organized and
@@ -409,7 +410,7 @@ class VShaderWrapper(ShaderWrapper):
         which can display that texture as a simple quad onto a screen,
         along with the rgb value which is meant to be discarded.
         """
-        cam_config = get_configuration(parse_cli())['camera_config']
+        cam_config = get_camera_config()
         size = (cam_config['pixel_width'], cam_config['pixel_height'])
         double_size = (2 * size[0], 2 * size[1])
 

@@ -1,4 +1,6 @@
+appdirs
 colour
+diskcache
 ipython>=8.18.0
 isosurfaces
 fontTools
@@ -13,7 +15,6 @@ pydub
 pygments
 PyOpenGL
 pyperclip
-pyrr
 pyyaml
 rich
 scipy
@@ -21,6 +22,7 @@ screeninfo
 skia-pathops
 svgelements>=1.8.1
 sympy
+tempfile
 tqdm
 typing-extensions; python_version < "3.11"
 validators

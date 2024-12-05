@@ -234,7 +234,11 @@ class Scene(object):
         # the local namespace of the caller
         caller_frame = inspect.currentframe().f_back
         module = get_module(caller_frame.f_globals["__file__"])
-        shell = InteractiveShellEmbed(user_module=module)
+        shell = InteractiveShellEmbed(
+            user_module=module,
+            display_banner=False,
+            xmode=self.embed_exception_mode
+        )
         self.shell = shell
 
         # Add a few custom shortcuts to that local namespace
@@ -289,9 +293,6 @@ class Scene(object):
             self.play(VFadeInThenOut(rect, run_time=0.5))
 
         shell.set_custom_exc((Exception,), custom_exc)
-
-        # Set desired exception mode
-        shell.magic(f"xmode {self.embed_exception_mode}")
 
         # Autoreload
         if self.should_autoreload:

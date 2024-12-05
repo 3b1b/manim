@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import numpy as np
-
 from manimlib.animation.animation import Animation
 from manimlib.animation.animation import prepare_animation
 from manimlib.mobject.mobject import _AnimationBuilder
