@@ -19,6 +19,12 @@ from manimlib.utils.init_config import init_customization
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     Module = importlib.util.types.ModuleType
+    from typing import Optional
+
+
+# This has to be here instead of in constants.py
+# due to its use in creating the camera configuration
+FRAME_HEIGHT: float = 8.0
 
 
 def parse_cli():
@@ -400,8 +406,13 @@ def get_window_config(args: Namespace, custom_config: dict, camera_config: dict)
     return dict(size=(window_width, window_height))
 
 
-def get_camera_config(args: Namespace, custom_config: dict) -> dict:
-    camera_config = {}
+def get_camera_config(args: Optional[Namespace] = None, custom_config: Optional[dict] = None) -> dict:
+    if args is None:
+        args = parse_cli()
+    if custom_config is None:
+        custom_config = get_global_config()
+
+    camera_config = dict()
     camera_resolutions = custom_config["camera_resolutions"]
     if args.resolution:
         resolution = args.resolution
@@ -429,7 +440,7 @@ def get_camera_config(args: Namespace, custom_config: dict) -> dict:
         "pixel_width": width,
         "pixel_height": height,
         "frame_config": {
-            "frame_shape": ((width / height) * get_frame_height(), get_frame_height()),
+            "frame_shape": ((width / height) * FRAME_HEIGHT, FRAME_HEIGHT),
         },
         "fps": fps,
     })
@@ -475,22 +486,3 @@ def get_configuration(args: Namespace) -> dict:
         "embed_exception_mode": global_config["embed_exception_mode"],
         "embed_error_sound": global_config["embed_error_sound"],
     }
-
-
-def get_frame_height():
-    return 8.0
-
-
-def get_aspect_ratio():
-    cam_config = get_camera_config(parse_cli(), get_global_config())
-    return cam_config['pixel_width'] / cam_config['pixel_height']
-
-
-def get_default_pixel_width():
-    cam_config = get_camera_config(parse_cli(), get_global_config())
-    return cam_config['pixel_width']
-
-
-def get_default_pixel_height():
-    cam_config = get_camera_config(parse_cli(), get_global_config())
-    return cam_config['pixel_height']

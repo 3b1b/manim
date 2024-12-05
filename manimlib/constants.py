@@ -1,10 +1,8 @@
 from __future__ import annotations
 import numpy as np
 
-from manimlib.config import get_aspect_ratio
-from manimlib.config import get_default_pixel_width
-from manimlib.config import get_default_pixel_height
-from manimlib.config import get_frame_height
+from manimlib.config import get_camera_config
+from manimlib.config import FRAME_HEIGHT
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -12,16 +10,21 @@ if TYPE_CHECKING:
     from manimlib.typing import ManimColor, Vect3
 
 
+# TODO, it feels a bit unprincipled to have some global constants
+# depend on the output of this function, all for all that configuration
+# code to be run merely upon importing from this file
+CAMERA_CONFIG = get_camera_config()
+
 # Sizes relevant to default camera frame
-ASPECT_RATIO: float = get_aspect_ratio()
-FRAME_HEIGHT: float = get_frame_height()
+ASPECT_RATIO: float = CAMERA_CONFIG['pixel_width'] / CAMERA_CONFIG['pixel_height']
+# FRAME_HEIGHT: float = 8.0
 FRAME_WIDTH: float = FRAME_HEIGHT * ASPECT_RATIO
 FRAME_SHAPE: tuple[float, float] = (FRAME_WIDTH, FRAME_HEIGHT)
 FRAME_Y_RADIUS: float = FRAME_HEIGHT / 2
 FRAME_X_RADIUS: float = FRAME_WIDTH / 2
 
-DEFAULT_PIXEL_HEIGHT: int = get_default_pixel_height()
-DEFAULT_PIXEL_WIDTH: int = get_default_pixel_width()
+DEFAULT_PIXEL_HEIGHT: int = CAMERA_CONFIG['pixel_height']
+DEFAULT_PIXEL_WIDTH: int = CAMERA_CONFIG['pixel_width']
 DEFAULT_FPS: int = 30
 
 SMALL_BUFF: float = 0.1
