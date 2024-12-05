@@ -311,10 +311,6 @@ def load_yaml(file_path: str):
 def get_global_config():
     args = parse_cli()
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
-
-    print(f"global_defaults_file = {global_defaults_file}")
-    print(f"args.config_file = {args.config_file}")
-
     return merge_dicts_recursively(
         load_yaml(global_defaults_file),
         load_yaml("custom_config.yml"),  # From current working directory
