@@ -7,7 +7,7 @@ import re
 from manimlib.constants import BLACK, WHITE
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.tex_file_writing import tex_to_svg
+from manimlib.utils.tex_file_writing import latex_to_svg
 
 from typing import TYPE_CHECKING
 
@@ -79,7 +79,7 @@ class SingleStringTex(SVGMobject):
     def get_svg_string_by_content(self, content: str) -> str:
         return get_cached_value(
             key=hash_string(str((content, self.template, self.additional_preamble))),
-            value_func=lambda: tex_to_svg(content, self.template, self.additional_preamble),
+            value_func=lambda: latex_to_svg(content, self.template, self.additional_preamble),
             message=f"Writing {self.tex_string}..."
         )
 

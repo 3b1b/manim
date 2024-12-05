@@ -9,7 +9,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.cache import get_cached_value
 from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import hex_to_int
-from manimlib.utils.tex_file_writing import tex_to_svg
+from manimlib.utils.tex_file_writing import latex_to_svg
 from manimlib.utils.tex import num_tex_symbols
 from manimlib.utils.simple_functions import hash_string
 from manimlib.logger import log
@@ -88,7 +88,7 @@ class Tex(StringMobject):
     def get_svg_string_by_content(self, content: str) -> str:
         return get_cached_value(
             key=hash_string(str((content, self.template, self.additional_preamble))),
-            value_func=lambda: tex_to_svg(content, self.template, self.additional_preamble),
+            value_func=lambda: latex_to_svg(content, self.template, self.additional_preamble),
             message=f"Writing {self.tex_string}..."
         )
 
