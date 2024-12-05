@@ -78,7 +78,13 @@ class ReloadManager:
                 break
 
         for scene in self.scenes:
+            if self.args.embed:
+                print(" ".join([
+                    "Loading interactive session for",
+                    f"\033[96m{self.args.scene_names[0]}\033[0m",
+                    f"in \033[96m{self.args.file}\033[0m",
+                    f"at line \033[96m{self.args.embed}\033[0m"
+                ]))
             scene.run()
-
 
 reload_manager = ReloadManager()
