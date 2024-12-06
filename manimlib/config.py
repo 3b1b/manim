@@ -9,6 +9,7 @@ import os
 import screeninfo
 import sys
 import yaml
+from pathlib import Path
 
 from functools import lru_cache
 
@@ -144,12 +145,8 @@ def parse_cli():
         )
         parser.add_argument(
             "-e", "--embed",
-            nargs="?",
-            const="",
             help="Creates a new file where the line `self.embed` is inserted " + \
-                 "into the Scenes construct method. " + \
-                 "If a string is passed in, the line will be inserted below the " + \
-                 "last line of code including that string."
+                 "at the corresponding line number"
         )
         parser.add_argument(
             "-r", "--resolution",
@@ -210,12 +207,19 @@ def get_manim_dir():
     return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
-def get_indent(line: str):
-    return len(line) - len(line.lstrip())
+def get_indent(code_lines: list[str], line_number: int):
+    for line in code_lines[line_number:0:-1]:
+        if len(line.strip()) == 0:
+            continue
+        n_spaces = len(line) - len(line.lstrip())
+        if line.endswith(":"):
+            n_spaces += 4
+        return n_spaces
+    return 0
 
 
 def get_module_with_inserted_embed_line(
-    file_name: str, scene_name: str, line_marker: str
+    file_name: str, scene_name: str, line_number: int
 ):
     """
     This is hacky, but convenient. When user includes the argument "-e", it will try
@@ -223,59 +227,24 @@ def get_module_with_inserted_embed_line(
     construct method. If there is an argument passed in, it will insert the line after
     the last line in the sourcefile which includes that string.
     """
-    with open(file_name, 'r') as fp:
-        lines = fp.readlines()
+    lines = Path(file_name).read_text().splitlines()
 
-    try:
-        scene_line_number = next(
-            i for i, line in enumerate(lines)
-            if line.startswith(f"class {scene_name}")
-        )
-    except StopIteration:
+    scene_line_numbers = [
+        n for n, line in enumerate(lines)
+        if line.startswith("class SurfaceTest")
+    ]
+    if len(scene_line_numbers) == 0:
         log.error(f"No scene {scene_name}")
         return
+    scene_line_number = scene_line_numbers[0]
 
-    prev_line_num = -1
-    n_spaces = None
-    if len(line_marker) == 0:
-        # Find the end of the construct method
-        in_construct = False
-        for index in range(scene_line_number, len(lines) - 1):
-            line = lines[index]
-            if line.lstrip().startswith("def construct"):
-                in_construct = True
-                n_spaces = get_indent(line) + 4
-            elif in_construct:
-                if len(line.strip()) > 0 and get_indent(line) < (n_spaces or 0):
-                    prev_line_num = index - 1
-                    break
-        if prev_line_num < 0:
-            prev_line_num = len(lines) - 1
-    elif line_marker.isdigit():
-        # Treat the argument as a line number
-        prev_line_num = int(line_marker) - 1
-    elif len(line_marker) > 0:
-        # Treat the argument as a string
-        try:
-            prev_line_num = next(
-                i
-                for i in range(scene_line_number, len(lines) - 1)
-                if line_marker in lines[i]
-            )
-        except StopIteration:
-            log.error(f"No lines matching {line_marker}")
-            sys.exit(2)
-
-    # Insert the embed line, rewrite file, then write it back when done
-    if n_spaces is None:
-        n_spaces = get_indent(lines[prev_line_num])
-    inserted_line = " " * n_spaces + "self.embed()\n"
+    n_spaces = get_indent(lines, line_number - 1)
+    inserted_line = " " * n_spaces + "self.embed()"
     new_lines = list(lines)
-    new_lines.insert(prev_line_num + 1, inserted_line)
+    new_lines.insert(line_number, inserted_line)
     new_file = file_name.replace(".py", "_insert_embed.py")
 
-    with open(new_file, 'w') as fp:
-        fp.writelines(new_lines)
+    Path(new_file).write_text("\n".join(new_lines))
 
     from manimlib.reload_manager import reload_manager
     module = ModuleLoader.get_module(new_file, is_during_reload=reload_manager.is_reload)
@@ -293,7 +262,7 @@ def get_scene_module(args: Namespace) -> Module:
         return ModuleLoader.get_module(args.file)
     else:
         return get_module_with_inserted_embed_line(
-            args.file, args.scene_names[0], args.embed
+            args.file, args.scene_names[0], int(args.embed)
         )
 
 
