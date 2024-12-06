@@ -218,24 +218,19 @@ def get_indent(code_lines: list[str], line_number: int) -> str:
     return ""
 
 
-def get_module_with_inserted_embed_line(file_name: str, line_number: int):
+def insert_embed_line_to_module(module: Module, line_number: int):
     """
     This is hacky, but convenient. When user includes the argument "-e", it will try
     to recreate a file that inserts the line `self.embed()` into the end of the scene's
     construct method. If there is an argument passed in, it will insert the line after
     the last line in the sourcefile which includes that string.
     """
-    lines = Path(file_name).read_text().splitlines()
+    lines = inspect.getsource(module).splitlines()
 
     # Add the relevant embed line to the code
     indent = get_indent(lines, line_number)
     lines.insert(line_number, indent + "self.embed()")
     new_code = "\n".join(lines)
-
-    # Load the module for the original file, then exectue the new code within
-    # it, which should redefined the scene to have the inserted embed line
-    from manimlib.reload_manager import reload_manager
-    module = ModuleLoader.get_module(file_name, is_during_reload=reload_manager.is_reload)
 
     code_object = compile(new_code, module.__name__, 'exec')
     exec(code_object, module.__dict__)
@@ -243,11 +238,11 @@ def get_module_with_inserted_embed_line(file_name: str, line_number: int):
 
 
 def get_scene_module(args: Namespace) -> Module:
-    if args.embed is None:
-        return ModuleLoader.get_module(args.file)
-    else:
-        return get_module_with_inserted_embed_line(args.file, int(args.embed))
-
+    from manimlib.reload_manager import reload_manager
+    module = ModuleLoader.get_module(args.file, is_during_reload=reload_manager.is_reload)
+    if args.embed:
+        insert_embed_line_to_module(module, int(args.embed))
+    return module
 
 def load_yaml(file_path: str):
     try:
