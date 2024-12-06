@@ -343,8 +343,8 @@ def get_animations_numbers(args: Namespace) -> tuple[int | None, int | None]:
         return int(stan), None
 
 
-def get_output_directory(args: Namespace, custom_config: dict) -> str:
-    dir_config = custom_config["directories"]
+def get_output_directory(args: Namespace, global_config: dict) -> str:
+    dir_config = global_config["directories"]
     output_directory = args.video_dir or dir_config["output"]
     if dir_config["mirror_module_path"] and args.file:
         to_cut = dir_config["removed_mirror_prefix"]
@@ -356,7 +356,7 @@ def get_output_directory(args: Namespace, custom_config: dict) -> str:
     return output_directory
 
 
-def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
+def get_file_writer_config(args: Namespace, global_config: dict) -> dict:
     result = {
         "write_to_movie": not args.skip_animations and args.write_file,
         "save_last_frame": args.skip_animations and args.write_file,
@@ -364,13 +364,13 @@ def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
         # If -t is passed in (for transparent), this will be RGBA
         "png_mode": "RGBA" if args.transparent else "RGB",
         "movie_file_extension": get_file_ext(args),
-        "output_directory": get_output_directory(args, custom_config),
+        "output_directory": get_output_directory(args, global_config),
         "file_name": args.file_name,
         "input_file_path": args.file or "",
         "open_file_upon_completion": args.open,
         "show_file_location_upon_completion": args.finder,
         "quiet": args.quiet,
-        **custom_config["file_writer_config"],
+        **global_config["file_writer_config"],
     }
 
     if args.vcodec:
@@ -387,32 +387,11 @@ def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
     return result
 
 
-def get_window_config(args: Namespace, custom_config: dict, camera_config: dict) -> dict:
-    # Default to making window half the screen size
-    # but make it full screen if -f is passed in
-    try:
-        monitors = screeninfo.get_monitors()
-    except screeninfo.ScreenInfoError:
-        # Default fallback
-        monitors = [screeninfo.Monitor(width=1920, height=1080)]
-    mon_index = custom_config["window_monitor"]
-    monitor = monitors[min(mon_index, len(monitors) - 1)]
-    aspect_ratio = camera_config["pixel_width"] / camera_config["pixel_height"]
-    window_width = monitor.width
-    if not (args.full_screen or custom_config["full_screen"]):
-        window_width //= 2
-    window_height = int(window_width / aspect_ratio)
-    return dict(size=(window_width, window_height))
+def get_resolution(args: Optional[Namespace] = None, global_config: Optional[dict] = None):
+    args = args or parse_cli()
+    global_config = global_config or get_global_config()
 
-
-def get_camera_config(args: Optional[Namespace] = None, custom_config: Optional[dict] = None) -> dict:
-    if args is None:
-        args = parse_cli()
-    if custom_config is None:
-        custom_config = get_global_config()
-
-    camera_config = dict()
-    camera_resolutions = custom_config["camera_resolutions"]
+    camera_resolutions = global_config["camera_resolutions"]
     if args.resolution:
         resolution = args.resolution
     elif args.low_quality:
@@ -426,33 +405,56 @@ def get_camera_config(args: Optional[Namespace] = None, custom_config: Optional[
     else:
         resolution = camera_resolutions[camera_resolutions["default_resolution"]]
 
-    if args.fps:
-        fps = int(args.fps)
-    else:
-        fps = custom_config["fps"]
-
     width_str, height_str = resolution.split("x")
-    width = int(width_str)
-    height = int(height_str)
+    return int(width_str), int(height_str)
 
-    camera_config.update({
+
+def get_window_config(args: Namespace, global_config: dict) -> dict:
+    # Default to making window half the screen size
+    # but make it full screen if -f is passed in
+    try:
+        monitors = screeninfo.get_monitors()
+    except screeninfo.ScreenInfoError:
+        # Default fallback
+        monitors = [screeninfo.Monitor(width=1920, height=1080)]
+    mon_index = global_config["window_monitor"]
+    monitor = monitors[min(mon_index, len(monitors) - 1)]
+
+    width, height = get_resolution(args, global_config)
+
+    aspect_ratio = width / height
+    window_width = monitor.width
+    if not (args.full_screen or global_config["full_screen"]):
+        window_width //= 2
+    window_height = int(window_width / aspect_ratio)
+    return dict(size=(window_width, window_height))
+
+
+def get_camera_config(args: Optional[Namespace] = None, global_config: Optional[dict] = None) -> dict:
+    args = args or parse_cli()
+    global_config = global_config or get_global_config()
+
+    width, height = get_resolution(args, global_config)
+    fps = int(args.fps or global_config["fps"])
+
+    camera_config = {
         "pixel_width": width,
         "pixel_height": height,
         "frame_config": {
             "frame_shape": ((width / height) * FRAME_HEIGHT, FRAME_HEIGHT),
         },
         "fps": fps,
-    })
+    }
 
     try:
-        bg_color = args.color or custom_config["style"]["background_color"]
+        bg_color = args.color or global_config["style"]["background_color"]
         camera_config["background_color"] = colour.Color(bg_color)
     except ValueError as err:
         log.error("Please use a valid color")
         log.error(err)
         sys.exit(2)
 
-    # If rendering a transparent image/move, make sure the
+    # If rendering a transparent image/movie, make sure the
     # scene has a background opacity of 0
     if args.transparent:
         camera_config["background_opacity"] = 0
@@ -466,10 +468,11 @@ def get_scene_config(args: Namespace) -> dict:
     """
     global_config = get_global_config()
     camera_config = get_camera_config(args, global_config)
+    file_writer_config = get_file_writer_config(args, global_config)
     start, end = get_animations_numbers(args)
 
     return {
-        "file_writer_config": get_file_writer_config(args, global_config),
+        "file_writer_config": file_writer_config,
         "camera_config": camera_config,
         "skip_animations": args.skip_animations,
         "start_at_animation_number": start,
@@ -484,9 +487,7 @@ def get_scene_config(args: Namespace) -> dict:
 
 
 def get_run_config(args: Namespace):
-    global_config = get_global_config()
-    camera_config = get_camera_config(args, global_config)
-    window_config = get_window_config(args, global_config, camera_config)
+    window_config = get_window_config(args, get_global_config())
     return {
         "module": get_scene_module(args),
         "prerun": args.prerun,
