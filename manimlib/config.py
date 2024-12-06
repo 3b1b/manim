@@ -13,6 +13,7 @@ import yaml
 from functools import lru_cache
 
 from manimlib.logger import log
+from manimlib.module_loader import ModuleLoader
 from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.init_config import init_customization
 
@@ -209,22 +210,12 @@ def get_manim_dir():
     return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
-def get_module(file_name: str | None) -> Module:
-    if file_name is None:
-        return None
-    module_name = file_name.replace(os.sep, ".").replace(".py", "")
-    spec = importlib.util.spec_from_file_location(module_name, file_name)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
 def get_indent(line: str):
     return len(line) - len(line.lstrip())
 
 
 def get_module_with_inserted_embed_line(
-    file_name: str, scene_name: str, line_marker: str
+    file_name: str, scene_name: str, line_marker: str, is_during_reload
 ):
     """
     This is hacky, but convenient. When user includes the argument "-e", it will try
@@ -286,7 +277,7 @@ def get_module_with_inserted_embed_line(
     with open(new_file, 'w') as fp:
         fp.writelines(new_lines)
 
-    module = get_module(new_file)
+    module = ModuleLoader.get_module(new_file, is_during_reload)
     # This is to pretend the module imported from the edited lines
     # of code actually comes from the original file.
     module.__file__ = file_name
@@ -298,10 +289,11 @@ def get_module_with_inserted_embed_line(
 
 def get_scene_module(args: Namespace) -> Module:
     if args.embed is None:
-        return get_module(args.file)
+        return ModuleLoader.get_module(args.file)
     else:
+        is_reload = args.is_reload if hasattr(args, "is_reload") else False
         return get_module_with_inserted_embed_line(
-            args.file, args.scene_names[0], args.embed
+            args.file, args.scene_names[0], args.embed, is_reload
         )
 
 
