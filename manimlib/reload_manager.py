@@ -64,7 +64,6 @@ class ReloadManager:
             self.args.embed = str(overwrite_start_at_line)
 
         # Args to Config
-        self.args.is_reload = self.is_reload  # Where is this used?
         scene_config = manimlib.config.get_scene_config(self.args)
         run_config = manimlib.config.get_run_config(self.args)
 

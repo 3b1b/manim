@@ -215,7 +215,7 @@ def get_indent(line: str):
 
 
 def get_module_with_inserted_embed_line(
-    file_name: str, scene_name: str, line_marker: str, is_during_reload
+    file_name: str, scene_name: str, line_marker: str
 ):
     """
     This is hacky, but convenient. When user includes the argument "-e", it will try
@@ -277,7 +277,8 @@ def get_module_with_inserted_embed_line(
     with open(new_file, 'w') as fp:
         fp.writelines(new_lines)
 
-    module = ModuleLoader.get_module(new_file, is_during_reload)
+    from manimlib.reload_manager import reload_manager
+    module = ModuleLoader.get_module(new_file, is_during_reload=reload_manager.is_reload)
     # This is to pretend the module imported from the edited lines
     # of code actually comes from the original file.
     module.__file__ = file_name
@@ -291,9 +292,8 @@ def get_scene_module(args: Namespace) -> Module:
     if args.embed is None:
         return ModuleLoader.get_module(args.file)
     else:
-        is_reload = args.is_reload if hasattr(args, "is_reload") else False
         return get_module_with_inserted_embed_line(
-            args.file, args.scene_names[0], args.embed, is_reload
+            args.file, args.scene_names[0], args.embed
         )
 
 
