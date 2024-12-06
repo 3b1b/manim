@@ -69,7 +69,7 @@ class ReloadManager:
         run_config = manimlib.config.get_run_config(self.args)
 
         # Create or reuse window
-        if scene_config["preview"] and not self.window:  # TODO, this should be in run_config not scene_config
+        if run_config["show_in_window"] and not self.window:
             self.window = Window(**run_config["window_config"])
         scene_config["window"] = self.window
 

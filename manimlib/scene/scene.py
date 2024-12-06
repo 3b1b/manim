@@ -82,7 +82,6 @@ class Scene(object):
         start_at_animation_number: int | None = None,
         end_at_animation_number: int | None = None,
         leave_progress_bars: bool = False,
-        preview: bool = True,  # TODO, remove
         window: Optional[Window] = None,
         presenter_mode: bool = False,
         show_animation_progress: bool = False,
@@ -94,7 +93,6 @@ class Scene(object):
         self.start_at_animation_number = start_at_animation_number
         self.end_at_animation_number = end_at_animation_number
         self.leave_progress_bars = leave_progress_bars
-        self.preview = preview
         self.presenter_mode = presenter_mode
         self.show_animation_progress = show_animation_progress
         self.embed_exception_mode = embed_exception_mode
@@ -212,8 +210,8 @@ class Scene(object):
         close_scene_on_exit: bool = True,
         show_animation_progress: bool = False,
     ) -> None:
-        if not self.preview:
-            # Embed is only relevant with a preview
+        if not self.window:
+            # Embed is only relevant for interactive development with a Window
             return
         self.stop_skipping()
         self.update_frame(force_draw=True)
@@ -728,8 +726,6 @@ class Scene(object):
         scene_state.restore_scene(self)
 
     def save_state(self) -> None:
-        if not self.preview:
-            return
         state = self.get_state()
         if self.undo_stack and state.mobjects_match(self.undo_stack[-1]):
             return

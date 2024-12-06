@@ -477,7 +477,6 @@ def get_scene_config(args: Namespace) -> dict:
         "skip_animations": args.skip_animations,
         "start_at_animation_number": start,
         "end_at_animation_number": end,
-        "preview": not args.write_file,
         "presenter_mode": args.presenter_mode,
         "leave_progress_bars": args.leave_progress_bars,
         "show_animation_progress": args.show_animation_progress,
@@ -495,4 +494,5 @@ def get_run_config(args: Namespace):
         "quiet": args.quiet or args.write_all,
         "write_all": args.write_all,
         "window_config": window_config,
+        "show_in_window": not args.write_file
     }
