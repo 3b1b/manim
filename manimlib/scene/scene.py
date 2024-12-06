@@ -45,7 +45,7 @@ from manimlib.window import Window
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, TypeVar
+    from typing import Callable, Iterable, TypeVar, Optional
     from manimlib.typing import Vect3
 
     T = TypeVar('T')
@@ -68,7 +68,6 @@ class Scene(object):
     drag_to_pan: bool = True
     max_num_saved_states: int = 50
     default_camera_config: dict = dict()
-    default_window_config: dict = dict()
     default_file_writer_config: dict = dict()
     samples = 0
     # Euler angles, in degrees
@@ -76,7 +75,6 @@ class Scene(object):
 
     def __init__(
         self,
-        window_config: dict = dict(),
         camera_config: dict = dict(),
         file_writer_config: dict = dict(),
         skip_animations: bool = False,
@@ -84,12 +82,12 @@ class Scene(object):
         start_at_animation_number: int | None = None,
         end_at_animation_number: int | None = None,
         leave_progress_bars: bool = False,
-        preview: bool = True,
+        preview: bool = True,  # TODO, remove
+        window: Optional[Window] = None,
         presenter_mode: bool = False,
         show_animation_progress: bool = False,
         embed_exception_mode: str = "",
         embed_error_sound: bool = False,
-        existing_window: Window | None = None,
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
@@ -103,26 +101,20 @@ class Scene(object):
         self.embed_error_sound = embed_error_sound
 
         self.camera_config = {**self.default_camera_config, **camera_config}
-        self.window_config = {**self.default_window_config, **window_config}
-        for config in self.camera_config, self.window_config:
-            config["samples"] = self.samples
         self.file_writer_config = {**self.default_file_writer_config, **file_writer_config}
 
-        # Initialize window, if applicable (and reuse window if provided during
-        # reload by means of the ReloadManager)
-        if self.preview:
-            if existing_window:
-                self.window = existing_window
-                self.window.update_scene(self)
-            else:
-                self.window = Window(scene=self, **self.window_config)
-                self.camera_config["fps"] = 30  # Where's that 30 from?
-            self.camera_config["window"] = self.window
-        else:
-            self.window = None
+        self.window = window
+        if self.window:
+            self.window.init_for_scene(self)
+            # Make sure camera and Pyglet window sync
+            self.camera_config["fps"] = 30
 
         # Core state of the scene
-        self.camera: Camera = Camera(**self.camera_config)
+        self.camera: Camera = Camera(
+            window=self.window,
+            samples=self.samples,
+            **self.camera_config
+        )
         self.frame: CameraFrame = self.camera.frame
         self.frame.reorient(*self.default_frame_orientation)
         self.frame.make_orientation_default()

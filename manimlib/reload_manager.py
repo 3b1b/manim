@@ -1,6 +1,8 @@
 from typing import Any
 from IPython.terminal.embed import KillEmbedded
 
+from manimlib.window import Window
+
 
 class ReloadManager:
     """
@@ -62,12 +64,14 @@ class ReloadManager:
             self.args.embed = str(overwrite_start_at_line)
 
         # Args to Config
-        self.args.is_reload = self.is_reload
+        self.args.is_reload = self.is_reload  # Where is this used?
         scene_config = manimlib.config.get_scene_config(self.args)
-        if self.window:
-            scene_config["existing_window"] = self.window  # see scene initialization
-
         run_config = manimlib.config.get_run_config(self.args)
+
+        # Create or reuse window
+        if scene_config["preview"] and not self.window:  # TODO, this should be in run_config not scene_config
+            self.window = Window(**run_config["window_config"])
+        scene_config["window"] = self.window
 
         # Scenes
         self.scenes = manimlib.extract_scene.main(scene_config, run_config)
@@ -75,16 +79,10 @@ class ReloadManager:
             print("No scenes found to run")
             return
 
-        # Find first available window
         for scene in self.scenes:
-            if scene.window is not None:
-                self.window = scene.window
-                break
-
-        for scene in self.scenes:
-            if self.args.embed:
+            if self.args.embed and self.is_reload:
                 print(" ".join([
-                    "Loading interactive session for",
+                    "Reloading interactive session for",
                     f"\033[96m{self.args.scene_names[0]}\033[0m",
                     f"in \033[96m{self.args.file}\033[0m",
                     f"at line \033[96m{self.args.embed}\033[0m"

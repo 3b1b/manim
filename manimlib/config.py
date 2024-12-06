@@ -466,13 +466,11 @@ def get_scene_config(args: Namespace) -> dict:
     """
     global_config = get_global_config()
     camera_config = get_camera_config(args, global_config)
-    window_config = get_window_config(args, global_config, camera_config)
     start, end = get_animations_numbers(args)
 
     return {
         "file_writer_config": get_file_writer_config(args, global_config),
         "camera_config": camera_config,
-        "window_config": window_config,
         "skip_animations": args.skip_animations,
         "start_at_animation_number": start,
         "end_at_animation_number": end,
@@ -486,10 +484,14 @@ def get_scene_config(args: Namespace) -> dict:
 
 
 def get_run_config(args: Namespace):
+    global_config = get_global_config()
+    camera_config = get_camera_config(args, global_config)
+    window_config = get_window_config(args, global_config, camera_config)
     return {
         "module": get_scene_module(args),
         "prerun": args.prerun,
         "scene_names": args.scene_names,
         "quiet": args.quiet or args.write_all,
         "write_all": args.write_all,
+        "window_config": window_config,
     }

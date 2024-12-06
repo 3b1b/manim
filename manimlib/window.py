@@ -14,7 +14,7 @@ from manimlib.constants import FRAME_SHAPE
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, TypeVar
+    from typing import Callable, TypeVar, Optional
     from manimlib.scene.scene import Scene
 
     T = TypeVar("T")
@@ -29,21 +29,22 @@ class Window(PygletWindow):
 
     def __init__(
         self,
-        scene: Scene,
+        scene: Optional[Scene] = None,
         size: tuple[int, int] = (1280, 720),
         samples: int = 0
     ):
-        scene.window = self
         super().__init__(size=size, samples=samples)
 
+        self.scene = scene
         self.default_size = size
         self.default_position = self.find_initial_position(size)
         self.pressed_keys = set()
         self.size = size
 
-        self.update_scene(scene)
+        if self.scene:
+            self.init_for_scene(scene)
 
-    def update_scene(self, scene: Scene):
+    def init_for_scene(self, scene: Scene):
         """
         Resets the state and updates the scene associated to this window.
 
@@ -114,7 +115,7 @@ class Window(PygletWindow):
         py: int,
         relative: bool = False
     ) -> np.ndarray:
-        if not hasattr(self.scene, "frame"):
+        if self.scene is None or not hasattr(self.scene, "frame"):
             return np.zeros(3)
 
         pixel_shape = np.array(self.size)
@@ -145,6 +146,8 @@ class Window(PygletWindow):
     @note_undrawn_event
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int) -> None:
         super().on_mouse_motion(x, y, dx, dy)
+        if not self.scene:
+            return
         point = self.pixel_coords_to_space_coords(x, y)
         d_point = self.pixel_coords_to_space_coords(dx, dy, relative=True)
         self.scene.on_mouse_motion(point, d_point)
@@ -152,6 +155,8 @@ class Window(PygletWindow):
     @note_undrawn_event
     def on_mouse_drag(self, x: int, y: int, dx: int, dy: int, buttons: int, modifiers: int) -> None:
         super().on_mouse_drag(x, y, dx, dy, buttons, modifiers)
+        if not self.scene:
+            return
         point = self.pixel_coords_to_space_coords(x, y)
         d_point = self.pixel_coords_to_space_coords(dx, dy, relative=True)
         self.scene.on_mouse_drag(point, d_point, buttons, modifiers)
@@ -159,18 +164,24 @@ class Window(PygletWindow):
     @note_undrawn_event
     def on_mouse_press(self, x: int, y: int, button: int, mods: int) -> None:
         super().on_mouse_press(x, y, button, mods)
+        if not self.scene:
+            return
         point = self.pixel_coords_to_space_coords(x, y)
         self.scene.on_mouse_press(point, button, mods)
 
     @note_undrawn_event
     def on_mouse_release(self, x: int, y: int, button: int, mods: int) -> None:
         super().on_mouse_release(x, y, button, mods)
+        if not self.scene:
+            return
         point = self.pixel_coords_to_space_coords(x, y)
         self.scene.on_mouse_release(point, button, mods)
 
     @note_undrawn_event
     def on_mouse_scroll(self, x: int, y: int, x_offset: float, y_offset: float) -> None:
         super().on_mouse_scroll(x, y, x_offset, y_offset)
+        if not self.scene:
+            return
         point = self.pixel_coords_to_space_coords(x, y)
         offset = self.pixel_coords_to_space_coords(x_offset, y_offset, relative=True)
         self.scene.on_mouse_scroll(point, offset, x_offset, y_offset)
@@ -179,32 +190,44 @@ class Window(PygletWindow):
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         self.pressed_keys.add(symbol)  # Modifiers?
         super().on_key_press(symbol, modifiers)
+        if not self.scene:
+            return
         self.scene.on_key_press(symbol, modifiers)
 
     @note_undrawn_event
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         self.pressed_keys.difference_update({symbol})  # Modifiers?
         super().on_key_release(symbol, modifiers)
+        if not self.scene:
+            return
         self.scene.on_key_release(symbol, modifiers)
 
     @note_undrawn_event
     def on_resize(self, width: int, height: int) -> None:
         super().on_resize(width, height)
+        if not self.scene:
+            return
         self.scene.on_resize(width, height)
 
     @note_undrawn_event
     def on_show(self) -> None:
         super().on_show()
+        if not self.scene:
+            return
         self.scene.on_show()
 
     @note_undrawn_event
     def on_hide(self) -> None:
         super().on_hide()
+        if not self.scene:
+            return
         self.scene.on_hide()
 
     @note_undrawn_event
     def on_close(self) -> None:
         super().on_close()
+        if not self.scene:
+            return
         self.scene.on_close()
 
     def is_key_pressed(self, symbol: int) -> bool:
