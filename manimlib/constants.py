@@ -2,7 +2,6 @@ from __future__ import annotations
 import numpy as np
 
 from manimlib.config import get_resolution
-from manimlib.config import FRAME_HEIGHT
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -20,6 +19,7 @@ DEFAULT_FPS: int = 30
 
 # Sizes relevant to default camera frame
 ASPECT_RATIO: float = DEFAULT_PIXEL_WIDTH / DEFAULT_PIXEL_HEIGHT
+FRAME_HEIGHT: float = 8.0
 FRAME_WIDTH: float = FRAME_HEIGHT * ASPECT_RATIO
 FRAME_SHAPE: tuple[float, float] = (FRAME_WIDTH, FRAME_HEIGHT)
 FRAME_Y_RADIUS: float = FRAME_HEIGHT / 2

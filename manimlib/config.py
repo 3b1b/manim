@@ -21,11 +21,6 @@ if TYPE_CHECKING:
     from typing import Optional
 
 
-# This has to be here instead of in constants.py
-# due to its use in creating the camera configuration
-FRAME_HEIGHT: float = 8.0
-
-
 def parse_cli():
     try:
         parser = argparse.ArgumentParser()
@@ -347,9 +342,6 @@ def get_camera_config(args: Optional[Namespace] = None, global_config: Optional[
     camera_config = {
         "pixel_width": width,
         "pixel_height": height,
-        "frame_config": {
-            "frame_shape": ((width / height) * FRAME_HEIGHT, FRAME_HEIGHT),
-        },
         "fps": fps,
     }
 
