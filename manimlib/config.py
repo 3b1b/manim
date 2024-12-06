@@ -14,13 +14,11 @@ from pathlib import Path
 from functools import lru_cache
 
 from manimlib.logger import log
-from manimlib.module_loader import ModuleLoader
 from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.init_config import init_customization
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    Module = importlib.util.types.ModuleType
     from typing import Optional
 
 
@@ -206,43 +204,6 @@ def get_manim_dir():
     manimlib_dir = os.path.dirname(inspect.getabsfile(manimlib_module))
     return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
-
-def get_indent(code_lines: list[str], line_number: int) -> str:
-    for line in code_lines[line_number - 1::-1]:
-        if len(line.strip()) == 0:
-            continue
-        n_spaces = len(line) - len(line.lstrip())
-        if line.endswith(":"):
-            n_spaces += 4
-        return n_spaces * " "
-    return ""
-
-
-def insert_embed_line_to_module(module: Module, line_number: int):
-    """
-    This is hacky, but convenient. When user includes the argument "-e", it will try
-    to recreate a file that inserts the line `self.embed()` into the end of the scene's
-    construct method. If there is an argument passed in, it will insert the line after
-    the last line in the sourcefile which includes that string.
-    """
-    lines = inspect.getsource(module).splitlines()
-
-    # Add the relevant embed line to the code
-    indent = get_indent(lines, line_number)
-    lines.insert(line_number, indent + "self.embed()")
-    new_code = "\n".join(lines)
-
-    code_object = compile(new_code, module.__name__, 'exec')
-    exec(code_object, module.__dict__)
-    return module
-
-
-def get_scene_module(args: Namespace) -> Module:
-    from manimlib.reload_manager import reload_manager
-    module = ModuleLoader.get_module(args.file, is_during_reload=reload_manager.is_reload)
-    if args.embed:
-        insert_embed_line_to_module(module, int(args.embed))
-    return module
 
 def load_yaml(file_path: str):
     try:
@@ -435,7 +396,9 @@ def get_scene_config(args: Namespace) -> dict:
 def get_run_config(args: Namespace):
     window_config = get_window_config(args, get_global_config())
     return {
-        "module": get_scene_module(args),
+        "file_name": args.file,
+        "embed_line": int(args.embed) if args.embed is not None else None,
+        "is_reload": False,
         "prerun": args.prerun,
         "scene_names": args.scene_names,
         "quiet": args.quiet or args.write_all,

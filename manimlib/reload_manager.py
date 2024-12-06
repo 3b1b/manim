@@ -66,11 +66,12 @@ class ReloadManager:
         # Args to Config
         scene_config = manimlib.config.get_scene_config(self.args)
         run_config = manimlib.config.get_run_config(self.args)
+        run_config.update(is_reload=self.is_reload)
 
         # Create or reuse window
         if run_config["show_in_window"] and not self.window:
             self.window = Window(**run_config["window_config"])
-        scene_config["window"] = self.window
+        scene_config.update(window=self.window)
 
         # Scenes
         self.scenes = manimlib.extract_scene.main(scene_config, run_config)
