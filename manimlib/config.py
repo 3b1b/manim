@@ -207,20 +207,18 @@ def get_manim_dir():
     return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
-def get_indent(code_lines: list[str], line_number: int):
-    for line in code_lines[line_number:0:-1]:
+def get_indent(code_lines: list[str], line_number: int) -> str:
+    for line in code_lines[line_number - 1::-1]:
         if len(line.strip()) == 0:
             continue
         n_spaces = len(line) - len(line.lstrip())
         if line.endswith(":"):
             n_spaces += 4
-        return n_spaces
-    return 0
+        return n_spaces * " "
+    return ""
 
 
-def get_module_with_inserted_embed_line(
-    file_name: str, scene_name: str, line_number: int
-):
+def get_module_with_inserted_embed_line(file_name: str, line_number: int):
     """
     This is hacky, but convenient. When user includes the argument "-e", it will try
     to recreate a file that inserts the line `self.embed()` into the end of the scene's
@@ -229,31 +227,18 @@ def get_module_with_inserted_embed_line(
     """
     lines = Path(file_name).read_text().splitlines()
 
-    scene_line_numbers = [
-        n for n, line in enumerate(lines)
-        if line.startswith("class SurfaceTest")
-    ]
-    if len(scene_line_numbers) == 0:
-        log.error(f"No scene {scene_name}")
-        return
-    scene_line_number = scene_line_numbers[0]
+    # Add the relevant embed line to the code
+    indent = get_indent(lines, line_number)
+    lines.insert(line_number, indent + "self.embed()")
+    new_code = "\n".join(lines)
 
-    n_spaces = get_indent(lines, line_number - 1)
-    inserted_line = " " * n_spaces + "self.embed()"
-    new_lines = list(lines)
-    new_lines.insert(line_number, inserted_line)
-    new_file = file_name.replace(".py", "_insert_embed.py")
-
-    Path(new_file).write_text("\n".join(new_lines))
-
+    # Load the module for the original file, then exectue the new code within
+    # it, which should redefined the scene to have the inserted embed line
     from manimlib.reload_manager import reload_manager
-    module = ModuleLoader.get_module(new_file, is_during_reload=reload_manager.is_reload)
-    # This is to pretend the module imported from the edited lines
-    # of code actually comes from the original file.
-    module.__file__ = file_name
+    module = ModuleLoader.get_module(file_name, is_during_reload=reload_manager.is_reload)
 
-    os.remove(new_file)
-
+    code_object = compile(new_code, module.__name__, 'exec')
+    exec(code_object, module.__dict__)
     return module
 
 
@@ -261,9 +246,7 @@ def get_scene_module(args: Namespace) -> Module:
     if args.embed is None:
         return ModuleLoader.get_module(args.file)
     else:
-        return get_module_with_inserted_embed_line(
-            args.file, args.scene_names[0], int(args.embed)
-        )
+        return get_module_with_inserted_embed_line(args.file, int(args.embed))
 
 
 def load_yaml(file_path: str):
