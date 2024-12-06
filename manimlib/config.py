@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from argparse import Namespace
 import colour
 import importlib
 import inspect
@@ -9,7 +8,6 @@ import os
 import screeninfo
 import sys
 import yaml
-from pathlib import Path
 
 from functools import lru_cache
 
@@ -19,6 +17,7 @@ from manimlib.utils.init_config import init_customization
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
+    from argparse import Namespace
     from typing import Optional
 
 
