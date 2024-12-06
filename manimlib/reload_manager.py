@@ -19,6 +19,8 @@ class ReloadManager:
     # The line number to load the scene from when reloading
     start_at_line = None
 
+    is_reload = False
+
     def set_new_start_at_line(self, start_at_line):
         """
         Sets/Updates the line number to load the scene from when reloading.
@@ -41,6 +43,7 @@ class ReloadManager:
                     scene.tear_down()
 
                 self.scenes = []
+                self.is_reload = True
 
             except KeyboardInterrupt:
                 break
@@ -59,6 +62,7 @@ class ReloadManager:
             self.args.embed = str(overwrite_start_at_line)
 
         # Args to Config
+        self.args.is_reload = self.is_reload
         scene_config = manimlib.config.get_scene_config(self.args)
         if self.window:
             scene_config["existing_window"] = self.window  # see scene initialization
