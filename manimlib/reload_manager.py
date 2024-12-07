@@ -19,6 +19,8 @@ class ReloadManager:
     # The line number to load the scene from when reloading
     start_at_line = None
 
+    is_reload = False
+
     def set_new_start_at_line(self, start_at_line):
         """
         Sets/Updates the line number to load the scene from when reloading.
@@ -37,12 +39,11 @@ class ReloadManager:
             except KillEmbedded:
                 # Requested via the `exit_raise` IPython runline magic
                 # by means of our scene.reload() command
-                print("Reloading...")
-
                 for scene in self.scenes:
                     scene.tear_down()
 
                 self.scenes = []
+                self.is_reload = True
 
             except KeyboardInterrupt:
                 break
@@ -61,12 +62,15 @@ class ReloadManager:
             self.args.embed = str(overwrite_start_at_line)
 
         # Args to Config
-        config = manimlib.config.get_configuration(self.args)
+        self.args.is_reload = self.is_reload
+        scene_config = manimlib.config.get_scene_config(self.args)
         if self.window:
-            config["existing_window"] = self.window  # see scene initialization
+            scene_config["existing_window"] = self.window  # see scene initialization
+
+        run_config = manimlib.config.get_run_config(self.args)
 
         # Scenes
-        self.scenes = manimlib.extract_scene.main(config)
+        self.scenes = manimlib.extract_scene.main(scene_config, run_config)
         if len(self.scenes) == 0:
             print("No scenes found to run")
             return
@@ -78,7 +82,13 @@ class ReloadManager:
                 break
 
         for scene in self.scenes:
+            if self.args.embed:
+                print(" ".join([
+                    "Loading interactive session for",
+                    f"\033[96m{self.args.scene_names[0]}\033[0m",
+                    f"in \033[96m{self.args.file}\033[0m",
+                    f"at line \033[96m{self.args.embed}\033[0m"
+                ]))
             scene.run()
-
 
 reload_manager = ReloadManager()

@@ -1,33 +1,29 @@
 from __future__ import annotations
 
 import os
+import tempfile
+import appdirs
 
-from manimlib.utils.customization import get_customization
+
+from manimlib.config import get_global_config
+from manimlib.config import get_manim_dir
 from manimlib.utils.file_ops import guarantee_existence
 
 
 def get_directories() -> dict[str, str]:
-    return get_customization()["directories"]
+    return get_global_config()["directories"]
+
+
+def get_cache_dir() -> str:
+    return get_directories()["cache"] or appdirs.user_cache_dir("manim")
 
 
 def get_temp_dir() -> str:
-    return get_directories()["temporary_storage"]
-
-
-def get_tex_dir() -> str:
-    return guarantee_existence(os.path.join(get_temp_dir(), "Tex"))
-
-
-def get_text_dir() -> str:
-    return guarantee_existence(os.path.join(get_temp_dir(), "Text"))
-
-
-def get_mobject_data_dir() -> str:
-    return guarantee_existence(os.path.join(get_temp_dir(), "mobject_data"))
+    return get_directories()["temporary_storage"] or tempfile.gettempdir()
 
 
 def get_downloads_dir() -> str:
-    return guarantee_existence(os.path.join(get_temp_dir(), "manim_downloads"))
+    return get_directories()["downloads"] or appdirs.user_cache_dir("manim_downloads")
 
 
 def get_output_dir() -> str:
@@ -47,4 +43,4 @@ def get_sound_dir() -> str:
 
 
 def get_shader_dir() -> str:
-    return get_directories()["shaders"]
+    return os.path.join(get_manim_dir(), "manimlib", "shaders")

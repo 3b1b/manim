@@ -61,9 +61,9 @@ from manimlib.scene.interactive_scene import *
 from manimlib.scene.scene import *
 
 from manimlib.utils.bezier import *
+from manimlib.utils.cache import *
 from manimlib.utils.color import *
 from manimlib.utils.dict_ops import *
-from manimlib.utils.customization import *
 from manimlib.utils.debug import *
 from manimlib.utils.directories import *
 from manimlib.utils.file_ops import *

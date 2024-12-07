@@ -2,7 +2,7 @@ import copy
 import inspect
 import sys
 
-from manimlib.config import get_custom_config
+from manimlib.config import get_global_config
 from manimlib.logger import log
 from manimlib.scene.interactive_scene import InteractiveScene
 from manimlib.scene.scene import Scene
@@ -10,7 +10,7 @@ from manimlib.scene.scene import Scene
 
 class BlankScene(InteractiveScene):
     def construct(self):
-        exec(get_custom_config()["universal_import_line"])
+        exec(get_global_config()["universal_import_line"])
         self.embed()
 
 
@@ -53,14 +53,6 @@ def prompt_user_for_choice(scene_classes):
         sys.exit(1)
 
 
-def get_scene_config(config):
-    scene_parameters = inspect.signature(Scene).parameters.keys()
-    return {
-        key: config[key]
-        for key in set(scene_parameters).intersection(config.keys())
-    }
-
-
 def compute_total_frames(scene_class, scene_config):
     """
     When a scene is being written to file, a copy of the scene is run with
@@ -79,19 +71,19 @@ def compute_total_frames(scene_class, scene_config):
     return int(total_time * scene_config["camera_config"]["fps"])
 
 
-def scene_from_class(scene_class, scene_config, config):
+def scene_from_class(scene_class, scene_config, run_config):
     fw_config = scene_config["file_writer_config"]
-    if fw_config["write_to_movie"] and config["prerun"]:
+    if fw_config["write_to_movie"] and run_config["prerun"]:
         fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
     return scene_class(**scene_config)
 
 
-def get_scenes_to_render(all_scene_classes, scene_config, config):
-    if config["write_all"]:
+def get_scenes_to_render(all_scene_classes, scene_config, run_config):
+    if run_config["write_all"]:
         return [sc(**scene_config) for sc in all_scene_classes]
 
-    names_to_classes = {sc.__name__ : sc for sc in all_scene_classes}
-    scene_names = config["scene_names"]
+    names_to_classes = {sc.__name__: sc for sc in all_scene_classes}
+    scene_names = run_config["scene_names"]
 
     for name in set.difference(set(scene_names), names_to_classes):
         log.error(f"No scene named {name} found")
@@ -105,7 +97,7 @@ def get_scenes_to_render(all_scene_classes, scene_config, config):
         classes_to_run = prompt_user_for_choice(all_scene_classes)
 
     return [
-        scene_from_class(scene_class, scene_config, config)
+        scene_from_class(scene_class, scene_config, run_config)
         for scene_class in classes_to_run
     ]
 
@@ -123,13 +115,10 @@ def get_scene_classes_from_module(module):
         ]
 
 
-def main(config):
-    module = config["module"]
-    scene_config = get_scene_config(config)
-    if module is None:
+def main(scene_config, run_config):
+    if run_config["module"] is None:
         # If no module was passed in, just play the blank scene
         return [BlankScene(**scene_config)]
 
-    all_scene_classes = get_scene_classes_from_module(module)
-    scenes = get_scenes_to_render(all_scene_classes, scene_config, config)
-    return scenes
+    all_scene_classes = get_scene_classes_from_module(run_config["module"])
+    return get_scenes_to_render(all_scene_classes, scene_config, run_config)

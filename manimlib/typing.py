@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Union, Tuple, Annotated, Literal, Iterable
+    from typing import Union, Tuple, Annotated, Literal, Iterable, Dict
     from colour import Color
     import numpy as np
     import re
-    
+
     try:
         from typing import Self
     except ImportError:
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
     # These are various alternate names for np.ndarray meant to specify
     # certain shapes.
-    # 
+    #
     # In theory, these annotations could be used to check arrays sizes
     # at runtime, but at the moment nothing actually uses them, and
     # the names are here primarily to enhance readibility and allow
@@ -40,6 +40,7 @@ if TYPE_CHECKING:
     Vect4 = Annotated[FloatArray, Literal[4]]
     VectN = Annotated[FloatArray, Literal["N"]]
     Matrix3x3 = Annotated[FloatArray, Literal[3, 3]]
+    VectArray = Annotated[FloatArray, Literal["N", 1]]
     Vect2Array = Annotated[FloatArray, Literal["N", 2]]
     Vect3Array = Annotated[FloatArray, Literal["N", 3]]
     Vect4Array = Annotated[FloatArray, Literal["N", 4]]
