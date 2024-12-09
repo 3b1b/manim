@@ -58,3 +58,4 @@ camera_resolutions:
 fps: 30
 embed_exception_mode: "Verbose"
 embed_error_sound: False
+ignore_manimlib_modules_on_reload: True
