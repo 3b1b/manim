@@ -1,7 +1,18 @@
+from __future__ import annotations
+
 from typing import Any
 from IPython.terminal.embed import KillEmbedded
 
+
+import manimlib.config
+import manimlib.extract_scene
+
 from manimlib.window import Window
+
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from argparse import Namespace
 
 
 class ReloadManager:
@@ -14,7 +25,6 @@ class ReloadManager:
     command in the IPython shell.
     """
 
-    args: Any = None
     scenes: list[Any] = []
     window = None
 
@@ -22,6 +32,9 @@ class ReloadManager:
     start_at_line = None
 
     is_reload = False
+
+    def __init__(self, cli_args: Namespace):
+        self.args = cli_args
 
     def set_new_start_at_line(self, start_at_line):
         """
@@ -36,7 +49,7 @@ class ReloadManager:
         while True:
             try:
                 # blocking call since a scene will init an IPython shell()
-                self.retrieve_scenes_and_run(self.start_at_line)
+                self.retrieve_scenes_and_run()
                 return
             except KillEmbedded:
                 # Requested via the `exit_raise` IPython runline magic
@@ -50,18 +63,12 @@ class ReloadManager:
             except KeyboardInterrupt:
                 break
 
-    def retrieve_scenes_and_run(self, overwrite_start_at_line: int | None = None):
+    def retrieve_scenes_and_run(self):
         """
         Creates a new configuration based on the CLI args and runs the scenes.
         """
-        import manimlib.config
-        import manimlib.extract_scene
-
-        # Args
-        if self.args is None:
-            raise RuntimeError("Fatal error: No args were passed to the ReloadManager")
-        if overwrite_start_at_line is not None:
-            self.args.embed = str(overwrite_start_at_line)
+        if self.start_at_line is not None:
+            self.args.embed = str(self.start_at_line)
 
         # Args to Config
         scene_config = manimlib.config.get_scene_config(self.args)
