@@ -123,28 +123,7 @@ class CheckpointManager:
 
         checkpoint_key = self.get_leading_comment(code_string)
         self.handle_checkpoint_key(scene, checkpoint_key)
-        code_string = self.handle_method_definitions(code_string)
-
         shell.run_cell(code_string)
-
-    @staticmethod
-    def handle_method_definitions(code_string: str):
-        # Copied methods of a scene are handled specially
-        # A bit hacky, yes, but convenient
-        lines = code_string.split("\n")
-        method_pattern = r"^def\s+([a-zA-Z_]\w*)\s*\(self.*\):"
-        method_names = re.findall(method_pattern, lines[0].strip())
-        if method_names:
-            method_name = method_names[0]
-            indent = " " * lines[0].index(lines[0].strip())
-            return "\n".join([
-                # Remove self from function signature
-                re.sub(r"self(,\s*)?", "", lines[0]),
-                *lines[1:],
-                # Attach to scene via self.func_name = func_name
-                f"{indent}self.{method_name} = {method_name}"
-            ])
-        return code_string
 
     @staticmethod
     def get_leading_comment(code_string: str):
