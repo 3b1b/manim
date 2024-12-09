@@ -131,7 +131,7 @@ def get_indent(code_lines: list[str], line_number: int) -> str:
     """
     # Find most recent non-empty line
     try:
-        next(filter(lambda line: line.strip(), code_lines[line_number - 1::-1]))
+        line = next(filter(lambda line: line.strip(), code_lines[line_number - 1::-1]))
     except StopIteration:
         return ""
 
