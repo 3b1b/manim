@@ -125,14 +125,21 @@ def get_scene_classes_from_module(module):
 
 
 def get_indent(code_lines: list[str], line_number: int) -> str:
-    for line in code_lines[line_number - 1::-1]:
-        if len(line.strip()) == 0:
-            continue
-        n_spaces = len(line) - len(line.lstrip())
-        if line.endswith(":"):
-            n_spaces += 4
-        return n_spaces * " "
-    return ""
+    """
+    Find the indent associated with a given line of python code,
+    as a string of spaces
+    """
+    # Find most recent non-empty line
+    try:
+        next(filter(lambda line: line.strip(), code_lines[line_number - 1::-1]))
+    except StopIteration:
+        return ""
+
+    # Either return its leading spaces, or add for if it ends with colon
+    n_spaces = len(line) - len(line.lstrip())
+    if line.endswith(":"):
+        n_spaces += 4
+    return n_spaces * " "
 
 
 def insert_embed_line_to_module(module: Module, line_number: int):
@@ -149,9 +156,10 @@ def insert_embed_line_to_module(module: Module, line_number: int):
     lines.insert(line_number, indent + "self.embed()")
     new_code = "\n".join(lines)
 
+    # Execute the code, which presumably redefines the user's
+    # scene to include this embed line, within the relevant module.
     code_object = compile(new_code, module.__name__, 'exec')
     exec(code_object, module.__dict__)
-    return module
 
 
 def get_scene_module(file_name: Optional[str], embed_line: Optional[int], is_reload: bool = False) -> Module:
