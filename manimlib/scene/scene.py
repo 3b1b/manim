@@ -204,6 +204,9 @@ class Scene(object):
         close_scene_on_exit: bool = True,
         show_animation_progress: bool = False,
     ) -> None:
+        if not self.window:
+            # Embed is only relevant for interactive development with a Window
+            return
         self.show_animation_progress = show_animation_progress
 
         interactive_scene_embed(self)
@@ -887,7 +890,9 @@ class Scene(object):
         this means.
         """
         reload_manager.set_new_start_at_line(start_at_line)
-        self.shell.run_line_magic("exit_raise", "")
+        shell = get_ipython()
+        if shell:
+            shell.run_line_magic("exit_raise", "")
 
     def focus(self) -> None:
         """

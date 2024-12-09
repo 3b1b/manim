@@ -13,15 +13,10 @@ from manimlib.module_loader import ModuleLoader
 
 
 def interactive_scene_embed(scene):
-    if not scene.window:
-        # Embed is only relevant for interactive development with a Window
-        return
     scene.stop_skipping()
     scene.update_frame(force_draw=True)
-    scene.save_state()
 
     shell = get_ipython_shell_for_embedded_scene(scene)
-    scene.shell = shell  # It would be better not to add attributes to scene here
     enable_gui(shell, scene)
     ensure_frame_update_post_cell(shell, scene)
     ensure_flash_on_error(shell, scene)
