@@ -25,7 +25,6 @@ class ReloadManager:
     command in the IPython shell.
     """
 
-    scenes: list[Any] = []
     window = None
     is_reload = False
 
@@ -50,10 +49,6 @@ class ReloadManager:
             except KillEmbedded:
                 # Requested via the `exit_raise` IPython runline magic
                 # by means of our scene.reload() command
-                for scene in self.scenes:
-                    scene.tear_down()
-
-                self.scenes = []
                 self.note_reload()
             except KeyboardInterrupt:
                 break
@@ -83,9 +78,9 @@ class ReloadManager:
         scene_config.update(window=self.window)
 
         # Scenes
-        self.scenes = manimlib.extract_scene.main(scene_config, run_config)
-        if len(self.scenes) == 0:
+        scenes = manimlib.extract_scene.main(scene_config, run_config)
+        if len(scenes) == 0:
             print("No scenes found to run")
 
-        for scene in self.scenes:
+        for scene in scenes:
             scene.run()
