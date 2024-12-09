@@ -3,7 +3,7 @@ from manimlib import __version__
 import manimlib.config
 import manimlib.logger
 import manimlib.utils.init_config
-from manimlib.reload_manager import reload_manager
+from manimlib.reload_manager import ReloadManager
 
 
 def main():
@@ -22,6 +22,7 @@ def main():
         manimlib.utils.init_config.init_customization()
         return
 
+    reload_manager = ReloadManager()
     reload_manager.args = args
     reload_manager.run()
 

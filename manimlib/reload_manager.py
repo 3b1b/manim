@@ -65,6 +65,8 @@ class ReloadManager:
 
         # Args to Config
         scene_config = manimlib.config.get_scene_config(self.args)
+        scene_config.update(reload_manager=self)
+
         run_config = manimlib.config.get_run_config(self.args)
         run_config.update(is_reload=self.is_reload)
 
@@ -88,6 +90,3 @@ class ReloadManager:
                     f"at line \033[96m{self.args.embed}\033[0m"
                 ]))
             scene.run()
-
-
-reload_manager = ReloadManager()
