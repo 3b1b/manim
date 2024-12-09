@@ -33,18 +33,17 @@ def get_ipython_shell_for_embedded_scene(scene):
     # Triple back should take us to the context in a user's scene definition
     # which is calling "self.embed"
     caller_frame = inspect.currentframe().f_back.f_back.f_back
+
+    # Update the module's namespace to include local variables
     module = ModuleLoader.get_module(caller_frame.f_globals["__file__"])
-    shell = InteractiveShellEmbed(
+    module.__dict__.update(caller_frame.f_locals)
+    module.__dict__.update(get_shortcuts(scene))
+
+    return InteractiveShellEmbed(
         user_module=module,
         display_banner=False,
         xmode=scene.embed_exception_mode
     )
-
-    # Update the module's namespace to match include local variables
-    module.__dict__.update(caller_frame.f_locals)
-    module.__dict__.update(get_shortcuts(scene))
-
-    return shell
 
 
 def get_shortcuts(scene):
@@ -130,9 +129,9 @@ class CheckpointManager:
 
     @staticmethod
     def handle_method_definitions(code_string: str):
-        lines = code_string.split("\n")
         # Copied methods of a scene are handled specially
         # A bit hacky, yes, but convenient
+        lines = code_string.split("\n")
         method_pattern = r"^def\s+([a-zA-Z_]\w*)\s*\(self.*\):"
         method_names = re.findall(method_pattern, lines[0].strip())
         if method_names:
