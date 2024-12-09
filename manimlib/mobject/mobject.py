@@ -715,21 +715,6 @@ class Mobject(object):
         self.become(self.saved_state)
         return self
 
-    def save_to_file(self, file_path: str) -> Self:
-        with open(file_path, "wb") as fp:
-            fp.write(self.serialize())
-        log.info(f"Saved mobject to {file_path}")
-        return self
-
-    @staticmethod
-    def load(file_path) -> Mobject:
-        if not os.path.exists(file_path):
-            log.error(f"No file found at {file_path}")
-            sys.exit(2)
-        with open(file_path, "rb") as fp:
-            mobject = pickle.load(fp)
-        return mobject
-
     def become(self, mobject: Mobject, match_updaters=False) -> Self:
         """
         Edit all data and submobjects to be idential

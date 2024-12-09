@@ -710,21 +710,6 @@ class Scene(object):
     def clear_checkpoints(self):
         self.checkpoint_manager.clear_checkpoints()
 
-    def save_mobject_to_file(self, mobject: Mobject, file_path: str | None = None) -> None:
-        if file_path is None:
-            file_path = self.file_writer.get_saved_mobject_path(mobject)
-            if file_path is None:
-                return
-        mobject.save_to_file(file_path)
-
-    def load_mobject(self, file_name):
-        if os.path.exists(file_name):
-            path = file_name
-        else:
-            directory = self.file_writer.get_saved_mobject_directory()
-            path = os.path.join(directory, file_name)
-        return Mobject.load(path)
-
     def is_window_closing(self):
         return self.window and (self.window.is_closing or self.quit_interaction)
 
