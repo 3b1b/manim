@@ -1,41 +1,34 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-import inspect
 import os
 import platform
-import pyperclip
 import random
 import time
-import re
 from functools import wraps
 
-from IPython.terminal import pt_inputhooks
-from IPython.terminal.embed import InteractiveShellEmbed
 from pyglet.window import key as PygletWindowKeys
 
 import numpy as np
 from tqdm.auto import tqdm as ProgressDisplay
 
 from manimlib.animation.animation import prepare_animation
-from manimlib.animation.fading import VFadeInThenOut
 from manimlib.camera.camera import Camera
 from manimlib.camera.camera_frame import CameraFrame
-from manimlib.module_loader import ModuleLoader
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
-from manimlib.constants import RED
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
 from manimlib.reload_manager import reload_manager
-from manimlib.mobject.frame import FullScreenRectangle
 from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.scene.scene_embed import interactive_scene_embed
+from manimlib.scene.scene_embed import CheckpointManager
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import recursive_mobject_remove
@@ -126,6 +119,7 @@ class Scene(object):
         self.skip_time: float = 0
         self.original_skipping_status: bool = self.skip_animations
         self.checkpoint_states: dict[str, list[tuple[Mobject, Mobject]]] = dict()
+        self.checkpoint_manager: CheckpointManager = CheckpointManager()
         self.undo_stack = []
         self.redo_stack = []
 
@@ -210,80 +204,9 @@ class Scene(object):
         close_scene_on_exit: bool = True,
         show_animation_progress: bool = False,
     ) -> None:
-        if not self.window:
-            # Embed is only relevant for interactive development with a Window
-            return
-        self.stop_skipping()
-        self.update_frame(force_draw=True)
-        self.save_state()
         self.show_animation_progress = show_animation_progress
 
-        # Create embedded IPython terminal configured to have access to
-        # the local namespace of the caller
-        caller_frame = inspect.currentframe().f_back
-        module = ModuleLoader.get_module(caller_frame.f_globals["__file__"])
-        shell = InteractiveShellEmbed(
-            user_module=module,
-            display_banner=False,
-            xmode=self.embed_exception_mode
-        )
-        self.shell = shell
-
-        # Add a few custom shortcuts to that local namespace
-        local_ns = dict(caller_frame.f_locals)
-        local_ns.update(
-            play=self.play,
-            wait=self.wait,
-            add=self.add,
-            remove=self.remove,
-            clear=self.clear,
-            focus=self.focus,
-            save_state=self.save_state,
-            reload=self.reload,
-            undo=self.undo,
-            redo=self.redo,
-            i2g=self.i2g,
-            i2m=self.i2m,
-            checkpoint_paste=self.checkpoint_paste,
-            touch=lambda: shell.enable_gui("manim"),
-            notouch=lambda: shell.enable_gui(None),
-        )
-
-        # Update the shell module with the caller's locals + shortcuts
-        module.__dict__.update(local_ns)
-
-        # Enables gui interactions during the embed
-        def inputhook(context):
-            while not context.input_is_ready():
-                if not self.is_window_closing():
-                    self.update_frame(dt=0)
-            if self.is_window_closing():
-                shell.ask_exit()
-
-        pt_inputhooks.register("manim", inputhook)
-        shell.enable_gui("manim")
-
-        # Operation to run after each ipython command
-        def post_cell_func(*args, **kwargs):
-            if not self.is_window_closing():
-                self.update_frame(dt=0, force_draw=True)
-
-        shell.events.register("post_run_cell", post_cell_func)
-
-        # Flash border, and potentially play sound, on exceptions
-        def custom_exc(shell, etype, evalue, tb, tb_offset=None):
-            # Show the error don't just swallow it
-            shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
-            if self.embed_error_sound:
-                os.system("printf '\a'")
-            rect = FullScreenRectangle().set_stroke(RED, 30).set_fill(opacity=0)
-            rect.fix_in_frame()
-            self.play(VFadeInThenOut(rect, run_time=0.5))
-
-        shell.set_custom_exc((Exception,), custom_exc)
-
-        # Launch shell
-        shell()
+        interactive_scene_embed(self)
 
         # End scene when exiting an embed
         if close_scene_on_exit:
@@ -760,37 +683,6 @@ class Scene(object):
         revert to the state of the scene the first time this function
         was called on a block of code starting with that comment.
         """
-        if self.shell is None or self.window is None:
-            raise Exception(
-                "Scene.checkpoint_paste cannot be called outside of " +
-                "an ipython shell"
-            )
-
-        pasted = pyperclip.paste()
-        lines = pasted.split("\n")
-
-        # Commented lines trigger saved checkpoints
-        if lines[0].lstrip().startswith("#"):
-            if lines[0] not in self.checkpoint_states:
-                self.checkpoint(lines[0])
-            else:
-                self.revert_to_checkpoint(lines[0])
-
-        # Copied methods of a scene are handled specially
-        # A bit hacky, yes, but convenient
-        method_pattern = r"^def\s+([a-zA-Z_]\w*)\s*\(self.*\):"
-        method_names = re.findall(method_pattern ,lines[0].strip())
-        if method_names:
-            method_name = method_names[0]
-            indent = " " * lines[0].index(lines[0].strip())
-            pasted = "\n".join([
-                # Remove self from function signature
-                re.sub(r"self(,\s*)?", "", lines[0]),
-                *lines[1:],
-                # Attach to scene via self.func_name = func_name
-                f"{indent}self.{method_name} = {method_name}"
-            ])
-
         # Keep track of skipping and progress bar status
         self.skip_animations = skip
 
@@ -801,7 +693,7 @@ class Scene(object):
             self.camera.use_window_fbo(False)
             self.file_writer.begin_insert()
 
-        self.shell.run_cell(pasted)
+        self.checkpoint_manager.checkpoint_paste(self)
 
         if record:
             self.file_writer.end_insert()
@@ -810,22 +702,8 @@ class Scene(object):
         self.stop_skipping()
         self.show_animation_progress = prev_progress
 
-    def checkpoint(self, key: str):
-        self.checkpoint_states[key] = self.get_state()
-
-    def revert_to_checkpoint(self, key: str):
-        if key not in self.checkpoint_states:
-            log.error(f"No checkpoint at {key}")
-            return
-        all_keys = list(self.checkpoint_states.keys())
-        index = all_keys.index(key)
-        for later_key in all_keys[index + 1:]:
-            self.checkpoint_states.pop(later_key)
-
-        self.restore_state(self.checkpoint_states[key])
-
     def clear_checkpoints(self):
-        self.checkpoint_states = dict()
+        self.checkpoint_manager.clear_checkpoints()
 
     def save_mobject_to_file(self, mobject: Mobject, file_path: str | None = None) -> None:
         if file_path is None:
