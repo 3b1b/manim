@@ -27,10 +27,6 @@ class ReloadManager:
 
     scenes: list[Any] = []
     window = None
-
-    # The line number to load the scene from when reloading
-    start_at_line = None
-
     is_reload = False
 
     def __init__(self, cli_args: Namespace):
@@ -40,7 +36,7 @@ class ReloadManager:
         """
         Sets/Updates the line number to load the scene from when reloading.
         """
-        self.start_at_line = start_at_line
+        self.args.embed = str(start_at_line)
 
     def run(self):
         """
@@ -58,18 +54,22 @@ class ReloadManager:
                     scene.tear_down()
 
                 self.scenes = []
-                self.is_reload = True
-
+                self.note_reload()
             except KeyboardInterrupt:
                 break
+
+    def note_reload(self):
+        self.is_reload = True
+        print(" ".join([
+            "Reloading interactive session for",
+            f"\033[96m{self.args.scene_names[0]}\033[0m",
+            f"at line \033[96m{self.args.embed}\033[0m"
+        ]))
 
     def retrieve_scenes_and_run(self):
         """
         Creates a new configuration based on the CLI args and runs the scenes.
         """
-        if self.start_at_line is not None:
-            self.args.embed = str(self.start_at_line)
-
         # Args to Config
         scene_config = manimlib.config.get_scene_config(self.args)
         scene_config.update(reload_manager=self)
@@ -86,13 +86,6 @@ class ReloadManager:
         self.scenes = manimlib.extract_scene.main(scene_config, run_config)
         if len(self.scenes) == 0:
             print("No scenes found to run")
-            return
 
         for scene in self.scenes:
-            if self.args.embed and self.is_reload:
-                print(" ".join([
-                    "Reloading interactive session for",
-                    f"\033[96m{self.args.scene_names[0]}\033[0m",
-                    f"at line \033[96m{self.args.embed}\033[0m"
-                ]))
             scene.run()
