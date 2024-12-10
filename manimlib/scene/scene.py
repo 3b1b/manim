@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from typing import Callable, Iterable, TypeVar, Optional
     from manimlib.typing import Vect3
 
-    T = TypeVar("T")
+    T = TypeVar('T')
 
     from PIL.Image import Image
 
@@ -48,10 +48,10 @@ if TYPE_CHECKING:
     from manimlib.animation.animation import Animation
 
 
-PAN_3D_KEY = "d"
-FRAME_SHIFT_KEY = "f"
-RESET_FRAME_KEY = "r"
-QUIT_KEY = "q"
+PAN_3D_KEY = 'd'
+FRAME_SHIFT_KEY = 'f'
+RESET_FRAME_KEY = 'r'
+QUIT_KEY = 'q'
 
 
 class Scene(object):
@@ -94,10 +94,7 @@ class Scene(object):
         self.reload_manager = reload_manager
 
         self.camera_config = {**self.default_camera_config, **camera_config}
-        self.file_writer_config = {
-            **self.default_file_writer_config,
-            **file_writer_config,
-        }
+        self.file_writer_config = {**self.default_file_writer_config, **file_writer_config}
 
         self.window = window
         if self.window:
@@ -107,7 +104,9 @@ class Scene(object):
 
         # Core state of the scene
         self.camera: Camera = Camera(
-            window=self.window, samples=self.samples, **self.camera_config
+            window=self.window,
+            samples=self.samples,
+            **self.camera_config
         )
         self.frame: CameraFrame = self.camera.frame
         self.frame.reorient(*self.default_frame_orientation)
@@ -194,9 +193,9 @@ class Scene(object):
         if self.window is None:
             return
         log.info(
-            "\nTips: Using the keys `d`, `f`, or `z` "
-            + "you can interact with the scene. "
-            + "Press `command + q` or `esc` to quit"
+            "\nTips: Using the keys `d`, `f`, or `z` " +
+            "you can interact with the scene. " +
+            "Press `command + q` or `esc` to quit"
         )
         self.skip_animations = False
         while not self.is_window_closing():
@@ -242,12 +241,7 @@ class Scene(object):
         if self.is_window_closing():
             raise EndScene()
 
-        if (
-            self.window
-            and dt == 0
-            and not self.window.has_undrawn_event()
-            and not force_draw
-        ):
+        if self.window and dt == 0 and not self.window.has_undrawn_event() and not force_draw:
             # In this case, there's no need for new rendering, but we
             # shoudl still listen for new events
             self.window._window.dispatch_events()
@@ -292,9 +286,11 @@ class Scene(object):
         families = [m.get_family() for m in mobjects]
 
         def is_top_level(mobject):
-            num_families = sum([(mobject in family) for family in families])
+            num_families = sum([
+                (mobject in family)
+                for family in families
+            ])
             return num_families == 1
-
         return list(filter(is_top_level, mobjects))
 
     def get_mobject_family_members(self) -> list[Mobject]:
@@ -308,15 +304,14 @@ class Scene(object):
         """
         batches = batch_by_property(
             self.mobjects,
-            lambda m: str(type(m))
-            + str(m.get_shader_wrapper(self.camera.ctx).get_id())
-            + str(m.z_index),
+            lambda m: str(type(m)) + str(m.get_shader_wrapper(self.camera.ctx).get_id()) + str(m.z_index)
         )
 
         for group in self.render_groups:
             group.clear()
         self.render_groups = [
-            batch[0].get_group_class()(*batch) for batch, key in batches
+            batch[0].get_group_class()(*batch)
+            for batch, key in batches
         ]
 
     @staticmethod
@@ -326,7 +321,6 @@ class Scene(object):
             func(self, *args, **kwargs)
             self.assemble_render_groups()
             return self
-
         return wrapper
 
     @affects_mobject_list
@@ -342,9 +336,11 @@ class Scene(object):
         id_to_scene_order = {id(m): idx for idx, m in enumerate(self.mobjects)}
         self.mobjects.sort(key=lambda m: (m.z_index, id_to_scene_order[id(m)]))
 
-        self.id_to_mobject_map.update(
-            {id(sm): sm for m in new_mobjects for sm in m.get_family()}
-        )
+        self.id_to_mobject_map.update({
+            id(sm): sm
+            for m in new_mobjects
+            for sm in m.get_family()
+        })
         return self
 
     def add_mobjects_among(self, values: Iterable):
@@ -353,7 +349,10 @@ class Scene(object):
         e.g. to add all mobjects defined up to a point,
         call self.add_mobjects_among(locals().values())
         """
-        self.add(*filter(lambda m: isinstance(m, Mobject), values))
+        self.add(*filter(
+            lambda m: isinstance(m, Mobject),
+            values
+        ))
         return self
 
     @affects_mobject_list
@@ -363,7 +362,7 @@ class Scene(object):
             self.mobjects = [
                 *self.mobjects[:index],
                 *replacements,
-                *self.mobjects[index + 1 :],
+                *self.mobjects[index + 1:]
             ]
         return self
 
@@ -406,7 +405,7 @@ class Scene(object):
         self,
         point: np.ndarray,
         search_set: Iterable[Mobject] | None = None,
-        buff: float = 0,
+        buff: float = 0
     ) -> Mobject | None:
         """
         E.g. if clicking on the scene, this returns the top layer mobject
@@ -429,9 +428,10 @@ class Scene(object):
         return self.id_to_mobject_map[id_value]
 
     def ids_to_group(self, *id_values):
-        return self.get_group(
-            *filter(lambda x: x is not None, map(self.id_to_mobject, id_values))
-        )
+        return self.get_group(*filter(
+            lambda x: x is not None,
+            map(self.id_to_mobject, id_values)
+        ))
 
     def i2g(self, *id_values):
         return self.ids_to_group(*id_values)
@@ -463,7 +463,7 @@ class Scene(object):
         run_time: float,
         n_iterations: int | None = None,
         desc: str = "",
-        override_skip_animations: bool = False,
+        override_skip_animations: bool = False
     ) -> list[float] | np.ndarray | ProgressDisplay:
         if self.skip_animations and not override_skip_animations:
             return [run_time]
@@ -477,7 +477,7 @@ class Scene(object):
                 times,
                 total=n_iterations,
                 leave=self.leave_progress_bars,
-                ascii=True if platform.system() == "Windows" else None,
+                ascii=True if platform.system() == 'Windows' else None,
                 desc=desc,
                 bar_format="{l_bar} {n_fmt:3}/{total_fmt:3} {rate_fmt}{postfix}",
             )
@@ -488,7 +488,8 @@ class Scene(object):
         return np.max([animation.get_run_time() for animation in animations])
 
     def get_animation_time_progression(
-        self, animations: Iterable[Animation]
+        self,
+        animations: Iterable[Animation]
     ) -> list[float] | np.ndarray | ProgressDisplay:
         animations = list(animations)
         run_time = self.get_run_time(animations)
@@ -499,7 +500,9 @@ class Scene(object):
         return time_progression
 
     def get_wait_time_progression(
-        self, duration: float, stop_condition: Callable[[], bool] | None = None
+        self,
+        duration: float,
+        stop_condition: Callable[[], bool] | None = None
     ) -> list[float] | np.ndarray | ProgressDisplay:
         kw = {"desc": f"{self.num_plays} Waiting"}
         if stop_condition is not None:
@@ -589,15 +592,11 @@ class Scene(object):
         duration: float = DEFAULT_WAIT_TIME,
         stop_condition: Callable[[], bool] = None,
         note: str = None,
-        ignore_presenter_mode: bool = False,
+        ignore_presenter_mode: bool = False
     ):
         self.pre_play()
         self.update_mobjects(dt=0)  # Any problems with this?
-        if (
-            self.presenter_mode
-            and not self.skip_animations
-            and not ignore_presenter_mode
-        ):
+        if self.presenter_mode and not self.skip_animations and not ignore_presenter_mode:
             if note:
                 log.info(note)
             self.hold_loop()
@@ -618,7 +617,11 @@ class Scene(object):
             self.update_frame(dt=1 / self.camera.fps)
         self.hold_on_wait = True
 
-    def wait_until(self, stop_condition: Callable[[], bool], max_time: float = 60):
+    def wait_until(
+        self,
+        stop_condition: Callable[[], bool],
+        max_time: float = 60
+    ):
         self.wait(max_time, stop_condition=stop_condition)
 
     def force_skipping(self):
@@ -636,7 +639,7 @@ class Scene(object):
         sound_file: str,
         time_offset: float = 0,
         gain: float | None = None,
-        gain_to_background: float | None = None,
+        gain_to_background: float | None = None
     ):
         if self.skip_animations:
             return
@@ -672,7 +675,10 @@ class Scene(object):
             self.restore_state(self.redo_stack.pop())
 
     def checkpoint_paste(
-        self, skip: bool = False, record: bool = False, progress_bar: bool = True
+        self,
+        skip: bool = False,
+        record: bool = False,
+        progress_bar: bool = True
     ):
         """
         Used during interactive development to run (or re-run)
@@ -716,14 +722,16 @@ class Scene(object):
         else:
             raise Exception("Only `xz` and `xy` are valid floor planes")
 
-    def on_mouse_motion(self, point: Vect3, d_point: Vect3) -> None:
+    def on_mouse_motion(
+        self,
+        point: Vect3,
+        d_point: Vect3
+    ) -> None:
         assert self.window is not None
         self.mouse_point.move_to(point)
 
         event_data = {"point": point, "d_point": d_point}
-        propagate_event = EVENT_DISPATCHER.dispatch(
-            EventType.MouseMotionEvent, **event_data
-        )
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseMotionEvent, **event_data)
         if propagate_event is not None and propagate_event is False:
             return
 
@@ -739,63 +747,77 @@ class Scene(object):
             frame.shift(-d_point)
 
     def on_mouse_drag(
-        self, point: Vect3, d_point: Vect3, buttons: int, modifiers: int
+        self,
+        point: Vect3,
+        d_point: Vect3,
+        buttons: int,
+        modifiers: int
     ) -> None:
         self.mouse_drag_point.move_to(point)
         if self.drag_to_pan:
             self.frame.shift(-d_point)
 
-        event_data = {
-            "point": point,
-            "d_point": d_point,
-            "buttons": buttons,
-            "modifiers": modifiers,
-        }
-        propagate_event = EVENT_DISPATCHER.dispatch(
-            EventType.MouseDragEvent, **event_data
-        )
+        event_data = {"point": point, "d_point": d_point, "buttons": buttons, "modifiers": modifiers}
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseDragEvent, **event_data)
         if propagate_event is not None and propagate_event is False:
             return
 
-    def on_mouse_press(self, point: Vect3, button: int, mods: int) -> None:
+    def on_mouse_press(
+        self,
+        point: Vect3,
+        button: int,
+        mods: int
+    ) -> None:
         self.mouse_drag_point.move_to(point)
         event_data = {"point": point, "button": button, "mods": mods}
-        propagate_event = EVENT_DISPATCHER.dispatch(
-            EventType.MousePressEvent, **event_data
-        )
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.MousePressEvent, **event_data)
         if propagate_event is not None and propagate_event is False:
             return
 
-    def on_mouse_release(self, point: Vect3, button: int, mods: int) -> None:
+    def on_mouse_release(
+        self,
+        point: Vect3,
+        button: int,
+        mods: int
+    ) -> None:
         event_data = {"point": point, "button": button, "mods": mods}
-        propagate_event = EVENT_DISPATCHER.dispatch(
-            EventType.MouseReleaseEvent, **event_data
-        )
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseReleaseEvent, **event_data)
         if propagate_event is not None and propagate_event is False:
             return
 
     def on_mouse_scroll(
-        self, point: Vect3, offset: Vect3, x_pixel_offset: float, y_pixel_offset: float
+        self,
+        point: Vect3,
+        offset: Vect3,
+        x_pixel_offset: float,
+        y_pixel_offset: float
     ) -> None:
         event_data = {"point": point, "offset": offset}
-        propagate_event = EVENT_DISPATCHER.dispatch(
-            EventType.MouseScrollEvent, **event_data
-        )
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseScrollEvent, **event_data)
         if propagate_event is not None and propagate_event is False:
             return
 
         rel_offset = y_pixel_offset / self.camera.get_pixel_height()
-        self.frame.scale(1 - self.scroll_sensitivity * rel_offset, about_point=point)
-
-    def on_key_release(self, symbol: int, modifiers: int) -> None:
-        event_data = {"symbol": symbol, "modifiers": modifiers}
-        propagate_event = EVENT_DISPATCHER.dispatch(
-            EventType.KeyReleaseEvent, **event_data
+        self.frame.scale(
+            1 - self.scroll_sensitivity * rel_offset,
+            about_point=point
         )
+
+    def on_key_release(
+        self,
+        symbol: int,
+        modifiers: int
+    ) -> None:
+        event_data = {"symbol": symbol, "modifiers": modifiers}
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.KeyReleaseEvent, **event_data)
         if propagate_event is not None and propagate_event is False:
             return
 
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
+    def on_key_press(
+        self,
+        symbol: int,
+        modifiers: int
+    ) -> None:
         try:
             char = chr(symbol)
         except OverflowError:
@@ -803,31 +825,18 @@ class Scene(object):
             return
 
         event_data = {"symbol": symbol, "modifiers": modifiers}
-        propagate_event = EVENT_DISPATCHER.dispatch(
-            EventType.KeyPressEvent, **event_data
-        )
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.KeyPressEvent, **event_data)
         if propagate_event is not None and propagate_event is False:
             return
 
         if char == RESET_FRAME_KEY:
             self.play(self.camera.frame.animate.to_default_state())
-        elif char == "z" and (
-            modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)
-        ):
+        elif char == "z" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.undo()
-        elif char == "z" and (
-            modifiers
-            & (
-                PygletWindowKeys.MOD_COMMAND
-                | PygletWindowKeys.MOD_CTRL
-                | PygletWindowKeys.MOD_SHIFT
-            )
-        ):
+        elif char == "z" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL | PygletWindowKeys.MOD_SHIFT)):
             self.redo()
         # command + q
-        elif char == QUIT_KEY and (
-            modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)
-        ):
+        elif char == QUIT_KEY and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.quit_interaction = True
         # Space or right arrow
         elif char == " " or symbol == ARROW_SYMBOLS[2]:
@@ -882,7 +891,7 @@ class Scene(object):
         self.window.focus()
 
 
-class SceneState:
+class SceneState():
     def __init__(self, scene: Scene, ignore: list[Mobject] | None = None):
         self.time = scene.time
         self.num_plays = scene.num_plays
@@ -891,9 +900,7 @@ class SceneState:
             for mob in ignore:
                 self.mobjects_to_copies.pop(mob, None)
 
-        last_m2c = (
-            scene.undo_stack[-1].mobjects_to_copies if scene.undo_stack else dict()
-        )
+        last_m2c = scene.undo_stack[-1].mobjects_to_copies if scene.undo_stack else dict()
         for mob in self.mobjects_to_copies:
             # If it hasn't changed since the last state, just point to the
             # same copy as before
@@ -903,13 +910,11 @@ class SceneState:
                 self.mobjects_to_copies[mob] = mob.copy()
 
     def __eq__(self, state: SceneState):
-        return all(
-            (
-                self.time == state.time,
-                self.num_plays == state.num_plays,
-                self.mobjects_to_copies == state.mobjects_to_copies,
-            )
-        )
+        return all((
+            self.time == state.time,
+            self.num_plays == state.num_plays,
+            self.mobjects_to_copies == state.mobjects_to_copies
+        ))
 
     def mobjects_match(self, state: SceneState):
         return self.mobjects_to_copies == state.mobjects_to_copies
@@ -925,7 +930,8 @@ class SceneState:
         scene.time = self.time
         scene.num_plays = self.num_plays
         scene.mobjects = [
-            mob.become(mob_copy) for mob, mob_copy in self.mobjects_to_copies.items()
+            mob.become(mob_copy)
+            for mob, mob_copy in self.mobjects_to_copies.items()
         ]
 
 
@@ -938,15 +944,9 @@ class ThreeDScene(Scene):
     default_frame_orientation = (-30, 70)
     always_depth_test = True
 
-    def add(
-        self, *mobjects: Mobject, set_depth_test: bool = True, perp_stroke: bool = True
-    ):
+    def add(self, *mobjects: Mobject, set_depth_test: bool = True, perp_stroke: bool = True):
         for mob in mobjects:
-            if (
-                set_depth_test
-                and not mob.is_fixed_in_frame()
-                and self.always_depth_test
-            ):
+            if set_depth_test and not mob.is_fixed_in_frame() and self.always_depth_test:
                 mob.apply_depth_test()
             if isinstance(mob, VMobject) and mob.has_stroke() and perp_stroke:
                 mob.set_flat_stroke(False)
