@@ -11,4 +11,4 @@ logging.basicConfig(
 )
 
 log = logging.getLogger("manimgl")
-log.setLevel("DEBUG")
+log.setLevel("WARNING")

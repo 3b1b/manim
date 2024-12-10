@@ -146,39 +146,6 @@ class SceneFileWriter(object):
     def get_movie_file_path(self) -> str:
         return self.movie_file_path
 
-    def get_saved_mobject_directory(self) -> str:
-        return guarantee_existence(self.saved_mobject_directory)
-
-    def get_saved_mobject_path(self, mobject: Mobject) -> str | None:
-        directory = self.get_saved_mobject_directory()
-        files = os.listdir(directory)
-        default_name = str(mobject) + "_0.mob"
-        index = 0
-        while default_name in files:
-            default_name = default_name.replace(str(index), str(index + 1))
-            index += 1
-        if platform.system() == 'Darwin':
-            cmds = [
-                "osascript", "-e",
-                f"""
-                set chosenfile to (choose file name default name "{default_name}" default location "{directory}")
-                POSIX path of chosenfile
-                """,
-            ]
-            process = sp.Popen(cmds, stdout=sp.PIPE)
-            file_path = process.stdout.read().decode("utf-8").split("\n")[0]
-            if not file_path:
-                return
-        else:
-            user_name = input(f"Enter mobject file name (default is {default_name}): ")
-            file_path = os.path.join(directory, user_name or default_name)
-            if os.path.exists(file_path) or os.path.exists(file_path + ".mob"):
-                if input(f"{file_path} already exists. Overwrite (y/n)? ") != "y":
-                    return
-        if not file_path.endswith(".mob"):
-            file_path = file_path + ".mob"
-        return file_path
-
     # Sound
     def init_audio(self) -> None:
         self.includes_sound: bool = False

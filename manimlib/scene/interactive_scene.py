@@ -460,12 +460,6 @@ class InteractiveScene(Scene):
             nudge *= 10
         self.selection.shift(nudge * vect)
 
-    def save_selection_to_file(self):
-        if len(self.selection) == 1:
-            self.save_mobject_to_file(self.selection[0])
-        else:
-            self.save_mobject_to_file(self.selection)
-
     # Key actions
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
@@ -503,8 +497,6 @@ class InteractiveScene(Scene):
             self.ungroup_selection()
         elif char == "t" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.toggle_selection_mode()
-        elif char == "s" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
-            self.save_selection_to_file()
         elif char == "d" and (modifiers & PygletWindowKeys.MOD_SHIFT):
             self.copy_frame_positioning()
         elif char == "c" and (modifiers & PygletWindowKeys.MOD_SHIFT):

@@ -1,8 +1,7 @@
 from __future__ import annotations
 import numpy as np
 
-from manimlib.config import get_camera_config
-from manimlib.config import FRAME_HEIGHT
+from manimlib.config import get_resolution
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -13,18 +12,19 @@ if TYPE_CHECKING:
 # TODO, it feels a bit unprincipled to have some global constants
 # depend on the output of this function, and for all that configuration
 # code to be run merely upon importing from this file.
-CAMERA_CONFIG = get_camera_config()
+DEFAULT_RESOLUTION: tuple[int, int] = get_resolution()
+DEFAULT_PIXEL_WIDTH = DEFAULT_RESOLUTION[0]
+DEFAULT_PIXEL_HEIGHT = DEFAULT_RESOLUTION[1]
+DEFAULT_FPS: int = 30
 
 # Sizes relevant to default camera frame
-ASPECT_RATIO: float = CAMERA_CONFIG['pixel_width'] / CAMERA_CONFIG['pixel_height']
+ASPECT_RATIO: float = DEFAULT_PIXEL_WIDTH / DEFAULT_PIXEL_HEIGHT
+FRAME_HEIGHT: float = 8.0
 FRAME_WIDTH: float = FRAME_HEIGHT * ASPECT_RATIO
 FRAME_SHAPE: tuple[float, float] = (FRAME_WIDTH, FRAME_HEIGHT)
 FRAME_Y_RADIUS: float = FRAME_HEIGHT / 2
 FRAME_X_RADIUS: float = FRAME_WIDTH / 2
 
-DEFAULT_PIXEL_HEIGHT: int = CAMERA_CONFIG['pixel_height']
-DEFAULT_PIXEL_WIDTH: int = CAMERA_CONFIG['pixel_width']
-DEFAULT_FPS: int = 30
 
 SMALL_BUFF: float = 0.1
 MED_SMALL_BUFF: float = 0.25
