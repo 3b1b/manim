@@ -1,11 +1,20 @@
+from __future__ import annotations
+
 import copy
 import inspect
 import sys
+
+from manimlib.module_loader import ModuleLoader
 
 from manimlib.config import get_global_config
 from manimlib.logger import log
 from manimlib.scene.interactive_scene import InteractiveScene
 from manimlib.scene.scene import Scene
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    Module = importlib.util.types.ModuleType
+    from typing import Optional
 
 
 class BlankScene(InteractiveScene):
@@ -115,10 +124,60 @@ def get_scene_classes_from_module(module):
         ]
 
 
+def get_indent(code_lines: list[str], line_number: int) -> str:
+    """
+    Find the indent associated with a given line of python code,
+    as a string of spaces
+    """
+    # Find most recent non-empty line
+    try:
+        line = next(filter(lambda line: line.strip(), code_lines[line_number - 1::-1]))
+    except StopIteration:
+        return ""
+
+    # Either return its leading spaces, or add for if it ends with colon
+    n_spaces = len(line) - len(line.lstrip())
+    if line.endswith(":"):
+        n_spaces += 4
+    return n_spaces * " "
+
+
+def insert_embed_line_to_module(module: Module, line_number: int):
+    """
+    This is hacky, but convenient. When user includes the argument "-e", it will try
+    to recreate a file that inserts the line `self.embed()` into the end of the scene's
+    construct method. If there is an argument passed in, it will insert the line after
+    the last line in the sourcefile which includes that string.
+    """
+    lines = inspect.getsource(module).splitlines()
+
+    # Add the relevant embed line to the code
+    indent = get_indent(lines, line_number)
+    lines.insert(line_number, indent + "self.embed()")
+    new_code = "\n".join(lines)
+
+    # Execute the code, which presumably redefines the user's
+    # scene to include this embed line, within the relevant module.
+    code_object = compile(new_code, module.__name__, 'exec')
+    exec(code_object, module.__dict__)
+
+
+def get_scene_module(file_name: Optional[str], embed_line: Optional[int], is_reload: bool = False) -> Module:
+    module = ModuleLoader.get_module(file_name, is_reload)
+    if embed_line:
+        insert_embed_line_to_module(module, embed_line)
+    return module
+
+
 def main(scene_config, run_config):
-    if run_config["module"] is None:
+    module = get_scene_module(
+        run_config["file_name"],
+        run_config["embed_line"],
+        run_config["is_reload"]
+    )
+    if module is None:
         # If no module was passed in, just play the blank scene
         return [BlankScene(**scene_config)]
 
-    all_scene_classes = get_scene_classes_from_module(run_config["module"])
+    all_scene_classes = get_scene_classes_from_module(module)
     return get_scenes_to_render(all_scene_classes, scene_config, run_config)

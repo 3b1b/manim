@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from argparse import Namespace
 import colour
 import importlib
 import inspect
@@ -13,19 +12,13 @@ import yaml
 from functools import lru_cache
 
 from manimlib.logger import log
-from manimlib.module_loader import ModuleLoader
 from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.init_config import init_customization
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    Module = importlib.util.types.ModuleType
+    from argparse import Namespace
     from typing import Optional
-
-
-# This has to be here instead of in constants.py
-# due to its use in creating the camera configuration
-FRAME_HEIGHT: float = 8.0
 
 
 def parse_cli():
@@ -144,12 +137,8 @@ def parse_cli():
         )
         parser.add_argument(
             "-e", "--embed",
-            nargs="?",
-            const="",
             help="Creates a new file where the line `self.embed` is inserted " + \
-                 "into the Scenes construct method. " + \
-                 "If a string is passed in, the line will be inserted below the " + \
-                 "last line of code including that string."
+                 "at the corresponding line number"
         )
         parser.add_argument(
             "-r", "--resolution",
@@ -210,93 +199,6 @@ def get_manim_dir():
     return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
-def get_indent(line: str):
-    return len(line) - len(line.lstrip())
-
-
-def get_module_with_inserted_embed_line(
-    file_name: str, scene_name: str, line_marker: str, is_during_reload
-):
-    """
-    This is hacky, but convenient. When user includes the argument "-e", it will try
-    to recreate a file that inserts the line `self.embed()` into the end of the scene's
-    construct method. If there is an argument passed in, it will insert the line after
-    the last line in the sourcefile which includes that string.
-    """
-    with open(file_name, 'r') as fp:
-        lines = fp.readlines()
-
-    try:
-        scene_line_number = next(
-            i for i, line in enumerate(lines)
-            if line.startswith(f"class {scene_name}")
-        )
-    except StopIteration:
-        log.error(f"No scene {scene_name}")
-        return
-
-    prev_line_num = -1
-    n_spaces = None
-    if len(line_marker) == 0:
-        # Find the end of the construct method
-        in_construct = False
-        for index in range(scene_line_number, len(lines) - 1):
-            line = lines[index]
-            if line.lstrip().startswith("def construct"):
-                in_construct = True
-                n_spaces = get_indent(line) + 4
-            elif in_construct:
-                if len(line.strip()) > 0 and get_indent(line) < (n_spaces or 0):
-                    prev_line_num = index - 1
-                    break
-        if prev_line_num < 0:
-            prev_line_num = len(lines) - 1
-    elif line_marker.isdigit():
-        # Treat the argument as a line number
-        prev_line_num = int(line_marker) - 1
-    elif len(line_marker) > 0:
-        # Treat the argument as a string
-        try:
-            prev_line_num = next(
-                i
-                for i in range(scene_line_number, len(lines) - 1)
-                if line_marker in lines[i]
-            )
-        except StopIteration:
-            log.error(f"No lines matching {line_marker}")
-            sys.exit(2)
-
-    # Insert the embed line, rewrite file, then write it back when done
-    if n_spaces is None:
-        n_spaces = get_indent(lines[prev_line_num])
-    inserted_line = " " * n_spaces + "self.embed()\n"
-    new_lines = list(lines)
-    new_lines.insert(prev_line_num + 1, inserted_line)
-    new_file = file_name.replace(".py", "_insert_embed.py")
-
-    with open(new_file, 'w') as fp:
-        fp.writelines(new_lines)
-
-    module = ModuleLoader.get_module(new_file, is_during_reload)
-    # This is to pretend the module imported from the edited lines
-    # of code actually comes from the original file.
-    module.__file__ = file_name
-
-    os.remove(new_file)
-
-    return module
-
-
-def get_scene_module(args: Namespace) -> Module:
-    if args.embed is None:
-        return ModuleLoader.get_module(args.file)
-    else:
-        is_reload = args.is_reload if hasattr(args, "is_reload") else False
-        return get_module_with_inserted_embed_line(
-            args.file, args.scene_names[0], args.embed, is_reload
-        )
-
-
 def load_yaml(file_path: str):
     try:
         with open(file_path, "r") as file:
@@ -343,8 +245,8 @@ def get_animations_numbers(args: Namespace) -> tuple[int | None, int | None]:
         return int(stan), None
 
 
-def get_output_directory(args: Namespace, custom_config: dict) -> str:
-    dir_config = custom_config["directories"]
+def get_output_directory(args: Namespace, global_config: dict) -> str:
+    dir_config = global_config["directories"]
     output_directory = args.video_dir or dir_config["output"]
     if dir_config["mirror_module_path"] and args.file:
         to_cut = dir_config["removed_mirror_prefix"]
@@ -356,7 +258,7 @@ def get_output_directory(args: Namespace, custom_config: dict) -> str:
     return output_directory
 
 
-def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
+def get_file_writer_config(args: Namespace, global_config: dict) -> dict:
     result = {
         "write_to_movie": not args.skip_animations and args.write_file,
         "save_last_frame": args.skip_animations and args.write_file,
@@ -364,13 +266,13 @@ def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
         # If -t is passed in (for transparent), this will be RGBA
         "png_mode": "RGBA" if args.transparent else "RGB",
         "movie_file_extension": get_file_ext(args),
-        "output_directory": get_output_directory(args, custom_config),
+        "output_directory": get_output_directory(args, global_config),
         "file_name": args.file_name,
         "input_file_path": args.file or "",
         "open_file_upon_completion": args.open,
         "show_file_location_upon_completion": args.finder,
         "quiet": args.quiet,
-        **custom_config["file_writer_config"],
+        **global_config["file_writer_config"],
     }
 
     if args.vcodec:
@@ -387,32 +289,11 @@ def get_file_writer_config(args: Namespace, custom_config: dict) -> dict:
     return result
 
 
-def get_window_config(args: Namespace, custom_config: dict, camera_config: dict) -> dict:
-    # Default to making window half the screen size
-    # but make it full screen if -f is passed in
-    try:
-        monitors = screeninfo.get_monitors()
-    except screeninfo.ScreenInfoError:
-        # Default fallback
-        monitors = [screeninfo.Monitor(width=1920, height=1080)]
-    mon_index = custom_config["window_monitor"]
-    monitor = monitors[min(mon_index, len(monitors) - 1)]
-    aspect_ratio = camera_config["pixel_width"] / camera_config["pixel_height"]
-    window_width = monitor.width
-    if not (args.full_screen or custom_config["full_screen"]):
-        window_width //= 2
-    window_height = int(window_width / aspect_ratio)
-    return dict(size=(window_width, window_height))
+def get_resolution(args: Optional[Namespace] = None, global_config: Optional[dict] = None):
+    args = args or parse_cli()
+    global_config = global_config or get_global_config()
 
-
-def get_camera_config(args: Optional[Namespace] = None, custom_config: Optional[dict] = None) -> dict:
-    if args is None:
-        args = parse_cli()
-    if custom_config is None:
-        custom_config = get_global_config()
-
-    camera_config = dict()
-    camera_resolutions = custom_config["camera_resolutions"]
+    camera_resolutions = global_config["camera_resolutions"]
     if args.resolution:
         resolution = args.resolution
     elif args.low_quality:
@@ -426,33 +307,53 @@ def get_camera_config(args: Optional[Namespace] = None, custom_config: Optional[
     else:
         resolution = camera_resolutions[camera_resolutions["default_resolution"]]
 
-    if args.fps:
-        fps = int(args.fps)
-    else:
-        fps = custom_config["fps"]
-
     width_str, height_str = resolution.split("x")
-    width = int(width_str)
-    height = int(height_str)
+    return int(width_str), int(height_str)
 
-    camera_config.update({
+
+def get_window_config(args: Namespace, global_config: dict) -> dict:
+    # Default to making window half the screen size
+    # but make it full screen if -f is passed in
+    try:
+        monitors = screeninfo.get_monitors()
+    except screeninfo.ScreenInfoError:
+        # Default fallback
+        monitors = [screeninfo.Monitor(width=1920, height=1080)]
+    mon_index = global_config["window_monitor"]
+    monitor = monitors[min(mon_index, len(monitors) - 1)]
+
+    width, height = get_resolution(args, global_config)
+
+    aspect_ratio = width / height
+    window_width = monitor.width
+    if not (args.full_screen or global_config["full_screen"]):
+        window_width //= 2
+    window_height = int(window_width / aspect_ratio)
+    return dict(size=(window_width, window_height))
+
+
+def get_camera_config(args: Optional[Namespace] = None, global_config: Optional[dict] = None) -> dict:
+    args = args or parse_cli()
+    global_config = global_config or get_global_config()
+
+    width, height = get_resolution(args, global_config)
+    fps = int(args.fps or global_config["fps"])
+
+    camera_config = {
         "pixel_width": width,
         "pixel_height": height,
-        "frame_config": {
-            "frame_shape": ((width / height) * FRAME_HEIGHT, FRAME_HEIGHT),
-        },
         "fps": fps,
-    })
+    }
 
     try:
-        bg_color = args.color or custom_config["style"]["background_color"]
+        bg_color = args.color or global_config["style"]["background_color"]
         camera_config["background_color"] = colour.Color(bg_color)
     except ValueError as err:
         log.error("Please use a valid color")
         log.error(err)
         sys.exit(2)
 
-    # If rendering a transparent image/move, make sure the
+    # If rendering a transparent image/movie, make sure the
     # scene has a background opacity of 0
     if args.transparent:
         camera_config["background_opacity"] = 0
@@ -466,17 +367,15 @@ def get_scene_config(args: Namespace) -> dict:
     """
     global_config = get_global_config()
     camera_config = get_camera_config(args, global_config)
-    window_config = get_window_config(args, global_config, camera_config)
+    file_writer_config = get_file_writer_config(args, global_config)
     start, end = get_animations_numbers(args)
 
     return {
-        "file_writer_config": get_file_writer_config(args, global_config),
+        "file_writer_config": file_writer_config,
         "camera_config": camera_config,
-        "window_config": window_config,
         "skip_animations": args.skip_animations,
         "start_at_animation_number": start,
         "end_at_animation_number": end,
-        "preview": not args.write_file,
         "presenter_mode": args.presenter_mode,
         "leave_progress_bars": args.leave_progress_bars,
         "show_animation_progress": args.show_animation_progress,
@@ -486,10 +385,15 @@ def get_scene_config(args: Namespace) -> dict:
 
 
 def get_run_config(args: Namespace):
+    window_config = get_window_config(args, get_global_config())
     return {
-        "module": get_scene_module(args),
+        "file_name": args.file,
+        "embed_line": int(args.embed) if args.embed is not None else None,
+        "is_reload": False,
         "prerun": args.prerun,
         "scene_names": args.scene_names,
         "quiet": args.quiet or args.write_all,
         "write_all": args.write_all,
+        "window_config": window_config,
+        "show_in_window": not args.write_file
     }

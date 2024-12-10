@@ -6,11 +6,10 @@ import os
 import sys
 import sysconfig
 
+from manimlib.config import get_global_config
 from manimlib.logger import log
 
 Module = importlib.util.types.ModuleType
-
-IGNORE_MANIMLIB_MODULES = True
 
 
 class ModuleLoader:
@@ -76,10 +75,7 @@ class ModuleLoader:
         builtins.__import__ = tracked_import
 
         try:
-            # Remove the "_insert_embed" suffix from the module name
             module_name = module.__name__
-            if module.__name__.endswith("_insert_embed"):
-                module_name = module_name[:-13]
             log.debug('Reloading module "%s"', module_name)
 
             spec.loader.exec_module(module)
@@ -146,7 +142,8 @@ class ModuleLoader:
 
         Only user-defined modules are reloaded, see `is_user_defined_module()`.
         """
-        if IGNORE_MANIMLIB_MODULES and module.__name__.startswith("manimlib"):
+        ignore_manimlib_modules = get_global_config()["ignore_manimlib_modules_on_reload"]
+        if ignore_manimlib_modules and module.__name__.startswith("manimlib"):
             return
 
         if not hasattr(module, "__dict__"):
