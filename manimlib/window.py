@@ -42,12 +42,10 @@ class Window(PygletWindow):
         self.monitor = self.get_monitor(monitor_index)
         self.default_size = size or self.get_default_size(full_screen)
         self.default_position = position or self.position_from_string(position_string)
+        self.pressed_keys = set()
 
         super().__init__(samples=samples)
         self.to_default_position()
-
-        self.pressed_keys = set()
-
 
         if self.scene:
             self.init_for_scene(scene)
