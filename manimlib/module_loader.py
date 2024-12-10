@@ -145,6 +145,9 @@ class ModuleLoader:
         ignore_manimlib_modules = get_global_config()["ignore_manimlib_modules_on_reload"]
         if ignore_manimlib_modules and module.__name__.startswith("manimlib"):
             return
+        if module.__name__.startswith("manimlib.config"):
+            # We don't want to reload global config
+            return
 
         if not hasattr(module, "__dict__"):
             return
