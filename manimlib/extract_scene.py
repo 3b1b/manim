@@ -180,4 +180,7 @@ def main(scene_config, run_config):
         return [BlankScene(**scene_config)]
 
     all_scene_classes = get_scene_classes_from_module(module)
-    return get_scenes_to_render(all_scene_classes, scene_config, run_config)
+    scenes = get_scenes_to_render(all_scene_classes, scene_config, run_config)
+    if len(scenes) == 0:
+        print("No scenes found to run")
+    return scenes

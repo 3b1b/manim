@@ -60,8 +60,6 @@ class ReloadManager:
 
         # Scenes
         scenes = manimlib.extract_scene.main(scene_config, run_config)
-        if len(scenes) == 0:
-            print("No scenes found to run")
 
         for scene in scenes:
             scene.run()
