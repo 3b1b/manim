@@ -118,8 +118,8 @@ def reload_scene(embed_line: int | None = None) -> None:
 
     Before reload, the scene is cleared and the entire state is reset, such
     that we can start from a clean slate. This is taken care of by the
-    ReloadManager, which will catch the error raised by the `exit_raise`
-    magic command that we invoke here.
+    run_scenes function in __main__.py, which will catch the error raised by the
+    `exit_raise` magic command that we invoke here.
 
     Note that we cannot define a custom exception class for this error,
     since the IPython kernel will swallow any exception. While we can catch
@@ -131,7 +131,7 @@ def reload_scene(embed_line: int | None = None) -> None:
     if not shell:
         return
 
-    # Update the global run configuration
+    # Update the global run configuration.
     run_config = get_global_config()["run"]
     run_config["is_reload"] = True
     if embed_line:
