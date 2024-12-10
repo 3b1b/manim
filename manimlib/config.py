@@ -7,6 +7,7 @@ import inspect
 import os
 import sys
 import yaml
+from ast import literal_eval
 
 from functools import lru_cache
 
@@ -292,22 +293,24 @@ def get_resolution(args: Optional[Namespace] = None, global_config: Optional[dic
     args = args or parse_cli()
     global_config = global_config or get_global_config()
 
-    camera_resolutions = global_config["camera_resolutions"]
+    resolution_options = global_config["resolution_options"]
     if args.resolution:
-        resolution = args.resolution
+        resolution = tuple(map(int, args.resolution.split("x")))
     elif args.low_quality:
-        resolution = camera_resolutions["low"]
+        resolution = resolution_options["low"]
     elif args.medium_quality:
-        resolution = camera_resolutions["med"]
+        resolution = resolution_options["med"]
     elif args.hd:
-        resolution = camera_resolutions["high"]
+        resolution = resolution_options["high"]
     elif args.uhd:
-        resolution = camera_resolutions["4k"]
+        resolution = resolution_options["4k"]
     else:
-        resolution = camera_resolutions[camera_resolutions["default_resolution"]]
+        resolution = global_config["camera"]["resolution"]
 
-    width_str, height_str = resolution.split("x")
-    return int(width_str), int(height_str)
+    if isinstance(resolution, str):
+        resolution = literal_eval(resolution)
+
+    return resolution
 
 
 def get_window_config(args: Namespace, global_config: dict) -> dict:
@@ -315,7 +318,7 @@ def get_window_config(args: Namespace, global_config: dict) -> dict:
     # Todo, this correction of configuration should maybe happen elsewhere
     for key in "position", "size":
         if window_config.get(key):
-            window_config[key] = eval(window_config[key])
+            window_config[key] = literal_eval(window_config[key])
     if args.full_screen:
         window_config["full_screen"] = True
     return window_config
@@ -325,27 +328,21 @@ def get_camera_config(args: Optional[Namespace] = None, global_config: Optional[
     args = args or parse_cli()
     global_config = global_config or get_global_config()
 
-    width, height = get_resolution(args, global_config)
-    fps = int(args.fps or global_config["fps"])
+    camera_config = global_config["camera"]
 
-    camera_config = {
-        "pixel_width": width,
-        "pixel_height": height,
-        "fps": fps,
-    }
-
-    try:
-        bg_color = args.color or global_config["style"]["background_color"]
-        camera_config["background_color"] = colour.Color(bg_color)
-    except ValueError as err:
-        log.error("Please use a valid color")
-        log.error(err)
-        sys.exit(2)
-
-    # If rendering a transparent image/movie, make sure the
-    # scene has a background opacity of 0
+    # All of this should be taken care of during some initialization of global_config
+    camera_config["resolution"] = get_resolution(args, global_config)
+    if args.fps:
+        camera_config["fps"] = args.fps
+    if args.color:
+        try:
+            camera_config["background_color"] = colour.Color(args.color)
+        except Exception:
+            log.error("Please use a valid color")
+            log.error(err)
+            sys.exit(2)
     if args.transparent:
-        camera_config["background_opacity"] = 0
+        camera_config["background_opacity"] = 0.0
 
     return camera_config
 

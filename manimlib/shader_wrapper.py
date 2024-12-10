@@ -411,7 +411,7 @@ class VShaderWrapper(ShaderWrapper):
         along with the rgb value which is meant to be discarded.
         """
         cam_config = get_camera_config()
-        size = (cam_config['pixel_width'], cam_config['pixel_height'])
+        size = cam_config["resolution"]
         double_size = (2 * size[0], 2 * size[1])
 
         # Important to make sure dtype is floating point (not fixed point)

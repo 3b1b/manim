@@ -36,6 +36,11 @@ window:
   # Other optional specifications that override the above
   # position: (500, 500)  # Specific position, in pixel coordiantes, for upper right corner
   # size: (1920, 1080)  # Specific size, in pixels
+camera:
+  resolution: (1920, 1080)
+  background_color: "#333333"
+  fps: 30
+  background_opacity: 1.0
 file_writer_config:
   # If break_into_partial_movies is set to True, then many small
   # files will be written corresponding to each Scene.play and
@@ -52,14 +57,11 @@ style:
   tex_template: "default"
   font: "Consolas"
   text_alignment: "LEFT"
-  background_color: "#333333"
-camera_resolutions:
-  low: "854x480"
-  med: "1280x720"
-  high: "1920x1080"
-  4k: "3840x2160"
-  default_resolution: "high"
-fps: 30
+resolution_options:
+  low: (854, 480)
+  med: (1280, 720)
+  high: (1920, 1080)
+  4k: (3840, 2160)
 universal_import_line: "from manimlib import *"
 embed_exception_mode: "Verbose"
 embed_error_sound: False
