@@ -319,17 +319,40 @@ def get_window_config(args: Namespace, global_config: dict) -> dict:
     except screeninfo.ScreenInfoError:
         # Default fallback
         monitors = [screeninfo.Monitor(width=1920, height=1080)]
-    mon_index = global_config["window_monitor"]
+    mon_index = global_config["window"]["monitor"]
     monitor = monitors[min(mon_index, len(monitors) - 1)]
 
     width, height = get_resolution(args, global_config)
 
     aspect_ratio = width / height
     window_width = monitor.width
-    if not (args.full_screen or global_config["full_screen"]):
+    if not (args.full_screen or global_config["window"]["full_screen"]):
         window_width //= 2
     window_height = int(window_width / aspect_ratio)
-    return dict(size=(window_width, window_height))
+
+    # Find position (Perhaps factor this out)
+    pos_str = global_config["window"]["position"]
+    # Position might be specified with a string of the form
+    # x,y for integers x and y
+    if "," in pos_str:
+        default_position = tuple(map(int, pos_str.split(",")))
+    else:
+        # Alternatively, it might be specified with a string like
+        # UR, OO, DL, etc. specifying what corner it should go to
+        char_to_n = {"L": 0, "U": 0, "O": 1, "R": 2, "D": 2}
+        width_diff = monitor.width - window_width
+        height_diff = monitor.height - window_height
+        x_step = char_to_n[pos_str[1]] * width_diff // 2
+        y_step = char_to_n[pos_str[0]] * height_diff // 2
+        default_position = (
+            monitor.x + x_step,
+            -monitor.y + y_step,
+        )
+
+    return dict(
+        size=(window_width, window_height),
+        default_position=default_position
+    )
 
 
 def get_camera_config(args: Optional[Namespace] = None, global_config: Optional[dict] = None) -> dict:

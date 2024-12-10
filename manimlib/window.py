@@ -31,13 +31,14 @@ class Window(PygletWindow):
         self,
         scene: Optional[Scene] = None,
         size: tuple[int, int] = (1280, 720),
+        default_position: tuple[int, int] = (0, 0),
         samples: int = 0
     ):
         super().__init__(size=size, samples=samples)
 
         self.scene = scene
         self.default_size = size
-        self.default_position = self.find_initial_position(size)
+        self.default_position = default_position
         self.pressed_keys = set()
         self.size = size
 
@@ -85,28 +86,6 @@ class Window(PygletWindow):
         w, h = self.default_size
         self.size = (w - 1, h - 1)
         self.size = (w, h)
-
-    def find_initial_position(self, size: tuple[int, int]) -> tuple[int, int]:
-        global_config = get_global_config()
-        custom_position = global_config["window_position"]
-        mon_index = global_config["window_monitor"]
-        monitors = get_monitors()
-        monitor = monitors[min(mon_index, len(monitors) - 1)]
-        window_width, window_height = size
-        # Position might be specified with a string of the form
-        # x,y for integers x and y
-        if "," in custom_position:
-            return tuple(map(int, custom_position.split(",")))
-
-        # Alternatively, it might be specified with a string like
-        # UR, OO, DL, etc. specifying what corner it should go to
-        char_to_n = {"L": 0, "U": 0, "O": 1, "R": 2, "D": 2}
-        width_diff = monitor.width - window_width
-        height_diff = monitor.height - window_height
-        return (
-            monitor.x + char_to_n[custom_position[1]] * width_diff // 2,
-            -monitor.y + char_to_n[custom_position[0]] * height_diff // 2,
-        )
 
     # Delegate event handling to scene
     def pixel_coords_to_space_coords(
