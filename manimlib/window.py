@@ -6,8 +6,10 @@ import moderngl_window as mglw
 from moderngl_window.context.pyglet.window import Window as PygletWindow
 from moderngl_window.timers.clock import Timer
 from functools import wraps
+import screeninfo
 
 from manimlib.config import get_global_config
+from manimlib.constants import ASPECT_RATIO
 from manimlib.constants import FRAME_SHAPE
 
 from typing import TYPE_CHECKING
@@ -29,19 +31,23 @@ class Window(PygletWindow):
     def __init__(
         self,
         scene: Optional[Scene] = None,
-        size: tuple[int, int] = (1280, 720),
-        default_position: tuple[int, int] = (0, 0),
+        position_string: str = "UR",
+        monitor_index: int = 1,
+        full_screen: bool = False,
+        size: Optional[tuple[int, int]] = None,
+        position: Optional[tuple[int, int]] = None,
         samples: int = 0
     ):
-        super().__init__(size=size, samples=samples)
-
         self.scene = scene
-        self.default_size = size
-        self.default_position = default_position
-        self.pressed_keys = set()
-        self.size = size
+        self.monitor = self.get_monitor(monitor_index)
+        self.default_size = size or self.get_default_size(full_screen)
+        self.default_position = position or self.position_from_string(position_string)
 
+        super().__init__(samples=samples)
         self.to_default_position()
+
+        self.pressed_keys = set()
+
 
         if self.scene:
             self.init_for_scene(scene)
@@ -65,6 +71,30 @@ class Window(PygletWindow):
         self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
         mglw.activate_context(window=self, ctx=self.ctx)
         self.timer.start()
+
+    def get_monitor(self, index):
+        try:
+            monitors = screeninfo.get_monitors()
+            return monitors[min(index, len(monitors) - 1)]
+        except screeninfo.ScreenInfoError:
+            # Default fallback
+            return screeninfo.Monitor(width=1920, height=1080)
+
+    def get_default_size(self, full_screen=False):
+        width = self.monitor.width // (1 if full_screen else 2)
+        height = int(width // ASPECT_RATIO)
+        return (width, height)
+
+    def position_from_string(self, position_string):
+        # Alternatively, it might be specified with a string like
+        # UR, OO, DL, etc. specifying what corner it should go to
+        char_to_n = {"L": 0, "U": 0, "O": 1, "R": 2, "D": 2}
+        size = self.default_size
+        width_diff = self.monitor.width - size[0]
+        height_diff = self.monitor.height - size[1]
+        x_step = char_to_n[position_string[1]] * width_diff // 2
+        y_step = char_to_n[position_string[0]] * height_diff // 2
+        return (self.monitor.x + x_step, -self.monitor.y + y_step)
 
     def focus(self):
         """

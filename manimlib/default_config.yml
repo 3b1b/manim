@@ -26,14 +26,16 @@ directories:
   # but here a user can specify a different cache location
   cache: ""
 window:
-  # Set the position of window on screen, you can use directions, e.g. UL/DR/OL/OO/...
-  # also, you can also specify the position(pixel) of the upper left corner of 
-  # the window on the monitor, e.g. "960,540"
-  position: UR
-  # If using multiple monitors, which one should show the window?
-  monitor: 0
+  # The position of window on screen. UR -> Upper Right, and likewise DL -> Down and Left,
+  # UO would be upper middle, etc.
+  position_string: UR
+  # If using multiple monitors, which one should show the window
+  monitor_index: 0
   # If not full screen, the default to give it half the screen width
   full_screen: False
+  # Other optional specifications that override the above
+  # position: (500, 500)  # Specific position, in pixel coordiantes, for upper right corner
+  # size: (1920, 1080)  # Specific size, in pixels
 file_writer_config:
   # If break_into_partial_movies is set to True, then many small
   # files will be written corresponding to each Scene.play and

@@ -5,7 +5,6 @@ import colour
 import importlib
 import inspect
 import os
-import screeninfo
 import sys
 import yaml
 
@@ -311,48 +310,15 @@ def get_resolution(args: Optional[Namespace] = None, global_config: Optional[dic
     return int(width_str), int(height_str)
 
 
-def get_window_position(monitor: screeninfo.Monitor, position_string: str, size: tuple[int, int]):
-    # Find position (Perhaps factor this out)
-    # Position might be specified with a string of the form
-    # x,y for integers x and y
-    if "," in position_string:
-        return tuple(map(int, position_string.split(",")))
-    elif len(position_string) == 2:
-        # Alternatively, it might be specified with a string like
-        # UR, OO, DL, etc. specifying what corner it should go to
-        char_to_n = {"L": 0, "U": 0, "O": 1, "R": 2, "D": 2}
-        width_diff = monitor.width - size[0]
-        height_diff = monitor.height - size[1]
-        x_step = char_to_n[position_string[1]] * width_diff // 2
-        y_step = char_to_n[position_string[0]] * height_diff // 2
-        return (monitor.x + x_step, -monitor.y + y_step)
-    else:
-        raise Exception("Window position string must be either a tuple of integers, or a pair of from \"ULORD\"")
-
-
 def get_window_config(args: Namespace, global_config: dict) -> dict:
-    # Default to making window half the screen size
-    # but make it full screen if -f is passed in
-    try:
-        monitors = screeninfo.get_monitors()
-    except screeninfo.ScreenInfoError:
-        # Default fallback
-        monitors = [screeninfo.Monitor(width=1920, height=1080)]
-    mon_index = global_config["window"]["monitor"]
-    monitor = monitors[min(mon_index, len(monitors) - 1)]
-
-    width, height = get_resolution(args, global_config)
-    aspect_ratio = width / height
-
-    window_width = monitor.width
-    if not (args.full_screen or global_config["window"]["full_screen"]):
-        window_width //= 2
-    window_height = int(window_width / aspect_ratio)
-    size = (window_width, window_height)
-
-    default_position = get_window_position(monitor, global_config["window"]["position"], size)
-
-    return dict(size=size, default_position=default_position)
+    window_config = global_config["window"]
+    # Todo, this correction of configuration should maybe happen elsewhere
+    for key in "position", "size":
+        if window_config.get(key):
+            window_config[key] = eval(window_config[key])
+    if args.full_screen:
+        window_config["full_screen"] = True
+    return window_config
 
 
 def get_camera_config(args: Optional[Namespace] = None, global_config: Optional[dict] = None) -> dict:
