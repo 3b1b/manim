@@ -4,7 +4,7 @@ from typing import Any
 from IPython.terminal.embed import KillEmbedded
 
 
-import manimlib.config
+from manimlib.config import get_global_config
 import manimlib.extract_scene
 
 from manimlib.window import Window
@@ -57,21 +57,22 @@ class ReloadManager:
 
     def retrieve_scenes_and_run(self):
         """
-        Creates a new configuration based on the CLI args and runs the scenes.
+        Take the global configuration, which is based on CLI arguments,
+        modify it based on reloading status, then extract and run scenes
+        accordingly
         """
-        # Args to Config
-        scene_config = manimlib.config.get_scene_config()
-        scene_config.update(reload_manager=self)
+        global_config = get_global_config()
+        scene_config = global_config["scene"]
+        run_config = global_config["run"]
 
-        run_config = manimlib.config.get_run_config()
+        scene_config.update(reload_manager=self)
         run_config.update(is_reload=self.is_reload)
         if self.embed_line:
             run_config.update(embed_line=self.embed_line)
 
         # Create or reuse window
         if run_config["show_in_window"] and not self.window:
-            window_config = manimlib.config.get_window_config()
-            self.window = Window(**window_config)
+            self.window = Window(**global_config["window"])
         scene_config.update(window=self.window)
 
         # Scenes

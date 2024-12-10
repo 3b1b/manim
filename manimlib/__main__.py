@@ -22,8 +22,7 @@ def main():
         manimlib.utils.init_config.init_customization()
         return
 
-    reload_manager = ReloadManager(args)
-    reload_manager.run()
+    ReloadManager().run()
 
 
 if __name__ == "__main__":
