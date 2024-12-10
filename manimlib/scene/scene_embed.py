@@ -21,7 +21,7 @@ def interactive_scene_embed(scene):
     ensure_frame_update_post_cell(shell, scene)
     ensure_flash_on_error(shell, scene)
 
-    if scene.should_autoreload:
+    if scene.reload_manager.should_autoreload:
         auto_reload(shell)
 
     # Launch shell
