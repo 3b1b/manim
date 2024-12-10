@@ -42,6 +42,8 @@ class Window(PygletWindow):
         self.pressed_keys = set()
         self.size = size
 
+        self.to_default_position()
+
         if self.scene:
             self.init_for_scene(scene)
 
@@ -64,8 +66,6 @@ class Window(PygletWindow):
         self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
         mglw.activate_context(window=self, ctx=self.ctx)
         self.timer.start()
-
-        self.to_default_position()
 
     def focus(self):
         """
