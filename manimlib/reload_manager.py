@@ -77,7 +77,8 @@ class ReloadManager:
 
         # Create or reuse window
         if run_config["show_in_window"] and not self.window:
-            self.window = Window(**run_config["window_config"])
+            window_config = manimlib.config.get_window_config()
+            self.window = Window(**window_config)
         scene_config.update(window=self.window)
 
         # Scenes
