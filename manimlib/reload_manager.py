@@ -29,9 +29,6 @@ class ReloadManager:
     is_reload = False
     embed_line = None
 
-    def __init__(self, cli_args: Namespace):
-        self.args = cli_args
-
     def set_new_start_at_line(self, start_at_line):
         """
         Sets/Updates the line number to load the scene from when reloading.
@@ -56,11 +53,7 @@ class ReloadManager:
 
     def note_reload(self):
         self.is_reload = True
-        print(" ".join([
-            "Reloading interactive session for",
-            f"\033[96m{self.args.scene_names[0]}\033[0m",
-            f"at line \033[96m{self.embed_line}\033[0m"
-        ]))
+        print("Reloading...")
 
     def retrieve_scenes_and_run(self):
         """
