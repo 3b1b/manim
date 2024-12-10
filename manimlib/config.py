@@ -9,8 +9,6 @@ import sys
 import yaml
 from ast import literal_eval
 
-from functools import lru_cache
-
 from manimlib.logger import log
 from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.init_config import init_customization
@@ -21,8 +19,7 @@ if TYPE_CHECKING:
     from typing import Optional
 
 
-@lru_cache
-def get_global_config():
+def initialize_global_config():
     """
     Return default configuration for various classes in manim, such as
     Scene, Window, Camera, and SceneFileWriter, as well as configuration
@@ -31,9 +28,6 @@ def get_global_config():
     The result is initially on the contents of default_config.yml in the manimlib directory,
     which can be further updated by a custom configuration file custom_config.yml.
     It is further updated based on command line argument.
-
-    After the first time this function is called, it's result is cached
-    via lru cache, and subsequent calls return this result
     """
     args = parse_cli()
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
@@ -51,9 +45,6 @@ def get_global_config():
     update_run_config(config, args)
 
     return config
-
-
-# Functions used to initialized the configuration
 
 
 def parse_cli():
@@ -322,36 +313,6 @@ def update_run_config(config: dict, args: Namespace):
     )
 
 
-# Shortcuts for retrieving portions of global configuration
-
-
-def get_window_config() -> dict:
-    """ Key word arguments for Window """
-    return get_global_config()["window"]
-
-
-def get_camera_config() -> dict:
-    """ Key word arguments for Camera """
-    return get_global_config()["camera"]
-
-
-def get_file_writer_config() -> dict:
-    """ Key word arguments for SceneFileWriter """
-    return get_global_config()["file_writer"]
-
-
-def get_scene_config() -> dict:
-    """ Key word arguments for Scene """
-    return get_global_config()["scene"]
-
-
-def get_run_config():
-    return get_global_config()["run"]
-
-
-# Helpers for the functions above
-
-
 def load_yaml(file_path: str):
     try:
         with open(file_path, "r") as file:
@@ -411,3 +372,44 @@ def get_output_directory(args: Namespace, global_config: dict) -> str:
             ext = ext[1:]
         output_directory = os.path.join(output_directory, ext)
     return output_directory
+
+
+# Create global configuration
+
+
+GLOBAL_CONFIG = initialize_global_config()
+
+
+def get_global_config():
+    global GLOBAL_CONFIG
+    return GLOBAL_CONFIG
+
+
+# Shortcuts for retrieving portions of global configuration
+
+
+def get_window_config() -> dict:
+    """ Key word arguments for Window """
+    return get_global_config()["window"]
+
+
+def get_camera_config() -> dict:
+    """ Key word arguments for Camera """
+    return get_global_config()["camera"]
+
+
+def get_file_writer_config() -> dict:
+    """ Key word arguments for SceneFileWriter """
+    return get_global_config()["file_writer"]
+
+
+def get_scene_config() -> dict:
+    """ Key word arguments for Scene """
+    return get_global_config()["scene"]
+
+
+def get_run_config():
+    return get_global_config()["run"]
+
+
+# Helpers for the functions above
