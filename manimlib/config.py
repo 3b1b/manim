@@ -387,6 +387,7 @@ def get_scene_config(args: Namespace) -> dict:
         "show_animation_progress": args.show_animation_progress,
         "embed_exception_mode": global_config["embed_exception_mode"],
         "embed_error_sound": global_config["embed_error_sound"],
+        "should_autoreload": args.autoreload,
     }
 
 

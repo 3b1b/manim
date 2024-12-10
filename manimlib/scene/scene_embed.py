@@ -21,6 +21,9 @@ def interactive_scene_embed(scene):
     ensure_frame_update_post_cell(shell, scene)
     ensure_flash_on_error(shell, scene)
 
+    if scene.should_autoreload:
+        auto_reload(shell)
+
     # Launch shell
     shell()
 
@@ -101,6 +104,11 @@ def ensure_flash_on_error(shell, scene):
         scene.play(VFadeInThenOut(rect, run_time=0.5))
 
     shell.set_custom_exc((Exception,), custom_exc)
+
+def auto_reload(shell):
+    """Enables IPython autoreload for automatic reloading of modules."""
+    shell.magic("load_ext autoreload")
+    shell.magic("autoreload all")
 
 
 class CheckpointManager:
