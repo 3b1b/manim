@@ -53,6 +53,11 @@ file_writer:
   pixel_format: "yuv420p"
   saturation: 1.0
   gamma: 1.0
+scene:
+  # Most of the scene configuration will come from CLI arguments,
+  # but defaults can be set here
+  show_animation_progress: False
+  leave_progress_bars: False
 style:
   tex_template: "default"
   font: "Consolas"

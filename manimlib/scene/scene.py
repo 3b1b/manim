@@ -15,6 +15,8 @@ from tqdm.auto import tqdm as ProgressDisplay
 from manimlib.animation.animation import prepare_animation
 from manimlib.camera.camera import Camera
 from manimlib.camera.camera_frame import CameraFrame
+from manimlib.config import get_camera_config
+from manimlib.config import get_file_writer_config
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.event_handler import EVENT_DISPATCHER
@@ -29,6 +31,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene_embed import interactive_scene_embed
 from manimlib.scene.scene_embed import CheckpointManager
 from manimlib.scene.scene_file_writer import SceneFileWriter
+from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import recursive_mobject_remove
 from manimlib.utils.iterables import batch_by_property
@@ -68,17 +71,17 @@ class Scene(object):
 
     def __init__(
         self,
+        window: Optional[Window] = None,
+        reload_manager: Optional[ReloadManager] = None,
         camera_config: dict = dict(),
         file_writer_config: dict = dict(),
         skip_animations: bool = False,
         always_update_mobjects: bool = False,
         start_at_animation_number: int | None = None,
         end_at_animation_number: int | None = None,
-        leave_progress_bars: bool = False,
-        window: Optional[Window] = None,
-        reload_manager: Optional[ReloadManager] = None,
-        presenter_mode: bool = False,
         show_animation_progress: bool = False,
+        leave_progress_bars: bool = False,
+        presenter_mode: bool = False,
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
@@ -89,8 +92,16 @@ class Scene(object):
         self.show_animation_progress = show_animation_progress
         self.reload_manager = reload_manager
 
-        self.camera_config = {**self.default_camera_config, **camera_config}
-        self.file_writer_config = {**self.default_file_writer_config, **file_writer_config}
+        self.camera_config = merge_dicts_recursively(
+            get_camera_config(),         # Global default
+            self.default_camera_config,  # Updated configuration that subclasses may specify
+            camera_config,               # Updated configuration from instantiation
+        )
+        self.file_writer_config = merge_dicts_recursively(
+            get_file_writer_config(),
+            self.default_file_writer_config,
+            file_writer_config,
+        )
 
         self.window = window
         if self.window:

@@ -66,7 +66,7 @@ class ReloadManager:
         Creates a new configuration based on the CLI args and runs the scenes.
         """
         # Args to Config
-        scene_config = manimlib.config.get_scene_config(self.args)
+        scene_config = manimlib.config.get_scene_config()
         scene_config.update(reload_manager=self)
 
         run_config = manimlib.config.get_run_config(self.args)

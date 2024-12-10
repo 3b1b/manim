@@ -47,6 +47,7 @@ def get_global_config():
     update_window_config(config, args)
     update_camera_config(config, args)
     update_file_writer_config(config, args)
+    update_scene_config(config, args)
 
     return config
 
@@ -287,6 +288,26 @@ def update_file_writer_config(config: dict, args: Namespace):
         file_writer_config["pixel_format"] = args.pix_fmt
 
 
+def update_scene_config(config: dict, args: Namespace):
+    scene_config = config["scene"]
+    start, end = get_animations_numbers(args)
+    scene_config.update(
+        # Note, Scene.__init__ makes use of both get_camera_config() and
+        # get_file_writer_config() below, so the arguments here are just for
+        # any future specifications beyond what the global configuration holds
+        camera_config=dict(),
+        file_writer_config=dict(),
+        skip_animations=args.skip_animations,
+        start_at_animation_number=start,
+        end_at_animation_number=end,
+        presenter_mode=args.presenter_mode,
+    )
+    if args.leave_progress_bars:
+        scene_config["leave_progress_bars"] = True
+    if args.show_animation_progress:
+        scene_config["show_animation_progress"] = True
+
+
 # Shortcuts for retrieving portions of global configuration
 
 
@@ -302,25 +323,11 @@ def get_file_writer_config() -> dict:
     return get_global_config()["file_writer"]
 
 
-def get_scene_config(args: Namespace) -> dict:
+def get_scene_config() -> dict:
     """
     Returns a dictionary to be used as key word arguments for Scene
     """
-    global_config = get_global_config()
-    camera_config = get_camera_config()
-    file_writer_config = get_file_writer_config()
-    start, end = get_animations_numbers(args)
-
-    return {
-        "file_writer_config": file_writer_config,
-        "camera_config": camera_config,
-        "skip_animations": args.skip_animations,
-        "start_at_animation_number": start,
-        "end_at_animation_number": end,
-        "presenter_mode": args.presenter_mode,
-        "leave_progress_bars": args.leave_progress_bars,
-        "show_animation_progress": args.show_animation_progress,
-    }
+    return get_global_config()["scene"]
 
 
 def get_run_config(args: Namespace):

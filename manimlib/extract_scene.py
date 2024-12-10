@@ -77,13 +77,13 @@ def compute_total_frames(scene_class, scene_config):
     pre_scene = scene_class(**pre_config)
     pre_scene.run()
     total_time = pre_scene.time - pre_scene.skip_time
-    return int(total_time * scene_config["camera_config"]["fps"])
+    return int(total_time * get_global_config()["camera"]["fps"])
 
 
 def scene_from_class(scene_class, scene_config, run_config):
-    fw_config = scene_config["file_writer_config"]
+    fw_config = get_global_config()["file_writer"]
     if fw_config["write_to_movie"] and run_config["prerun"]:
-        fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
+        scene_config["file_writer_config"]["total_frames"] = compute_total_frames(scene_class, scene_config)
     return scene_class(**scene_config)
 
 
