@@ -127,15 +127,18 @@ def reload_scene(embed_line: int | None = None) -> None:
     `set_custom_exc` method, we cannot break out of the IPython shell by
     this means.
     """
+    shell = get_ipython()
+    if not shell:
+        return
+
+    # Update the global run configuration
     run_config = get_global_config()["run"]
     run_config["is_reload"] = True
     if embed_line:
         run_config["embed_line"] = embed_line
 
-    shell = get_ipython()
-    if shell:
-        print("Reloading...")
-        shell.run_line_magic("exit_raise", "")
+    print("Reloading...")
+    shell.run_line_magic("exit_raise", "")
 
 
 class CheckpointManager:
