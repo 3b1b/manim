@@ -27,6 +27,7 @@ class ReloadManager:
 
     window = None
     is_reload = False
+    embed_line = None
 
     def __init__(self, cli_args: Namespace):
         self.args = cli_args
@@ -35,7 +36,7 @@ class ReloadManager:
         """
         Sets/Updates the line number to load the scene from when reloading.
         """
-        self.args.embed = str(start_at_line)
+        self.embed_line = start_at_line
 
     def run(self):
         """
@@ -58,7 +59,7 @@ class ReloadManager:
         print(" ".join([
             "Reloading interactive session for",
             f"\033[96m{self.args.scene_names[0]}\033[0m",
-            f"at line \033[96m{self.args.embed}\033[0m"
+            f"at line \033[96m{self.embed_line}\033[0m"
         ]))
 
     def retrieve_scenes_and_run(self):
@@ -69,8 +70,10 @@ class ReloadManager:
         scene_config = manimlib.config.get_scene_config()
         scene_config.update(reload_manager=self)
 
-        run_config = manimlib.config.get_run_config(self.args)
+        run_config = manimlib.config.get_run_config()
         run_config.update(is_reload=self.is_reload)
+        if self.embed_line:
+            run_config.update(embed_line=self.embed_line)
 
         # Create or reuse window
         if run_config["show_in_window"] and not self.window:

@@ -48,6 +48,7 @@ def get_global_config():
     update_camera_config(config, args)
     update_file_writer_config(config, args)
     update_scene_config(config, args)
+    update_run_config(config, args)
 
     return config
 
@@ -308,6 +309,20 @@ def update_scene_config(config: dict, args: Namespace):
         scene_config["show_animation_progress"] = True
 
 
+def update_run_config(config: dict, args: Namespace):
+    config["run"] = dict(
+        file_name=args.file,
+        embed_line=(int(args.embed) if args.embed is not None else None),
+        is_reload=False,
+        prerun=args.prerun,
+        scene_names=args.scene_names,
+        quiet=args.quiet or args.write_all,
+        write_all=args.write_all,
+        window_config=config["window"],  # TODO
+        show_in_window=not args.write_file
+    )
+
+
 # Shortcuts for retrieving portions of global configuration
 
 
@@ -330,19 +345,8 @@ def get_scene_config() -> dict:
     return get_global_config()["scene"]
 
 
-def get_run_config(args: Namespace):
-    window_config = get_window_config()
-    return {
-        "file_name": args.file,
-        "embed_line": int(args.embed) if args.embed is not None else None,
-        "is_reload": False,
-        "prerun": args.prerun,
-        "scene_names": args.scene_names,
-        "quiet": args.quiet or args.write_all,
-        "write_all": args.write_all,
-        "window_config": window_config,
-        "show_in_window": not args.write_file
-    }
+def get_run_config():
+    return get_global_config()["run"]
 
 
 # Helpers for the functions above
