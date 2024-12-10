@@ -79,8 +79,6 @@ class Scene(object):
         reload_manager: Optional[ReloadManager] = None,
         presenter_mode: bool = False,
         show_animation_progress: bool = False,
-        embed_exception_mode: str = "",
-        embed_error_sound: bool = False,
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
@@ -89,8 +87,6 @@ class Scene(object):
         self.leave_progress_bars = leave_progress_bars
         self.presenter_mode = presenter_mode
         self.show_animation_progress = show_animation_progress
-        self.embed_exception_mode = embed_exception_mode
-        self.embed_error_sound = embed_error_sound
         self.reload_manager = reload_manager
 
         self.camera_config = {**self.default_camera_config, **camera_config}

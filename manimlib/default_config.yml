@@ -57,6 +57,8 @@ style:
   tex_template: "default"
   font: "Consolas"
   text_alignment: "LEFT"
+embed:
+  exception_mode: "Verbose"
 resolution_options:
   # When the user passes in -l, -m, --hd or --uhd, these are the corresponding
   # resolutions
@@ -65,6 +67,4 @@ resolution_options:
   high: (1920, 1080)
   4k: (3840, 2160)
 universal_import_line: "from manimlib import *"
-embed_exception_mode: "Verbose"
-embed_error_sound: False
 ignore_manimlib_modules_on_reload: True

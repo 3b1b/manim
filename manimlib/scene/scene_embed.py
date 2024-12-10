@@ -1,11 +1,13 @@
 import inspect
 import pyperclip
 import re
+import os
 
 from IPython.terminal import pt_inputhooks
 from IPython.terminal.embed import InteractiveShellEmbed
 
 from manimlib.animation.fading import VFadeInThenOut
+from manimlib.config import get_global_config
 from manimlib.constants import RED
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.frame import FullScreenRectangle
@@ -38,11 +40,12 @@ def get_ipython_shell_for_embedded_scene(scene):
     module = ModuleLoader.get_module(caller_frame.f_globals["__file__"])
     module.__dict__.update(caller_frame.f_locals)
     module.__dict__.update(get_shortcuts(scene))
+    exception_mode = get_global_config()["embed"]["exception_mode"]
 
     return InteractiveShellEmbed(
         user_module=module,
         display_banner=False,
-        xmode=scene.embed_exception_mode
+        xmode=exception_mode
     )
 
 
@@ -94,8 +97,6 @@ def ensure_flash_on_error(shell, scene):
     def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         # Show the error don't just swallow it
         shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
-        if scene.embed_error_sound:
-            os.system("printf '\a'")
         rect = FullScreenRectangle().set_stroke(RED, 30).set_fill(opacity=0)
         rect.fix_in_frame()
         scene.play(VFadeInThenOut(rect, run_time=0.5))
