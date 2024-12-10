@@ -26,7 +26,6 @@ class ReloadManager:
     """
 
     window = None
-    is_reload = False
 
     def run(self):
         """
@@ -44,10 +43,6 @@ class ReloadManager:
             except KeyboardInterrupt:
                 break
 
-    def note_reload(self):
-        self.is_reload = True
-        print("Reloading...")
-
     def retrieve_scenes_and_run(self):
         """
         Take the global configuration, which is based on CLI arguments,
@@ -57,8 +52,6 @@ class ReloadManager:
         global_config = get_global_config()
         scene_config = global_config["scene"]
         run_config = global_config["run"]
-
-        run_config.update(is_reload=self.is_reload)
 
         # Create or reuse window
         if run_config["show_in_window"] and not self.window:
