@@ -21,6 +21,39 @@ if TYPE_CHECKING:
     from typing import Optional
 
 
+@lru_cache
+def get_global_config():
+    """
+    Return default configuration for various classes in manim, such as
+    Scene, Window, Camera, and SceneFileWriter, as well as configuration
+    determining how the scene is run (e.g. written to file or previewed in window).
+
+    The result is initially on the contents of default_config.yml in the manimlib directory,
+    which can be further updated by a custom configuration file custom_config.yml.
+    It is further updated based on command line argument.
+
+    After the first time this function is called, it's result is cached
+    via lru cache, and subsequent calls return this result
+    """
+    args = parse_cli()
+    global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
+    config = merge_dicts_recursively(
+        load_yaml(global_defaults_file),
+        load_yaml("custom_config.yml"),  # From current working directory
+        load_yaml(args.config_file) if args.config_file else dict(),
+    )
+
+    update_directory_config(config)
+    update_window_config(config, args)
+    update_camera_config(config, args)
+    update_file_writer_config(config, args)
+
+    return config
+
+
+# Functions used to initialized the configuration
+
+
 def parse_cli():
     try:
         parser = argparse.ArgumentParser()
@@ -193,10 +226,121 @@ def parse_cli():
         sys.exit(2)
 
 
-def get_manim_dir():
-    manimlib_module = importlib.import_module("manimlib")
-    manimlib_dir = os.path.dirname(inspect.getabsfile(manimlib_module))
-    return os.path.abspath(os.path.join(manimlib_dir, ".."))
+def update_directory_config(config: dict):
+    dir_config = config["directories"]
+    base = dir_config['base']
+    for key, subdir in dir_config['subdirs'].items():
+        dir_config[key] = os.path.join(base, subdir)
+
+
+def update_window_config(config: dict, args: Namespace):
+    window_config = config["window"]
+    for key in "position", "size":
+        if window_config.get(key):
+            window_config[key] = literal_eval(window_config[key])
+    if args.full_screen:
+        window_config["full_screen"] = True
+
+
+def update_camera_config(config: dict, args: Namespace):
+    camera_config = config["camera"]
+    arg_resolution = get_resolution_from_args(args, config["resolution_options"])
+    camera_config["resolution"] = arg_resolution or literal_eval(camera_config["resolution"])
+    if args.fps:
+        camera_config["fps"] = args.fps
+    if args.color:
+        try:
+            camera_config["background_color"] = colour.Color(args.color)
+        except Exception:
+            log.error("Please use a valid color")
+            log.error(err)
+            sys.exit(2)
+    if args.transparent:
+        camera_config["background_opacity"] = 0.0
+
+
+def update_file_writer_config(config: dict, args: Namespace):
+    file_writer_config = config["file_writer"]
+    file_writer_config.update(
+        write_to_movie=(not args.skip_animations and args.write_file),
+        save_last_frame=(args.skip_animations and args.write_file),
+        save_pngs=args.save_pngs,
+        png_mode=("RGBA" if args.transparent else "RGB"),
+        movie_file_extension=(get_file_ext(args)),
+        output_directory=get_output_directory(args, config),
+        file_name=args.file_name,
+        input_file_path=args.file or "",
+        open_file_upon_completion=args.open,
+        show_file_location_upon_completion=args.finder,
+        quiet=args.quiet,
+    )
+
+    if args.vcodec:
+        file_writer_config["video_codec"] = args.vcodec
+    elif args.transparent:
+        file_writer_config["video_codec"] = 'prores_ks'
+        file_writer_config["pixel_format"] = ''
+    elif args.gif:
+        file_writer_config["video_codec"] = ''
+
+    if args.pix_fmt:
+        file_writer_config["pixel_format"] = args.pix_fmt
+
+
+# Shortcuts for retrieving portions of global configuration
+
+
+def get_window_config() -> dict:
+    return get_global_config()["window"]
+
+
+def get_camera_config() -> dict:
+    return get_global_config()["camera"]
+
+
+def get_file_writer_config() -> dict:
+    return get_global_config()["file_writer"]
+
+
+def get_scene_config(args: Namespace) -> dict:
+    """
+    Returns a dictionary to be used as key word arguments for Scene
+    """
+    global_config = get_global_config()
+    camera_config = get_camera_config()
+    file_writer_config = get_file_writer_config()
+    start, end = get_animations_numbers(args)
+
+    return {
+        "file_writer_config": file_writer_config,
+        "camera_config": camera_config,
+        "skip_animations": args.skip_animations,
+        "start_at_animation_number": start,
+        "end_at_animation_number": end,
+        "presenter_mode": args.presenter_mode,
+        "leave_progress_bars": args.leave_progress_bars,
+        "show_animation_progress": args.show_animation_progress,
+        "embed_exception_mode": global_config["embed_exception_mode"],
+        "embed_error_sound": global_config["embed_error_sound"],
+    }
+
+
+def get_run_config(args: Namespace):
+    window_config = get_window_config()
+    return {
+        "file_name": args.file,
+        "embed_line": int(args.embed) if args.embed is not None else None,
+        "is_reload": False,
+        "prerun": args.prerun,
+        "scene_names": args.scene_names,
+        "quiet": args.quiet or args.write_all,
+        "write_all": args.write_all,
+        "window_config": window_config,
+        "show_in_window": not args.write_file
+    }
+
+
+# Helpers for the functions above
 
 
 def load_yaml(file_path: str):
@@ -207,22 +351,24 @@ def load_yaml(file_path: str):
         return {}
 
 
-@lru_cache
-def get_global_config():
-    args = parse_cli()
-    global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
-    config = merge_dicts_recursively(
-        load_yaml(global_defaults_file),
-        load_yaml("custom_config.yml"),  # From current working directory
-        load_yaml(args.config_file) if args.config_file else {},
-    )
+def get_manim_dir():
+    manimlib_module = importlib.import_module("manimlib")
+    manimlib_dir = os.path.dirname(inspect.getabsfile(manimlib_module))
+    return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
-    # Set the subdirectories
-    base = config['directories']['base']
-    for key, subdir in config['directories']['subdirs'].items():
-        config['directories'][key] = os.path.join(base, subdir)
 
-    return config
+def get_resolution_from_args(args: Optional[Namespace], resolution_options: dict) -> Optional[tuple[int, int]]:
+    if args.resolution:
+        return tuple(map(int, args.resolution.split("x")))
+    if args.low_quality:
+        return literal_eval(resolution_options["low"])
+    if args.medium_quality:
+        return literal_eval(resolution_options["med"])
+    if args.hd:
+        return literal_eval(resolution_options["high"])
+    if args.uhd:
+        return literal_eval(resolution_options["4k"])
+    return None
 
 
 def get_file_ext(args: Namespace) -> str:
@@ -256,130 +402,3 @@ def get_output_directory(args: Namespace, global_config: dict) -> str:
             ext = ext[1:]
         output_directory = os.path.join(output_directory, ext)
     return output_directory
-
-
-def get_file_writer_config(args: Namespace, global_config: dict) -> dict:
-    result = {
-        "write_to_movie": not args.skip_animations and args.write_file,
-        "save_last_frame": args.skip_animations and args.write_file,
-        "save_pngs": args.save_pngs,
-        # If -t is passed in (for transparent), this will be RGBA
-        "png_mode": "RGBA" if args.transparent else "RGB",
-        "movie_file_extension": get_file_ext(args),
-        "output_directory": get_output_directory(args, global_config),
-        "file_name": args.file_name,
-        "input_file_path": args.file or "",
-        "open_file_upon_completion": args.open,
-        "show_file_location_upon_completion": args.finder,
-        "quiet": args.quiet,
-        **global_config["file_writer"],
-    }
-
-    if args.vcodec:
-        result["video_codec"] = args.vcodec
-    elif args.transparent:
-        result["video_codec"] = 'prores_ks'
-        result["pixel_format"] = ''
-    elif args.gif:
-        result["video_codec"] = ''
-
-    if args.pix_fmt:
-        result["pixel_format"] = args.pix_fmt
-
-    return result
-
-
-def get_resolution(args: Optional[Namespace] = None, global_config: Optional[dict] = None):
-    args = args or parse_cli()
-    global_config = global_config or get_global_config()
-
-    resolution_options = global_config["resolution_options"]
-    if args.resolution:
-        resolution = tuple(map(int, args.resolution.split("x")))
-    elif args.low_quality:
-        resolution = resolution_options["low"]
-    elif args.medium_quality:
-        resolution = resolution_options["med"]
-    elif args.hd:
-        resolution = resolution_options["high"]
-    elif args.uhd:
-        resolution = resolution_options["4k"]
-    else:
-        resolution = global_config["camera"]["resolution"]
-
-    if isinstance(resolution, str):
-        resolution = literal_eval(resolution)
-
-    return resolution
-
-
-def get_window_config(args: Namespace, global_config: dict) -> dict:
-    window_config = global_config["window"]
-    # Todo, this correction of configuration should maybe happen elsewhere
-    for key in "position", "size":
-        if window_config.get(key):
-            window_config[key] = literal_eval(window_config[key])
-    if args.full_screen:
-        window_config["full_screen"] = True
-    return window_config
-
-
-def get_camera_config(args: Optional[Namespace] = None, global_config: Optional[dict] = None) -> dict:
-    args = args or parse_cli()
-    global_config = global_config or get_global_config()
-
-    camera_config = global_config["camera"]
-
-    # All of this should be taken care of during some initialization of global_config
-    camera_config["resolution"] = get_resolution(args, global_config)
-    if args.fps:
-        camera_config["fps"] = args.fps
-    if args.color:
-        try:
-            camera_config["background_color"] = colour.Color(args.color)
-        except Exception:
-            log.error("Please use a valid color")
-            log.error(err)
-            sys.exit(2)
-    if args.transparent:
-        camera_config["background_opacity"] = 0.0
-
-    return camera_config
-
-
-def get_scene_config(args: Namespace) -> dict:
-    """
-    Returns a dictionary to be used as key word arguments for Scene
-    """
-    global_config = get_global_config()
-    camera_config = get_camera_config(args, global_config)
-    file_writer_config = get_file_writer_config(args, global_config)
-    start, end = get_animations_numbers(args)
-
-    return {
-        "file_writer_config": file_writer_config,
-        "camera_config": camera_config,
-        "skip_animations": args.skip_animations,
-        "start_at_animation_number": start,
-        "end_at_animation_number": end,
-        "presenter_mode": args.presenter_mode,
-        "leave_progress_bars": args.leave_progress_bars,
-        "show_animation_progress": args.show_animation_progress,
-        "embed_exception_mode": global_config["embed_exception_mode"],
-        "embed_error_sound": global_config["embed_error_sound"],
-    }
-
-
-def get_run_config(args: Namespace):
-    window_config = get_window_config(args, get_global_config())
-    return {
-        "file_name": args.file,
-        "embed_line": int(args.embed) if args.embed is not None else None,
-        "is_reload": False,
-        "prerun": args.prerun,
-        "scene_names": args.scene_names,
-        "quiet": args.quiet or args.write_all,
-        "write_all": args.write_all,
-        "window_config": window_config,
-        "show_in_window": not args.write_file
-    }

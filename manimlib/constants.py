@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np
 
-from manimlib.config import get_resolution
+from manimlib.config import get_global_config
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 # TODO, it feels a bit unprincipled to have some global constants
 # depend on the output of this function, and for all that configuration
 # code to be run merely upon importing from this file.
-DEFAULT_RESOLUTION: tuple[int, int] = get_resolution()
+DEFAULT_RESOLUTION: tuple[int, int] = get_global_config()["camera"]["resolution"]
 DEFAULT_PIXEL_WIDTH = DEFAULT_RESOLUTION[0]
 DEFAULT_PIXEL_HEIGHT = DEFAULT_RESOLUTION[1]
 DEFAULT_FPS: int = 30
