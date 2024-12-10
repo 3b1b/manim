@@ -61,12 +61,12 @@ def get_shortcuts(scene):
         clear=scene.clear,
         focus=scene.focus,
         save_state=scene.save_state,
-        reload=scene.reload,
         undo=scene.undo,
         redo=scene.redo,
         i2g=scene.i2g,
         i2m=scene.i2m,
         checkpoint_paste=scene.checkpoint_paste,
+        reload=reload_scene  # Defined below
     )
 
 
@@ -102,6 +102,38 @@ def ensure_flash_on_error(shell, scene):
         scene.play(VFadeInThenOut(rect, run_time=0.5))
 
     shell.set_custom_exc((Exception,), custom_exc)
+
+
+def reload_scene(embed_line: int | None = None) -> None:
+    """
+    Reloads the scene just like the `manimgl` command would do with the
+    same arguments that were provided for the initial startup. This allows
+    for quick iteration during scene development since we don't have to exit
+    the IPython kernel and re-run the `manimgl` command again. The GUI stays
+    open during the reload.
+
+    If `embed_line` is provided, the scene will be reloaded at that line
+    number. This corresponds to the `linemarker` param of the
+    `extract_scene.insert_embed_line_to_module()` method.
+
+    Before reload, the scene is cleared and the entire state is reset, such
+    that we can start from a clean slate. This is taken care of by the
+    ReloadManager, which will catch the error raised by the `exit_raise`
+    magic command that we invoke here.
+
+    Note that we cannot define a custom exception class for this error,
+    since the IPython kernel will swallow any exception. While we can catch
+    such an exception in our custom exception handler registered with the
+    `set_custom_exc` method, we cannot break out of the IPython shell by
+    this means.
+    """
+    if embed_line:
+        global_config = get_global_config()
+        global_config["run"]["embed_line"] = embed_line
+
+    shell = get_ipython()
+    if shell:
+        shell.run_line_magic("exit_raise", "")
 
 
 class CheckpointManager:

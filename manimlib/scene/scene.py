@@ -47,7 +47,6 @@ if TYPE_CHECKING:
 
     from PIL.Image import Image
 
-    from manimlib.reload_manager import ReloadManager
     from manimlib.animation.animation import Animation
 
 
@@ -72,7 +71,6 @@ class Scene(object):
     def __init__(
         self,
         window: Optional[Window] = None,
-        reload_manager: Optional[ReloadManager] = None,
         camera_config: dict = dict(),
         file_writer_config: dict = dict(),
         skip_animations: bool = False,
@@ -90,7 +88,6 @@ class Scene(object):
         self.leave_progress_bars = leave_progress_bars
         self.presenter_mode = presenter_mode
         self.show_animation_progress = show_animation_progress
-        self.reload_manager = reload_manager
 
         self.camera_config = merge_dicts_recursively(
             get_camera_config(),         # Global default
@@ -860,34 +857,6 @@ class Scene(object):
 
     def on_close(self) -> None:
         pass
-
-    def reload(self, start_at_line: int | None = None) -> None:
-        """
-        Reloads the scene just like the `manimgl` command would do with the
-        same arguments that were provided for the initial startup. This allows
-        for quick iteration during scene development since we don't have to exit
-        the IPython kernel and re-run the `manimgl` command again. The GUI stays
-        open during the reload.
-
-        If `start_at_line` is provided, the scene will be reloaded at that line
-        number. This corresponds to the `linemarker` param of the
-        `extract_scene.insert_embed_line_to_module()` method.
-
-        Before reload, the scene is cleared and the entire state is reset, such
-        that we can start from a clean slate. This is taken care of by the
-        ReloadManager, which will catch the error raised by the `exit_raise`
-        magic command that we invoke here.
-
-        Note that we cannot define a custom exception class for this error,
-        since the IPython kernel will swallow any exception. While we can catch
-        such an exception in our custom exception handler registered with the
-        `set_custom_exc` method, we cannot break out of the IPython shell by
-        this means.
-        """
-        self.reload_manager.set_new_start_at_line(start_at_line)
-        shell = get_ipython()
-        if shell:
-            shell.run_line_magic("exit_raise", "")
 
     def focus(self) -> None:
         """

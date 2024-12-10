@@ -27,13 +27,6 @@ class ReloadManager:
 
     window = None
     is_reload = False
-    embed_line = None
-
-    def set_new_start_at_line(self, start_at_line):
-        """
-        Sets/Updates the line number to load the scene from when reloading.
-        """
-        self.embed_line = start_at_line
 
     def run(self):
         """
@@ -65,10 +58,7 @@ class ReloadManager:
         scene_config = global_config["scene"]
         run_config = global_config["run"]
 
-        scene_config.update(reload_manager=self)
         run_config.update(is_reload=self.is_reload)
-        if self.embed_line:
-            run_config.update(embed_line=self.embed_line)
 
         # Create or reuse window
         if run_config["show_in_window"] and not self.window:
