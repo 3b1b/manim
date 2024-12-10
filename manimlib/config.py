@@ -311,6 +311,25 @@ def get_resolution(args: Optional[Namespace] = None, global_config: Optional[dic
     return int(width_str), int(height_str)
 
 
+def get_window_position(monitor: screeninfo.Monitor, position_string: str, size: tuple[int, int]):
+    # Find position (Perhaps factor this out)
+    # Position might be specified with a string of the form
+    # x,y for integers x and y
+    if "," in position_string:
+        return tuple(map(int, position_string.split(",")))
+    elif len(position_string) == 2:
+        # Alternatively, it might be specified with a string like
+        # UR, OO, DL, etc. specifying what corner it should go to
+        char_to_n = {"L": 0, "U": 0, "O": 1, "R": 2, "D": 2}
+        width_diff = monitor.width - size[0]
+        height_diff = monitor.height - size[1]
+        x_step = char_to_n[position_string[1]] * width_diff // 2
+        y_step = char_to_n[position_string[0]] * height_diff // 2
+        return (monitor.x + x_step, -monitor.y + y_step)
+    else:
+        raise Exception("Window position string must be either a tuple of integers, or a pair of from \"ULORD\"")
+
+
 def get_window_config(args: Namespace, global_config: dict) -> dict:
     # Default to making window half the screen size
     # but make it full screen if -f is passed in
@@ -323,36 +342,17 @@ def get_window_config(args: Namespace, global_config: dict) -> dict:
     monitor = monitors[min(mon_index, len(monitors) - 1)]
 
     width, height = get_resolution(args, global_config)
-
     aspect_ratio = width / height
+
     window_width = monitor.width
     if not (args.full_screen or global_config["window"]["full_screen"]):
         window_width //= 2
     window_height = int(window_width / aspect_ratio)
+    size = (window_width, window_height)
 
-    # Find position (Perhaps factor this out)
-    pos_str = global_config["window"]["position"]
-    # Position might be specified with a string of the form
-    # x,y for integers x and y
-    if "," in pos_str:
-        default_position = tuple(map(int, pos_str.split(",")))
-    else:
-        # Alternatively, it might be specified with a string like
-        # UR, OO, DL, etc. specifying what corner it should go to
-        char_to_n = {"L": 0, "U": 0, "O": 1, "R": 2, "D": 2}
-        width_diff = monitor.width - window_width
-        height_diff = monitor.height - window_height
-        x_step = char_to_n[pos_str[1]] * width_diff // 2
-        y_step = char_to_n[pos_str[0]] * height_diff // 2
-        default_position = (
-            monitor.x + x_step,
-            -monitor.y + y_step,
-        )
+    default_position = get_window_position(monitor, global_config["window"]["position"], size)
 
-    return dict(
-        size=(window_width, window_height),
-        default_position=default_position
-    )
+    return dict(size=size, default_position=default_position)
 
 
 def get_camera_config(args: Optional[Namespace] = None, global_config: Optional[dict] = None) -> dict:
