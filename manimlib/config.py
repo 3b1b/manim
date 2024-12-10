@@ -272,7 +272,7 @@ def get_file_writer_config(args: Namespace, global_config: dict) -> dict:
         "open_file_upon_completion": args.open,
         "show_file_location_upon_completion": args.finder,
         "quiet": args.quiet,
-        **global_config["file_writer_config"],
+        **global_config["file_writer"],
     }
 
     if args.vcodec:

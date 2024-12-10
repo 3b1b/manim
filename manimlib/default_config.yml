@@ -33,7 +33,7 @@ window:
   monitor_index: 0
   # If not full screen, the default to give it half the screen width
   full_screen: False
-  # Other optional specifications that override the above
+  # Other optional specifications that override the above include:
   # position: (500, 500)  # Specific position, in pixel coordiantes, for upper right corner
   # size: (1920, 1080)  # Specific size, in pixels
 camera:
@@ -41,7 +41,7 @@ camera:
   background_color: "#333333"
   fps: 30
   background_opacity: 1.0
-file_writer_config:
+file_writer:
   # If break_into_partial_movies is set to True, then many small
   # files will be written corresponding to each Scene.play and
   # Scene.wait call, and these files will then be combined
@@ -58,6 +58,8 @@ style:
   font: "Consolas"
   text_alignment: "LEFT"
 resolution_options:
+  # When the user passes in -l, -m, --hd or --uhd, these are the corresponding
+  # resolutions
   low: (854, 480)
   med: (1280, 720)
   high: (1920, 1080)
