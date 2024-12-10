@@ -326,21 +326,22 @@ def update_run_config(config: dict, args: Namespace):
 
 
 def get_window_config() -> dict:
+    """ Key word arguments for Window """
     return get_global_config()["window"]
 
 
 def get_camera_config() -> dict:
+    """ Key word arguments for Camera """
     return get_global_config()["camera"]
 
 
 def get_file_writer_config() -> dict:
+    """ Key word arguments for SceneFileWriter """
     return get_global_config()["file_writer"]
 
 
 def get_scene_config() -> dict:
-    """
-    Returns a dictionary to be used as key word arguments for Scene
-    """
+    """ Key word arguments for Scene """
     return get_global_config()["scene"]
 
 
