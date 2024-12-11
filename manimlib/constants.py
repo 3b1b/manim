@@ -59,19 +59,13 @@ BOTTOM: Vect3 = FRAME_Y_RADIUS * DOWN
 LEFT_SIDE: Vect3 = FRAME_X_RADIUS * LEFT
 RIGHT_SIDE: Vect3 = FRAME_X_RADIUS * RIGHT
 
+# Angles
 PI: float = np.pi
 TAU: float = 2 * PI
 DEGREES: float = TAU / 360
 # Nice to have a constant for readability
 # when juxtaposed with expressions like 30 * DEGREES
 RADIANS: float = 1
-
-JOINT_TYPE_MAP: dict = {
-    "no_joint": 0,
-    "auto": 1,
-    "bevel": 2,
-    "miter": 3,
-}
 
 # Related to Text
 NORMAL: str = "NORMAL"
