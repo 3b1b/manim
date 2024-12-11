@@ -63,6 +63,7 @@ flag                                                       abbr   function
 ``--video_dir VIDEO_DIR``                                         Directory to write video
 ``--config_file CONFIG_FILE``                                     Path to the custom configuration file
 ``--log-level LOG_LEVEL``                                         Level of messages to Display, can be DEBUG / INFO / WARNING / ERROR / CRITICAL
+``--autoreload``                                                  Automatically reload Python modules to pick up code changes across different files
 ========================================================== ====== =====================================================================================================================================================================================================
 
 custom_config

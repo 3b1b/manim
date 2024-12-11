@@ -28,8 +28,16 @@ class ReloadManager:
     window = None
     is_reload = False
 
+    """
+    Whether to autoreload Python modules automatically for every command
+    executed in the IPython shell. Also see the docs on the IPython autoreload
+    extension.
+    """
+    should_autoreload = False
+
     def __init__(self, cli_args: Namespace):
         self.args = cli_args
+        self.should_autoreload = self.args.autoreload
 
     def set_new_start_at_line(self, start_at_line):
         """

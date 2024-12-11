@@ -185,6 +185,12 @@ def parse_cli():
             "--log-level",
             help="Level of messages to Display, can be DEBUG / INFO / WARNING / ERROR / CRITICAL"
         )
+        parser.add_argument(
+            "--autoreload",
+            action="store_true",
+            help="Automatically reload Python modules to pick up code changes"
+            + " across different files",
+        )
         args = parser.parse_args()
         args.write_file = any([args.write_file, args.open, args.finder])
         return args
