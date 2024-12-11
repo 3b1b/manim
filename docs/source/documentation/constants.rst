@@ -8,38 +8,35 @@ they are only used inside manim.
 Frame and pixel shape
 ---------------------
 
+These values will be determined based on the ``camera`` configuration in default_config.yml or custom_config.yml
+
 .. code-block:: python
 
-    ASPECT_RATIO = 16.0 / 9.0
-    FRAME_HEIGHT = 8.0
-    FRAME_WIDTH = FRAME_HEIGHT * ASPECT_RATIO
-    FRAME_Y_RADIUS = FRAME_HEIGHT / 2
-    FRAME_X_RADIUS = FRAME_WIDTH / 2
+    ASPECT_RATIO
+    FRAME_HEIGHT
+    FRAME_WIDTH
+    FRAME_Y_RADIUS
+    FRAME_X_RADIUS
 
-    DEFAULT_PIXEL_HEIGHT = 1080
-    DEFAULT_PIXEL_WIDTH = 1920
-    DEFAULT_FPS = 30
+    DEFAULT_PIXEL_HEIGHT
+    DEFAULT_PIXEL_WIDTH
+    DEFAULT_FPS
 
 Buffs
 -----
 
-.. code-block:: python
+These values will be determined based on the ``size`` configuration in default_config.yml or custom_config.yml
 
-    SMALL_BUFF = 0.1
-    MED_SMALL_BUFF = 0.25
-    MED_LARGE_BUFF = 0.5
-    LARGE_BUFF = 1  
-
-    DEFAULT_MOBJECT_TO_EDGE_BUFF = MED_LARGE_BUFF    # Distance between object and edge
-    DEFAULT_MOBJECT_TO_MOBJECT_BUFF = MED_SMALL_BUFF # Distance between objects   
-
-Run times
----------
 
 .. code-block:: python
 
-    DEFAULT_POINTWISE_FUNCTION_RUN_TIME = 3.0
-    DEFAULT_WAIT_TIME = 1.0
+    SMALL_BUFF
+    MED_SMALL_BUFF
+    MED_LARGE_BUFF
+    LARGE_BUFF
+
+    DEFAULT_MOBJECT_TO_EDGE_BUFF
+    DEFAULT_MOBJECT_TO_MOBJECT_BUFF
 
 Coordinates
 -----------
@@ -89,15 +86,10 @@ Text
     OBLIQUE = "OBLIQUE"
     BOLD = "BOLD"
 
-Stroke width
-------------
-
-.. code-block:: python
-
-    DEFAULT_STROKE_WIDTH = 4
-
 Colours
 -------
+
+Color constants are determined based on the ``color`` configuration in default_config.yml or custom_config.yml
 
 Here are the preview of default colours. (Modified from 
 `elteoremadebeethoven <https://elteoremadebeethoven.github.io/manim_3feb_docs.github.io/html/_static/colors/colors.html>`_)
