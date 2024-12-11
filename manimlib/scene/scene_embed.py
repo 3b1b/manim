@@ -1,5 +1,7 @@
 import inspect
 import pyperclip
+import traceback
+
 
 from IPython.core.getipython import get_ipython
 from IPython.terminal import pt_inputhooks
@@ -95,7 +97,7 @@ def ensure_flash_on_error(shell, scene):
     """Flash border, and potentially play sound, on exceptions"""
     def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         # Show the error don't just swallow it
-        shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
+        print(''.join(traceback.format_exception(etype, evalue, tb)))
         rect = FullScreenRectangle().set_stroke(RED, 30).set_fill(opacity=0)
         rect.fix_in_frame()
         scene.play(VFadeInThenOut(rect, run_time=0.5))
