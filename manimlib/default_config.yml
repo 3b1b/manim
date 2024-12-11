@@ -147,5 +147,7 @@ colors:
   light_pink: "#DC75CD"
   green_screen: "#00FF00"
   orange: "#FF862F"
+# Can be DEBUG / INFO / WARNING / ERROR / CRITICAL
+log_level: "INFO"
 universal_import_line: "from manimlib import *"
 ignore_manimlib_modules_on_reload: True

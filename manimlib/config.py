@@ -37,6 +37,8 @@ def initialize_global_config():
         load_yaml(args.config_file) if args.config_file else dict(),
     )
 
+    log.setLevel(args.log_level or config["log_level"])
+
     update_directory_config(config)
     update_window_config(config, args)
     update_camera_config(config, args)

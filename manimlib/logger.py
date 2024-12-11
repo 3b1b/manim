@@ -11,4 +11,3 @@ logging.basicConfig(
 )
 
 log = logging.getLogger("manimgl")
-log.setLevel("WARNING")

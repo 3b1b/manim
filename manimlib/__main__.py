@@ -2,7 +2,6 @@
 from manimlib import __version__
 from manimlib.config import get_global_config
 from manimlib.config import parse_cli
-import manimlib.logger
 import manimlib.utils.init_config
 import manimlib.extract_scene
 from manimlib.window import Window
@@ -53,9 +52,6 @@ def main():
     args = parse_cli()
     if args.version and args.file is None:
         return
-    if args.log_level:
-        manimlib.logger.log.setLevel(args.log_level)
-
     if args.config:
         manimlib.utils.init_config.init_customization()
         return
