@@ -24,7 +24,7 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.scene.scene_embed import interactive_scene_embed
+from manimlib.scene.scene_embed import InteractiveSceneEmbed
 from manimlib.scene.scene_embed import CheckpointManager
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.dict_ops import merge_dicts_recursively
@@ -212,8 +212,10 @@ class Scene(object):
             # Embed is only relevant for interactive development with a Window
             return
         self.show_animation_progress = show_animation_progress
+        self.stop_skipping()
+        self.update_frame(force_draw=True)
 
-        interactive_scene_embed(self)
+        InteractiveSceneEmbed(self).launch()
 
         # End scene when exiting an embed
         if close_scene_on_exit:
