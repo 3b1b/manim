@@ -4,7 +4,6 @@ from addict import Dict
 from manimlib import __version__
 from manimlib.config import manim_config
 from manimlib.config import parse_cli
-import manimlib.utils.init_config
 import manimlib.extract_scene
 from manimlib.window import Window
 
@@ -54,9 +53,6 @@ def main():
 
     args = parse_cli()
     if args.version and args.file is None:
-        return
-    if args.config:
-        manimlib.utils.init_config.init_customization()
         return
 
     run_scenes()

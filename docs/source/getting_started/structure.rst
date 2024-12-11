@@ -103,7 +103,6 @@ Below is the directory structure of manim:
         ├── family_ops.py         # Process family members
         ├── file_ops.py           # Process files and directories
         ├── images.py             # Read image
-        ├── init_config.py        # Configuration guide
         ├── iterables.py          # Functions related to list/dictionary processing
         ├── paths.py              # Curve path
         ├── rate_functions.py     # Some defined rate_functions
