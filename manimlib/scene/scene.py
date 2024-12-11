@@ -6,7 +6,6 @@ import random
 import time
 from functools import wraps
 
-from IPython.core.getipython import get_ipython
 from pyglet.window import key as PygletWindowKeys
 
 import numpy as np
