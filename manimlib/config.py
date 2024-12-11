@@ -76,12 +76,12 @@ def parse_cli():
         parser.add_argument(
             "-l", "--low_quality",
             action="store_true",
-            help="Render at a low quality (for faster rendering)",
+            help="Render at 480p",
         )
         parser.add_argument(
             "-m", "--medium_quality",
             action="store_true",
-            help="Render at a medium quality",
+            help="Render at 720p",
         )
         parser.add_argument(
             "--hd",
@@ -165,8 +165,9 @@ def parse_cli():
         )
         parser.add_argument(
             "-e", "--embed",
-            help="Creates a new file where the line `self.embed` is inserted " + \
-                 "at the corresponding line number"
+            metavar="LINE_NUMBER",
+            help="Adds a breakpoint at the inputted file dropping into an " + \
+                 "interactive iPython session at that point of the code."
         )
         parser.add_argument(
             "-r", "--resolution",
