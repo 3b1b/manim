@@ -151,7 +151,7 @@ class MarkupText(StringMobject):
         t2g: dict = {},  # Overrides text2gradient if nonempty
         t2s: dict = {},  # Overrides text2slant if nonempty
         t2w: dict = {},  # Overrides text2weight if nonempty
-        global_attrs: dict = {},
+        global_config: dict = {},
         local_configs: dict = {},
         disable_ligatures: bool = True,
         isolate: Selector = re.compile(r"\w+", re.U),
@@ -175,7 +175,7 @@ class MarkupText(StringMobject):
         self.t2s = text2slant or t2s
         self.t2w = text2weight or t2w
 
-        self.global_attrs = global_attrs
+        self.global_config = global_config
         self.local_configs = local_configs
         self.disable_ligatures = disable_ligatures
         self.isolate = isolate
@@ -362,7 +362,7 @@ class MarkupText(StringMobject):
         if self.disable_ligatures:
             global_attr_dict["font_features"] = "liga=0,dlig=0,clig=0,hlig=0"
 
-        global_attr_dict.update(self.global_attrs)
+        global_attr_dict.update(self.global_config)
         return tuple(
             self.get_command_string(
                 global_attr_dict,
