@@ -17,14 +17,6 @@ if TYPE_CHECKING:
     from typing import Iterable
 
 
-def add_extension_if_not_present(file_name: str, extension: str) -> str:
-    # This could conceivably be smarter about handling existing differing extensions
-    if(file_name[-len(extension):] != extension):
-        return file_name + extension
-    else:
-        return file_name
-
-
 def guarantee_existence(path: str | Path) -> Path:
     path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
