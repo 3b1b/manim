@@ -52,13 +52,6 @@ camera:
   fps: 30
   background_opacity: 1.0
 file_writer:
-  # If break_into_partial_movies is set to True, then many small
-  # files will be written corresponding to each Scene.play and
-  # Scene.wait call, and these files will then be combined
-  # to form the full scene.  Sometimes video-editing is made
-  # easier when working with the broken up scene, which
-  # effectively has cuts at all the places you might want.
-  break_into_partial_movies: False
   # What command to use for ffmpeg
   ffmpeg_bin: "ffmpeg"
   # Parameters to pass into ffmpeg
