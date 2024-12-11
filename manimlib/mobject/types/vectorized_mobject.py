@@ -2,10 +2,7 @@ from __future__ import annotations
 
 from functools import wraps
 
-import moderngl
 import numpy as np
-import operator as op
-import itertools as it
 
 from manimlib.constants import GREY_A, GREY_C, GREY_E
 from manimlib.constants import BLACK
@@ -35,10 +32,7 @@ from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.iterables import resize_preserving_order
-from manimlib.utils.iterables import arrays_match
-from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import angle_between_vectors
-from manimlib.utils.space_ops import cross
 from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
 from manimlib.utils.space_ops import get_norm
@@ -49,7 +43,6 @@ from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.space_ops import poly_line_length
 from manimlib.utils.space_ops import z_to_vector
-from manimlib.shader_wrapper import ShaderWrapper
 from manimlib.shader_wrapper import VShaderWrapper
 
 from typing import TYPE_CHECKING
@@ -57,8 +50,8 @@ from typing import Generic, TypeVar, Iterable
 SubVmobjectType = TypeVar('SubVmobjectType', bound='VMobject')
 
 if TYPE_CHECKING:
-    from typing import Callable, Tuple, Any
-    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Vect4Array, Self
+    from typing import Callable, Tuple, Any, Optional
+    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Self
     from moderngl.context import Context
 
 DEFAULT_STROKE_COLOR = GREY_A

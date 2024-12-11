@@ -10,7 +10,6 @@ from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import hex_to_int
 from manimlib.utils.tex_file_writing import latex_to_svg
 from manimlib.utils.tex import num_tex_symbols
-from manimlib.utils.simple_functions import hash_string
 from manimlib.logger import log
 
 from typing import TYPE_CHECKING

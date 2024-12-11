@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 import re
 import tempfile
-import hashlib
 from functools import lru_cache
 
 import manimpango
@@ -21,7 +20,6 @@ from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.utils.cache import cache_on_disk
 from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import int_to_hex
-from manimlib.utils.simple_functions import hash_string
 
 from typing import TYPE_CHECKING
 
@@ -77,7 +75,10 @@ def markup_to_svg(
 
     # Write the result to a temporary svg file, and return it's contents.
     # TODO, better would be to have this not write to file at all
-    with tempfile.NamedTemporaryFile(suffix='.svg', mode='r+') as tmp:
+    #
+    # To avoid CAIRO_STATUS_WRITE_ERROR: b'error while writing to
+    # output stream' on Windows, we need to pass 'delete=False'.
+    with tempfile.NamedTemporaryFile(suffix='.svg', mode='r+', delete=False) as tmp:
         manimpango.MarkupUtils.text2svg(
             text=markup_str,
             font="",                     # Already handled
