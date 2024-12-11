@@ -56,15 +56,19 @@ file_writer:
   pixel_format: "yuv420p"
   saturation: 1.0
   gamma: 1.0
+# Most of the scene configuration will come from CLI arguments,
+# but defaults can be set here
 scene:
-  # Most of the scene configuration will come from CLI arguments,
-  # but defaults can be set here
   show_animation_progress: False
   leave_progress_bars: False
   # How long does a scene pause on Scene.wait calls
   default_wait_time: 1.0
-style:
-  tex_template: "default"
+vmobject:
+  default_stroke_width: 4.0
+tex:
+  # See tex_templates.yml
+  template: "default"
+style:  # TODO, change to `text`
   font: "Consolas"
   text_alignment: "LEFT"
 embed:
@@ -89,9 +93,6 @@ sizes:
   # Default buffers used in Mobject.next_to or Mobject.to_edge
   default_mobject_to_edge_buff: 0.5
   default_mobject_to_mobject_buff: 0.25
-vmobject:
-  # Default stroke width for VMobject
-  default_stroke_width: 4.0
 colors:
   blue_e: "#1C758A"
   blue_d: "#29ABCA"
