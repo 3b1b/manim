@@ -49,10 +49,13 @@ CURSOR_KEY = 'k'
 COPY_FRAME_POSITION_KEY = 'p'
 
 # For keyboard interactions
-CTRL_SYMBOL: int = 65508
-SHIFT_SYMBOL: int = 65505
-DELETE_SYMBOL: int = 65288
-ARROW_SYMBOLS: list[int] = list(range(65361, 65365))
+
+ARROW_SYMBOLS: list[int] = [
+    PygletWindowKeys.LEFT,
+    PygletWindowKeys.UP,
+    PygletWindowKeys.RIGHT,
+    PygletWindowKeys.DOWN,
+]
 
 ALL_MODIFIERS = PygletWindowKeys.MOD_CTRL | PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_SHIFT
 
@@ -477,7 +480,7 @@ class InteractiveScene(Scene):
             self.prepare_grab()
         elif char == RESIZE_KEY and (modifiers & PygletWindowKeys.MOD_SHIFT):
             self.prepare_resizing(about_corner=((modifiers & PygletWindowKeys.MOD_SHIFT) > 0))
-        elif symbol == SHIFT_SYMBOL:
+        elif symbol == PygletWindowKeys.LSHIFT:
             if self.window.is_key_pressed(ord("t")):
                 self.prepare_resizing(about_corner=True)
         elif char == COLOR_KEY and (modifiers & ALL_MODIFIERS) == 0:
@@ -491,7 +494,7 @@ class InteractiveScene(Scene):
         elif char == "x" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.copy_selection()
             self.delete_selection()
-        elif symbol == DELETE_SYMBOL:
+        elif symbol == PygletWindowKeys.BACKSPACE:
             self.delete_selection()
         elif char == "a" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.clear_selection()
@@ -532,7 +535,7 @@ class InteractiveScene(Scene):
             self.is_grabbing = False
         elif chr(symbol) == INFORMATION_KEY:
             self.display_information(False)
-        elif symbol == SHIFT_SYMBOL and self.window.is_key_pressed(ord(RESIZE_KEY)):
+        elif symbol == PygletWindowKeys.LSHIFT and self.window.is_key_pressed(ord(RESIZE_KEY)):
             self.prepare_resizing(about_corner=False)
 
     # Mouse actions
@@ -549,7 +552,7 @@ class InteractiveScene(Scene):
         if not hasattr(self, "scale_about_point"):
             return
         vect = point - self.scale_about_point
-        if self.window.is_key_pressed(CTRL_SYMBOL):
+        if self.window.is_key_pressed(PygletWindowKeys.LCTRL):
             for i in (0, 1):
                 scalar = vect[i] / self.scale_ref_vect[i]
                 self.selection.rescale_to_fit(
@@ -594,7 +597,7 @@ class InteractiveScene(Scene):
             self.handle_grabbing(point)
         elif self.window.is_key_pressed(ord(RESIZE_KEY)):
             self.handle_resizing(point)
-        elif self.window.is_key_pressed(ord(SELECT_KEY)) and self.window.is_key_pressed(SHIFT_SYMBOL):
+        elif self.window.is_key_pressed(ord(SELECT_KEY)) and self.window.is_key_pressed(PygletWindowKeys.LSHIFT):
             self.handle_sweeping_selection(point)
 
     def on_mouse_drag(

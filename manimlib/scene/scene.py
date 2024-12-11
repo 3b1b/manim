@@ -17,7 +17,6 @@ from manimlib.camera.camera import Camera
 from manimlib.camera.camera_frame import CameraFrame
 from manimlib.config import get_camera_config
 from manimlib.config import get_file_writer_config
-from manimlib.constants import ARROW_SYMBOLS
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
@@ -846,7 +845,7 @@ class Scene(object):
         elif char == QUIT_KEY and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.quit_interaction = True
         # Space or right arrow
-        elif char == " " or symbol == ARROW_SYMBOLS[2]:
+        elif char == " " or symbol == PygletWindowKeys.RIGHT:
             self.hold_on_wait = False
 
     def on_resize(self, width: int, height: int) -> None:
