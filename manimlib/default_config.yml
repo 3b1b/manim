@@ -68,9 +68,9 @@ vmobject:
 tex:
   # See tex_templates.yml
   template: "default"
-style:  # TODO, change to `text`
+text:
   font: "Consolas"
-  text_alignment: "LEFT"
+  alignment: "LEFT"
 embed:
   exception_mode: "Verbose"
 resolution_options:
