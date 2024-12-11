@@ -1,44 +1,44 @@
 from __future__ import annotations
 import numpy as np
 
-from manimlib.config import get_global_config
-
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import List
     from manimlib.typing import ManimColor, Vect3
 
+# See manimlib/default_config.yml
+from manimlib.config import GLOBAL_CONFIG
 
-# TODO, it feels a bit unprincipled to have some global constants
-# depend on the output of this function, and for all that configuration
-# code to be run merely upon importing from this file.
-DEFAULT_RESOLUTION: tuple[int, int] = get_global_config()["camera"]["resolution"]
-DEFAULT_PIXEL_WIDTH = DEFAULT_RESOLUTION[0]
-DEFAULT_PIXEL_HEIGHT = DEFAULT_RESOLUTION[1]
-DEFAULT_FPS: int = 30
+
+DEFAULT_RESOLUTION: tuple[int, int] = GLOBAL_CONFIG["camera"]["resolution"]
+DEFAULT_PIXEL_WIDTH: int = DEFAULT_RESOLUTION[0]
+DEFAULT_PIXEL_HEIGHT: int = DEFAULT_RESOLUTION[1]
+DEFAULT_FPS: int = GLOBAL_CONFIG["camera"]["fps"]
 
 # Sizes relevant to default camera frame
 ASPECT_RATIO: float = DEFAULT_PIXEL_WIDTH / DEFAULT_PIXEL_HEIGHT
-FRAME_HEIGHT: float = 8.0
+FRAME_HEIGHT: float = GLOBAL_CONFIG["sizes"]["frame_height"]
 FRAME_WIDTH: float = FRAME_HEIGHT * ASPECT_RATIO
 FRAME_SHAPE: tuple[float, float] = (FRAME_WIDTH, FRAME_HEIGHT)
 FRAME_Y_RADIUS: float = FRAME_HEIGHT / 2
 FRAME_X_RADIUS: float = FRAME_WIDTH / 2
 
 
-SMALL_BUFF: float = 0.1
-MED_SMALL_BUFF: float = 0.25
-MED_LARGE_BUFF: float = 0.5
-LARGE_BUFF: float = 1
+# Helpful values for positioning mobjects
+SMALL_BUFF: float = GLOBAL_CONFIG["sizes"]["small_buff"]
+MED_SMALL_BUFF: float = GLOBAL_CONFIG["sizes"]["med_small_buff"]
+MED_LARGE_BUFF: float = GLOBAL_CONFIG["sizes"]["med_large_buff"]
+LARGE_BUFF: float = GLOBAL_CONFIG["sizes"]["large_buff"]
 
-DEFAULT_MOBJECT_TO_EDGE_BUFFER: float = MED_LARGE_BUFF
-DEFAULT_MOBJECT_TO_MOBJECT_BUFFER: float = MED_SMALL_BUFF
+DEFAULT_MOBJECT_TO_EDGE_BUFFER: float = GLOBAL_CONFIG["sizes"]["default_mobject_to_edge_buff"]
+DEFAULT_MOBJECT_TO_MOBJECT_BUFFER: float = GLOBAL_CONFIG["sizes"]["default_mobject_to_mobject_buff"]
 
 
 # In seconds
-DEFAULT_WAIT_TIME: float = 1.0
+DEFAULT_WAIT_TIME: float = GLOBAL_CONFIG["default_wait_time"]
 
 
+# Standard vectors
 ORIGIN: Vect3 = np.array([0., 0., 0.])
 UP: Vect3 = np.array([0., 1., 0.])
 DOWN: Vect3 = np.array([0., -1., 0.])
@@ -70,7 +70,7 @@ DEGREES: float = TAU / 360
 # when juxtaposed with expressions like 30 * DEGREES
 RADIANS: float = 1
 
-FFMPEG_BIN: str = "ffmpeg"
+FFMPEG_BIN: str = GLOBAL_CONFIG["ffmpeg_bin"]
 
 JOINT_TYPE_MAP: dict = {
     "no_joint": 0,
@@ -85,7 +85,7 @@ ITALIC: str = "ITALIC"
 OBLIQUE: str = "OBLIQUE"
 BOLD: str = "BOLD"
 
-DEFAULT_STROKE_WIDTH: float = 4
+DEFAULT_STROKE_WIDTH: float = GLOBAL_CONFIG["vmobject"]["default_stroke_width"]
 
 # For keyboard interactions
 CTRL_SYMBOL: int = 65508
@@ -95,75 +95,64 @@ DELETE_SYMBOL: int = 65288
 ARROW_SYMBOLS: list[int] = list(range(65361, 65365))
 
 # Colors
+colors = GLOBAL_CONFIG["colors"]
 
-BLUE_E: ManimColor = "#1C758A"
-BLUE_D: ManimColor = "#29ABCA"
-BLUE_C: ManimColor = "#58C4DD"
-BLUE_B: ManimColor = "#9CDCEB"
-BLUE_A: ManimColor = "#C7E9F1"
-TEAL_E: ManimColor = "#49A88F"
-TEAL_D: ManimColor = "#55C1A7"
-TEAL_C: ManimColor = "#5CD0B3"
-TEAL_B: ManimColor = "#76DDC0"
-TEAL_A: ManimColor = "#ACEAD7"
-GREEN_E: ManimColor = "#699C52"
-GREEN_D: ManimColor = "#77B05D"
-GREEN_C: ManimColor = "#83C167"
-GREEN_B: ManimColor = "#A6CF8C"
-GREEN_A: ManimColor = "#C9E2AE"
-YELLOW_E: ManimColor = "#E8C11C"
-YELLOW_D: ManimColor = "#F4D345"
-YELLOW_C: ManimColor = "#FFFF00"
-YELLOW_B: ManimColor = "#FFEA94"
-YELLOW_A: ManimColor = "#FFF1B6"
-GOLD_E: ManimColor = "#C78D46"
-GOLD_D: ManimColor = "#E1A158"
-GOLD_C: ManimColor = "#F0AC5F"
-GOLD_B: ManimColor = "#F9B775"
-GOLD_A: ManimColor = "#F7C797"
-RED_E: ManimColor = "#CF5044"
-RED_D: ManimColor = "#E65A4C"
-RED_C: ManimColor = "#FC6255"
-RED_B: ManimColor = "#FF8080"
-RED_A: ManimColor = "#F7A1A3"
-MAROON_E: ManimColor = "#94424F"
-MAROON_D: ManimColor = "#A24D61"
-MAROON_C: ManimColor = "#C55F73"
-MAROON_B: ManimColor = "#EC92AB"
-MAROON_A: ManimColor = "#ECABC1"
-PURPLE_E: ManimColor = "#644172"
-PURPLE_D: ManimColor = "#715582"
-PURPLE_C: ManimColor = "#9A72AC"
-PURPLE_B: ManimColor = "#B189C6"
-PURPLE_A: ManimColor = "#CAA3E8"
-GREY_E: ManimColor = "#222222"
-GREY_D: ManimColor = "#444444"
-GREY_C: ManimColor = "#888888"
-GREY_B: ManimColor = "#BBBBBB"
-GREY_A: ManimColor = "#DDDDDD"
-WHITE: ManimColor = "#FFFFFF"
-BLACK: ManimColor = "#000000"
-GREY_BROWN: ManimColor = "#736357"
-DARK_BROWN: ManimColor = "#8B4513"
-LIGHT_BROWN: ManimColor = "#CD853F"
-PINK: ManimColor = "#D147BD"
-LIGHT_PINK: ManimColor = "#DC75CD"
-GREEN_SCREEN: ManimColor = "#00FF00"
-ORANGE: ManimColor = "#FF862F"
+BLUE_E: ManimColor = colors["blue_e"]
+BLUE_D: ManimColor = colors["blue_d"]
+BLUE_C: ManimColor = colors["blue_c"]
+BLUE_B: ManimColor = colors["blue_b"]
+BLUE_A: ManimColor = colors["blue_a"]
+TEAL_E: ManimColor = colors["teal_e"]
+TEAL_D: ManimColor = colors["teal_d"]
+TEAL_C: ManimColor = colors["teal_c"]
+TEAL_B: ManimColor = colors["teal_b"]
+TEAL_A: ManimColor = colors["teal_a"]
+GREEN_E: ManimColor = colors["green_e"]
+GREEN_D: ManimColor = colors["green_d"]
+GREEN_C: ManimColor = colors["green_c"]
+GREEN_B: ManimColor = colors["green_b"]
+GREEN_A: ManimColor = colors["green_a"]
+YELLOW_E: ManimColor = colors["yellow_e"]
+YELLOW_D: ManimColor = colors["yellow_d"]
+YELLOW_C: ManimColor = colors["yellow_c"]
+YELLOW_B: ManimColor = colors["yellow_b"]
+YELLOW_A: ManimColor = colors["yellow_a"]
+GOLD_E: ManimColor = colors["gold_e"]
+GOLD_D: ManimColor = colors["gold_d"]
+GOLD_C: ManimColor = colors["gold_c"]
+GOLD_B: ManimColor = colors["gold_b"]
+GOLD_A: ManimColor = colors["gold_a"]
+RED_E: ManimColor = colors["red_e"]
+RED_D: ManimColor = colors["red_d"]
+RED_C: ManimColor = colors["red_c"]
+RED_B: ManimColor = colors["red_b"]
+RED_A: ManimColor = colors["red_a"]
+MAROON_E: ManimColor = colors["maroon_e"]
+MAROON_D: ManimColor = colors["maroon_d"]
+MAROON_C: ManimColor = colors["maroon_c"]
+MAROON_B: ManimColor = colors["maroon_b"]
+MAROON_A: ManimColor = colors["maroon_a"]
+PURPLE_E: ManimColor = colors["purple_e"]
+PURPLE_D: ManimColor = colors["purple_d"]
+PURPLE_C: ManimColor = colors["purple_c"]
+PURPLE_B: ManimColor = colors["purple_b"]
+PURPLE_A: ManimColor = colors["purple_a"]
+GREY_E: ManimColor = colors["grey_e"]
+GREY_D: ManimColor = colors["grey_d"]
+GREY_C: ManimColor = colors["grey_c"]
+GREY_B: ManimColor = colors["grey_b"]
+GREY_A: ManimColor = colors["grey_a"]
+WHITE: ManimColor = colors["white"]
+BLACK: ManimColor = colors["black"]
+GREY_BROWN: ManimColor = colors["grey_brown"]
+DARK_BROWN: ManimColor = colors["dark_brown"]
+LIGHT_BROWN: ManimColor = colors["light_brown"]
+PINK: ManimColor = colors["pink"]
+LIGHT_PINK: ManimColor = colors["light_pink"]
+GREEN_SCREEN: ManimColor = colors["green_screen"]
+ORANGE: ManimColor = colors["orange"]
 
-MANIM_COLORS: List[ManimColor] = [
-    BLACK, GREY_E, GREY_D, GREY_C, GREY_B, GREY_A, WHITE,
-    BLUE_E, BLUE_D, BLUE_C, BLUE_B, BLUE_A,
-    TEAL_E, TEAL_D, TEAL_C, TEAL_B, TEAL_A,
-    GREEN_E, GREEN_D, GREEN_C, GREEN_B, GREEN_A,
-    YELLOW_E, YELLOW_D, YELLOW_C, YELLOW_B, YELLOW_A,
-    GOLD_E, GOLD_D, GOLD_C, GOLD_B, GOLD_A,
-    RED_E, RED_D, RED_C, RED_B, RED_A,
-    MAROON_E, MAROON_D, MAROON_C, MAROON_B, MAROON_A,
-    PURPLE_E, PURPLE_D, PURPLE_C, PURPLE_B, PURPLE_A,
-    GREY_BROWN, DARK_BROWN, LIGHT_BROWN,
-    PINK, LIGHT_PINK,
-]
+MANIM_COLORS: List[ManimColor] = list(colors.values())
 
 # Abbreviated names for the "median" colors
 BLUE: ManimColor = BLUE_C

@@ -71,5 +71,80 @@ resolution_options:
   med: (1280, 720)
   high: (1920, 1080)
   4k: (3840, 2160)
+sizes:
+  # This determines the scale of the manim coordinate system with respect to
+  # the viewing frame
+  frame_height: 8.0
+  # These determine the constants SMALL_BUFF, MED_SMALL_BUFF, etc., useful
+  # for nudging things around and having default spacing values
+  small_buff: 0.1
+  med_small_buff: 0.25
+  med_large_buff: 0.5
+  large_buff: 1.0
+  # Default buffers used in Mobject.next_to or Mobject.to_edge
+  default_mobject_to_edge_buff: 0.5
+  default_mobject_to_mobject_buff: 0.25
+vmobject:
+  # Default stroke width for VMobject
+  default_stroke_width: 4.0
+colors:
+  blue_e: "#1C758A"
+  blue_d: "#29ABCA"
+  blue_c: "#58C4DD"
+  blue_b: "#9CDCEB"
+  blue_a: "#C7E9F1"
+  teal_e: "#49A88F"
+  teal_d: "#55C1A7"
+  teal_c: "#5CD0B3"
+  teal_b: "#76DDC0"
+  teal_a: "#ACEAD7"
+  green_e: "#699C52"
+  green_d: "#77B05D"
+  green_c: "#83C167"
+  green_b: "#A6CF8C"
+  green_a: "#C9E2AE"
+  yellow_e: "#E8C11C"
+  yellow_d: "#F4D345"
+  yellow_c: "#FFFF00"
+  yellow_b: "#FFEA94"
+  yellow_a: "#FFF1B6"
+  gold_e: "#C78D46"
+  gold_d: "#E1A158"
+  gold_c: "#F0AC5F"
+  gold_b: "#F9B775"
+  gold_a: "#F7C797"
+  red_e: "#CF5044"
+  red_d: "#E65A4C"
+  red_c: "#FC6255"
+  red_b: "#FF8080"
+  red_a: "#F7A1A3"
+  maroon_e: "#94424F"
+  maroon_d: "#A24D61"
+  maroon_c: "#C55F73"
+  maroon_b: "#EC92AB"
+  maroon_a: "#ECABC1"
+  purple_e: "#644172"
+  purple_d: "#715582"
+  purple_c: "#9A72AC"
+  purple_b: "#B189C6"
+  purple_a: "#CAA3E8"
+  grey_e: "#222222"
+  grey_d: "#444444"
+  grey_c: "#888888"
+  grey_b: "#BBBBBB"
+  grey_a: "#DDDDDD"
+  white: "#FFFFFF"
+  black: "#000000"
+  grey_brown: "#736357"
+  dark_brown: "#8B4513"
+  light_brown: "#CD853F"
+  pink: "#D147BD"
+  light_pink: "#DC75CD"
+  green_screen: "#00FF00"
+  orange: "#FF862F"
+# How long does a scene pause on Scene.wait calls
+default_wait_time: 1.0
+# What command to use for ffmpeg
+ffmpeg_bin: "ffmpeg"
 universal_import_line: "from manimlib import *"
 ignore_manimlib_modules_on_reload: True
