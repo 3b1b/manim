@@ -1,3 +1,4 @@
+addict
 appdirs
 colour
 diskcache
