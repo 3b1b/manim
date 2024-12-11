@@ -7,7 +7,6 @@ from IPython.core.getipython import get_ipython
 from pyglet.window import key as PygletWindowKeys
 
 from manimlib.animation.fading import FadeIn
-from manimlib.constants import ARROW_SYMBOLS, CTRL_SYMBOL, DELETE_SYMBOL, SHIFT_SYMBOL
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, RIGHT, UL, UP, UR
 from manimlib.constants import FRAME_WIDTH, FRAME_HEIGHT, SMALL_BUFF
 from manimlib.constants import PI
@@ -48,6 +47,12 @@ COLOR_KEY = 'c'
 INFORMATION_KEY = 'i'
 CURSOR_KEY = 'k'
 COPY_FRAME_POSITION_KEY = 'p'
+
+# For keyboard interactions
+CTRL_SYMBOL: int = 65508
+SHIFT_SYMBOL: int = 65505
+DELETE_SYMBOL: int = 65288
+ARROW_SYMBOLS: list[int] = list(range(65361, 65365))
 
 ALL_MODIFIERS = PygletWindowKeys.MOD_CTRL | PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_SHIFT
 

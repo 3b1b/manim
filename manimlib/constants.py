@@ -75,13 +75,6 @@ BOLD: str = "BOLD"
 
 DEFAULT_STROKE_WIDTH: float = GLOBAL_CONFIG["vmobject"]["default_stroke_width"]
 
-# For keyboard interactions
-CTRL_SYMBOL: int = 65508
-SHIFT_SYMBOL: int = 65505
-COMMAND_SYMBOL: int = 65517
-DELETE_SYMBOL: int = 65288
-ARROW_SYMBOLS: list[int] = list(range(65361, 65365))
-
 # Colors
 named_colors = GLOBAL_CONFIG["colors"]
 
