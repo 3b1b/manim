@@ -8,7 +8,6 @@ from moderngl_window.timers.clock import Timer
 from functools import wraps
 import screeninfo
 
-from manimlib.config import get_global_config
 from manimlib.constants import ASPECT_RATIO
 from manimlib.constants import FRAME_SHAPE
 
@@ -70,6 +69,8 @@ class Window(PygletWindow):
         mglw.activate_context(window=self, ctx=self.ctx)
         self.timer.start()
 
+        self.focus()
+
     def get_monitor(self, index):
         try:
             monitors = screeninfo.get_monitors()
@@ -105,6 +106,8 @@ class Window(PygletWindow):
         """
         self._window.set_visible(False)
         self._window.set_visible(True)
+        # This line seems to resync the viewport
+        self.on_resize(*self.size)
 
     def to_default_position(self):
         self.position = self.default_position
