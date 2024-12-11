@@ -36,12 +36,6 @@ def get_num_args(function: Callable) -> int:
 def get_parameters(function: Callable) -> Iterable[str]:
     return inspect.signature(function).parameters.keys()
 
-# Just to have a less heavyweight name for this extremely common operation
-#
-# We may wish to have more fine-grained control over division by zero behavior
-# in the future (separate specifiable values for 0/0 and x/0 with x != 0),
-# but for now, we just allow the option to handle indeterminate 0/0.
-
 
 def clip(a: float, min_a: float, max_a: float) -> float:
     if a < min_a:
@@ -58,6 +52,10 @@ def arr_clip(arr: np.ndarray, min_a: float, max_a: float) -> np.ndarray:
 
 
 def fdiv(a: Scalable, b: Scalable, zero_over_zero_value: Scalable | None = None) -> Scalable:
+    """
+    Less heavyweight name for np.true_divide, enabling
+    default behavior for 0/0
+    """
     if zero_over_zero_value is not None:
         out = np.full_like(a, zero_over_zero_value)
         where = np.logical_or(a != 0, b != 0)
@@ -68,11 +66,13 @@ def fdiv(a: Scalable, b: Scalable, zero_over_zero_value: Scalable | None = None)
     return np.true_divide(a, b, out=out, where=where)
 
 
-def binary_search(function: Callable[[float], float],
-                  target: float,
-                  lower_bound: float,
-                  upper_bound: float,
-                  tolerance:float = 1e-4) -> float | None:
+def binary_search(
+    function: Callable[[float], float],
+    target: float,
+    lower_bound: float,
+    upper_bound: float,
+    tolerance:float = 1e-4
+) -> float | None:
     lh = lower_bound
     rh = upper_bound
     mh = (lh + rh) / 2
