@@ -10,13 +10,10 @@ from pathlib import Path
 import tempfile
 
 from manimlib.utils.cache import cache_on_disk
-from manimlib.config import get_global_config
+from manimlib.config import manim_config
 from manimlib.config import get_manim_dir
 from manimlib.logger import log
 from manimlib.utils.simple_functions import hash_string
-
-
-SAVED_TEX_CONFIG = {}
 
 
 def get_tex_template_config(template_name: str) -> dict[str, str]:
@@ -33,7 +30,8 @@ def get_tex_template_config(template_name: str) -> dict[str, str]:
     return templates_dict[name]
 
 
-def get_tex_config() -> dict[str, str]:
+@lru_cache
+def get_tex_config(template: str = "") -> dict[str, str]:
     """
     Returns a dict which should look something like this:
     {
@@ -42,16 +40,13 @@ def get_tex_config() -> dict[str, str]:
         "preamble": "..."
     }
     """
-    # Only load once, then save thereafter
-    if not SAVED_TEX_CONFIG:
-        template_name = get_global_config()["style"]["tex_template"]
-        template_config = get_tex_template_config(template_name)
-        SAVED_TEX_CONFIG.update({
-            "template": template_name,
-            "compiler": template_config["compiler"],
-            "preamble": template_config["preamble"]
-        })
-    return SAVED_TEX_CONFIG
+    template = template or manim_config.tex.template
+    template_config = get_tex_template_config(template)
+    return {
+        "template": template,
+        "compiler": template_config["compiler"],
+        "preamble": template_config["preamble"]
+    }
 
 
 def get_full_tex(content: str, preamble: str = ""):
@@ -94,17 +89,12 @@ def latex_to_svg(
             message = message[:max_message_len - 3] + "..."
         print(message, end="\r")
 
-    tex_config = get_tex_config()
-    if template and template != tex_config["template"]:
-        tex_config = get_tex_template_config(template)
-
+    tex_config = get_tex_config(template)
     compiler = tex_config["compiler"]
 
     if compiler == "latex":
-        program = "latex"
         dvi_ext = ".dvi"
     elif compiler == "xelatex":
-        program = "xelatex -no-pdf"
         dvi_ext = ".xdv"
     else:
         raise NotImplementedError(f"Compiler '{compiler}' is not implemented")
@@ -119,18 +109,18 @@ def latex_to_svg(
         dvi_path = base_path + dvi_ext
 
         # Write tex file
-        with open(tex_path, "w", encoding="utf-8") as tex_file:
-            tex_file.write(full_tex)
+        Path(tex_path).write_text(full_tex)
 
         # Run latex compiler
         process = subprocess.run(
             [
-                program.split()[0],  # Split for xelatex case
+                compiler,
+                "-no-pdf",
                 "-interaction=batchmode",
                 "-halt-on-error",
-                "-output-directory=" + temp_dir,
+                f"-output-directory={temp_dir}",
                 tex_path
-            ] + (["--no-pdf"] if compiler == "xelatex" else []),
+            ],
             capture_output=True,
             text=True
         )

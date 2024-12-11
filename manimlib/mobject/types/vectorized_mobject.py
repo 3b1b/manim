@@ -8,7 +8,6 @@ from manimlib.constants import GREY_A, GREY_C, GREY_E
 from manimlib.constants import BLACK
 from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import DEGREES
-from manimlib.constants import JOINT_TYPE_MAP
 from manimlib.constants import ORIGIN, OUT
 from manimlib.constants import PI
 from manimlib.constants import TAU
@@ -72,6 +71,12 @@ class VMobject(Mobject):
     make_smooth_after_applying_functions: bool = False
     # TODO, do we care about accounting for varying zoom levels?
     tolerance_for_point_equality: float = 1e-8
+    joint_type_map: dict = {
+        "no_joint": 0,
+        "auto": 1,
+        "bevel": 2,
+        "miter": 3,
+    }
 
     def __init__(
         self,
@@ -123,7 +128,7 @@ class VMobject(Mobject):
         super().init_uniforms()
         self.uniforms.update(
             anti_alias_width=self.anti_alias_width,
-            joint_type=JOINT_TYPE_MAP[self.joint_type],
+            joint_type=self.joint_type_map[self.joint_type],
             flat_stroke=float(self.flat_stroke),
             scale_stroke_with_zoom=float(self.scale_stroke_with_zoom)
         )
@@ -406,7 +411,7 @@ class VMobject(Mobject):
 
     def set_joint_type(self, joint_type: str, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):
-            mob.uniforms["joint_type"] = JOINT_TYPE_MAP[joint_type]
+            mob.uniforms["joint_type"] = self.joint_type_map[joint_type]
         return self
 
     def get_joint_type(self) -> float:

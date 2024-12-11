@@ -1,3 +1,4 @@
+addict
 appdirs
 colour
 diskcache
@@ -22,7 +23,6 @@ screeninfo
 skia-pathops
 svgelements>=1.8.1
 sympy
-tempfile
 tqdm
 typing-extensions; python_version < "3.11"
 validators

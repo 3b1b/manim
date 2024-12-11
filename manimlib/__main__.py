@@ -1,9 +1,48 @@
 #!/usr/bin/env python
+from addict import Dict
+
 from manimlib import __version__
-import manimlib.config
-import manimlib.logger
-import manimlib.utils.init_config
-from manimlib.reload_manager import ReloadManager
+from manimlib.config import manim_config
+from manimlib.config import parse_cli
+import manimlib.extract_scene
+from manimlib.window import Window
+
+
+from IPython.terminal.embed import KillEmbedded
+
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from argparse import Namespace
+
+
+def run_scenes():
+    """
+    Runs the scenes in a loop and detects when a scene reload is requested.
+    """
+    # Create a new dict to be able to upate without
+    # altering global configuration
+    scene_config = Dict(manim_config.scene)
+    run_config = manim_config.run
+
+    if run_config.show_in_window:
+        # Create a reusable window
+        window = Window(**manim_config.window)
+        scene_config.update(window=window)
+
+    while True:
+        try:
+            # Blocking call since a scene may init an IPython shell()
+            scenes = manimlib.extract_scene.main(scene_config, run_config)
+            for scene in scenes:
+                scene.run()
+            return
+        except KillEmbedded:
+            # Requested via the `exit_raise` IPython runline magic
+            # by means of the reload_scene() command
+            pass
+        except KeyboardInterrupt:
+            break
 
 
 def main():
@@ -12,18 +51,11 @@ def main():
     """
     print(f"ManimGL \033[32mv{__version__}\033[0m")
 
-    args = manimlib.config.parse_cli()
+    args = parse_cli()
     if args.version and args.file is None:
         return
-    if args.log_level:
-        manimlib.logger.log.setLevel(args.log_level)
 
-    if args.config:
-        manimlib.utils.init_config.init_customization()
-        return
-
-    reload_manager = ReloadManager(args)
-    reload_manager.run()
+    run_scenes()
 
 
 if __name__ == "__main__":

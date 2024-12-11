@@ -5,10 +5,10 @@ import numpy as np
 import moderngl_window as mglw
 from moderngl_window.context.pyglet.window import Window as PygletWindow
 from moderngl_window.timers.clock import Timer
-from screeninfo import get_monitors
 from functools import wraps
+import screeninfo
 
-from manimlib.config import get_global_config
+from manimlib.constants import ASPECT_RATIO
 from manimlib.constants import FRAME_SHAPE
 
 from typing import TYPE_CHECKING
@@ -30,16 +30,21 @@ class Window(PygletWindow):
     def __init__(
         self,
         scene: Optional[Scene] = None,
-        size: tuple[int, int] = (1280, 720),
+        position_string: str = "UR",
+        monitor_index: int = 1,
+        full_screen: bool = False,
+        size: Optional[tuple[int, int]] = None,
+        position: Optional[tuple[int, int]] = None,
         samples: int = 0
     ):
-        super().__init__(size=size, samples=samples)
-
         self.scene = scene
-        self.default_size = size
-        self.default_position = self.find_initial_position(size)
+        self.monitor = self.get_monitor(monitor_index)
+        self.default_size = size or self.get_default_size(full_screen)
+        self.default_position = position or self.position_from_string(position_string)
         self.pressed_keys = set()
-        self.size = size
+
+        super().__init__(samples=samples)
+        self.to_default_position()
 
         if self.scene:
             self.init_for_scene(scene)
@@ -64,7 +69,31 @@ class Window(PygletWindow):
         mglw.activate_context(window=self, ctx=self.ctx)
         self.timer.start()
 
-        self.to_default_position()
+        self.focus()
+
+    def get_monitor(self, index):
+        try:
+            monitors = screeninfo.get_monitors()
+            return monitors[min(index, len(monitors) - 1)]
+        except screeninfo.ScreenInfoError:
+            # Default fallback
+            return screeninfo.Monitor(width=1920, height=1080)
+
+    def get_default_size(self, full_screen=False):
+        width = self.monitor.width // (1 if full_screen else 2)
+        height = int(width // ASPECT_RATIO)
+        return (width, height)
+
+    def position_from_string(self, position_string):
+        # Alternatively, it might be specified with a string like
+        # UR, OO, DL, etc. specifying what corner it should go to
+        char_to_n = {"L": 0, "U": 0, "O": 1, "R": 2, "D": 2}
+        size = self.default_size
+        width_diff = self.monitor.width - size[0]
+        height_diff = self.monitor.height - size[1]
+        x_step = char_to_n[position_string[1]] * width_diff // 2
+        y_step = char_to_n[position_string[0]] * height_diff // 2
+        return (self.monitor.x + x_step, -self.monitor.y + y_step)
 
     def focus(self):
         """
@@ -77,6 +106,8 @@ class Window(PygletWindow):
         """
         self._window.set_visible(False)
         self._window.set_visible(True)
+        # This line seems to resync the viewport
+        self.on_resize(*self.size)
 
     def to_default_position(self):
         self.position = self.default_position
@@ -85,28 +116,6 @@ class Window(PygletWindow):
         w, h = self.default_size
         self.size = (w - 1, h - 1)
         self.size = (w, h)
-
-    def find_initial_position(self, size: tuple[int, int]) -> tuple[int, int]:
-        global_config = get_global_config()
-        custom_position = global_config["window_position"]
-        mon_index = global_config["window_monitor"]
-        monitors = get_monitors()
-        monitor = monitors[min(mon_index, len(monitors) - 1)]
-        window_width, window_height = size
-        # Position might be specified with a string of the form
-        # x,y for integers x and y
-        if "," in custom_position:
-            return tuple(map(int, custom_position.split(",")))
-
-        # Alternatively, it might be specified with a string like
-        # UR, OO, DL, etc. specifying what corner it should go to
-        char_to_n = {"L": 0, "U": 0, "O": 1, "R": 2, "D": 2}
-        width_diff = monitor.width - window_width
-        height_diff = monitor.height - window_height
-        return (
-            monitor.x + char_to_n[custom_position[1]] * width_diff // 2,
-            -monitor.y + char_to_n[custom_position[0]] * height_diff // 2,
-        )
 
     # Delegate event handling to scene
     def pixel_coords_to_space_coords(

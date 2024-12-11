@@ -5,7 +5,7 @@ import copy
 
 import numpy as np
 
-from manimlib.constants import DEFAULT_MOBJECT_TO_MOBJECT_BUFFER, SMALL_BUFF
+from manimlib.constants import DEFAULT_MOBJECT_TO_MOBJECT_BUFF, SMALL_BUFF
 from manimlib.constants import DOWN, LEFT, ORIGIN, RIGHT, DL, DR, UL
 from manimlib.constants import PI
 from manimlib.animation.composition import AnimationGroup
@@ -79,7 +79,7 @@ class Brace(Tex):
             )
         else:
             mob.move_to(self.get_tip())
-            buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_MOBJECT_BUFFER)
+            buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_MOBJECT_BUFF)
             shift_distance = mob.get_width() / 2.0 + buff
             mob.shift(self.get_direction() * shift_distance)
         return self
@@ -116,7 +116,7 @@ class BraceLabel(VMobject):
         text: str | Iterable[str],
         brace_direction: np.ndarray = DOWN,
         label_scale: float = 1.0,
-        label_buff: float = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
+        label_buff: float = DEFAULT_MOBJECT_TO_MOBJECT_BUFF,
         **kwargs
     ) -> None:
         super().__init__(**kwargs)

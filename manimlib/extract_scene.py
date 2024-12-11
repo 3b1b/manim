@@ -6,7 +6,7 @@ import sys
 
 from manimlib.module_loader import ModuleLoader
 
-from manimlib.config import get_global_config
+from manimlib.config import manim_config
 from manimlib.logger import log
 from manimlib.scene.interactive_scene import InteractiveScene
 from manimlib.scene.scene import Scene
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 class BlankScene(InteractiveScene):
     def construct(self):
-        exec(get_global_config()["universal_import_line"])
+        exec(manim_config.universal_import_line)
         self.embed()
 
 
@@ -77,13 +77,13 @@ def compute_total_frames(scene_class, scene_config):
     pre_scene = scene_class(**pre_config)
     pre_scene.run()
     total_time = pre_scene.time - pre_scene.skip_time
-    return int(total_time * scene_config["camera_config"]["fps"])
+    return int(total_time * manim_config.camera.fps)
 
 
 def scene_from_class(scene_class, scene_config, run_config):
-    fw_config = scene_config["file_writer_config"]
-    if fw_config["write_to_movie"] and run_config["prerun"]:
-        fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
+    fw_config = manim_config.file_writer
+    if fw_config.write_to_movie and run_config.prerun:
+        scene_config.file_writer_config.total_frames = compute_total_frames(scene_class, scene_config)
     return scene_class(**scene_config)
 
 
@@ -180,4 +180,7 @@ def main(scene_config, run_config):
         return [BlankScene(**scene_config)]
 
     all_scene_classes = get_scene_classes_from_module(module)
-    return get_scenes_to_render(all_scene_classes, scene_config, run_config)
+    scenes = get_scenes_to_render(all_scene_classes, scene_config, run_config)
+    if len(scenes) == 0:
+        print("No scenes found to run")
+    return scenes

@@ -6,7 +6,6 @@ import random
 import time
 from functools import wraps
 
-from IPython.core.getipython import get_ipython
 from pyglet.window import key as PygletWindowKeys
 
 import numpy as np
@@ -15,8 +14,7 @@ from tqdm.auto import tqdm as ProgressDisplay
 from manimlib.animation.animation import prepare_animation
 from manimlib.camera.camera import Camera
 from manimlib.camera.camera_frame import CameraFrame
-from manimlib.constants import ARROW_SYMBOLS
-from manimlib.constants import DEFAULT_WAIT_TIME
+from manimlib.config import manim_config
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
@@ -29,6 +27,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene_embed import interactive_scene_embed
 from manimlib.scene.scene_embed import CheckpointManager
 from manimlib.scene.scene_file_writer import SceneFileWriter
+from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import recursive_mobject_remove
 from manimlib.utils.iterables import batch_by_property
@@ -44,7 +43,6 @@ if TYPE_CHECKING:
 
     from PIL.Image import Image
 
-    from manimlib.reload_manager import ReloadManager
     from manimlib.animation.animation import Animation
 
 
@@ -68,33 +66,37 @@ class Scene(object):
 
     def __init__(
         self,
+        window: Optional[Window] = None,
         camera_config: dict = dict(),
         file_writer_config: dict = dict(),
         skip_animations: bool = False,
         always_update_mobjects: bool = False,
         start_at_animation_number: int | None = None,
         end_at_animation_number: int | None = None,
-        leave_progress_bars: bool = False,
-        window: Optional[Window] = None,
-        reload_manager: Optional[ReloadManager] = None,
-        presenter_mode: bool = False,
         show_animation_progress: bool = False,
-        embed_exception_mode: str = "",
-        embed_error_sound: bool = False,
+        leave_progress_bars: bool = False,
+        presenter_mode: bool = False,
+        default_wait_time: float = 1.0,
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
         self.start_at_animation_number = start_at_animation_number
         self.end_at_animation_number = end_at_animation_number
+        self.show_animation_progress = show_animation_progress
         self.leave_progress_bars = leave_progress_bars
         self.presenter_mode = presenter_mode
-        self.show_animation_progress = show_animation_progress
-        self.embed_exception_mode = embed_exception_mode
-        self.embed_error_sound = embed_error_sound
-        self.reload_manager = reload_manager
+        self.default_wait_time = default_wait_time
 
-        self.camera_config = {**self.default_camera_config, **camera_config}
-        self.file_writer_config = {**self.default_file_writer_config, **file_writer_config}
+        self.camera_config = merge_dicts_recursively(
+            manim_config.camera,         # Global default
+            self.default_camera_config,  # Updated configuration that subclasses may specify
+            camera_config,               # Updated configuration from instantiation
+        )
+        self.file_writer_config = merge_dicts_recursively(
+            manim_config.file_writer,
+            self.default_file_writer_config,
+            file_writer_config,
+        )
 
         self.window = window
         if self.window:
@@ -589,11 +591,13 @@ class Scene(object):
 
     def wait(
         self,
-        duration: float = DEFAULT_WAIT_TIME,
+        duration: Optional[float] = None,
         stop_condition: Callable[[], bool] = None,
         note: str = None,
         ignore_presenter_mode: bool = False
     ):
+        if duration is None:
+            duration = self.default_wait_time
         self.pre_play()
         self.update_mobjects(dt=0)  # Any problems with this?
         if self.presenter_mode and not self.skip_animations and not ignore_presenter_mode:
@@ -839,7 +843,7 @@ class Scene(object):
         elif char == QUIT_KEY and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.quit_interaction = True
         # Space or right arrow
-        elif char == " " or symbol == ARROW_SYMBOLS[2]:
+        elif char == " " or symbol == PygletWindowKeys.RIGHT:
             self.hold_on_wait = False
 
     def on_resize(self, width: int, height: int) -> None:
@@ -853,34 +857,6 @@ class Scene(object):
 
     def on_close(self) -> None:
         pass
-
-    def reload(self, start_at_line: int | None = None) -> None:
-        """
-        Reloads the scene just like the `manimgl` command would do with the
-        same arguments that were provided for the initial startup. This allows
-        for quick iteration during scene development since we don't have to exit
-        the IPython kernel and re-run the `manimgl` command again. The GUI stays
-        open during the reload.
-
-        If `start_at_line` is provided, the scene will be reloaded at that line
-        number. This corresponds to the `linemarker` param of the
-        `extract_scene.insert_embed_line_to_module()` method.
-
-        Before reload, the scene is cleared and the entire state is reset, such
-        that we can start from a clean slate. This is taken care of by the
-        ReloadManager, which will catch the error raised by the `exit_raise`
-        magic command that we invoke here.
-
-        Note that we cannot define a custom exception class for this error,
-        since the IPython kernel will swallow any exception. While we can catch
-        such an exception in our custom exception handler registered with the
-        `set_custom_exc` method, we cannot break out of the IPython shell by
-        this means.
-        """
-        self.reload_manager.set_new_start_at_line(start_at_line)
-        shell = get_ipython()
-        if shell:
-            shell.run_line_magic("exit_raise", "")
 
     def focus(self) -> None:
         """

@@ -1,12 +1,12 @@
 import inspect
 import pyperclip
-import os
 
 from IPython.core.getipython import get_ipython
 from IPython.terminal import pt_inputhooks
 from IPython.terminal.embed import InteractiveShellEmbed
 
 from manimlib.animation.fading import VFadeInThenOut
+from manimlib.config import manim_config
 from manimlib.constants import RED
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.frame import FullScreenRectangle
@@ -39,11 +39,12 @@ def get_ipython_shell_for_embedded_scene(scene):
     module = ModuleLoader.get_module(caller_frame.f_globals["__file__"])
     module.__dict__.update(caller_frame.f_locals)
     module.__dict__.update(get_shortcuts(scene))
+    exception_mode = manim_config.embed.exception_mode
 
     return InteractiveShellEmbed(
         user_module=module,
         display_banner=False,
-        xmode=scene.embed_exception_mode
+        xmode=exception_mode
     )
 
 
@@ -59,12 +60,12 @@ def get_shortcuts(scene):
         clear=scene.clear,
         focus=scene.focus,
         save_state=scene.save_state,
-        reload=scene.reload,
         undo=scene.undo,
         redo=scene.redo,
         i2g=scene.i2g,
         i2m=scene.i2m,
         checkpoint_paste=scene.checkpoint_paste,
+        reload=reload_scene  # Defined below
     )
 
 
@@ -95,13 +96,48 @@ def ensure_flash_on_error(shell, scene):
     def custom_exc(shell, etype, evalue, tb, tb_offset=None):
         # Show the error don't just swallow it
         shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
-        if scene.embed_error_sound:
-            os.system("printf '\a'")
         rect = FullScreenRectangle().set_stroke(RED, 30).set_fill(opacity=0)
         rect.fix_in_frame()
         scene.play(VFadeInThenOut(rect, run_time=0.5))
 
     shell.set_custom_exc((Exception,), custom_exc)
+
+
+def reload_scene(embed_line: int | None = None) -> None:
+    """
+    Reloads the scene just like the `manimgl` command would do with the
+    same arguments that were provided for the initial startup. This allows
+    for quick iteration during scene development since we don't have to exit
+    the IPython kernel and re-run the `manimgl` command again. The GUI stays
+    open during the reload.
+
+    If `embed_line` is provided, the scene will be reloaded at that line
+    number. This corresponds to the `linemarker` param of the
+    `extract_scene.insert_embed_line_to_module()` method.
+
+    Before reload, the scene is cleared and the entire state is reset, such
+    that we can start from a clean slate. This is taken care of by the
+    run_scenes function in __main__.py, which will catch the error raised by the
+    `exit_raise` magic command that we invoke here.
+
+    Note that we cannot define a custom exception class for this error,
+    since the IPython kernel will swallow any exception. While we can catch
+    such an exception in our custom exception handler registered with the
+    `set_custom_exc` method, we cannot break out of the IPython shell by
+    this means.
+    """
+    shell = get_ipython()
+    if not shell:
+        return
+
+    # Update the global run configuration.
+    run_config = manim_config.run
+    run_config.is_reload = True
+    if embed_line:
+        run_config.embed_line = embed_line
+
+    print("Reloading...")
+    shell.run_line_magic("exit_raise", "")
 
 
 class CheckpointManager:

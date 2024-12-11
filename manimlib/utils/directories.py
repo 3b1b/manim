@@ -5,13 +5,13 @@ import tempfile
 import appdirs
 
 
-from manimlib.config import get_global_config
+from manimlib.config import manim_config
 from manimlib.config import get_manim_dir
 from manimlib.utils.file_ops import guarantee_existence
 
 
 def get_directories() -> dict[str, str]:
-    return get_global_config()["directories"]
+    return manim_config.directories
 
 
 def get_cache_dir() -> str:
