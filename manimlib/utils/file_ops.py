@@ -25,10 +25,10 @@ def add_extension_if_not_present(file_name: str, extension: str) -> str:
         return file_name
 
 
-def guarantee_existence(path: str) -> str:
-    if not os.path.exists(path):
-        os.makedirs(path)
-    return os.path.abspath(path)
+def guarantee_existence(path: str | Path) -> Path:
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
+    return path.absolute()
 
 
 def find_file(
