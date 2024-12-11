@@ -49,6 +49,9 @@ file_writer:
   # easier when working with the broken up scene, which
   # effectively has cuts at all the places you might want.
   break_into_partial_movies: False
+  # What command to use for ffmpeg
+  ffmpeg_bin: "ffmpeg"
+  # Parameters to pass into ffmpeg
   video_codec: "libx264"
   pixel_format: "yuv420p"
   saturation: 1.0
@@ -144,7 +147,5 @@ colors:
   light_pink: "#DC75CD"
   green_screen: "#00FF00"
   orange: "#FF862F"
-# What command to use for ffmpeg
-ffmpeg_bin: "ffmpeg"
 universal_import_line: "from manimlib import *"
 ignore_manimlib_modules_on_reload: True

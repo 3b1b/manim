@@ -66,8 +66,6 @@ DEGREES: float = TAU / 360
 # when juxtaposed with expressions like 30 * DEGREES
 RADIANS: float = 1
 
-FFMPEG_BIN: str = GLOBAL_CONFIG["ffmpeg_bin"]
-
 JOINT_TYPE_MAP: dict = {
     "no_joint": 0,
     "auto": 1,

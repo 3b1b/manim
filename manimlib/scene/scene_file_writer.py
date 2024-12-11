@@ -11,7 +11,6 @@ from pydub import AudioSegment
 from tqdm.auto import tqdm as ProgressDisplay
 from pathlib import Path
 
-from manimlib.constants import FFMPEG_BIN
 from manimlib.logger import log
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.file_ops import add_extension_if_not_present
@@ -49,6 +48,8 @@ class SceneFileWriter(object):
         quiet: bool = False,
         total_frames: int = 0,
         progress_description_len: int = 40,
+        # Name of the binary used for ffmpeg
+        ffmpeg_bin: str = "ffmpeg",
         video_codec: str = "libx264",
         pixel_format: str = "yuv420p",
         saturation: float = 1.0,
@@ -70,6 +71,7 @@ class SceneFileWriter(object):
         self.quiet = quiet
         self.total_frames = total_frames
         self.progress_description_len = progress_description_len
+        self.ffmpeg_bin = ffmpeg_bin
         self.video_codec = video_codec
         self.pixel_format = pixel_format
         self.saturation = saturation
@@ -236,7 +238,7 @@ class SceneFileWriter(object):
         vf_arg += f',eq=saturation={self.saturation}:gamma={self.gamma}'
 
         command = [
-            FFMPEG_BIN,
+            self.ffmpeg_bin,
             '-y',  # overwrite output file if it exists
             '-f', 'rawvideo',
             '-s', f'{width}x{height}',  # size of one frame
@@ -358,7 +360,7 @@ class SceneFileWriter(object):
 
         movie_file_path = self.get_movie_file_path()
         commands = [
-            FFMPEG_BIN,
+            self.ffmpeg_bin,
             '-y',  # overwrite output file if it exists
             '-f', 'concat',
             '-safe', '0',
@@ -385,7 +387,7 @@ class SceneFileWriter(object):
         )
         temp_file_path = stem + "_temp" + ext
         commands = [
-            FFMPEG_BIN,
+            self.ffmpeg_bin,
             "-i", movie_file_path,
             "-i", sound_file_path,
             '-y',  # overwrite output file if it exists
