@@ -315,6 +315,9 @@ def update_run_config(config: dict, args: Namespace):
     )
 
 
+# Helpers for the functions above
+
+
 def load_yaml(file_path: str):
     try:
         with open(file_path, "r") as file:
@@ -413,5 +416,3 @@ def get_scene_config() -> dict:
 def get_run_config():
     return get_global_config()["run"]
 
-
-# Helpers for the functions above
