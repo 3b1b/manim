@@ -23,8 +23,9 @@ if TYPE_CHECKING:
 class InteractiveSceneEmbed:
     def __init__(self, scene: Scene):
         self.scene = scene
-        self.shell = self.get_ipython_shell_for_embedded_scene()
+        self.checkpoint_manager = CheckpointManager()
 
+        self.shell = self.get_ipython_shell_for_embedded_scene()
         self.enable_gui()
         self.ensure_frame_update_post_cell()
         self.ensure_flash_on_error()
@@ -70,7 +71,8 @@ class InteractiveSceneEmbed:
             redo=scene.redo,
             i2g=scene.i2g,
             i2m=scene.i2m,
-            checkpoint_paste=scene.checkpoint_paste,
+            checkpoint_paste=self.checkpoint_paste,
+            clear_checkpoints=self.checkpoint_manager.clear_checkpoints,
             reload=self.reload_scene  # Defined below
         )
 
@@ -137,11 +139,20 @@ class InteractiveSceneEmbed:
         print("Reloading...")
         self.shell.run_line_magic("exit_raise", "")
 
+    def checkpoint_paste(
+        self,
+        skip: bool = False,
+        record: bool = False,
+        progress_bar: bool = True
+    ):
+        with self.scene.temp_config_change(skip, record, progress_bar):
+            self.checkpoint_manager.checkpoint_paste(self.shell, self.scene)
+
 
 class CheckpointManager:
     checkpoint_states: dict[str, list[tuple[Mobject, Mobject]]] = dict()
 
-    def checkpoint_paste(self, scene):
+    def checkpoint_paste(self, shell, scene):
         """
         Used during interactive development to run (or re-run)
         a block of scene code.
@@ -150,12 +161,7 @@ class CheckpointManager:
         revert to the state of the scene the first time this function
         was called on a block of code starting with that comment.
         """
-        shell = get_ipython()
-        if shell is None:
-            return
-
         code_string = pyperclip.paste()
-
         checkpoint_key = self.get_leading_comment(code_string)
         self.handle_checkpoint_key(scene, checkpoint_key)
         shell.run_cell(code_string)

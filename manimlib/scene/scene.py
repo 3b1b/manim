@@ -5,6 +5,8 @@ import platform
 import random
 import time
 from functools import wraps
+from contextlib import contextmanager
+from contextlib import ExitStack
 
 from pyglet.window import key as PygletWindowKeys
 
@@ -122,8 +124,6 @@ class Scene(object):
         self.time: float = 0
         self.skip_time: float = 0
         self.original_skipping_status: bool = self.skip_animations
-        self.checkpoint_states: dict[str, list[tuple[Mobject, Mobject]]] = dict()
-        self.checkpoint_manager: CheckpointManager = CheckpointManager()
         self.undo_stack = []
         self.redo_stack = []
 
@@ -680,41 +680,44 @@ class Scene(object):
             self.undo_stack.append(self.get_state())
             self.restore_state(self.redo_stack.pop())
 
-    def checkpoint_paste(
-        self,
-        skip: bool = False,
-        record: bool = False,
-        progress_bar: bool = True
-    ):
-        """
-        Used during interactive development to run (or re-run)
-        a block of scene code.
+    @contextmanager
+    def temp_skip(self):
+        prev_status = self.skip_animations
+        self.skip_animations = True
+        try:
+            yield
+        finally:
+            if not prev_status:
+                self.stop_skipping()
 
-        If the copied selection starts with a comment, this will
-        revert to the state of the scene the first time this function
-        was called on a block of code starting with that comment.
-        """
-        # Keep track of skipping and progress bar status
-        self.skip_animations = skip
-
+    @contextmanager
+    def temp_progress_bar(self):
         prev_progress = self.show_animation_progress
-        self.show_animation_progress = progress_bar
+        self.show_animation_progress = True
+        try:
+            yield
+        finally:
+            self.show_animation_progress = prev_progress
 
-        if record:
-            self.camera.use_window_fbo(False)
-            self.file_writer.begin_insert()
-
-        self.checkpoint_manager.checkpoint_paste(self)
-
-        if record:
+    @contextmanager
+    def temp_record(self):
+        self.camera.use_window_fbo(False)
+        self.file_writer.begin_insert()
+        try:
+            yield
+        finally:
             self.file_writer.end_insert()
             self.camera.use_window_fbo(True)
 
-        self.stop_skipping()
-        self.show_animation_progress = prev_progress
-
-    def clear_checkpoints(self):
-        self.checkpoint_manager.clear_checkpoints()
+    def temp_config_change(self, skip=False, record=False, progress_bar=False):
+        stack = ExitStack()
+        if skip:
+            stack.enter_context(self.temp_skip())
+        if record:
+            stack.enter_context(self.temp_record())
+        if progress_bar:
+            stack.enter_context(self.temp_progress_bar())
+        return stack
 
     def is_window_closing(self):
         return self.window and (self.window.is_closing or self.quit_interaction)
