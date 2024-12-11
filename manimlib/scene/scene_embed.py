@@ -1,7 +1,8 @@
 import inspect
 import pyperclip
-import re
+import os
 
+from IPython.core.getipython import get_ipython
 from IPython.terminal import pt_inputhooks
 from IPython.terminal.embed import InteractiveShellEmbed
 
