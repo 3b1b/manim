@@ -27,7 +27,7 @@ def find_file(
     file_name: str,
     directories: Iterable[str] | None = None,
     extensions: Iterable[str] | None = None
-) -> str:
+) -> Path:
     # Check if this is a file online first, and if so, download
     # it to a temporary directory
     if validators.url(file_name):
@@ -41,17 +41,17 @@ def find_file(
 
     # Check if what was passed in is already a valid path to a file
     if os.path.exists(file_name):
-        return file_name
+        return Path(file_name)
 
     # Otherwise look in local file system
     directories = directories or [""]
     extensions = extensions or [""]
     possible_paths = (
-        os.path.join(directory, file_name + extension)
+        Path(directory, file_name).with_suffix(extension)
         for directory in directories
         for extension in extensions
     )
     for path in possible_paths:
-        if os.path.exists(path):
+        if path.exists():
             return path
     raise IOError(f"{file_name} not Found")
