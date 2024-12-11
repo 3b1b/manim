@@ -7,7 +7,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 
 
 # Boolean operations between 2D mobjects
-# Borrowed from from https://github.com/ManimCommunity/manim/
+# Borrowed from https://github.com/ManimCommunity/manim/
 
 def _convert_vmobject_to_skia_path(vmobject: VMobject) -> pathops.Path:
     path = pathops.Path()
