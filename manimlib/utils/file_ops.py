@@ -47,7 +47,7 @@ def find_file(
     directories = directories or [""]
     extensions = extensions or [""]
     possible_paths = (
-        Path(directory, file_name).with_suffix(extension)
+        Path(directory, file_name + extension)
         for directory in directories
         for extension in extensions
     )
