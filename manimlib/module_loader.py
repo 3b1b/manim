@@ -146,7 +146,7 @@ class ModuleLoader:
         if ignore_manimlib_modules and module.__name__.startswith("manimlib"):
             return
         if module.__name__.startswith("manimlib.config"):
-            # We don't want to reload global config
+            # We don't want to reload global manim_config
             return
 
         if not hasattr(module, "__dict__"):
