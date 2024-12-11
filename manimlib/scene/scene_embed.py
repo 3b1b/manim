@@ -167,14 +167,14 @@ class CheckpointManager:
         shell.run_cell(code_string)
 
     @staticmethod
-    def get_leading_comment(code_string: str):
+    def get_leading_comment(code_string: str) -> str:
         leading_line = code_string.partition("\n")[0].lstrip()
         if leading_line.startswith("#"):
             return leading_line
-        return None
+        return ""
 
     def handle_checkpoint_key(self, scene, key: str):
-        if key is None:
+        if not key:
             return
         elif key in self.checkpoint_states:
             # Revert to checkpoint
