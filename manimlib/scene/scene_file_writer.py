@@ -13,7 +13,6 @@ from pathlib import Path
 
 from manimlib.logger import log
 from manimlib.mobject.mobject import Mobject
-from manimlib.utils.file_ops import get_sorted_integer_files
 from manimlib.utils.file_ops import guarantee_existence
 from manimlib.utils.sounds import get_full_sound_file_path
 
