@@ -15,8 +15,7 @@ from tqdm.auto import tqdm as ProgressDisplay
 from manimlib.animation.animation import prepare_animation
 from manimlib.camera.camera import Camera
 from manimlib.camera.camera_frame import CameraFrame
-from manimlib.config import get_camera_config
-from manimlib.config import get_file_writer_config
+from manimlib.config import manim_config
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
@@ -90,12 +89,12 @@ class Scene(object):
         self.default_wait_time = default_wait_time
 
         self.camera_config = merge_dicts_recursively(
-            get_camera_config(),         # Global default
+            manim_config.camera,         # Global default
             self.default_camera_config,  # Updated configuration that subclasses may specify
             camera_config,               # Updated configuration from instantiation
         )
         self.file_writer_config = merge_dicts_recursively(
-            get_file_writer_config(),
+            manim_config.file_writer,
             self.default_file_writer_config,
             file_writer_config,
         )

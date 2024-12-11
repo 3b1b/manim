@@ -288,8 +288,8 @@ def update_scene_config(config: dict, args: Namespace):
     scene_config = config["scene"]
     start, end = get_animations_numbers(args)
     scene_config.update(
-        # Note, Scene.__init__ makes use of both get_camera_config() and
-        # get_file_writer_config() below, so the arguments here are just for
+        # Note, Scene.__init__ makes use of both manimlib.camera and
+        # manimlib.file_writer below, so the arguments here are just for
         # any future specifications beyond what the global configuration holds
         camera_config=dict(),
         file_writer_config=dict(),
@@ -382,34 +382,4 @@ def get_output_directory(args: Namespace, config: dict) -> str:
 
 
 # Create global configuration
-
-
 manim_config: Dict = initialize_manim_config()
-
-
-# Shortcuts for retrieving portions of global configuration
-
-
-def get_window_config() -> dict:
-    """ Key word arguments for Window """
-    return manim_config.window
-
-
-def get_camera_config() -> dict:
-    """ Key word arguments for Camera """
-    return manim_config.camera
-
-
-def get_file_writer_config() -> dict:
-    """ Key word arguments for SceneFileWriter """
-    return manim_config.file_writer
-
-
-def get_scene_config() -> dict:
-    """ Key word arguments for Scene """
-    return manim_config.scene
-
-
-def get_run_config():
-    return manim_config.run
-
