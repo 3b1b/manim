@@ -7,7 +7,7 @@ from IPython.terminal import pt_inputhooks
 from IPython.terminal.embed import InteractiveShellEmbed
 
 from manimlib.animation.fading import VFadeInThenOut
-from manimlib.config import get_global_config
+from manimlib.config import manim_config
 from manimlib.constants import RED
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.frame import FullScreenRectangle
@@ -40,7 +40,7 @@ def get_ipython_shell_for_embedded_scene(scene):
     module = ModuleLoader.get_module(caller_frame.f_globals["__file__"])
     module.__dict__.update(caller_frame.f_locals)
     module.__dict__.update(get_shortcuts(scene))
-    exception_mode = get_global_config()["embed"]["exception_mode"]
+    exception_mode = manim_config.embed.exception_mode
 
     return InteractiveShellEmbed(
         user_module=module,
@@ -132,10 +132,10 @@ def reload_scene(embed_line: int | None = None) -> None:
         return
 
     # Update the global run configuration.
-    run_config = get_global_config()["run"]
-    run_config["is_reload"] = True
+    run_config = manim_config.run
+    run_config.is_reload = True
     if embed_line:
-        run_config["embed_line"] = embed_line
+        run_config.embed_line = embed_line
 
     print("Reloading...")
     shell.run_line_magic("exit_raise", "")

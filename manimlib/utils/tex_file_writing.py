@@ -10,7 +10,7 @@ from pathlib import Path
 import tempfile
 
 from manimlib.utils.cache import cache_on_disk
-from manimlib.config import get_global_config
+from manimlib.config import manim_config
 from manimlib.config import get_manim_dir
 from manimlib.logger import log
 from manimlib.utils.simple_functions import hash_string
@@ -40,7 +40,7 @@ def get_tex_config(template: str = "") -> dict[str, str]:
         "preamble": "..."
     }
     """
-    template = template or get_global_config()["tex"]["template"]
+    template = template or manim_config.tex.template
     template_config = get_tex_template_config(template)
     return {
         "template": template,

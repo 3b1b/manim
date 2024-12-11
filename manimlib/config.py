@@ -8,6 +8,7 @@ import os
 import sys
 import yaml
 from ast import literal_eval
+from addict import Dict
 
 from manimlib.logger import log
 from manimlib.utils.dict_ops import merge_dicts_recursively
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
     from typing import Optional
 
 
-def initialize_global_config():
+def initialize_manim_config() -> Dict:
     """
     Return default configuration for various classes in manim, such as
     Scene, Window, Camera, and SceneFileWriter, as well as configuration
@@ -46,7 +47,7 @@ def initialize_global_config():
     update_scene_config(config, args)
     update_run_config(config, args)
 
-    return config
+    return Dict(config)
 
 
 def parse_cli():
@@ -367,8 +368,8 @@ def get_animations_numbers(args: Namespace) -> tuple[int | None, int | None]:
         return int(stan), None
 
 
-def get_output_directory(args: Namespace, global_config: dict) -> str:
-    dir_config = global_config["directories"]
+def get_output_directory(args: Namespace, config: dict) -> str:
+    dir_config = config["directories"]
     output_directory = args.video_dir or dir_config["output"]
     if dir_config["mirror_module_path"] and args.file:
         to_cut = dir_config["removed_mirror_prefix"]
@@ -383,12 +384,7 @@ def get_output_directory(args: Namespace, global_config: dict) -> str:
 # Create global configuration
 
 
-GLOBAL_CONFIG = initialize_global_config()
-
-
-def get_global_config():
-    global GLOBAL_CONFIG
-    return GLOBAL_CONFIG
+manim_config: Dict = initialize_manim_config()
 
 
 # Shortcuts for retrieving portions of global configuration
@@ -396,24 +392,24 @@ def get_global_config():
 
 def get_window_config() -> dict:
     """ Key word arguments for Window """
-    return get_global_config()["window"]
+    return manim_config.window
 
 
 def get_camera_config() -> dict:
     """ Key word arguments for Camera """
-    return get_global_config()["camera"]
+    return manim_config.camera
 
 
 def get_file_writer_config() -> dict:
     """ Key word arguments for SceneFileWriter """
-    return get_global_config()["file_writer"]
+    return manim_config.file_writer
 
 
 def get_scene_config() -> dict:
     """ Key word arguments for Scene """
-    return get_global_config()["scene"]
+    return manim_config.scene
 
 
 def get_run_config():
-    return get_global_config()["run"]
+    return manim_config.run
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from manimlib import __version__
-from manimlib.config import get_global_config
+from manimlib.config import manim_config
 from manimlib.config import parse_cli
 import manimlib.utils.init_config
 import manimlib.extract_scene
@@ -19,13 +19,14 @@ def run_scenes():
     """
     Runs the scenes in a loop and detects when a scene reload is requested.
     """
-    global_config = get_global_config()
-    scene_config = global_config["scene"]
-    run_config = global_config["run"]
+    # Create a new dict to be able to upate without
+    # altering global configuration
+    scene_config = dict(manim_config.scene)
+    run_config = manim_config.run
 
-    if run_config["show_in_window"]:
+    if run_config.show_in_window:
         # Create a reusable window
-        window = Window(**global_config["window"])
+        window = Window(**manim_config.window)
         scene_config.update(window=window)
 
     while True:

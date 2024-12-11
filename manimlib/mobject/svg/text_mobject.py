@@ -12,7 +12,7 @@ import pygments
 import pygments.formatters
 import pygments.lexers
 
-from manimlib.config import get_global_config
+from manimlib.config import manim_config
 from manimlib.constants import DEFAULT_PIXEL_WIDTH, FRAME_WIDTH
 from manimlib.constants import NORMAL
 from manimlib.logger import log
@@ -151,20 +151,20 @@ class MarkupText(StringMobject):
         t2g: dict = {},  # Overrides text2gradient if nonempty
         t2s: dict = {},  # Overrides text2slant if nonempty
         t2w: dict = {},  # Overrides text2weight if nonempty
-        global_config: dict = {},
+        global_attrs: dict = {},
         local_configs: dict = {},
         disable_ligatures: bool = True,
         isolate: Selector = re.compile(r"\w+", re.U),
         **kwargs
     ):
-        text_config = get_global_config()["text"]
+        text_config = manim_config.text
         self.text = text
         self.font_size = font_size
         self.justify = justify
         self.indent = indent
-        self.alignment = alignment or text_config["alignment"]
+        self.alignment = alignment or text_config.alignment
         self.line_width = line_width
-        self.font = font or text_config["font"]
+        self.font = font or text_config.font
         self.slant = slant
         self.weight = weight
 
@@ -175,7 +175,7 @@ class MarkupText(StringMobject):
         self.t2s = text2slant or t2s
         self.t2w = text2weight or t2w
 
-        self.global_config = global_config
+        self.global_attrs = global_attrs
         self.local_configs = local_configs
         self.disable_ligatures = disable_ligatures
         self.isolate = isolate
@@ -362,7 +362,7 @@ class MarkupText(StringMobject):
         if self.disable_ligatures:
             global_attr_dict["font_features"] = "liga=0,dlig=0,clig=0,hlig=0"
 
-        global_attr_dict.update(self.global_config)
+        global_attr_dict.update(self.global_attrs)
         return tuple(
             self.get_command_string(
                 global_attr_dict,

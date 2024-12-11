@@ -6,7 +6,7 @@ import os
 import sys
 import sysconfig
 
-from manimlib.config import get_global_config
+from manimlib.config import manim_config
 from manimlib.logger import log
 
 Module = importlib.util.types.ModuleType
@@ -142,7 +142,7 @@ class ModuleLoader:
 
         Only user-defined modules are reloaded, see `is_user_defined_module()`.
         """
-        ignore_manimlib_modules = get_global_config()["ignore_manimlib_modules_on_reload"]
+        ignore_manimlib_modules = manim_config.ignore_manimlib_modules_on_reload
         if ignore_manimlib_modules and module.__name__.startswith("manimlib"):
             return
         if module.__name__.startswith("manimlib.config"):
