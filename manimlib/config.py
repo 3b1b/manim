@@ -12,7 +12,6 @@ from addict import Dict
 
 from manimlib.logger import log
 from manimlib.utils.dict_ops import merge_dicts_recursively
-from manimlib.utils.init_config import init_customization
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
