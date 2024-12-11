@@ -143,6 +143,12 @@ def parse_cli():
             help="Show the output file in finder",
         )
         parser.add_argument(
+            "--subdivide",
+            action="store_true",
+            help="Divide the output animation into individual movie files " +
+                 "for each animation",
+        )
+        parser.add_argument(
             "--file_name",
             help="Name for the movie or image file",
         )
@@ -249,6 +255,7 @@ def update_file_writer_config(config: dict, args: Namespace):
     file_writer_config = config["file_writer"]
     file_writer_config.update(
         write_to_movie=(not args.skip_animations and args.write_file),
+        subdivide_output=args.subdivide,
         save_last_frame=(args.skip_animations and args.write_file),
         png_mode=("RGBA" if args.transparent else "RGB"),
         movie_file_extension=(get_file_ext(args)),
