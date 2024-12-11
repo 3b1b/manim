@@ -93,10 +93,8 @@ def latex_to_svg(
     compiler = tex_config["compiler"]
 
     if compiler == "latex":
-        program = "latex"
         dvi_ext = ".dvi"
     elif compiler == "xelatex":
-        program = "xelatex -no-pdf"
         dvi_ext = ".xdv"
     else:
         raise NotImplementedError(f"Compiler '{compiler}' is not implemented")
@@ -111,18 +109,18 @@ def latex_to_svg(
         dvi_path = base_path + dvi_ext
 
         # Write tex file
-        with open(tex_path, "w", encoding="utf-8") as tex_file:
-            tex_file.write(full_tex)
+        Path(tex_path).write_text(full_tex)
 
         # Run latex compiler
         process = subprocess.run(
             [
-                program.split()[0],  # Split for xelatex case
+                compiler,
+                "-no-pdf",
                 "-interaction=batchmode",
                 "-halt-on-error",
-                "-output-directory=" + temp_dir,
+                f"-output-directory={temp_dir}",
                 tex_path
-            ] + (["--no-pdf"] if compiler == "xelatex" else []),
+            ],
             capture_output=True,
             text=True
         )
