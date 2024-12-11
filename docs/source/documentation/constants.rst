@@ -30,8 +30,8 @@ Buffs
     MED_LARGE_BUFF = 0.5
     LARGE_BUFF = 1  
 
-    DEFAULT_MOBJECT_TO_EDGE_BUFFER = MED_LARGE_BUFF    # Distance between object and edge
-    DEFAULT_MOBJECT_TO_MOBJECT_BUFFER = MED_SMALL_BUFF # Distance between objects   
+    DEFAULT_MOBJECT_TO_EDGE_BUFF = MED_LARGE_BUFF    # Distance between object and edge
+    DEFAULT_MOBJECT_TO_MOBJECT_BUFF = MED_SMALL_BUFF # Distance between objects   
 
 Run times
 ---------

@@ -30,8 +30,8 @@ MED_SMALL_BUFF: float = GLOBAL_CONFIG["sizes"]["med_small_buff"]
 MED_LARGE_BUFF: float = GLOBAL_CONFIG["sizes"]["med_large_buff"]
 LARGE_BUFF: float = GLOBAL_CONFIG["sizes"]["large_buff"]
 
-DEFAULT_MOBJECT_TO_EDGE_BUFFER: float = GLOBAL_CONFIG["sizes"]["default_mobject_to_edge_buff"]
-DEFAULT_MOBJECT_TO_MOBJECT_BUFFER: float = GLOBAL_CONFIG["sizes"]["default_mobject_to_mobject_buff"]
+DEFAULT_MOBJECT_TO_EDGE_BUFF: float = GLOBAL_CONFIG["sizes"]["default_mobject_to_edge_buff"]
+DEFAULT_MOBJECT_TO_MOBJECT_BUFF: float = GLOBAL_CONFIG["sizes"]["default_mobject_to_mobject_buff"]
 
 
 # Standard vectors

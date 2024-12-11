@@ -12,8 +12,8 @@ import moderngl
 import numbers
 import numpy as np
 
-from manimlib.constants import DEFAULT_MOBJECT_TO_EDGE_BUFFER
-from manimlib.constants import DEFAULT_MOBJECT_TO_MOBJECT_BUFFER
+from manimlib.constants import DEFAULT_MOBJECT_TO_EDGE_BUFF
+from manimlib.constants import DEFAULT_MOBJECT_TO_MOBJECT_BUFF
 from manimlib.constants import DOWN, IN, LEFT, ORIGIN, OUT, RIGHT, UP
 from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
 from manimlib.constants import MED_SMALL_BUFF
@@ -1055,7 +1055,7 @@ class Mobject(object):
     def align_on_border(
         self,
         direction: Vect3,
-        buff: float = DEFAULT_MOBJECT_TO_EDGE_BUFFER
+        buff: float = DEFAULT_MOBJECT_TO_EDGE_BUFF
     ) -> Self:
         """
         Direction just needs to be a vector pointing towards side or
@@ -1071,14 +1071,14 @@ class Mobject(object):
     def to_corner(
         self,
         corner: Vect3 = LEFT + DOWN,
-        buff: float = DEFAULT_MOBJECT_TO_EDGE_BUFFER
+        buff: float = DEFAULT_MOBJECT_TO_EDGE_BUFF
     ) -> Self:
         return self.align_on_border(corner, buff)
 
     def to_edge(
         self,
         edge: Vect3 = LEFT,
-        buff: float = DEFAULT_MOBJECT_TO_EDGE_BUFFER
+        buff: float = DEFAULT_MOBJECT_TO_EDGE_BUFF
     ) -> Self:
         return self.align_on_border(edge, buff)
 
@@ -1086,7 +1086,7 @@ class Mobject(object):
         self,
         mobject_or_point: Mobject | Vect3,
         direction: Vect3 = RIGHT,
-        buff: float = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
+        buff: float = DEFAULT_MOBJECT_TO_MOBJECT_BUFF,
         aligned_edge: Vect3 = ORIGIN,
         submobject_to_align: Mobject | None = None,
         index_of_submobject_to_align: int | slice | None = None,
@@ -1117,7 +1117,7 @@ class Mobject(object):
         space_lengths = [FRAME_X_RADIUS, FRAME_Y_RADIUS]
         for vect in UP, DOWN, LEFT, RIGHT:
             dim = np.argmax(np.abs(vect))
-            buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_EDGE_BUFFER)
+            buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_EDGE_BUFF)
             max_val = space_lengths[dim] - buff
             edge_center = self.get_edge_center(vect)
             if np.dot(edge_center, vect) > max_val:
