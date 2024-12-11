@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from addict import Dict
+
 from manimlib import __version__
 from manimlib.config import manim_config
 from manimlib.config import parse_cli
@@ -21,7 +23,7 @@ def run_scenes():
     """
     # Create a new dict to be able to upate without
     # altering global configuration
-    scene_config = dict(manim_config.scene)
+    scene_config = Dict(manim_config.scene)
     run_config = manim_config.run
 
     if run_config.show_in_window:
