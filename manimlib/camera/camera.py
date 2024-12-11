@@ -7,7 +7,6 @@ from PIL import Image
 
 from manimlib.camera.camera_frame import CameraFrame
 from manimlib.constants import BLACK
-from manimlib.constants import DEFAULT_FPS
 from manimlib.constants import DEFAULT_RESOLUTION
 from manimlib.constants import FRAME_HEIGHT
 from manimlib.constants import FRAME_WIDTH
@@ -31,7 +30,7 @@ class Camera(object):
         frame_config: dict = dict(),
         # Note: frame height and width will be resized to match this resolution aspect ratio
         resolution=DEFAULT_RESOLUTION,
-        fps: int = DEFAULT_FPS,
+        fps: int = 30,
         background_color: ManimColor = BLACK,
         background_opacity: float = 1.0,
         # Points in vectorized mobjects with norm greater

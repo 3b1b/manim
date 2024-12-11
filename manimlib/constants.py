@@ -13,7 +13,6 @@ from manimlib.config import GLOBAL_CONFIG
 DEFAULT_RESOLUTION: tuple[int, int] = GLOBAL_CONFIG["camera"]["resolution"]
 DEFAULT_PIXEL_WIDTH: int = DEFAULT_RESOLUTION[0]
 DEFAULT_PIXEL_HEIGHT: int = DEFAULT_RESOLUTION[1]
-DEFAULT_FPS: int = GLOBAL_CONFIG["camera"]["fps"]
 
 # Sizes relevant to default camera frame
 ASPECT_RATIO: float = DEFAULT_PIXEL_WIDTH / DEFAULT_PIXEL_HEIGHT
