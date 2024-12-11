@@ -34,10 +34,6 @@ DEFAULT_MOBJECT_TO_EDGE_BUFFER: float = GLOBAL_CONFIG["sizes"]["default_mobject_
 DEFAULT_MOBJECT_TO_MOBJECT_BUFFER: float = GLOBAL_CONFIG["sizes"]["default_mobject_to_mobject_buff"]
 
 
-# In seconds
-DEFAULT_WAIT_TIME: float = GLOBAL_CONFIG["default_wait_time"]
-
-
 # Standard vectors
 ORIGIN: Vect3 = np.array([0., 0., 0.])
 UP: Vect3 = np.array([0., 1., 0.])

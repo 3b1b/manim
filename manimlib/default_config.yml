@@ -58,6 +58,8 @@ scene:
   # but defaults can be set here
   show_animation_progress: False
   leave_progress_bars: False
+  # How long does a scene pause on Scene.wait calls
+  default_wait_time: 1.0
 style:
   tex_template: "default"
   font: "Consolas"
@@ -142,8 +144,6 @@ colors:
   light_pink: "#DC75CD"
   green_screen: "#00FF00"
   orange: "#FF862F"
-# How long does a scene pause on Scene.wait calls
-default_wait_time: 1.0
 # What command to use for ffmpeg
 ffmpeg_bin: "ffmpeg"
 universal_import_line: "from manimlib import *"

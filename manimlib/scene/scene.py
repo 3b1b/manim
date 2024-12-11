@@ -18,7 +18,6 @@ from manimlib.camera.camera_frame import CameraFrame
 from manimlib.config import get_camera_config
 from manimlib.config import get_file_writer_config
 from manimlib.constants import ARROW_SYMBOLS
-from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
@@ -80,14 +79,16 @@ class Scene(object):
         show_animation_progress: bool = False,
         leave_progress_bars: bool = False,
         presenter_mode: bool = False,
+        default_wait_time: float = 1.0,
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
         self.start_at_animation_number = start_at_animation_number
         self.end_at_animation_number = end_at_animation_number
+        self.show_animation_progress = show_animation_progress
         self.leave_progress_bars = leave_progress_bars
         self.presenter_mode = presenter_mode
-        self.show_animation_progress = show_animation_progress
+        self.default_wait_time = default_wait_time
 
         self.camera_config = merge_dicts_recursively(
             get_camera_config(),         # Global default
@@ -593,11 +594,13 @@ class Scene(object):
 
     def wait(
         self,
-        duration: float = DEFAULT_WAIT_TIME,
+        duration: Optional[float] = None,
         stop_condition: Callable[[], bool] = None,
         note: str = None,
         ignore_presenter_mode: bool = False
     ):
+        if duration is None:
+            duration = self.default_wait_time
         self.pre_play()
         self.update_mobjects(dt=0)  # Any problems with this?
         if self.presenter_mode and not self.skip_animations and not ignore_presenter_mode:
