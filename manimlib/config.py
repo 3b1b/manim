@@ -312,7 +312,7 @@ def update_scene_config(config: Dict, args: Namespace):
 
 
 def update_run_config(config: Dict, args: Namespace):
-    config.run = dict(
+    config.run = Dict(
         file_name=args.file,
         embed_line=(int(args.embed) if args.embed is not None else None),
         is_reload=False,
@@ -380,17 +380,15 @@ def get_animations_numbers(args: Namespace) -> tuple[int | None, int | None]:
         return int(stan), None
 
 
-def get_output_directory(args: Namespace, config: dict) -> str:
-    dir_config = config["directories"]
-    output_directory = args.video_dir or dir_config["output"]
-    if dir_config["mirror_module_path"] and args.file:
-        to_cut = dir_config["removed_mirror_prefix"]
-        ext = os.path.abspath(args.file)
-        ext = ext.replace(to_cut, "").replace(".py", "")
-        if ext.startswith("_"):
-            ext = ext[1:]
-        output_directory = os.path.join(output_directory, ext)
-    return output_directory
+def get_output_directory(args: Namespace, config: Dict) -> str:
+    dir_config = config.directories
+    out_dir = args.video_dir or dir_config.output
+    if dir_config.mirror_module_path and args.file:
+        file_path = Path(args.file).absolute()
+        rel_path = file_path.relative_to(dir_config.removed_mirror_prefix)
+        rel_path = Path(str(rel_path).lstrip("_"))
+        out_dir = Path(out_dir, rel_path).with_suffix("")
+    return out_dir
 
 
 # Create global configuration
