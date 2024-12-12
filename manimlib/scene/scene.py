@@ -77,6 +77,7 @@ class Scene(object):
         end_at_animation_number: int | None = None,
         show_animation_progress: bool = False,
         leave_progress_bars: bool = False,
+        preview_while_skipping: bool = True,
         presenter_mode: bool = False,
         default_wait_time: float = 1.0,
     ):
@@ -86,6 +87,7 @@ class Scene(object):
         self.end_at_animation_number = end_at_animation_number
         self.show_animation_progress = show_animation_progress
         self.leave_progress_bars = leave_progress_bars
+        self.preview_while_skipping = preview_while_skipping
         self.presenter_mode = presenter_mode
         self.default_wait_time = default_wait_time
 
@@ -531,7 +533,7 @@ class Scene(object):
         if not self.skip_animations:
             self.file_writer.end_animation()
 
-        if self.skip_animations and self.window is not None:
+        if self.preview_while_skipping and self.skip_animations and self.window is not None:
             # Show some quick frames along the way
             self.update_frame(dt=0, force_draw=True)
 

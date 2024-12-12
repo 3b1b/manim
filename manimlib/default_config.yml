@@ -64,6 +64,9 @@ file_writer:
 scene:
   show_animation_progress: False
   leave_progress_bars: False
+  # When skipping animations, should a single frame be rendered
+  # at the end of each play call?
+  preview_while_skipping: True
   # How long does a scene pause on Scene.wait calls
   default_wait_time: 1.0
 vmobject:
