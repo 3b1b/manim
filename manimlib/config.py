@@ -212,6 +212,11 @@ def parse_cli():
             help="Level of messages to Display, can be DEBUG / INFO / WARNING / ERROR / CRITICAL"
         )
         parser.add_argument(
+            "--clear-cache",
+            action="store_true",
+            help="Erase the cache used for Tex and Text Mobjects"
+        )
+        parser.add_argument(
             "--autoreload",
             action="store_true",
             help="Automatically reload Python modules to pick up code changes " +

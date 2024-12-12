@@ -5,6 +5,7 @@ from manimlib import __version__
 from manimlib.config import manim_config
 from manimlib.config import parse_cli
 import manimlib.extract_scene
+from manimlib.utils.cache import clear_cache
 from manimlib.window import Window
 
 
@@ -54,6 +55,8 @@ def main():
     args = parse_cli()
     if args.version and args.file is None:
         return
+    if args.clear_cache:
+        clear_cache()
 
     run_scenes()
 
