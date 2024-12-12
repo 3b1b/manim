@@ -61,9 +61,10 @@ RIGHT_SIDE: Vect3 = FRAME_X_RADIUS * RIGHT
 # Angles
 PI: float = np.pi
 TAU: float = 2 * PI
-DEGREES: float = TAU / 360
+DEG: float = TAU / 360
+DEGREES = DEG  # Many older animations use teh full name
 # Nice to have a constant for readability
-# when juxtaposed with expressions like 30 * DEGREES
+# when juxtaposed with expressions like 30 * DEG
 RADIANS: float = 1
 
 # Related to Text

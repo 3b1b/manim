@@ -6,7 +6,7 @@ import warnings
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from manimlib.constants import DEGREES, RADIANS
+from manimlib.constants import DEG, RADIANS
 from manimlib.constants import FRAME_SHAPE
 from manimlib.constants import DOWN, LEFT, ORIGIN, OUT, RIGHT, UP
 from manimlib.constants import PI
@@ -26,7 +26,7 @@ class CameraFrame(Mobject):
         frame_shape: tuple[float, float] = FRAME_SHAPE,
         center_point: Vect3 = ORIGIN,
         # Field of view in the y direction
-        fovy: float = 45 * DEGREES,
+        fovy: float = 45 * DEG,
         euler_axes: str = "zxz",
         # This keeps it ordered first in a scene
         z_index=-1,
@@ -181,7 +181,7 @@ class CameraFrame(Mobject):
         Shortcut for set_euler_angles, defaulting to taking
         in angles in degrees
         """
-        self.set_euler_angles(theta_degrees, phi_degrees, gamma_degrees, units=DEGREES)
+        self.set_euler_angles(theta_degrees, phi_degrees, gamma_degrees, units=DEG)
         if center is not None:
             self.move_to(np.array(center))
         if height is not None:
@@ -209,7 +209,7 @@ class CameraFrame(Mobject):
         self.increment_euler_angles(dgamma=dgamma, units=units)
         return self
 
-    def add_ambient_rotation(self, angular_speed=1 * DEGREES):
+    def add_ambient_rotation(self, angular_speed=1 * DEG):
         self.add_updater(lambda m, dt: m.increment_theta(angular_speed * dt))
         return self
 

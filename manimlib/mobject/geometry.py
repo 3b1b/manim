@@ -7,7 +7,7 @@ import numpy as np
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, OUT, RIGHT, UL, UP, UR
 from manimlib.constants import GREY_A, RED, WHITE, BLACK
 from manimlib.constants import MED_SMALL_BUFF, SMALL_BUFF
-from manimlib.constants import DEGREES, PI, TAU
+from manimlib.constants import DEG, PI, TAU
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import DashedVMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -983,7 +983,7 @@ class RegularPolygon(Polygon):
     ):
         # Defaults to 0 for odd, 90 for even
         if start_angle is None:
-            start_angle = (n % 2) * 90 * DEGREES
+            start_angle = (n % 2) * 90 * DEG
         start_vect = rotate_vector(radius * RIGHT, start_angle)
         vertices = compass_directions(n, start_vect)
         super().__init__(*vertices, **kwargs)

@@ -7,7 +7,7 @@ import numpy as np
 from manimlib.constants import GREY_A, GREY_C, GREY_E
 from manimlib.constants import BLACK
 from manimlib.constants import DEFAULT_STROKE_WIDTH
-from manimlib.constants import DEGREES
+from manimlib.constants import DEG
 from manimlib.constants import ORIGIN, OUT
 from manimlib.constants import PI
 from manimlib.constants import TAU
@@ -490,7 +490,7 @@ class VMobject(Mobject):
         v1 = handle1 - last
         v2 = anchor - handle2
         angle = angle_between_vectors(v1, v2)
-        if self.use_simple_quadratic_approx and angle < 45 * DEGREES:
+        if self.use_simple_quadratic_approx and angle < 45 * DEG:
             quad_approx = [last, find_intersection(last, v1, anchor, -v2), anchor]
         else:
             quad_approx = get_quadratic_approximation_of_cubic(
@@ -616,7 +616,7 @@ class VMobject(Mobject):
 
     def subdivide_sharp_curves(
         self,
-        angle_threshold: float = 30 * DEGREES,
+        angle_threshold: float = 30 * DEG,
         recurse: bool = True
     ) -> Self:
         def tuple_to_subdivisions(b0, b1, b2):
@@ -656,7 +656,7 @@ class VMobject(Mobject):
         self.make_smooth(approx=approx)
         return self
 
-    def is_smooth(self, angle_tol=1 * DEGREES) -> bool:
+    def is_smooth(self, angle_tol=1 * DEG) -> bool:
         angles = np.abs(self.get_joint_angles()[0::2])
         return (angles < angle_tol).all()
 

@@ -11,7 +11,7 @@ from manimlib.config import manim_config
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, RIGHT, UL, UP, UR
 from manimlib.constants import FRAME_WIDTH, FRAME_HEIGHT, SMALL_BUFF
 from manimlib.constants import PI
-from manimlib.constants import DEGREES
+from manimlib.constants import DEG
 from manimlib.constants import MANIM_COLORS, WHITE, GREY_A, GREY_C
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
@@ -625,7 +625,7 @@ class InteractiveScene(Scene):
         angles = frame.get_euler_angles()
 
         call = f"reorient("
-        theta, phi, gamma = (angles / DEGREES).astype(int)
+        theta, phi, gamma = (angles / DEG).astype(int)
         call += f"{theta}, {phi}, {gamma}"
         if any(center != 0):
             call += f", {tuple(np.round(center, 2))}"

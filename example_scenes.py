@@ -190,7 +190,7 @@ class TexTransformExample(Scene):
                 # to go to a non-equal substring from the target,
                 # use the key map.
                 key_map={"+": "-"},
-                path_arc=90 * DEGREES,
+                path_arc=90 * DEG,
             ),
         )
         self.wait()
@@ -203,7 +203,7 @@ class TexTransformExample(Scene):
             TransformMatchingStrings(
                 lines[2].copy(), lines[3],
                 key_map={"2": R"\sqrt"},
-                path_arc=-30 * DEGREES,
+                path_arc=-30 * DEG,
             ),
         )
         self.wait(2)
@@ -616,8 +616,8 @@ class SurfaceExample(ThreeDScene):
         self.play(
             Transform(surface, surfaces[2]),
             # Move camera frame during the transition
-            self.frame.animate.increment_phi(-10 * DEGREES),
-            self.frame.animate.increment_theta(-20 * DEGREES),
+            self.frame.animate.increment_phi(-10 * DEG),
+            self.frame.animate.increment_theta(-20 * DEG),
             run_time=3
         )
         # Add ambient rotation
@@ -666,7 +666,7 @@ class InteractiveDevelopment(Scene):
         self.play(ReplacementTransform(square, circle))
         self.wait()
         self.play(circle.animate.stretch(4, 0))
-        self.play(Rotate(circle, 90 * DEGREES))
+        self.play(Rotate(circle, 90 * DEG))
         self.play(circle.animate.shift(2 * RIGHT).scale(0.25))
 
         text = Text("""

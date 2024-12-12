@@ -5,7 +5,7 @@ import inspect
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.constants import DEGREES
+from manimlib.constants import DEG
 from manimlib.constants import OUT
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
@@ -314,7 +314,7 @@ class ApplyComplexFunction(ApplyMethod):
 
 
 class CyclicReplace(Transform):
-    def __init__(self, *mobjects: Mobject, path_arc=90 * DEGREES, **kwargs):
+    def __init__(self, *mobjects: Mobject, path_arc=90 * DEG, **kwargs):
         super().__init__(Group(*mobjects), path_arc=path_arc, **kwargs)
 
     def create_target(self) -> Mobject:

@@ -14,7 +14,7 @@ from manimlib.animation.transform import Transform
 from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
 from manimlib.constants import ORIGIN, RIGHT, UP
 from manimlib.constants import SMALL_BUFF
-from manimlib.constants import DEGREES
+from manimlib.constants import DEG
 from manimlib.constants import TAU
 from manimlib.constants import GREY, YELLOW
 from manimlib.mobject.geometry import Circle
@@ -395,7 +395,7 @@ class WiggleOutThenIn(Animation):
 
 
 class TurnInsideOut(Transform):
-    def __init__(self, mobject: Mobject, path_arc: float = 90 * DEGREES, **kwargs):
+    def __init__(self, mobject: Mobject, path_arc: float = 90 * DEG, **kwargs):
         super().__init__(mobject, path_arc=path_arc, **kwargs)
 
     def create_target(self) -> Mobject:

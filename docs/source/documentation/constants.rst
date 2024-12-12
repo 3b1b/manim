@@ -74,7 +74,7 @@ Mathematical constant
 
    PI = np.pi
    TAU = 2 * PI
-   DEGREES = TAU / 360
+   DEG = TAU / 360
 
 Text
 ----
