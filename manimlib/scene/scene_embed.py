@@ -30,7 +30,7 @@ class InteractiveSceneEmbed:
         self.ensure_frame_update_post_cell()
         self.ensure_flash_on_error()
         if manim_config.embed.autoreload:
-            self.autoreload()
+            self.auto_reload()
 
     def launch(self):
         self.shell()
