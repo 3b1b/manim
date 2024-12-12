@@ -29,6 +29,8 @@ class InteractiveSceneEmbed:
         self.enable_gui()
         self.ensure_frame_update_post_cell()
         self.ensure_flash_on_error()
+        if manim_config.embed.autoreload:
+            self.autoreload()
 
     def launch(self):
         self.shell()
@@ -138,6 +140,11 @@ class InteractiveSceneEmbed:
 
         print("Reloading...")
         self.shell.run_line_magic("exit_raise", "")
+
+    def auto_reload(self):
+        """Enables IPython autoreload for automatic reloading of modules."""
+        self.shell.magic("load_ext autoreload")
+        self.shell.magic("autoreload all")
 
     def checkpoint_paste(
         self,

@@ -83,6 +83,7 @@ text:
   alignment: "LEFT"
 embed:
   exception_mode: "Verbose"
+  autoreload: False
 resolution_options:
   # When the user passes in -l, -m, --hd or --uhd, these are the corresponding
   # resolutions
