@@ -273,7 +273,6 @@ def update_file_writer_config(config: dict, args: Namespace):
         movie_file_extension=(get_file_ext(args)),
         output_directory=get_output_directory(args, config),
         file_name=args.file_name,
-        input_file_path=args.file or "",
         open_file_upon_completion=args.open,
         show_file_location_upon_completion=args.finder,
         quiet=args.quiet,

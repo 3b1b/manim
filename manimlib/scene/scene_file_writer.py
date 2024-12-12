@@ -34,8 +34,6 @@ class SceneFileWriter(object):
         png_mode: str = "RGBA",
         save_last_frame: bool = False,
         movie_file_extension: str = ".mp4",
-        # What python file is generating this scene
-        input_file_path: str = "",
         # Where should this be written
         output_directory: str = ".",
         file_name: str | None = None,
@@ -57,7 +55,6 @@ class SceneFileWriter(object):
         self.png_mode = png_mode
         self.save_last_frame = save_last_frame
         self.movie_file_extension = movie_file_extension
-        self.input_file_path = input_file_path
         self.output_directory = output_directory
         self.file_name = file_name
         self.open_file_upon_completion = open_file_upon_completion
