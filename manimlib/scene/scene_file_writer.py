@@ -37,7 +37,7 @@ class SceneFileWriter(object):
         # What python file is generating this scene
         input_file_path: str = "",
         # Where should this be written
-        output_directory: str = "",
+        output_directory: str = ".",
         file_name: str | None = None,
         open_file_upon_completion: bool = False,
         show_file_location_upon_completion: bool = False,
