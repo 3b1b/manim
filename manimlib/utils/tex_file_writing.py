@@ -31,22 +31,13 @@ def get_tex_template_config(template_name: str) -> dict[str, str]:
 
 
 @lru_cache
-def get_tex_config(template: str = "") -> dict[str, str]:
+def get_tex_config(template: str = "") -> tuple[str, str]:
     """
-    Returns a dict which should look something like this:
-    {
-        "template": "default",
-        "compiler": "latex",
-        "preamble": "..."
-    }
+    Returns a compiler and preamble to use for rendering LaTeX
     """
     template = template or manim_config.tex.template
-    template_config = get_tex_template_config(template)
-    return {
-        "template": template,
-        "compiler": template_config["compiler"],
-        "preamble": template_config["preamble"]
-    }
+    config = get_tex_template_config(template)
+    return config["compiler"], config["preamble"]
 
 
 def get_full_tex(content: str, preamble: str = ""):
@@ -60,7 +51,6 @@ def get_full_tex(content: str, preamble: str = ""):
 
 
 @lru_cache(maxsize=128)
-@cache_on_disk
 def latex_to_svg(
     latex: str,
     template: str = "",
@@ -83,14 +73,21 @@ def latex_to_svg(
         NotImplementedError: If compiler is not supported
     """
     if show_message_during_execution:
-        max_message_len = 80
-        message = f"Writing {short_tex or latex}"
-        if len(message) > max_message_len:
-            message = message[:max_message_len - 3] + "..."
-        print(message, end="\r")
+        message = f"Writing {(short_tex or latex)[:70]}..."
+    else:
+        message = ""
 
-    tex_config = get_tex_config(template)
-    compiler = tex_config["compiler"]
+    compiler, preamble = get_tex_config(template)
+
+    preamble = "\n".join([additional_preamble, preamble])
+    full_tex = get_full_tex(latex, preamble)
+    return full_tex_to_svg(full_tex, compiler, message)
+
+
+@cache_on_disk
+def full_tex_to_svg(full_tex: str, compiler: str = "latex", message: str = ""):
+    if message:
+        print(message, end="\r")
 
     if compiler == "latex":
         dvi_ext = ".dvi"
@@ -99,17 +96,13 @@ def latex_to_svg(
     else:
         raise NotImplementedError(f"Compiler '{compiler}' is not implemented")
 
-    preamble = tex_config["preamble"] + "\n" + additional_preamble
-    full_tex = get_full_tex(latex, preamble)
-
     # Write intermediate files to a temporary directory
     with tempfile.TemporaryDirectory() as temp_dir:
-        base_path = os.path.join(temp_dir, "working")
-        tex_path = base_path + ".tex"
-        dvi_path = base_path + dvi_ext
+        tex_path = Path(temp_dir, "working").with_suffix(".tex")
+        dvi_path = tex_path.with_suffix(dvi_ext)
 
         # Write tex file
-        Path(tex_path).write_text(full_tex)
+        tex_path.write_text(full_tex)
 
         # Run latex compiler
         process = subprocess.run(
@@ -128,13 +121,12 @@ def latex_to_svg(
         if process.returncode != 0:
             # Handle error
             error_str = ""
-            log_path = base_path + ".log"
-            if os.path.exists(log_path):
-                with open(log_path, "r", encoding="utf-8") as log_file:
-                    content = log_file.read()
-                    error_match = re.search(r"(?<=\n! ).*\n.*\n", content)
-                    if error_match:
-                        error_str = error_match.group()
+            log_path = tex_path.with_suffix(".log")
+            if log_path.exists():
+                content = log_path.read_text()
+                error_match = re.search(r"(?<=\n! ).*\n.*\n", content)
+                if error_match:
+                    error_str = error_match.group()
             raise LatexError(error_str or "LaTeX compilation failed")
 
         # Run dvisvgm and capture output directly
@@ -152,7 +144,7 @@ def latex_to_svg(
         # Return SVG string
         result = process.stdout.decode('utf-8')
 
-    if show_message_during_execution:
+    if message:
         print(" " * len(message), end="\r")
 
     return result
