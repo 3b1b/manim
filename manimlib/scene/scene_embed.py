@@ -157,7 +157,8 @@ class InteractiveSceneEmbed:
 
 
 class CheckpointManager:
-    checkpoint_states: dict[str, list[tuple[Mobject, Mobject]]] = dict()
+    def __init__(self):
+        self.checkpoint_states: dict[str, list[tuple[Mobject, Mobject]]] = dict()
 
     def checkpoint_paste(self, shell, scene):
         """
