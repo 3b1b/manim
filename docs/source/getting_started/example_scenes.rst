@@ -34,7 +34,7 @@ InteractiveDevlopment
             self.play(ReplacementTransform(square, circle))
             self.wait()
             self.play(circle.animate.stretch(4, 0))
-            self.play(Rotate(circle, 90 * DEGREES))
+            self.play(Rotate(circle, 90 * DEG))
             self.play(circle.animate.shift(2 * RIGHT).scale(0.25))
 
             text = Text("""
@@ -221,7 +221,7 @@ TexTransformExample
             self.play(
                 TransformMatchingTex(
                     lines[0].copy(), lines[1],
-                    path_arc=90 * DEGREES,
+                    path_arc=90 * DEG,
                 ),
                 **play_kw
             )
@@ -599,8 +599,8 @@ SurfaceExample
             # Set perspective
             frame = self.camera.frame
             frame.set_euler_angles(
-                theta=-30 * DEGREES,
-                phi=70 * DEGREES,
+                theta=-30 * DEG,
+                phi=70 * DEG,
             )
 
             surface = surfaces[0]
@@ -624,8 +624,8 @@ SurfaceExample
             self.play(
                 Transform(surface, surfaces[2]),
                 # Move camera frame during the transition
-                frame.animate.increment_phi(-10 * DEGREES),
-                frame.animate.increment_theta(-20 * DEGREES),
+                frame.animate.increment_phi(-10 * DEG),
+                frame.animate.increment_theta(-20 * DEG),
                 run_time=3
             )
             # Add ambient rotation

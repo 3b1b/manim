@@ -7,10 +7,11 @@ from IPython.core.getipython import get_ipython
 from pyglet.window import key as PygletWindowKeys
 
 from manimlib.animation.fading import FadeIn
+from manimlib.config import manim_config
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, RIGHT, UL, UP, UR
 from manimlib.constants import FRAME_WIDTH, FRAME_HEIGHT, SMALL_BUFF
 from manimlib.constants import PI
-from manimlib.constants import DEGREES
+from manimlib.constants import DEG
 from manimlib.constants import MANIM_COLORS, WHITE, GREY_A, GREY_C
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
@@ -36,17 +37,16 @@ if TYPE_CHECKING:
     from manimlib.typing import Vect3
 
 
-SELECT_KEY = 's'
-UNSELECT_KEY = 'u'
-GRAB_KEY = 'g'
-X_GRAB_KEY = 'h'
-Y_GRAB_KEY = 'v'
+SELECT_KEY = manim_config.key_bindings.select
+UNSELECT_KEY = manim_config.key_bindings.unselect
+GRAB_KEY = manim_config.key_bindings.grab
+X_GRAB_KEY = manim_config.key_bindings.x_grab
+Y_GRAB_KEY = manim_config.key_bindings.y_grab
 GRAB_KEYS = [GRAB_KEY, X_GRAB_KEY, Y_GRAB_KEY]
-RESIZE_KEY = 't'
-COLOR_KEY = 'c'
-INFORMATION_KEY = 'i'
-CURSOR_KEY = 'k'
-COPY_FRAME_POSITION_KEY = 'p'
+RESIZE_KEY = manim_config.key_bindings.resize  # TODO
+COLOR_KEY = manim_config.key_bindings.color
+INFORMATION_KEY = manim_config.key_bindings.information
+CURSOR_KEY = manim_config.key_bindings.cursor
 
 # For keyboard interactions
 
@@ -625,7 +625,7 @@ class InteractiveScene(Scene):
         angles = frame.get_euler_angles()
 
         call = f"reorient("
-        theta, phi, gamma = (angles / DEGREES).astype(int)
+        theta, phi, gamma = (angles / DEG).astype(int)
         call += f"{theta}, {phi}, {gamma}"
         if any(center != 0):
             call += f", {tuple(np.round(center, 2))}"

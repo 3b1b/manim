@@ -52,13 +52,6 @@ camera:
   fps: 30
   background_opacity: 1.0
 file_writer:
-  # If break_into_partial_movies is set to True, then many small
-  # files will be written corresponding to each Scene.play and
-  # Scene.wait call, and these files will then be combined
-  # to form the full scene.  Sometimes video-editing is made
-  # easier when working with the broken up scene, which
-  # effectively has cuts at all the places you might want.
-  break_into_partial_movies: False
   # What command to use for ffmpeg
   ffmpeg_bin: "ffmpeg"
   # Parameters to pass into ffmpeg
@@ -71,6 +64,9 @@ file_writer:
 scene:
   show_animation_progress: False
   leave_progress_bars: False
+  # When skipping animations, should a single frame be rendered
+  # at the end of each play call?
+  preview_while_skipping: True
   # How long does a scene pause on Scene.wait calls
   default_wait_time: 1.0
 vmobject:
@@ -104,6 +100,20 @@ sizes:
   # Default buffers used in Mobject.next_to or Mobject.to_edge
   default_mobject_to_edge_buff: 0.5
   default_mobject_to_mobject_buff: 0.25
+key_bindings:
+  pan_3d: 'd'
+  pan: 'f'
+  reset: 'r'
+  quit: 'q'  # Together with command
+  select: 's'
+  unselect: 'u'
+  grab: 'g'
+  x_grab: 'h'
+  y_grab: 'v'
+  resize: 't'
+  color: 'c'
+  information: 'i'
+  cursor: 'k'
 colors:
   blue_e: "#1C758A"
   blue_d: "#29ABCA"

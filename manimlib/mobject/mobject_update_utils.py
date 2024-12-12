@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 
-from manimlib.constants import DEGREES
+from manimlib.constants import DEG
 from manimlib.constants import RIGHT
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.simple_functions import clip
@@ -71,7 +71,7 @@ def always_shift(
 
 def always_rotate(
     mobject: Mobject,
-    rate: float = 20 * DEGREES,
+    rate: float = 20 * DEG,
     **kwargs
 ) -> Mobject:
     mobject.add_updater(

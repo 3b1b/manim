@@ -106,11 +106,6 @@ def parse_cli():
                  "space bar or right arrow is hit, like a slide show"
         )
         parser.add_argument(
-            "-g", "--save_pngs",
-            action="store_true",
-            help="Save each frame as a png",
-        )
-        parser.add_argument(
             "-i", "--gif",
             action="store_true",
             help="Save the video as gif",
@@ -147,6 +142,12 @@ def parse_cli():
             "--finder",
             action="store_true",
             help="Show the output file in finder",
+        )
+        parser.add_argument(
+            "--subdivide",
+            action="store_true",
+            help="Divide the output animation into individual movie files " +
+                 "for each animation",
         )
         parser.add_argument(
             "--file_name",
@@ -261,8 +262,8 @@ def update_file_writer_config(config: dict, args: Namespace):
     file_writer_config = config["file_writer"]
     file_writer_config.update(
         write_to_movie=(not args.skip_animations and args.write_file),
+        subdivide_output=args.subdivide,
         save_last_frame=(args.skip_animations and args.write_file),
-        save_pngs=args.save_pngs,
         png_mode=("RGBA" if args.transparent else "RGB"),
         movie_file_extension=(get_file_ext(args)),
         output_directory=get_output_directory(args, config),
