@@ -102,7 +102,7 @@ class InteractiveSceneEmbed:
         """Flash border, and potentially play sound, on exceptions"""
         def custom_exc(shell, etype, evalue, tb, tb_offset=None):
             # Show the error don't just swallow it
-            print(''.join(traceback.format_exception(etype, evalue, tb)))
+            shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
             rect = FullScreenRectangle().set_stroke(RED, 30).set_fill(opacity=0)
             rect.fix_in_frame()
             self.scene.play(VFadeInThenOut(rect, run_time=0.5))
