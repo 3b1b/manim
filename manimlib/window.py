@@ -69,7 +69,8 @@ class Window(PygletWindow):
         mglw.activate_context(window=self, ctx=self.ctx)
         self.timer.start()
 
-        self.focus()
+        # This line seems to resync the viewport
+        self.on_resize(*self.size)
 
     def get_monitor(self, index):
         try:
@@ -106,8 +107,6 @@ class Window(PygletWindow):
         """
         self._window.set_visible(False)
         self._window.set_visible(True)
-        # This line seems to resync the viewport
-        self.on_resize(*self.size)
 
     def to_default_position(self):
         self.position = self.default_position
