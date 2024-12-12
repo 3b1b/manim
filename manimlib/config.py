@@ -7,6 +7,7 @@ import inspect
 import os
 import sys
 import yaml
+from pathlib import Path
 from ast import literal_eval
 from addict import Dict
 
@@ -31,11 +32,11 @@ def initialize_manim_config() -> Dict:
     """
     args = parse_cli()
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
-    config = merge_dicts_recursively(
+    config = Dict(merge_dicts_recursively(
         load_yaml(global_defaults_file),
         load_yaml("custom_config.yml"),  # From current working directory
         load_yaml(args.config_file) if args.config_file else dict(),
-    )
+    ))
 
     log.setLevel(args.log_level or config["log_level"])
 
@@ -47,7 +48,7 @@ def initialize_manim_config() -> Dict:
     update_run_config(config, args)
     update_embed_config(config, args)
 
-    return Dict(config)
+    return config
 
 
 def parse_cli():
@@ -230,41 +231,41 @@ def parse_cli():
         sys.exit(2)
 
 
-def update_directory_config(config: dict):
-    dir_config = config["directories"]
-    base = dir_config['base']
-    for key, subdir in dir_config['subdirs'].items():
+def update_directory_config(config: Dict):
+    dir_config = config.directories
+    base = dir_config.base
+    for key, subdir in dir_config.subdirs.items():
         dir_config[key] = os.path.join(base, subdir)
 
 
-def update_window_config(config: dict, args: Namespace):
-    window_config = config["window"]
+def update_window_config(config: Dict, args: Namespace):
+    window_config = config.window
     for key in "position", "size":
         if window_config.get(key):
             window_config[key] = literal_eval(window_config[key])
     if args.full_screen:
-        window_config["full_screen"] = True
+        window_config.full_screen = True
 
 
-def update_camera_config(config: dict, args: Namespace):
-    camera_config = config["camera"]
-    arg_resolution = get_resolution_from_args(args, config["resolution_options"])
-    camera_config["resolution"] = arg_resolution or literal_eval(camera_config["resolution"])
+def update_camera_config(config: Dict, args: Namespace):
+    camera_config = config.camera
+    arg_resolution = get_resolution_from_args(args, config.resolution_options)
+    camera_config.resolution = arg_resolution or literal_eval(camera_config.resolution)
     if args.fps:
-        camera_config["fps"] = args.fps
+        camera_config.fps = args.fps
     if args.color:
         try:
-            camera_config["background_color"] = colour.Color(args.color)
+            camera_config.background_color = colour.Color(args.color)
         except Exception:
             log.error("Please use a valid color")
             log.error(err)
             sys.exit(2)
     if args.transparent:
-        camera_config["background_opacity"] = 0.0
+        camera_config.background_opacity = 0.0
 
 
-def update_file_writer_config(config: dict, args: Namespace):
-    file_writer_config = config["file_writer"]
+def update_file_writer_config(config: Dict, args: Namespace):
+    file_writer_config = config.file_writer
     file_writer_config.update(
         write_to_movie=(not args.skip_animations and args.write_file),
         subdivide_output=args.subdivide,
@@ -279,19 +280,19 @@ def update_file_writer_config(config: dict, args: Namespace):
     )
 
     if args.vcodec:
-        file_writer_config["video_codec"] = args.vcodec
+        file_writer_config.video_codec = args.vcodec
     elif args.transparent:
-        file_writer_config["video_codec"] = 'prores_ks'
-        file_writer_config["pixel_format"] = ''
+        file_writer_config.video_codec = 'prores_ks'
+        file_writer_config.pixel_format = ''
     elif args.gif:
-        file_writer_config["video_codec"] = ''
+        file_writer_config.video_codec = ''
 
     if args.pix_fmt:
-        file_writer_config["pixel_format"] = args.pix_fmt
+        file_writer_config.pixel_format = args.pix_fmt
 
 
-def update_scene_config(config: dict, args: Namespace):
-    scene_config = config["scene"]
+def update_scene_config(config: Dict, args: Namespace):
+    scene_config = config.scene
     start, end = get_animations_numbers(args)
     scene_config.update(
         # Note, Scene.__init__ makes use of both manimlib.camera and
@@ -305,13 +306,13 @@ def update_scene_config(config: dict, args: Namespace):
         presenter_mode=args.presenter_mode,
     )
     if args.leave_progress_bars:
-        scene_config["leave_progress_bars"] = True
+        scene_config.leave_progress_bars = True
     if args.show_animation_progress:
-        scene_config["show_animation_progress"] = True
+        scene_config.show_animation_progress = True
 
 
-def update_run_config(config: dict, args: Namespace):
-    config["run"] = dict(
+def update_run_config(config: Dict, args: Namespace):
+    config.run = dict(
         file_name=args.file,
         embed_line=(int(args.embed) if args.embed is not None else None),
         is_reload=False,
@@ -323,9 +324,9 @@ def update_run_config(config: dict, args: Namespace):
     )
 
 
-def update_embed_config(config: dict, args: Namespace):
+def update_embed_config(config: Dict, args: Namespace):
     if args.autoreload:
-        config["embed"]["autoreload"] = True
+        config.embed.autoreload = True
 
 
 # Helpers for the functions above
