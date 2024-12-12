@@ -48,12 +48,6 @@ if TYPE_CHECKING:
     from manimlib.animation.animation import Animation
 
 
-PAN_3D_KEY = 'd'
-FRAME_SHIFT_KEY = 'f'
-RESET_FRAME_KEY = 'r'
-QUIT_KEY = 'q'
-
-
 class Scene(object):
     random_seed: int = 0
     pan_sensitivity: float = 0.5
@@ -748,13 +742,13 @@ class Scene(object):
 
         frame = self.camera.frame
         # Handle perspective changes
-        if self.window.is_key_pressed(ord(PAN_3D_KEY)):
+        if self.window.is_key_pressed(ord(manim_config.key_bindings.pan_3d)):
             ff_d_point = frame.to_fixed_frame_point(d_point, relative=True)
             ff_d_point *= self.pan_sensitivity
             frame.increment_theta(-ff_d_point[0])
             frame.increment_phi(ff_d_point[1])
         # Handle frame movements
-        elif self.window.is_key_pressed(ord(FRAME_SHIFT_KEY)):
+        elif self.window.is_key_pressed(ord(manim_config.key_bindings.pan)):
             frame.shift(-d_point)
 
     def on_mouse_drag(
@@ -840,14 +834,14 @@ class Scene(object):
         if propagate_event is not None and propagate_event is False:
             return
 
-        if char == RESET_FRAME_KEY:
+        if char == manim_config.key_bindings.reset:
             self.play(self.camera.frame.animate.to_default_state())
         elif char == "z" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.undo()
         elif char == "z" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL | PygletWindowKeys.MOD_SHIFT)):
             self.redo()
         # command + q
-        elif char == QUIT_KEY and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
+        elif char == manim_config.key_bindings.quit and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
             self.quit_interaction = True
         # Space or right arrow
         elif char == " " or symbol == PygletWindowKeys.RIGHT:

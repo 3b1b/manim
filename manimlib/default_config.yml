@@ -100,6 +100,20 @@ sizes:
   # Default buffers used in Mobject.next_to or Mobject.to_edge
   default_mobject_to_edge_buff: 0.5
   default_mobject_to_mobject_buff: 0.25
+key_bindings:
+  pan_3d: 'd'
+  pan: 'f'
+  reset: 'r'
+  quit: 'q'  # Together with command
+  select: 's'
+  unselect: 'u'
+  grab: 'g'
+  x_grab: 'h'
+  y_grab: 'v'
+  resize: 't'
+  color: 'c'
+  information: 'i'
+  cursor: 'k'
 colors:
   blue_e: "#1C758A"
   blue_d: "#29ABCA"
