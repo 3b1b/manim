@@ -143,8 +143,11 @@ class InteractiveSceneEmbed:
 
     def auto_reload(self):
         """Enables IPython autoreload for automatic reloading of modules."""
-        self.shell.magic("load_ext autoreload")
-        self.shell.magic("autoreload all")
+        def pre_cell_func(*args, **kwargs):
+            new_mod = ModuleLoader.get_module(self.shell.user_module.__file__, is_during_reload=True)
+            self.shell.user_ns.update(vars(new_mod))
+
+        self.shell.events.register("pre_run_cell", pre_cell_func)
 
     def checkpoint_paste(
         self,
