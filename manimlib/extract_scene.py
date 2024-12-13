@@ -111,7 +111,7 @@ def get_scenes_to_render(all_scene_classes: list, scene_config: Dict, run_config
 def get_scene_classes(module: Optional[Module]):
     if module is None:
         # If no module was passed in, just play the blank scene
-        return [BlankScene(**scene_config)]
+        return [BlankScene]
     if hasattr(module, "SCENES_IN_ORDER"):
         return module.SCENES_IN_ORDER
     else:
