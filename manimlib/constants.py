@@ -62,7 +62,7 @@ RIGHT_SIDE: Vect3 = FRAME_X_RADIUS * RIGHT
 PI: float = np.pi
 TAU: float = 2 * PI
 DEG: float = TAU / 360
-DEGREES = DEG  # Many older animations use teh full name
+DEGREES = DEG  # Many older animations use the full name
 # Nice to have a constant for readability
 # when juxtaposed with expressions like 30 * DEG
 RADIANS: float = 1
