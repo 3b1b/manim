@@ -79,7 +79,7 @@ def latex_to_svg(
 
     compiler, preamble = get_tex_config(template)
 
-    preamble = "\n".join([additional_preamble, preamble])
+    preamble = "\n".join([preamble, additional_preamble])
     full_tex = get_full_tex(latex, preamble)
     return full_tex_to_svg(full_tex, compiler, message)
 
