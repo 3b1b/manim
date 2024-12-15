@@ -81,7 +81,7 @@ embed:
   exception_mode: "Verbose"
   autoreload: False
 resolution_options:
-  # When the user passes in -l, -m, --hd or --uhd, these are the corresponding
+  # When the user passes in -l, -m, --hd or --4k, these are the corresponding
   # resolutions
   low: (854, 480)
   med: (1280, 720)
