@@ -43,6 +43,7 @@ class SampleSpace(Rectangle):
             fill_opacity=fill_opacity,
             stroke_width=stroke_width,
             stroke_color=stroke_color,
+            **kwargs
         )
         self.default_label_scale_val = default_label_scale_val
 

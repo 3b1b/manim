@@ -12,6 +12,7 @@ from manimlib.scene.interactive_scene import InteractiveScene
 from manimlib.scene.scene import Scene
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     Module = importlib.util.types.ModuleType
     from typing import Optional
@@ -142,7 +143,7 @@ def get_indent(code_lines: list[str], line_number: int) -> str:
     return n_spaces * " "
 
 
-def insert_embed_line_to_module(module: Module, line_number: int):
+def insert_embed_line_to_module(module: Module, run_config: Dict) -> None:
     """
     This is hacky, but convenient. When user includes the argument "-e", it will try
     to recreate a file that inserts the line `self.embed()` into the end of the scene's
@@ -150,11 +151,24 @@ def insert_embed_line_to_module(module: Module, line_number: int):
     the last line in the sourcefile which includes that string.
     """
     lines = inspect.getsource(module).splitlines()
+    line_number = run_config.embed_line
 
     # Add the relevant embed line to the code
     indent = get_indent(lines, line_number)
     lines.insert(line_number, indent + "self.embed()")
     new_code = "\n".join(lines)
+
+    # When the user executes the `-e <line_number>` command,
+    # it should automatically identifies the nearest class
+    # defined above `<line_number>` as 'scene_names'.
+    classes = list(filter(lambda line: line.startswith("class"), lines[:line_number]))
+    if classes:
+        from re import search
+
+        name_search = search(r"(\w+)\(", classes[-1])
+        run_config.update(scene_names=[name_search.group(1)])
+    else:
+        log.error(f"No 'class' has been found above {line_number}!")
 
     # Execute the code, which presumably redefines the user's
     # scene to include this embed line, within the relevant module.
@@ -162,15 +176,15 @@ def insert_embed_line_to_module(module: Module, line_number: int):
     exec(code_object, module.__dict__)
 
 
-def get_module(file_name: Optional[str], embed_line: Optional[int], is_reload: bool = False) -> Module:
-    module = ModuleLoader.get_module(file_name, is_reload)
-    if embed_line:
-        insert_embed_line_to_module(module, embed_line)
+def get_module(run_config: Dict) -> Module:
+    module = ModuleLoader.get_module(run_config.file_name, run_config.is_reload)
+    if run_config.embed_line:
+        insert_embed_line_to_module(module, run_config)
     return module
 
 
 def main(scene_config: Dict, run_config: Dict):
-    module = get_module(run_config.file_name, run_config.embed_line, run_config.is_reload)
+    module = get_module(run_config)
     all_scene_classes = get_scene_classes(module)
     scenes = get_scenes_to_render(all_scene_classes, scene_config, run_config)
     if len(scenes) == 0:
