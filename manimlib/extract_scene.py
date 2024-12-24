@@ -159,7 +159,7 @@ def insert_embed_line_to_module(module: Module, run_config: Dict) -> None:
     new_code = "\n".join(lines)
 
     # When the user executes the `-e <line_number>` command,
-    # it should automatically identifies the nearest class
+    # it should automatically identify the nearest class
     # defined above `<line_number>` as 'scene_names'.
     classes = list(filter(lambda line: line.startswith("class"), lines[:line_number]))
     if classes:
