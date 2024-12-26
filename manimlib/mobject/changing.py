@@ -112,7 +112,7 @@ class TracedPath(VMobject):
         self.time: float = 0
         self.traced_points: list[np.ndarray] = []
         self.add_updater(lambda m, dt: m.update_path(dt))
-        self.set_stroke(stroke_color, stroke_width)
+        self.always.set_stroke(stroke_color, stroke_width)
 
     def update_path(self, dt: float) -> Self:
         if dt == 0:
