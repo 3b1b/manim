@@ -335,7 +335,7 @@ class TexturedSurface(Surface):
         self.uniforms["num_textures"] = self.num_textures
 
     @Mobject.affects_data
-    def set_opacity(self, opacity: float | Iterable[float]) -> Self:
+    def set_opacity(self, opacity: float | Iterable[float], recurse=True) -> Self:
         op_arr = np.array(listify(opacity))
         self.data["opacity"][:, 0] = resize_with_interpolation(op_arr, len(self.data))
         return self
