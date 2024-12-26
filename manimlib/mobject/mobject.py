@@ -845,6 +845,7 @@ class Mobject(object):
         if call:
             self.update(dt=0)
         self.refresh_has_updater_status()
+        self.update()
         return self
 
     def insert_updater(self, update_func: Updater, index=0):
