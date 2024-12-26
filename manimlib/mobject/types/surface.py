@@ -8,9 +8,11 @@ from manimlib.constants import OUT
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import resize_with_interpolation
+from manimlib.utils.simple_functions import clip
 from manimlib.utils.space_ops import normalize_along_axis
 from manimlib.utils.space_ops import cross
 
@@ -95,6 +97,32 @@ class Surface(Mobject):
         self.set_points(points)
         self.data['du_point'][:] = du_points
         self.data['dv_point'][:] = dv_points
+
+    def uv_to_point(self, u, v):
+        nu, nv = self.resolution
+        uv_grid = np.reshape(self.get_points(), (nu, nv, self.dim))
+
+        alpha1 = clip(inverse_interpolate(*self.u_range[:2], u), 0, 1)
+        alpha2 = clip(inverse_interpolate(*self.v_range[:2], v), 0, 1)
+        scaled_u = alpha1 * (nu - 1)
+        scaled_v = alpha2 * (nv - 1)
+        u_int = int(scaled_u)
+        v_int = int(scaled_v)
+        u_int_plus = min(u_int + 1, nu - 1)
+        v_int_plus = min(v_int + 1, nv - 1)
+
+        a = uv_grid[u_int, v_int, :]
+        b = uv_grid[u_int, v_int_plus, :]
+        c = uv_grid[u_int_plus, v_int, :]
+        d = uv_grid[u_int_plus, v_int_plus, :]
+
+        u_res = scaled_u % 1
+        v_res = scaled_v % 1
+        return interpolate(
+            interpolate(a, b, v_res),
+            interpolate(c, d, v_res),
+            u_res
+        )
 
     def apply_points_function(self, *args, **kwargs) -> Self:
         super().apply_points_function(*args, **kwargs)
@@ -307,7 +335,7 @@ class TexturedSurface(Surface):
         self.uniforms["num_textures"] = self.num_textures
 
     @Mobject.affects_data
-    def set_opacity(self, opacity: float | Iterable[float]) -> Self:
+    def set_opacity(self, opacity: float | Iterable[float], recurse=True) -> Self:
         op_arr = np.array(listify(opacity))
         self.data["opacity"][:, 0] = resize_with_interpolation(op_arr, len(self.data))
         return self

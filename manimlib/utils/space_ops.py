@@ -48,6 +48,10 @@ def get_norm(vect: VectN | List[float]) -> float:
     return sum((x**2 for x in vect))**0.5
 
 
+def get_dist(vect1: VectN, vect2: VectN):
+    return get_norm(vect2 - vect1)
+
+
 def normalize(
     vect: VectN | List[float],
     fall_back: VectN | List[float] | None = None

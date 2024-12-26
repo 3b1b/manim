@@ -11,7 +11,8 @@ def num_tex_symbols(tex: str) -> int:
     tex = remove_tex_environments(tex)
     commands_pattern = r"""
         (?P<sqrt>\\sqrt\[[0-9]+\])|    # Special sqrt with number
-        (?P<cmd>\\[a-zA-Z!,-/:;<>]+)   # Regular commands
+        (?P<escaped_brace>\\[{}])|      # Escaped braces
+        (?P<cmd>\\[a-zA-Z!,-/:;<>]+)    # Regular commands
     """
     total = 0
     pos = 0
@@ -21,6 +22,8 @@ def num_tex_symbols(tex: str) -> int:
 
         if match.group("sqrt"):
             total += len(match.group()) - 5
+        elif match.group("escaped_brace"):
+            total += 1  # Count escaped brace as one symbol
         else:
             total += TEX_TO_SYMBOL_COUNT.get(match.group(), 1)
         pos = match.end()

@@ -22,10 +22,7 @@ def get_tex_template_config(template_name: str) -> dict[str, str]:
     with open(template_path, encoding="utf-8") as tex_templates_file:
         templates_dict = yaml.safe_load(tex_templates_file)
     if name not in templates_dict:
-        log.warning(
-            "Cannot recognize template '%s', falling back to 'default'.",
-            name
-        )
+        log.warning(f"Cannot recognize template {name}, falling back to 'default'.")
         name = "default"
     return templates_dict[name]
 

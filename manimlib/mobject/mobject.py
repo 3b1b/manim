@@ -307,11 +307,14 @@ class Mobject(object):
                 parent.refresh_bounding_box()
         return self
 
-    # Others related to points
-
+    @affects_data
     def match_points(self, mobject: Mobject) -> Self:
-        self.set_points(mobject.get_points())
+        self.resize_points(len(mobject.data), resize_func=resize_preserving_order)
+        for key in self.pointlike_data_keys:
+            self.data[key][:] = mobject.data[key]
         return self
+
+    # Others related to points
 
     def get_points(self) -> Vect3Array:
         return self.data["point"]
@@ -842,6 +845,7 @@ class Mobject(object):
         if call:
             self.update(dt=0)
         self.refresh_has_updater_status()
+        self.update()
         return self
 
     def insert_updater(self, update_func: Updater, index=0):

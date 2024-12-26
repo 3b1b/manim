@@ -221,11 +221,13 @@ class UnitInterval(NumberLine):
         big_tick_numbers: list[float] = [0, 1],
         decimal_number_config: dict = dict(
             num_decimal_places=1,
-        )
+        ),
+        **kwargs
     ):
         super().__init__(
             x_range=x_range,
             unit_size=unit_size,
             big_tick_numbers=big_tick_numbers,
             decimal_number_config=decimal_number_config,
+            **kwargs
         )
