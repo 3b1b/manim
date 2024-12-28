@@ -122,8 +122,8 @@ class StringMobject(SVGMobject, ABC):
         # of submobject which are and use those for labels
         unlabelled_submobs = submobs
         labelled_content = self.get_content(is_labelled=True)
-        labelled_file = self.get_file_path_by_content(labelled_content)
-        labelled_submobs = super().mobjects_from_file(labelled_file)
+        labelled_file = self.get_svg_string_by_content(labelled_content)
+        labelled_submobs = super().mobjects_from_svg_string(labelled_file)
         self.labelled_submobs = labelled_submobs
         self.unlabelled_submobs = unlabelled_submobs
 

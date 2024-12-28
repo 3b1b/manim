@@ -176,9 +176,6 @@ class MarkupText(StringMobject):
         self.disable_ligatures = disable_ligatures
         self.isolate = isolate
 
-        if not isinstance(self, Text):
-            self.validate_markup_string(text)
-
         super().__init__(text, height=height, **kwargs)
 
         if self.t2g:
