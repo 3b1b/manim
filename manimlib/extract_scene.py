@@ -158,17 +158,19 @@ def insert_embed_line_to_module(module: Module, run_config: Dict) -> None:
     lines.insert(line_number, indent + "self.embed()")
     new_code = "\n".join(lines)
 
-    # When the user executes the `-e <line_number>` command,
-    # it should automatically identify the nearest class
-    # defined above `<line_number>` as 'scene_names'.
-    classes = list(filter(lambda line: line.startswith("class"), lines[:line_number]))
-    if classes:
-        from re import search
+    # When the user executes the `-e <line_number>` command
+    # without specifying scene_names, the nearest class name above
+    # `<line_number>` will be automatically used as 'scene_names'.
 
-        name_search = search(r"(\w+)\(", classes[-1])
-        run_config.update(scene_names=[name_search.group(1)])
-    else:
-        log.error(f"No 'class' has been found above {line_number}!")
+    if not run_config.scene_names:
+        classes = list(filter(lambda line: line.startswith("class"), lines[:line_number]))
+        if classes:
+            from re import search
+
+            scene_name = search(r"(\w+)\(", classes[-1])
+            run_config.update(scene_names=[scene_name.group(1)])
+        else:
+            log.error(f"No 'class' found above {line_number}!")
 
     # Execute the code, which presumably redefines the user's
     # scene to include this embed line, within the relevant module.
