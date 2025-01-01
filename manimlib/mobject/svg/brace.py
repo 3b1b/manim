@@ -35,6 +35,8 @@ class Brace(Text):
         mobject: Mobject,
         direction: Vect3 = DOWN,
         buff: float = 0.2,
+        # position of the tip
+        ratio: float = 0.5,
         # This depends on font that you choose.
         # Used to align different parts of the brace
         extend_offset: float = .0085,
@@ -50,6 +52,7 @@ class Brace(Text):
         target_height = up[1] - down[1]
 
         self.extend_offset = extend_offset
+        self.ratio = ratio
         self.tip_point_index = np.argmax(self.get_all_points()[:, 0])
         self.set_initial_height(target_height)
         self.shift(up - self.get_corner(UL) + buff * RIGHT)
@@ -58,9 +61,10 @@ class Brace(Text):
 
     def set_initial_height(self, height: float):
         h0 = sum([self[i].get_height() for i in [0,2,4]])
-        extend_height = max(height - h0, 0) / 2
+        extend_height = max(height - h0, 0)
+        self[1].set_height(extend_height * self.ratio, True)
+        self[3].set_height(extend_height * (1 - self.ratio), True)
         for extend in self[1::2]:
-            extend.set_height(extend_height, True)
             extend.shift(RIGHT * self.extend_offset)
         self.arrange(DOWN, buff=0, coor_mask=UP)
         if extend_height == 0:
