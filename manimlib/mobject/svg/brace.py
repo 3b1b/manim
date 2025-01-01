@@ -6,7 +6,7 @@ import copy
 import numpy as np
 
 from manimlib.constants import DEFAULT_MOBJECT_TO_MOBJECT_BUFF, SMALL_BUFF
-from manimlib.constants import DOWN, LEFT, ORIGIN, RIGHT, DL, DR, UL
+from manimlib.constants import UP, DOWN, ORIGIN, RIGHT, UL, UR, DR
 from manimlib.constants import PI
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.fading import FadeIn
@@ -29,41 +29,42 @@ if TYPE_CHECKING:
     from manimlib.typing import Vect3
 
 
-class Brace(Tex):
+class Brace(Text):
     def __init__(
         self,
         mobject: Mobject,
         direction: Vect3 = DOWN,
         buff: float = 0.2,
-        tex_string: str = R"\underbrace{\qquad}",
+        # This depends on font that you choose.
+        # Used to align different parts of the brace
+        extend_offset: float = .0085,
         **kwargs
     ):
-        super().__init__(tex_string, **kwargs)
+        # \u's are different parts of the brace
+        super().__init__("\u23AB\n\u23AA\n\u23AC\n\u23AA\n\u23AD", **kwargs)
 
-        angle = -math.atan2(*direction[:2]) + PI
+        angle = PI / 2 - math.atan2(*direction[:2])
         mobject.rotate(-angle, about_point=ORIGIN)
-        left = mobject.get_corner(DL)
-        right = mobject.get_corner(DR)
-        target_width = right[0] - left[0]
+        up = mobject.get_corner(UR)
+        down = mobject.get_corner(DR)
+        target_height = up[1] - down[1]
 
-        self.tip_point_index = np.argmin(self.get_all_points()[:, 1])
-        self.set_initial_width(target_width)
-        self.shift(left - self.get_corner(UL) + buff * DOWN)
+        self.extend_offset = extend_offset
+        self.tip_point_index = np.argmax(self.get_all_points()[:, 0])
+        self.set_initial_height(target_height)
+        self.shift(up - self.get_corner(UL) + buff * RIGHT)
         for mob in mobject, self:
             mob.rotate(angle, about_point=ORIGIN)
 
-    def set_initial_width(self, width: float):
-        width_diff = width - self.get_width()
-        if width_diff > 0:
-            for tip, rect, vect in [(self[0], self[1], RIGHT), (self[5], self[4], LEFT)]:
-                rect.set_width(
-                    width_diff / 2 + rect.get_width(),
-                    about_edge=vect, stretch=True
-                )
-                tip.shift(-width_diff / 2 * vect)
-        else:
-            self.set_width(width, stretch=True)
-        return self
+    def set_initial_height(self, height: float):
+        h0 = sum([self[i].get_height() for i in [0,2,4]])
+        extend_height = max(height - h0, 0) / 2
+        for extend in self[1::2]:
+            extend.set_height(extend_height, True)
+            extend.shift(RIGHT * self.extend_offset)
+        self.arrange(DOWN, buff=0, coor_mask=UP)
+        if extend_height == 0:
+          self.set_height(height, True)
 
     def put_at_tip(
         self,
