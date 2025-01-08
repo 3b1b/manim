@@ -105,7 +105,7 @@ def full_tex_to_svg(full_tex: str, compiler: str = "latex", message: str = ""):
         process = subprocess.run(
             [
                 compiler,
-                "-no-pdf",
+                *(['-no-pdf'] if compiler == "xelatex" else []),
                 "-interaction=batchmode",
                 "-halt-on-error",
                 f"-output-directory={temp_dir}",
