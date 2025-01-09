@@ -174,6 +174,7 @@ def parse_cli():
         parser.add_argument(
             "--fps",
             help="Frame rate, as an integer",
+            type=int,
         )
         parser.add_argument(
             "-c", "--color",
