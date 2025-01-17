@@ -106,6 +106,8 @@ class Sphere(Surface):
             resolution=resolution,
             **kwargs
         )
+        # Add bespoke normal specification to avoid issue at poles
+        self.data['d_normal_point'] = self.data['point'] * ((radius + self.normal_nudge) / radius)
 
     def uv_func(self, u: float, v: float) -> np.ndarray:
         return self.radius * np.array([
