@@ -143,8 +143,11 @@ def get_indent(code_lines: list[str], line_number: int) -> str:
     return n_spaces * " "
 
 
-def insert_embed_line_to_module(module: Module, run_config: Dict) -> None:
+def insert_embed_line_to_module_exec(module: Module, run_config: Dict) -> None:
     """
+    Loads the user code, inserts a self.embed() line at the given line_number
+    and executes the code.
+
     This is hacky, but convenient. When user includes the argument "-e", it will try
     to recreate a file that inserts the line `self.embed()` into the end of the scene's
     construct method. If there is an argument passed in, it will insert the line after
@@ -191,7 +194,7 @@ def insert_embed_line_to_module(module: Module, run_config: Dict) -> None:
 def get_module(run_config: Dict) -> Module:
     module = ModuleLoader.get_module(run_config.file_name, run_config.is_reload)
     if run_config.embed_line:
-        insert_embed_line_to_module(module, run_config)
+        insert_embed_line_to_module_exec(module, run_config)
     return module
 
 
