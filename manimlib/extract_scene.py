@@ -174,7 +174,17 @@ def insert_embed_line_to_module(module: Module, run_config: Dict) -> None:
 
     # Execute the code, which presumably redefines the user's
     # scene to include this embed line, within the relevant module.
-    code_object = compile(new_code, module.__name__, 'exec')
+    # Note that we add the user-module to sys.modules to please Python builtins
+    # that rely on cls.__module__ to be not None (which would be the case if
+    # the module was not in sys.modules). See #2307.
+    if module.__name__ in sys.modules:
+        log.error(
+            "Module name is already used by Manim itself, "
+            "please use a different name"
+        )
+        sys.exit(2)
+    sys.modules[module.__name__] = module
+    code_object = compile(new_code, module.__name__, "exec")
     exec(code_object, module.__dict__)
 
 
