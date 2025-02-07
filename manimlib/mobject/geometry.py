@@ -208,11 +208,15 @@ class Arc(TipableVMobject):
         start_angle: float = 0,
         angle: float = TAU / 4,
         radius: float = 1.0,
-        n_components: int = 8,
+        n_components: Optional[int] = None,
         arc_center: Vect3 = ORIGIN,
         **kwargs
     ):
         super().__init__(**kwargs)
+
+        if n_components is None:
+            # 16 components for a full circle
+            n_components = int(15 * (abs(angle) / TAU)) + 1
 
         self.set_points(quadratic_bezier_points_for_arc(angle, n_components))
         self.rotate(start_angle, about_point=ORIGIN)
