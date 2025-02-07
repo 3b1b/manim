@@ -33,7 +33,7 @@ const float COS_THRESHOLD = 0.999;
 // Used to determine how many lines to break the curve into
 const float POLYLINE_FACTOR = 100;
 const int MAX_STEPS = 32;
-const float MITER_COS_ANGLE_THRESHOLD = -0.9;
+const float MITER_COS_ANGLE_THRESHOLD = -0.8;
 
 #INSERT emit_gl_Position.glsl
 #INSERT finalize_color.glsl
