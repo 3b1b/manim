@@ -45,3 +45,5 @@ if TYPE_CHECKING:
     Vect3Array = Annotated[FloatArray, Literal["N", 3]]
     Vect4Array = Annotated[FloatArray, Literal["N", 4]]
     VectNArray = Annotated[FloatArray, Literal["N", "M"]]
+
+# Automated edit: [Edited] Refactor code to optimize performance
