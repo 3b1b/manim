@@ -6,7 +6,7 @@ import copy
 import numpy as np
 
 from manimlib.constants import DEFAULT_MOBJECT_TO_MOBJECT_BUFF, SMALL_BUFF
-from manimlib.constants import DOWN, LEFT, ORIGIN, RIGHT, DL, DR, UL
+from manimlib.constants import DOWN, LEFT, ORIGIN, RIGHT, DL, DR, UL, UP
 from manimlib.constants import PI
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.fading import FadeIn
@@ -174,3 +174,12 @@ class BraceLabel(VMobject):
 
 class BraceText(BraceLabel):
     label_constructor: type = TexText
+
+
+class LineBrace(Brace):
+    def __init__(self, line: Line, direction=UP, **kwargs):
+        angle = line.get_angle()
+        line.rotate(-angle)
+        super().__init__(line, direction, **kwargs)
+        line.rotate(angle)
+        self.rotate(angle, about_point=line.get_center())
