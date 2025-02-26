@@ -601,6 +601,9 @@ class DashedLine(Line):
         else:
             return Line.get_end(self)
 
+    def get_start_and_end(self) -> Tuple[Vect3, Vect3]:
+        return self.get_start(), self.get_end()
+
     def get_first_handle(self) -> Vect3:
         return self.submobjects[0].get_points()[1]
 
