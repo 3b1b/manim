@@ -208,11 +208,15 @@ class Arc(TipableVMobject):
         start_angle: float = 0,
         angle: float = TAU / 4,
         radius: float = 1.0,
-        n_components: int = 8,
+        n_components: Optional[int] = None,
         arc_center: Vect3 = ORIGIN,
         **kwargs
     ):
         super().__init__(**kwargs)
+
+        if n_components is None:
+            # 16 components for a full circle
+            n_components = int(15 * (abs(angle) / TAU)) + 1
 
         self.set_points(quadratic_bezier_points_for_arc(angle, n_components))
         self.rotate(start_angle, about_point=ORIGIN)
@@ -596,6 +600,9 @@ class DashedLine(Line):
             return self.submobjects[-1].get_end()
         else:
             return Line.get_end(self)
+
+    def get_start_and_end(self) -> Tuple[Vect3, Vect3]:
+        return self.get_start(), self.get_end()
 
     def get_first_handle(self) -> Vect3:
         return self.submobjects[0].get_points()[1]

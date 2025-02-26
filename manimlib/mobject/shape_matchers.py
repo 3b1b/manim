@@ -79,7 +79,8 @@ class BackgroundRectangle(SurroundingRectangle):
         stroke_width: float | None = None,
         fill_color: ManimColor | None = None,
         fill_opacity: float | None = None,
-        family: bool = True
+        family: bool = True,
+        **kwargs
     ) -> Self:
         # Unchangeable style, except for fill_opacity
         VMobject.set_style(

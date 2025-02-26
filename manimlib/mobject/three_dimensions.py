@@ -97,20 +97,27 @@ class Sphere(Surface):
         v_range: Tuple[float, float] = (0, PI),
         resolution: Tuple[int, int] = (101, 51),
         radius: float = 1.0,
+        true_normals: bool = True,
+        clockwise=False,
         **kwargs,
     ):
         self.radius = radius
+        self.clockwise = clockwise
         super().__init__(
             u_range=u_range,
             v_range=v_range,
             resolution=resolution,
             **kwargs
         )
+        # Add bespoke normal specification to avoid issue at poles
+        if true_normals:
+            self.data['d_normal_point'] = self.data['point'] * ((radius + self.normal_nudge) / radius)
 
     def uv_func(self, u: float, v: float) -> np.ndarray:
+        sign = -1 if self.clockwise else +1
         return self.radius * np.array([
-            math.cos(u) * math.sin(v),
-            math.sin(u) * math.sin(v),
+            math.cos(sign * u) * math.sin(v),
+            math.sin(sign * u) * math.sin(v),
             -math.cos(v)
         ])
 
