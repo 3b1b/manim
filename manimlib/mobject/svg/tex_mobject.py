@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from manimlib.typing import ManimColor, Span, Selector, Self
 
 
-SCALE_FACTOR_PER_FONT_POINT = 0.001
+TEX_MOB_SCALE_FACTOR = 0.001
 
 
 class Tex(StringMobject):
@@ -49,7 +49,6 @@ class Tex(StringMobject):
         if not tex_string.strip():
             tex_string = R"\\"
 
-        self.font_size = font_size
         self.tex_string = tex_string
         self.alignment = alignment
         self.template = template
@@ -64,13 +63,16 @@ class Tex(StringMobject):
         )
 
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
-        self.scale(SCALE_FACTOR_PER_FONT_POINT * font_size)
+        self.scale(TEX_MOB_SCALE_FACTOR * font_size)
+
+        self.font_size = font_size  # Important for this to go after the scale call
 
     def get_svg_string_by_content(self, content: str) -> str:
         return latex_to_svg(content, self.template, self.additional_preamble, short_tex=self.tex_string)
 
     def _handle_scale_side_effects(self, scale_factor: float) -> Self:
-        self.font_size *= scale_factor
+        if hasattr(self, "font_size"):
+            self.font_size *= scale_factor
         return self
 
     # Parsing
