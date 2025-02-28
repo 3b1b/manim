@@ -143,8 +143,11 @@ def get_indent(code_lines: list[str], line_number: int) -> str:
     return n_spaces * " "
 
 
-def insert_embed_line_to_module(module: Module, run_config: Dict) -> None:
+def insert_embed_line_to_module_exec(module: Module, run_config: Dict) -> None:
     """
+    Loads the user code, inserts a self.embed() line at the given line_number
+    and executes the code.
+
     This is hacky, but convenient. When user includes the argument "-e", it will try
     to recreate a file that inserts the line `self.embed()` into the end of the scene's
     construct method. If there is an argument passed in, it will insert the line after
@@ -174,14 +177,24 @@ def insert_embed_line_to_module(module: Module, run_config: Dict) -> None:
 
     # Execute the code, which presumably redefines the user's
     # scene to include this embed line, within the relevant module.
-    code_object = compile(new_code, module.__name__, 'exec')
+    # Note that we add the user-module to sys.modules to please Python builtins
+    # that rely on cls.__module__ to be not None (which would be the case if
+    # the module was not in sys.modules). See #2307.
+    if module.__name__ in sys.modules:
+        log.error(
+            "Module name is already used by Manim itself, "
+            "please use a different name"
+        )
+        sys.exit(2)
+    sys.modules[module.__name__] = module
+    code_object = compile(new_code, module.__name__, "exec")
     exec(code_object, module.__dict__)
 
 
 def get_module(run_config: Dict) -> Module:
     module = ModuleLoader.get_module(run_config.file_name, run_config.is_reload)
     if run_config.embed_line:
-        insert_embed_line_to_module(module, run_config)
+        insert_embed_line_to_module_exec(module, run_config)
     return module
 
 
