@@ -8,6 +8,7 @@ import io
 from pathlib import Path
 
 from manimlib.constants import RIGHT
+from manimlib.constants import TAU
 from manimlib.logger import log
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Line
@@ -16,8 +17,10 @@ from manimlib.mobject.geometry import Polyline
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import RoundedRectangle
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.utils.bezier import quadratic_bezier_points_for_arc
 from manimlib.utils.images import get_full_vector_image_path
 from manimlib.utils.iterables import hash_obj
+from manimlib.utils.space_ops import rotation_about_z
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -300,8 +303,9 @@ class VMobjectFromSVGPath(VMobject):
         path_obj: se.Path,
         **kwargs
     ):
-        # Get rid of arcs
-        path_obj.approximate_arcs_with_quads()
+        # caches (transform.inverse(), rot, shift)
+        self.transform_cache: tuple[se.Matrix, np.ndarray, np.ndarray] | None = None
+
         self.path_obj = path_obj
         super().__init__(**kwargs)
 
@@ -328,13 +332,55 @@ class VMobjectFromSVGPath(VMobject):
         }
         for segment in self.path_obj:
             segment_class = segment.__class__
-            func, attr_names = segment_class_to_func_map[segment_class]
-            points = [
-                _convert_point_to_3d(*segment.__getattribute__(attr_name))
-                for attr_name in attr_names
-            ]
-            func(*points)
+            if segment_class is se.Arc:
+                self.handle_arc(segment)
+            else:
+                func, attr_names = segment_class_to_func_map[segment_class]
+                points = [
+                    _convert_point_to_3d(*segment.__getattribute__(attr_name))
+                    for attr_name in attr_names
+                ]
+                func(*points)
 
         # Get rid of the side effect of trailing "Z M" commands.
         if self.has_new_path_started():
             self.resize_points(self.get_num_points() - 2)
+
+    def handle_arc(self, arc: se.Arc) -> None:
+        if self.transform_cache is not None:
+            transform, rot, shift = self.transform_cache
+        else:
+            # The transform obtained in this way considers the combined effect
+            # of all parent group transforms in the SVG.
+            # Therefore, the arc can be transformed inversely using this transform
+            # to correctly compute the arc path before transforming it back.
+            transform = se.Matrix(self.path_obj.values.get('transform', ''))
+            rot = np.array([
+                [transform.a, transform.c],
+                [transform.b, transform.d]
+            ])
+            shift = np.array([transform.e, transform.f, 0])
+            transform.inverse()
+            self.transform_cache = (transform, rot, shift)
+
+        # Apply inverse transformation to the arc so that its path can be correctly computed
+        arc *= transform
+
+        # The value of n_components is chosen based on the implementation of VMobject.arc_to
+        n_components = int(np.ceil(8 * abs(arc.sweep) / TAU))
+
+        # Obtain the required angular segments on the unit circle
+        arc_points = quadratic_bezier_points_for_arc(arc.sweep, n_components)
+        arc_points @= np.array(rotation_about_z(arc.get_start_t())).T
+
+        # Transform to an ellipse, considering rotation and translating the ellipse center
+        arc_points[:, 0] *= arc.rx
+        arc_points[:, 1] *= arc.ry
+        arc_points @= np.array(rotation_about_z(arc.get_rotation().as_radians)).T
+        arc_points += [*arc.center, 0]
+
+        # Transform back
+        arc_points[:, :2] @= rot.T
+        arc_points += shift
+
+        self.append_points(arc_points[1:])
