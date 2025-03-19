@@ -22,7 +22,7 @@ class BulletedList(VGroup):
         buff: float = MED_LARGE_BUFF,
         aligned_edge: Vect3 = LEFT,
         **kwargs
-    ):  
+    ):
         labelled_content = [R"\item " + item for item in items]
         tex_string = "\n".join([
             R"\begin{itemize}",
@@ -36,9 +36,12 @@ class BulletedList(VGroup):
 
         self.arrange(DOWN, buff=buff, aligned_edge=aligned_edge)
 
-    def fade_all_but(self, index: int, opacity: float = 0.25) -> None:
+    def fade_all_but(self, index: int, opacity: float = 0.25, scale_factor=0.7) -> None:
+        max_dot_height = max([item[0].get_height() for item in self.submobjects])
         for i, part in enumerate(self.submobjects):
+            trg_dot_height = (1.0 if i == index else scale_factor) * max_dot_height
             part.set_fill(opacity=(1.0 if i == index else opacity))
+            part.scale(trg_dot_height / part[0].get_height(), about_edge=LEFT)
 
 
 class TexTextFromPresetString(TexText):
