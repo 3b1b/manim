@@ -164,7 +164,7 @@ class NumberLine(Line):
         **number_config
     ) -> DecimalNumber:
         number_config = merge_dicts_recursively(
-            self.decimal_number_config, number_config,
+            number_config, self.decimal_number_config,
         )
         if direction is None:
             direction = self.line_to_number_direction
