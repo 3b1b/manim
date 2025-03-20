@@ -118,8 +118,8 @@ class InteractiveSceneEmbed:
         open during the reload.
 
         If `embed_line` is provided, the scene will be reloaded at that line
-        number. This corresponds to the `linemarker` param of the
-        `extract_scene.insert_embed_line_to_module()` method.
+        number. This corresponds to the `line_number` param of the
+        `extract_scene.insert_embed_line_to_module_exec()` method.
 
         Before reload, the scene is cleared and the entire state is reset, such
         that we can start from a clean slate. This is taken care of by the
