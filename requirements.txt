@@ -1,5 +1,6 @@
 addict
 appdirs
+audioop-lts
 colour
 diskcache
 ipython>=8.18.0
@@ -20,6 +21,7 @@ pyyaml
 rich
 scipy
 screeninfo
+setuptools
 skia-pathops
 svgelements>=1.8.1
 sympy
