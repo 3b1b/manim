@@ -8,10 +8,9 @@ from functools import wraps
 from contextlib import contextmanager
 from contextlib import ExitStack
 
-from pyglet.window import key as PygletWindowKeys
-
 import numpy as np
 from tqdm.auto import tqdm as ProgressDisplay
+from pyglet.window import key as PygletWindowKeys
 
 from manimlib.animation.animation import prepare_animation
 from manimlib.camera.camera import Camera
@@ -33,6 +32,7 @@ from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import recursive_mobject_remove
 from manimlib.utils.iterables import batch_by_property
+from manimlib.utils.sounds import play_sound
 from manimlib.window import Window
 
 from typing import TYPE_CHECKING
