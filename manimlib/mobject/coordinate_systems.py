@@ -770,13 +770,6 @@ class ComplexPlane(NumberPlane):
                 axis = self.get_x_axis()
                 value = z.real
             number_mob = axis.get_number_mobject(value, font_size=font_size, **kwargs)
-            # For -i, remove the "1"
-            if z.imag == -1:
-                number_mob.remove(number_mob[1])
-                number_mob[0].next_to(
-                    number_mob[1], LEFT,
-                    buff=number_mob[0].get_width() / 4
-                )
             self.coordinate_labels.add(number_mob)
         self.add(self.coordinate_labels)
         return self

@@ -52,7 +52,7 @@ SubmobjectType = TypeVar('SubmobjectType', bound='Mobject')
 if TYPE_CHECKING:
     from typing import Callable, Iterator, Union, Tuple, Optional, Any
     import numpy.typing as npt
-    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict, Self
+    from manimlib.typing import ManimColor, Vect3, Vect4Array, Vect3Array, UniformDict, Self
     from moderngl.context import Context
 
     T = TypeVar('T')
@@ -163,7 +163,7 @@ class Mobject(object):
     def animate(self) -> _AnimationBuilder:
         """
         Methods called with Mobject.animate.method() can be passed
-        into a Scene.play call, as if you were calling 
+        into a Scene.play call, as if you were calling
         ApplyMethod(mobject.method)
 
         Borrowed from https://github.com/ManimCommunity/manim/
@@ -287,10 +287,7 @@ class Mobject(object):
             about_point = self.get_bounding_box_point(about_edge)
 
         for mob in self.get_family():
-            arrs = []
-            if mob.has_points():
-                for key in mob.pointlike_data_keys:
-                    arrs.append(mob.data[key])
+            arrs = [mob.data[key] for key in mob.pointlike_data_keys if mob.has_points()]
             if works_on_bounding_box:
                 arrs.append(mob.get_bounding_box())
 
@@ -1323,20 +1320,19 @@ class Mobject(object):
 
     def set_color_by_rgba_func(
         self,
-        func: Callable[[Vect3], Vect4],
+        func: Callable[[Vect3Array], Vect4Array],
         recurse: bool = True
     ) -> Self:
         """
         Func should take in a point in R3 and output an rgba value
         """
         for mob in self.get_family(recurse):
-            rgba_array = [func(point) for point in mob.get_points()]
-            mob.set_rgba_array(rgba_array)
+            mob.set_rgba_array(func(mob.get_points()))
         return self
 
     def set_color_by_rgb_func(
         self,
-        func: Callable[[Vect3], Vect3],
+        func: Callable[[Vect3Array], Vect3Array],
         opacity: float = 1,
         recurse: bool = True
     ) -> Self:
@@ -1344,8 +1340,9 @@ class Mobject(object):
         Func should take in a point in R3 and output an rgb value
         """
         for mob in self.get_family(recurse):
-            rgba_array = [[*func(point), opacity] for point in mob.get_points()]
-            mob.set_rgba_array(rgba_array)
+            points = mob.get_points()
+            opacity = np.ones((points.shape[0], 1)) * opacity
+            mob.set_rgba_array(np.hstack((func(points), opacity)))
         return self
 
     @affects_family_data
