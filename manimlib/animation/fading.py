@@ -164,10 +164,10 @@ class VFadeIn(Animation):
         alpha: float
     ) -> None:
         submob.set_stroke(
-            opacity=interpolate(0, start.get_stroke_opacity(), alpha)
+            opacity=float(interpolate(0, start.get_stroke_opacity(), alpha))
         )
         submob.set_fill(
-            opacity=interpolate(0, start.get_fill_opacity(), alpha)
+            opacity=float(interpolate(0, start.get_fill_opacity(), alpha))
         )
 
 
