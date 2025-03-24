@@ -75,7 +75,7 @@ manim-render example_scenes.py OpeningManimExample
     git clone https://github.com/3b1b/manim.git
     cd manim
     pip install -e .
-    manimgl example_scenes.py OpeningManimExample (make sure to add manimgl to path first)
+    manimgl example_scenes.py OpeningManimExample (make sure to add manimgl to path first.)
     ```
 
 ## Anaconda Install
