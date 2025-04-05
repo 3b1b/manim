@@ -1,0 +1,5 @@
+langchain==0.1.0
+openai==1.3.0
+manim==0.17.3
+python-dotenv==1.0.0
+typing-extensions==4.8.0 
