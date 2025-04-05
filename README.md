@@ -88,7 +88,7 @@ you can change the `tex_file_writing.py` in `manimlib/utils':
   with tempfile.TemporaryDirectory() as temp_dir:
   
   ```
-add a `dir=your/path` into the brackets.
+add a `dir="your/path"` into the brackets.
 (If you're using Linux or Mac OSX, please don't use path containing "~".)
 
 
