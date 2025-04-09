@@ -386,7 +386,6 @@ class StreamLines(VGroup):
 
     def draw_lines(self) -> None:
         lines = []
-        origin = self.coordinate_system.get_origin()
 
         # Todo, it feels like coordinate system should just have
         # the ODE solver built into it, no?
