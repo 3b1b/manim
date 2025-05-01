@@ -160,7 +160,7 @@ class Mobject(object):
         return self
 
     @property
-    def animate(self) -> _AnimationBuilder:
+    def animate(self) -> _AnimationBuilder | Self:
         """
         Methods called with Mobject.animate.method() can be passed
         into a Scene.play call, as if you were calling
