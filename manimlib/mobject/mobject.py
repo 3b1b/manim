@@ -2253,13 +2253,13 @@ class _AnimationBuilder:
         self.is_chaining = True
         return update_target
 
-    def __call__(self, **kwargs) -> Self:
+    def __call__(self, **kwargs):
         return self.set_anim_args(**kwargs)
 
     def __dir__(self) -> list[str]:
         """
-        Extend attribute list to include Mobject attributes for better autocompletion
-        in the IPython terminal.
+        Extend attribute list of _AnimationBuilder object to include mobject attributes
+        for better autocompletion in the IPython terminal when using interactive mode.
         """
         methods = super().__dir__()
         mobject_methods = [
@@ -2268,7 +2268,7 @@ class _AnimationBuilder:
         ]
         return sorted(set(methods+mobject_methods))
 
-    def set_anim_args(self, **kwargs) -> Self:
+    def set_anim_args(self, **kwargs):
         '''
         You can change the args of :class:`~manimlib.animation.transform.Transform`, such as
 
