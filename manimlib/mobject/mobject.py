@@ -2256,6 +2256,14 @@ class _AnimationBuilder:
     def __call__(self, **kwargs):
         return self.set_anim_args(**kwargs)
 
+    def __dir__(self):
+        methods = super().__dir__()
+        mobject_methods = [
+            attr for attr in dir(self.mobject)
+            if not attr.startswith('_')
+        ]
+        return sorted(set(methods+mobject_methods))
+
     def set_anim_args(self, **kwargs):
         '''
         You can change the args of :class:`~manimlib.animation.transform.Transform`, such as
