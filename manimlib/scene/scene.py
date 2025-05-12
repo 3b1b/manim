@@ -380,6 +380,11 @@ class Scene(object):
         new_mobjects, _ = recursive_mobject_remove(self.mobjects, to_remove)
         self.mobjects = new_mobjects
 
+    @affects_mobject_list
+    def remove_all_except(self, *mobjects_to_keep : Mobject):
+        self.clear()
+        self.add(*mobjects_to_keep)
+
     def bring_to_front(self, *mobjects: Mobject):
         self.add(*mobjects)
         return self
