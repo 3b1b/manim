@@ -4,7 +4,7 @@ from functools import lru_cache
 import numpy as np
 
 from manimlib.constants import DOWN, LEFT, RIGHT, UP
-from manimlib.constants import WHITE
+from manimlib.constants import DEFAULT_MOBJECT_COLOR
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -35,7 +35,7 @@ class DecimalNumber(VMobject):
     def __init__(
         self,
         number: float | complex = 0,
-        color: ManimColor = WHITE,
+        color: ManimColor = DEFAULT_MOBJECT_COLOR,
         stroke_width: float = 0,
         fill_opacity: float = 1.0,
         fill_border_width: float = 0.5,

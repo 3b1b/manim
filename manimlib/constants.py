@@ -145,3 +145,10 @@ PURPLE: ManimColor = PURPLE_C
 GREY: ManimColor = GREY_C
 
 COLORMAP_3B1B: List[ManimColor] = [BLUE_E, GREEN, YELLOW, RED]
+
+# Default mobject colors should be configurable just like background color
+DEFAULT_MOBJECT_COLOR: ManimColor = manim_config.mobject.default_mobject_color if manim_config.mobject.default_color else WHITE
+DEFAULT_LIGHT_COLOR: ManimColor = manim_config.mobject.default_light_color if manim_config.mobject.default_light_color else GREY_B
+
+DEFAULT_VMOBJECT_STROKE_COLOR : ManimColor = manim_config.vmobject.default_stroke_color if manim_config.vmobject.default_stroke_color else GREY_A
+DEFAULT_VMOBJECT_FILL_COLOR : ManimColor = manim_config.vmobject.default_fill_color if manim_config.vmobject.default_fill_color else GREY_A

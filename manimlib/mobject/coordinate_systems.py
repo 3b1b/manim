@@ -6,7 +6,7 @@ import numbers
 import numpy as np
 import itertools as it
 
-from manimlib.constants import BLACK, BLUE, BLUE_D, BLUE_E, GREEN, GREY_A, WHITE, RED
+from manimlib.constants import BLACK, BLUE, BLUE_D, BLUE_E, GREEN, GREY_A, RED, DEFAULT_MOBJECT_COLOR
 from manimlib.constants import DEG, PI
 from manimlib.constants import DL, UL, DOWN, DR, LEFT, ORIGIN, OUT, RIGHT, UP
 from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
@@ -617,7 +617,7 @@ class ThreeDAxes(Axes):
 
 class NumberPlane(Axes):
     default_axis_config: dict = dict(
-        stroke_color=WHITE,
+        stroke_color=DEFAULT_MOBJECT_COLOR,
         stroke_width=2,
         include_ticks=False,
         include_tip=False,

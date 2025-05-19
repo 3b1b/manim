@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from manimlib.constants import BLUE_B, BLUE_D, BLUE_E, GREY_BROWN, WHITE
+from manimlib.constants import BLUE_B, BLUE_D, BLUE_E, GREY_BROWN, DEFAULT_MOBJECT_COLOR
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -102,7 +102,7 @@ class TracedPath(VMobject):
         time_traced: float = np.inf,
         time_per_anchor: float = 1.0 / 15,
         stroke_width: float | Iterable[float] = 2.0,
-        stroke_color: ManimColor = WHITE,
+        stroke_color: ManimColor = DEFAULT_MOBJECT_COLOR,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -147,7 +147,7 @@ class TracingTail(TracedPath):
         time_traced: float = 1.0,
         stroke_width: float | Iterable[float] = (0, 3),
         stroke_opacity: float | Iterable[float] = (0, 1),
-        stroke_color: ManimColor = WHITE,
+        stroke_color: ManimColor = DEFAULT_MOBJECT_COLOR,
         **kwargs
     ):
         if isinstance(mobject_or_func, Mobject):

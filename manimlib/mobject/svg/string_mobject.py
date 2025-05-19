@@ -6,7 +6,7 @@ import re
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
 
-from manimlib.constants import WHITE
+from manimlib.constants import DEFAULT_MOBJECT_COLOR
 from manimlib.logger import log
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -46,11 +46,11 @@ class StringMobject(SVGMobject, ABC):
     def __init__(
         self,
         string: str,
-        fill_color: ManimColor = WHITE,
+        fill_color: ManimColor = DEFAULT_MOBJECT_COLOR,
         fill_border_width: float = 0.5,
-        stroke_color: ManimColor = WHITE,
+        stroke_color: ManimColor = DEFAULT_MOBJECT_COLOR,
         stroke_width: float = 0,
-        base_color: ManimColor = WHITE,
+        base_color: ManimColor = DEFAULT_MOBJECT_COLOR,
         isolate: Selector = (),
         protect: Selector = (),
         # When set to true, only the labelled svg is
@@ -60,7 +60,7 @@ class StringMobject(SVGMobject, ABC):
         **kwargs
     ):
         self.string = string
-        self.base_color = base_color or WHITE
+        self.base_color = base_color or DEFAULT_MOBJECT_COLOR
         self.isolate = isolate
         self.protect = protect
         self.use_labelled_svg = use_labelled_svg

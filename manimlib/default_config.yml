@@ -48,7 +48,7 @@ window:
   # size: (1920, 1080)  # Specific size, in pixels
 camera:
   resolution: (1920, 1080)
-  background_color: "#333333"
+  background_color: "#121212"
   fps: 30
   background_opacity: 1.0
 file_writer:
@@ -71,11 +71,19 @@ scene:
   default_wait_time: 1.0
 vmobject:
   default_stroke_width: 4.0
+  default_stroke_color: "#DDDDDD"     # Default is GREY_A
+  default_fill_color: "#888888"       # Default is GREY_C
+mobject:
+  # default_mobject_color is mainly for text and tex mobjects. Default is WHITE
+  # default_light_color is mainly for things like axes, arrows and other slightly light things. Default is GREY_B
+  default_mobject_color: "#FFFFFF"
+  default_light_color: "#BBBBBB"
 tex:
   # See tex_templates.yml
   template: "default"
 text:
-  font: "Consolas"
+  # font: "Cambria Math"
+  font: "CMU Serif"
   alignment: "LEFT"
 embed:
   exception_mode: "Verbose"

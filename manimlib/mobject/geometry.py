@@ -5,7 +5,7 @@ import math
 import numpy as np
 
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, OUT, RIGHT, UL, UP, UR
-from manimlib.constants import GREY_A, RED, WHITE, BLACK
+from manimlib.constants import RED, BLACK, DEFAULT_MOBJECT_COLOR, DEFAULT_LIGHT_COLOR
 from manimlib.constants import MED_SMALL_BUFF, SMALL_BUFF
 from manimlib.constants import DEG, PI, TAU
 from manimlib.mobject.mobject import Mobject
@@ -330,7 +330,7 @@ class Dot(Circle):
         stroke_color: ManimColor = BLACK,
         stroke_width: float = 0.0,
         fill_opacity: float = 1.0,
-        fill_color: ManimColor = WHITE,
+        fill_color: ManimColor = DEFAULT_MOBJECT_COLOR,
         **kwargs
     ):
         super().__init__(
@@ -374,7 +374,7 @@ class AnnularSector(VMobject):
         inner_radius: float = 1.0,
         outer_radius: float = 2.0,
         arc_center: Vect3 = ORIGIN,
-        fill_color: ManimColor = GREY_A,
+        fill_color: ManimColor = DEFAULT_LIGHT_COLOR,
         fill_opacity: float = 1.0,
         stroke_width: float = 0.0,
         **kwargs,
@@ -424,7 +424,7 @@ class Annulus(VMobject):
         outer_radius: float = 2.0,
         fill_opacity: float = 1.0,
         stroke_width: float = 0.0,
-        fill_color: ManimColor = GREY_A,
+        fill_color: ManimColor = DEFAULT_LIGHT_COLOR,
         center: Vect3 = ORIGIN,
         **kwargs,
     ):
@@ -644,7 +644,7 @@ class StrokeArrow(Line):
         self,
         start: Vect3 | Mobject,
         end: Vect3 | Mobject,
-        stroke_color: ManimColor = GREY_A,
+        stroke_color: ManimColor = DEFAULT_LIGHT_COLOR,
         stroke_width: float = 5,
         buff: float = 0.25,
         tip_width_ratio: float = 5,
@@ -744,7 +744,7 @@ class Arrow(Line):
         end: Vect3 | Mobject = LEFT,
         buff: float = MED_SMALL_BUFF,
         path_arc: float = 0,
-        fill_color: ManimColor = GREY_A,
+        fill_color: ManimColor = DEFAULT_LIGHT_COLOR,
         fill_opacity: float = 1.0,
         stroke_width: float = 0.0,
         thickness: float = 3.0,
@@ -1008,7 +1008,7 @@ class ArrowTip(Triangle):
         width: float = DEFAULT_ARROW_TIP_WIDTH,
         length: float = DEFAULT_ARROW_TIP_LENGTH,
         fill_opacity: float = 1.0,
-        fill_color: ManimColor = WHITE,
+        fill_color: ManimColor = DEFAULT_MOBJECT_COLOR,
         stroke_width: float = 0.0,
         tip_style: int = 0,  # triangle=0, inner_smooth=1, dot=2
         **kwargs

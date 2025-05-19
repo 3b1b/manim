@@ -5,6 +5,7 @@ from functools import wraps
 import numpy as np
 
 from manimlib.constants import GREY_A, GREY_C, GREY_E
+from manimlib.constants import DEFAULT_VMOBJECT_FILL_COLOR, DEFAULT_VMOBJECT_STROKE_COLOR
 from manimlib.constants import BLACK
 from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import DEG
@@ -53,9 +54,6 @@ if TYPE_CHECKING:
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Self
     from moderngl.context import Context
 
-DEFAULT_STROKE_COLOR = GREY_A
-DEFAULT_FILL_COLOR = GREY_C
-
 
 class VMobject(Mobject):
     data_dtype: np.dtype = np.dtype([
@@ -99,9 +97,9 @@ class VMobject(Mobject):
         fill_border_width: float = 0.0,
         **kwargs
     ):
-        self.fill_color = fill_color or color or DEFAULT_FILL_COLOR
+        self.fill_color = fill_color or color or DEFAULT_VMOBJECT_FILL_COLOR
         self.fill_opacity = fill_opacity
-        self.stroke_color = stroke_color or color or DEFAULT_STROKE_COLOR
+        self.stroke_color = stroke_color or color or DEFAULT_VMOBJECT_STROKE_COLOR
         self.stroke_opacity = stroke_opacity
         self.stroke_width = stroke_width
         self.stroke_behind = stroke_behind

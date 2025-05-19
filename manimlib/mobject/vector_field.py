@@ -6,7 +6,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 
 from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
-from manimlib.constants import WHITE
+from manimlib.constants import DEFAULT_MOBJECT_COLOR
 from manimlib.animation.indication import VShowPassingFlash
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -347,7 +347,7 @@ class StreamLines(VGroup):
         cutoff_norm: float = 15,
         # Style info
         stroke_width: float = 1.0,
-        stroke_color: ManimColor = WHITE,
+        stroke_color: ManimColor = DEFAULT_MOBJECT_COLOR,
         stroke_opacity: float = 1,
         color_by_magnitude: bool = True,
         magnitude_range: Tuple[float, float] = (0, 2.0),
