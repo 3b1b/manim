@@ -33,6 +33,7 @@ from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import recursive_mobject_remove
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.sounds import play_sound
+from manimlib.utils.color import color_to_rgba
 from manimlib.window import Window
 
 from typing import TYPE_CHECKING
@@ -871,6 +872,11 @@ class Scene(object):
         if not self.window:
             return
         self.window.focus()
+
+    def set_background_color(self, background_color, background_opacity=1) -> None:
+        self.camera.background_rgba = list(color_to_rgba(
+            background_color, background_opacity
+        ))
 
 
 class SceneState():
