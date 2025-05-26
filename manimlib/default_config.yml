@@ -81,7 +81,7 @@ tex:
   template: "default"
 text:
   # font: "Cambria Math"
-  font: "CMU Serif"
+  font: "Consolas"
   alignment: "LEFT"
 embed:
   exception_mode: "Verbose"
