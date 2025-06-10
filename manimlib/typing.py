@@ -7,9 +7,9 @@ if TYPE_CHECKING:
     import re
 
     try:
-        from typing import Self
-    except ImportError:
         from typing_extensions import Self
+    except ImportError:
+        from typing import Self
 
     # Abbreviations for a common types
     ManimColor = Union[str, Color, None]

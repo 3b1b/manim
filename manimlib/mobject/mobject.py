@@ -160,7 +160,7 @@ class Mobject(object):
         return self
 
     @property
-    def animate(self) -> _AnimationBuilder:
+    def animate(self) -> _AnimationBuilder | Self:
         """
         Methods called with Mobject.animate.method() can be passed
         into a Scene.play call, as if you were calling
@@ -2255,6 +2255,18 @@ class _AnimationBuilder:
 
     def __call__(self, **kwargs):
         return self.set_anim_args(**kwargs)
+
+    def __dir__(self) -> list[str]:
+        """
+        Extend attribute list of _AnimationBuilder object to include mobject attributes
+        for better autocompletion in the IPython terminal when using interactive mode.
+        """
+        methods = super().__dir__()
+        mobject_methods = [
+            attr for attr in dir(self.mobject)
+            if not attr.startswith('_')
+        ]
+        return sorted(set(methods+mobject_methods))
 
     def set_anim_args(self, **kwargs):
         '''
