@@ -145,6 +145,7 @@ class VectorField(VMobject):
         func: Callable[[VectArray], VectArray],
         # Typically a set of Axes or NumberPlane
         coordinate_system: CoordinateSystem,
+        sample_coords: Optional[VectArray] = None,
         density: float = 2.0,
         magnitude_range: Optional[Tuple[float, float]] = None,
         color: Optional[ManimColor] = None,
@@ -168,14 +169,17 @@ class VectorField(VMobject):
         self.norm_to_opacity_func = norm_to_opacity_func
 
         # Search for sample_points
-        self.sample_coords = get_sample_coords(coordinate_system, density)
+        if sample_coords is not None:
+            self.sample_coords = sample_coords
+        else:
+            self.sample_coords = get_sample_coords(coordinate_system, density)
         self.update_sample_points()
 
         if max_vect_len is None:
             step_size = get_norm(self.sample_points[1] - self.sample_points[0])
             self.max_displayed_vect_len = max_vect_len_to_step_size * step_size
         else:
-            self.max_displayed_vect_len = max_vect_len * coordinate_system.get_x_unit_size()
+            self.max_displayed_vect_len = max_vect_len * coordinate_system.x_axis.get_unit_size()
 
         # Prepare the color map
         if magnitude_range is None:
@@ -406,7 +410,7 @@ class StreamLines(VGroup):
 
         noise_factor = self.noise_factor
         if noise_factor is None:
-            noise_factor = (cs.get_x_unit_size() / self.density) * 0.5
+            noise_factor = (cs.x_axis.get_unit_size() / self.density) * 0.5
 
         return np.array([
             coords + noise_factor * np.random.random(coords.shape)
