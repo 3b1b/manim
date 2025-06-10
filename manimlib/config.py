@@ -257,7 +257,7 @@ def update_camera_config(config: Dict, args: Namespace):
     if args.color:
         try:
             camera_config.background_color = colour.Color(args.color)
-        except Exception:
+        except Exception as err:
             log.error("Please use a valid color")
             log.error(err)
             sys.exit(2)

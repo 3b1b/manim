@@ -390,7 +390,6 @@ class StreamLines(VGroup):
 
     def draw_lines(self) -> None:
         lines = []
-        origin = self.coordinate_system.get_origin()
 
         # Todo, it feels like coordinate system should just have
         # the ODE solver built into it, no?
@@ -426,7 +425,7 @@ class StreamLines(VGroup):
             cs = self.coordinate_system
             for line in self.submobjects:
                 norms = [
-                    get_norm(self.func(*cs.p2c(point)))
+                    get_norm(self.func(cs.p2c(point)))
                     for point in line.get_points()
                 ]
                 rgbs = values_to_rgbs(norms)
@@ -471,7 +470,7 @@ class AnimatedStreamLines(VGroup):
 
         self.add_updater(lambda m, dt: m.update(dt))
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float = 0) -> None:
         stream_lines = self.stream_lines
         for line in stream_lines:
             line.time += dt
