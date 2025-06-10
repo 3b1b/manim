@@ -27,7 +27,7 @@ vec4 add_light(vec4 color, vec3 point, vec3 unit_normal){
     float light_to_normal = dot(to_light, unit_normal);
     // When unit normal points towards light, brighten
     float bright_factor = max(light_to_normal, 0) * reflectiveness;
-    // For glossy surface, add extra shine if light beam go towards camera
+    // For glossy surface, add extra shine if light beam goes towards camera
     vec3 light_reflection = reflect(-to_light, unit_normal);
     float light_to_cam = dot(light_reflection, to_camera);
     float shine = gloss * exp(-3 * pow(1 - light_to_cam, 2));

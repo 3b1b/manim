@@ -13,7 +13,7 @@ in vec2 uv_coords;
 
 out vec4 frag_color;
 
-// This include a delaration of uniform vec3 shading
+// This includes a declaration of uniform vec3 shading
 #INSERT finalize_color.glsl
 
 void main() {

@@ -130,6 +130,9 @@ PINK: ManimColor = manim_config.colors.pink
 LIGHT_PINK: ManimColor = manim_config.colors.light_pink
 GREEN_SCREEN: ManimColor = manim_config.colors.green_screen
 ORANGE: ManimColor = manim_config.colors.orange
+PURE_RED: ManimColor = manim_config.colors.pure_red
+PURE_GREEN: ManimColor = manim_config.colors.pure_green
+PURE_BLUE: ManimColor = manim_config.colors.pure_blue
 
 MANIM_COLORS: List[ManimColor] = list(manim_config.colors.values())
 

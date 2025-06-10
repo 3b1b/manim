@@ -169,6 +169,9 @@ colors:
   light_pink: "#DC75CD"
   green_screen: "#00FF00"
   orange: "#FF862F"
+  pure_red: "#FF0000"
+  pure_green: "#00FF00"
+  pure_blue: "#0000FF"
 # Can be DEBUG / INFO / WARNING / ERROR / CRITICAL
 log_level: "INFO"
 universal_import_line: "from manimlib import *"
