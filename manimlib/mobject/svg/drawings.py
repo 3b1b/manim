@@ -344,6 +344,8 @@ class ClockPassesTime(AnimationGroup):
                 angle=12 * hour_radians,
                 **rot_kwargs
             ),
+            group=clock,
+            run_time=run_time,
             **kwargs
         )
 
