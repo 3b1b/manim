@@ -18,7 +18,7 @@ from manimlib.constants import DOWN, IN, LEFT, ORIGIN, OUT, RIGHT, UP
 from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
 from manimlib.constants import MED_SMALL_BUFF
 from manimlib.constants import TAU
-from manimlib.constants import WHITE
+from manimlib.constants import DEFAULT_MOBJECT_COLOR
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_listner import EventListener
 from manimlib.event_handler.event_type import EventType
@@ -78,7 +78,7 @@ class Mobject(object):
 
     def __init__(
         self,
-        color: ManimColor = WHITE,
+        color: ManimColor = DEFAULT_MOBJECT_COLOR,
         opacity: float = 1.0,
         shading: Tuple[float, float, float] = (0.0, 0.0, 0.0),
         # For shaders

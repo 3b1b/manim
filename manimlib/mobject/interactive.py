@@ -6,7 +6,7 @@ from pyglet.window import key as PygletWindowKeys
 from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
 from manimlib.constants import DOWN, LEFT, ORIGIN, RIGHT, UP
 from manimlib.constants import MED_LARGE_BUFF, MED_SMALL_BUFF, SMALL_BUFF
-from manimlib.constants import BLACK, BLUE, GREEN, GREY_A, GREY_C, RED, WHITE
+from manimlib.constants import BLACK, BLUE, GREEN, GREY_A, GREY_C, RED, WHITE, DEFAULT_MOBJECT_COLOR
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.geometry import Circle
@@ -387,7 +387,7 @@ class Textbox(ControlMobject):
         box_kwargs: dict = {
             "width": 2.0,
             "height": 1.0,
-            "fill_color": WHITE,
+            "fill_color": DEFAULT_MOBJECT_COLOR,
             "fill_opacity": 1.0,
         },
         text_kwargs: dict = {
