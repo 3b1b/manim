@@ -6,6 +6,7 @@ from manimlib.animation.animation import Animation
 from manimlib.animation.transform import Transform
 from manimlib.constants import ORIGIN
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.rate_functions import there_and_back
 
@@ -101,7 +102,7 @@ class FadeTransform(Transform):
         self.dim_to_match = dim_to_match
 
         mobject.save_state()
-        super().__init__(mobject.get_group_class()(mobject, target_mobject.copy()), **kwargs)
+        super().__init__(Group(mobject, target_mobject.copy()), **kwargs)
 
     def begin(self) -> None:
         self.ending_mobject = self.mobject.copy()
