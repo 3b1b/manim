@@ -29,9 +29,9 @@ class ChangingDecimal(Animation):
         self.mobject = decimal_mob
 
     def interpolate_mobject(self, alpha: float) -> None:
-        self.mobject.set_value(
-            self.number_update_func(alpha)
-        )
+        true_alpha = self.time_spanned_alpha(alpha)
+        new_value = self.number_update_func(true_alpha)
+        self.mobject.set_value(new_value)
 
 
 class ChangeDecimalToValue(ChangingDecimal):
