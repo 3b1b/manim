@@ -43,7 +43,7 @@ class AnimationGroup(Animation):
         mobs = remove_list_redundancies([a.mobject for a in self.animations])
         if group is not None:
             self.group = group
-        if group_type is not None:
+        elif group_type is not None:
             self.group = group_type(*mobs)
         elif all(isinstance(anim.mobject, VMobject) for anim in animations):
             self.group = VGroup(*mobs)
