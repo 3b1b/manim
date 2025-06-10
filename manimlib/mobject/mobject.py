@@ -18,7 +18,7 @@ from manimlib.constants import DOWN, IN, LEFT, ORIGIN, OUT, RIGHT, UP
 from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
 from manimlib.constants import MED_SMALL_BUFF
 from manimlib.constants import TAU
-from manimlib.constants import WHITE
+from manimlib.constants import DEFAULT_MOBJECT_COLOR
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_listner import EventListener
 from manimlib.event_handler.event_type import EventType
@@ -52,7 +52,7 @@ SubmobjectType = TypeVar('SubmobjectType', bound='Mobject')
 if TYPE_CHECKING:
     from typing import Callable, Iterator, Union, Tuple, Optional, Any
     import numpy.typing as npt
-    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, UniformDict, Self
+    from manimlib.typing import ManimColor, Vect3, Vect4Array, Vect3Array, UniformDict, Self
     from moderngl.context import Context
 
     T = TypeVar('T')
@@ -78,7 +78,7 @@ class Mobject(object):
 
     def __init__(
         self,
-        color: ManimColor = WHITE,
+        color: ManimColor = DEFAULT_MOBJECT_COLOR,
         opacity: float = 1.0,
         shading: Tuple[float, float, float] = (0.0, 0.0, 0.0),
         # For shaders
@@ -160,10 +160,10 @@ class Mobject(object):
         return self
 
     @property
-    def animate(self) -> _AnimationBuilder:
+    def animate(self) -> _AnimationBuilder | Self:
         """
         Methods called with Mobject.animate.method() can be passed
-        into a Scene.play call, as if you were calling 
+        into a Scene.play call, as if you were calling
         ApplyMethod(mobject.method)
 
         Borrowed from https://github.com/ManimCommunity/manim/
@@ -287,10 +287,7 @@ class Mobject(object):
             about_point = self.get_bounding_box_point(about_edge)
 
         for mob in self.get_family():
-            arrs = []
-            if mob.has_points():
-                for key in mob.pointlike_data_keys:
-                    arrs.append(mob.data[key])
+            arrs = [mob.data[key] for key in mob.pointlike_data_keys if mob.has_points()]
             if works_on_bounding_box:
                 arrs.append(mob.get_bounding_box())
 
@@ -1323,20 +1320,19 @@ class Mobject(object):
 
     def set_color_by_rgba_func(
         self,
-        func: Callable[[Vect3], Vect4],
+        func: Callable[[Vect3Array], Vect4Array],
         recurse: bool = True
     ) -> Self:
         """
         Func should take in a point in R3 and output an rgba value
         """
         for mob in self.get_family(recurse):
-            rgba_array = [func(point) for point in mob.get_points()]
-            mob.set_rgba_array(rgba_array)
+            mob.set_rgba_array(func(mob.get_points()))
         return self
 
     def set_color_by_rgb_func(
         self,
-        func: Callable[[Vect3], Vect3],
+        func: Callable[[Vect3Array], Vect3Array],
         opacity: float = 1,
         recurse: bool = True
     ) -> Self:
@@ -1344,8 +1340,9 @@ class Mobject(object):
         Func should take in a point in R3 and output an rgb value
         """
         for mob in self.get_family(recurse):
-            rgba_array = [[*func(point), opacity] for point in mob.get_points()]
-            mob.set_rgba_array(rgba_array)
+            points = mob.get_points()
+            opacity = np.ones((points.shape[0], 1)) * opacity
+            mob.set_rgba_array(np.hstack((func(points), opacity)))
         return self
 
     @affects_family_data
@@ -1364,7 +1361,7 @@ class Mobject(object):
                     rgbs = resize_with_interpolation(rgbs, len(data))
                 data[name][:, :3] = rgbs
             if opacity is not None:
-                if not isinstance(opacity, (float, int)):
+                if not isinstance(opacity, (float, int, np.floating)):
                     opacity = resize_with_interpolation(np.array(opacity), len(data))
                 data[name][:, 3] = opacity
         return self
@@ -2258,6 +2255,18 @@ class _AnimationBuilder:
 
     def __call__(self, **kwargs):
         return self.set_anim_args(**kwargs)
+
+    def __dir__(self) -> list[str]:
+        """
+        Extend attribute list of _AnimationBuilder object to include mobject attributes
+        for better autocompletion in the IPython terminal when using interactive mode.
+        """
+        methods = super().__dir__()
+        mobject_methods = [
+            attr for attr in dir(self.mobject)
+            if not attr.startswith('_')
+        ]
+        return sorted(set(methods+mobject_methods))
 
     def set_anim_args(self, **kwargs):
         '''

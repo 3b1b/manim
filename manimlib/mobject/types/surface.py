@@ -30,11 +30,10 @@ class Surface(Mobject):
     shader_folder: str = "surface"
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
-        ('du_point', np.float32, (3,)),
-        ('dv_point', np.float32, (3,)),
+        ('d_normal_point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ])
-    pointlike_data_keys = ['point', 'du_point', 'dv_point']
+    pointlike_data_keys = ['point', 'd_normal_point']
 
     def __init__(
         self,
@@ -48,9 +47,11 @@ class Surface(Mobject):
         # rows/columns of approximating squares
         resolution: Tuple[int, int] = (101, 101),
         prefered_creation_axis: int = 1,
-        # For du and dv steps.  Much smaller and numerical error
-        # can crop up in the shaders.
-        epsilon: float = 1e-4,
+        # For du and dv steps.
+        epsilon: float = 1e-3,
+        # Step off the surface to a new point which will
+        # be used to determine the normal direction
+        normal_nudge: float = 1e-3,
         **kwargs
     ):
         self.u_range = u_range
@@ -58,6 +59,7 @@ class Surface(Mobject):
         self.resolution = resolution
         self.prefered_creation_axis = prefered_creation_axis
         self.epsilon = epsilon
+        self.normal_nudge = normal_nudge
 
         super().__init__(
             **kwargs,
@@ -94,9 +96,11 @@ class Surface(Mobject):
             ).reshape((nu * nv, dim))
             for grid in (uv_grid, uv_plus_du, uv_plus_dv)
         ]
+        crosses = cross(du_points - points, dv_points - points)
+        normals = normalize_along_axis(crosses, 1)
+
         self.set_points(points)
-        self.data['du_point'][:] = du_points
-        self.data['dv_point'][:] = dv_points
+        self.data['d_normal_point'] = points + self.normal_nudge * normals
 
     def uv_to_point(self, u, v):
         nu, nv = self.resolution
@@ -152,12 +156,8 @@ class Surface(Mobject):
         return self.triangle_indices
 
     def get_unit_normals(self) -> Vect3Array:
-        points = self.get_points()
-        crosses = cross(
-            self.data['du_point'] - points,
-            self.data['dv_point'] - points,
-        )
-        return normalize_along_axis(crosses, 1)
+        # TOOD, I could try a more resiliant way to compute this using the neighboring grid values
+        return normalize_along_axis(self.data['d_normal_point'] - self.data['point'], 1)
 
     @Mobject.affects_data
     def pointwise_become_partial(
@@ -276,8 +276,7 @@ class TexturedSurface(Surface):
     shader_folder: str = "textured_surface"
     data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
-        ('du_point', np.float32, (3,)),
-        ('dv_point', np.float32, (3,)),
+        ('d_normal_point', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ]
@@ -321,8 +320,7 @@ class TexturedSurface(Surface):
         self.resize_points(surf.get_num_points())
         self.resolution = surf.resolution
         self.data['point'][:] = surf.data['point']
-        self.data['du_point'][:] = surf.data['du_point']
-        self.data['dv_point'][:] = surf.data['dv_point']
+        self.data['d_normal_point'][:] = surf.data['d_normal_point']
         self.data['opacity'][:, 0] = surf.data["rgba"][:, 3]
         self.data["im_coords"] = np.array([
             [u, v]

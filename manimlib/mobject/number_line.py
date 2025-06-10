@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from manimlib.constants import DOWN, LEFT, RIGHT, UP
-from manimlib.constants import GREY_B
+from manimlib.constants import DEFAULT_LIGHT_COLOR
 from manimlib.constants import MED_SMALL_BUFF
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.numbers import DecimalNumber
@@ -24,7 +24,7 @@ class NumberLine(Line):
     def __init__(
         self,
         x_range: RangeSpecifier = (-8, 8, 1),
-        color: ManimColor = GREY_B,
+        color: ManimColor = DEFAULT_LIGHT_COLOR,
         stroke_width: float = 2.0,
         # How big is one one unit of this number line in terms of absolute spacial distance
         unit_size: float = 1.0,
@@ -182,9 +182,13 @@ class NumberLine(Line):
         if x < 0 and direction[0] == 0:
             # Align without the minus sign
             num_mob.shift(num_mob[0].get_width() * LEFT / 2)
-        if x == unit and unit_tex:
+        if abs(x) == unit and unit_tex:
             center = num_mob.get_center()
-            num_mob.remove(num_mob[0])
+            if x > 0:
+                num_mob.remove(num_mob[0])
+            else:
+                num_mob.remove(num_mob[1])
+                num_mob[0].next_to(num_mob[1], LEFT, buff=num_mob[0].get_width() / 4)
             num_mob.move_to(center)
         return num_mob
 

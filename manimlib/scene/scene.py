@@ -8,10 +8,9 @@ from functools import wraps
 from contextlib import contextmanager
 from contextlib import ExitStack
 
-from pyglet.window import key as PygletWindowKeys
-
 import numpy as np
 from tqdm.auto import tqdm as ProgressDisplay
+from pyglet.window import key as PygletWindowKeys
 
 from manimlib.animation.animation import prepare_animation
 from manimlib.camera.camera import Camera
@@ -33,6 +32,8 @@ from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import recursive_mobject_remove
 from manimlib.utils.iterables import batch_by_property
+from manimlib.utils.sounds import play_sound
+from manimlib.utils.color import color_to_rgba
 from manimlib.window import Window
 
 from typing import TYPE_CHECKING
@@ -379,6 +380,11 @@ class Scene(object):
         to_remove = set(extract_mobject_family_members(mobjects_to_remove))
         new_mobjects, _ = recursive_mobject_remove(self.mobjects, to_remove)
         self.mobjects = new_mobjects
+
+    @affects_mobject_list
+    def remove_all_except(self, *mobjects_to_keep : Mobject):
+        self.clear()
+        self.add(*mobjects_to_keep)
 
     def bring_to_front(self, *mobjects: Mobject):
         self.add(*mobjects)
@@ -866,6 +872,11 @@ class Scene(object):
         if not self.window:
             return
         self.window.focus()
+
+    def set_background_color(self, background_color, background_opacity=1) -> None:
+        self.camera.background_rgba = list(color_to_rgba(
+            background_color, background_opacity
+        ))
 
 
 class SceneState():

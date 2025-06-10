@@ -4,7 +4,7 @@ from functools import lru_cache
 import numpy as np
 
 from manimlib.constants import DOWN, LEFT, RIGHT, UP
-from manimlib.constants import WHITE
+from manimlib.constants import DEFAULT_MOBJECT_COLOR
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -35,11 +35,12 @@ class DecimalNumber(VMobject):
     def __init__(
         self,
         number: float | complex = 0,
-        color: ManimColor = WHITE,
+        color: ManimColor = DEFAULT_MOBJECT_COLOR,
         stroke_width: float = 0,
         fill_opacity: float = 1.0,
         fill_border_width: float = 0.5,
         num_decimal_places: int = 2,
+        min_total_width: Optional[int] = 0,
         include_sign: bool = False,
         group_with_commas: bool = True,
         digit_buff_per_font_unit: float = 0.001,
@@ -54,6 +55,7 @@ class DecimalNumber(VMobject):
         self.num_decimal_places = num_decimal_places
         self.include_sign = include_sign
         self.group_with_commas = group_with_commas
+        self.min_total_width = min_total_width
         self.digit_buff_per_font_unit = digit_buff_per_font_unit
         self.show_ellipsis = show_ellipsis
         self.unit = unit
@@ -167,6 +169,7 @@ class DecimalNumber(VMobject):
                 "include_sign",
                 "group_with_commas",
                 "num_decimal_places",
+                "min_total_width",
             ]
         ])
         config.update(kwargs)
@@ -176,6 +179,7 @@ class DecimalNumber(VMobject):
             config.get("field_name", ""),
             ":",
             "+" if config["include_sign"] else "",
+            "0" + str(config.get("min_total_width", "")) if config.get("min_total_width") else "",
             "," if config["group_with_commas"] else "",
             f".{ndp}f" if ndp > 0 else "d",
             "}",

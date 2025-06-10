@@ -6,7 +6,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 
 from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
-from manimlib.constants import WHITE
+from manimlib.constants import DEFAULT_MOBJECT_COLOR
 from manimlib.animation.indication import VShowPassingFlash
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -145,6 +145,7 @@ class VectorField(VMobject):
         func: Callable[[VectArray], VectArray],
         # Typically a set of Axes or NumberPlane
         coordinate_system: CoordinateSystem,
+        sample_coords: Optional[VectArray] = None,
         density: float = 2.0,
         magnitude_range: Optional[Tuple[float, float]] = None,
         color: Optional[ManimColor] = None,
@@ -168,14 +169,17 @@ class VectorField(VMobject):
         self.norm_to_opacity_func = norm_to_opacity_func
 
         # Search for sample_points
-        self.sample_coords = get_sample_coords(coordinate_system, density)
+        if sample_coords is not None:
+            self.sample_coords = sample_coords
+        else:
+            self.sample_coords = get_sample_coords(coordinate_system, density)
         self.update_sample_points()
 
         if max_vect_len is None:
             step_size = get_norm(self.sample_points[1] - self.sample_points[0])
             self.max_displayed_vect_len = max_vect_len_to_step_size * step_size
         else:
-            self.max_displayed_vect_len = max_vect_len * coordinate_system.get_x_unit_size()
+            self.max_displayed_vect_len = max_vect_len * coordinate_system.x_axis.get_unit_size()
 
         # Prepare the color map
         if magnitude_range is None:
@@ -347,7 +351,7 @@ class StreamLines(VGroup):
         cutoff_norm: float = 15,
         # Style info
         stroke_width: float = 1.0,
-        stroke_color: ManimColor = WHITE,
+        stroke_color: ManimColor = DEFAULT_MOBJECT_COLOR,
         stroke_opacity: float = 1,
         color_by_magnitude: bool = True,
         magnitude_range: Tuple[float, float] = (0, 2.0),
@@ -386,7 +390,6 @@ class StreamLines(VGroup):
 
     def draw_lines(self) -> None:
         lines = []
-        origin = self.coordinate_system.get_origin()
 
         # Todo, it feels like coordinate system should just have
         # the ODE solver built into it, no?
@@ -406,7 +409,7 @@ class StreamLines(VGroup):
 
         noise_factor = self.noise_factor
         if noise_factor is None:
-            noise_factor = (cs.get_x_unit_size() / self.density) * 0.5
+            noise_factor = (cs.x_axis.get_unit_size() / self.density) * 0.5
 
         return np.array([
             coords + noise_factor * np.random.random(coords.shape)
@@ -422,7 +425,7 @@ class StreamLines(VGroup):
             cs = self.coordinate_system
             for line in self.submobjects:
                 norms = [
-                    get_norm(self.func(*cs.p2c(point)))
+                    get_norm(self.func(cs.p2c(point)))
                     for point in line.get_points()
                 ]
                 rgbs = values_to_rgbs(norms)
@@ -467,7 +470,7 @@ class AnimatedStreamLines(VGroup):
 
         self.add_updater(lambda m, dt: m.update(dt))
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float = 0) -> None:
         stream_lines = self.stream_lines
         for line in stream_lines:
             line.time += dt

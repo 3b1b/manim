@@ -3,7 +3,7 @@ from __future__ import annotations
 from colour import Color
 
 from manimlib.config import manim_config
-from manimlib.constants import BLACK, RED, YELLOW, WHITE
+from manimlib.constants import BLACK, RED, YELLOW, DEFAULT_MOBJECT_COLOR
 from manimlib.constants import DL, DOWN, DR, LEFT, RIGHT, UL, UR
 from manimlib.constants import SMALL_BUFF
 from manimlib.mobject.geometry import Line
@@ -79,7 +79,8 @@ class BackgroundRectangle(SurroundingRectangle):
         stroke_width: float | None = None,
         fill_color: ManimColor | None = None,
         fill_opacity: float | None = None,
-        family: bool = True
+        family: bool = True,
+        **kwargs
     ) -> Self:
         # Unchangeable style, except for fill_opacity
         VMobject.set_style(
@@ -117,7 +118,7 @@ class Underline(Line):
         self,
         mobject: Mobject,
         buff: float = SMALL_BUFF,
-        stroke_color=WHITE,
+        stroke_color=DEFAULT_MOBJECT_COLOR,
         stroke_width: float | Sequence[float] = [0, 3, 3, 0],
         stretch_factor=1.2,
         **kwargs

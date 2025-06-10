@@ -33,7 +33,7 @@ class Animation(object):
         lag_ratio: float = DEFAULT_ANIMATION_LAG_RATIO,
         rate_func: Callable[[float], float] = smooth,
         name: str = "",
-        # Does this animation add or remove a mobject form the screen
+        # Does this animation add or remove a mobject from the screen
         remover: bool = False,
         # What to enter into the update function upon completion
         final_alpha_value: float = 1.0,
@@ -42,6 +42,7 @@ class Animation(object):
         # updating, call mobject.suspend_updating() before the animation
         suspend_mobject_updating: bool = False,
     ):
+        self._validate_input_type(mobject)
         self.mobject = mobject
         self.run_time = run_time
         self.time_span = time_span
@@ -52,7 +53,9 @@ class Animation(object):
         self.lag_ratio = lag_ratio
         self.suspend_mobject_updating = suspend_mobject_updating
 
-        assert isinstance(mobject, Mobject)
+    def _validate_input_type(self, mobject: Mobject) -> None:
+        if not isinstance(mobject, Mobject):
+            raise TypeError("Animation only works for Mobjects.")
 
     def __str__(self) -> str:
         return self.name
