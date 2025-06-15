@@ -39,6 +39,7 @@ class NumberLine(Line):
         include_numbers: bool = False,
         line_to_number_direction: Vect3 = DOWN,
         line_to_number_buff: float = MED_SMALL_BUFF,
+        number_orientation: float = 0,      # Number rotation in radians
         include_tip: bool = False,
         tip_config: dict = dict(
             width=0.25,
@@ -65,6 +66,7 @@ class NumberLine(Line):
             self.big_tick_numbers = list(big_tick_numbers)
         self.line_to_number_direction = line_to_number_direction
         self.line_to_number_buff = line_to_number_buff
+        self.number_orientation = number_orientation
         self.include_tip = include_tip
         self.tip_config = dict(tip_config)
         self.decimal_number_config = dict(decimal_number_config)
@@ -158,6 +160,7 @@ class NumberLine(Line):
         self,
         x: float,
         direction: Vect3 | None = None,
+        orientation: float | None = None,
         buff: float | None = None,
         unit: float = 1.0,
         unit_tex: str = "",
@@ -168,6 +171,8 @@ class NumberLine(Line):
         )
         if direction is None:
             direction = self.line_to_number_direction
+        if orientation is None:
+            orientation = self.number_orientation
         if buff is None:
             buff = self.line_to_number_buff
         if unit_tex:
@@ -190,6 +195,8 @@ class NumberLine(Line):
                 num_mob.remove(num_mob[1])
                 num_mob[0].next_to(num_mob[1], LEFT, buff=num_mob[0].get_width() / 4)
             num_mob.move_to(center)
+            
+        num_mob.rotate(orientation)
         return num_mob
 
     def add_numbers(
