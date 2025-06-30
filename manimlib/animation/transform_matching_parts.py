@@ -88,7 +88,7 @@ class TransformMatchingParts(AnimationGroup):
         if not source_is_new or not target_is_new:
             return
 
-        transform_type = self.mismatch_animation 
+        transform_type = self.mismatch_animation
         if source.has_same_shape_as(target):
             transform_type = self.match_animation
 
@@ -160,10 +160,10 @@ class TransformMatchingStrings(TransformMatchingParts):
         # Nullify any intersections with those matches in the two symbol lists
         for sub_source, sub_target in blocks:
             for i in range(len(syms1)):
-                if source[i] in sub_source.family_members_with_points():
+                if i < len(source) and source[i] in sub_source.family_members_with_points():
                     syms1[i] = "Null1"
             for j in range(len(syms2)):
-                if target[j] in sub_target.family_members_with_points():
+                if j < len(target) and target[j] in sub_target.family_members_with_points():
                     syms2[j] = "Null2"
 
         # Group together longest matching substrings
