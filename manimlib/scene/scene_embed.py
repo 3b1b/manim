@@ -109,6 +109,31 @@ class InteractiveSceneEmbed:
 
         self.shell.set_custom_exc((Exception,), custom_exc)
 
+    def validate_syntax(self, file_path: str) -> bool:
+        """
+        Validates the syntax of a Python file without executing it.
+        Returns True if syntax is valid, False otherwise.
+        Prints syntax errors to the console if found.
+        """
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                source_code = f.read()
+
+            # Use compile() to check for syntax errors without executing
+            compile(source_code, file_path, 'exec')
+            return True
+
+        except SyntaxError as e:
+            print(f"\nSyntax Error in {file_path}:")
+            print(f"  Line {e.lineno}: {e.text.strip() if e.text else ''}")
+            print(f"  {' ' * (e.offset - 1 if e.offset else 0)}^")
+            print(f"  {e.msg}")
+            return False
+
+        except Exception as e:
+            print(f"\nError reading {file_path}: {e}")
+            return False
+
     def reload_scene(self, embed_line: int | None = None) -> None:
         """
         Reloads the scene just like the `manimgl` command would do with the
@@ -132,6 +157,14 @@ class InteractiveSceneEmbed:
         `set_custom_exc` method, we cannot break out of the IPython shell by
         this means.
         """
+        # Get the current file path for syntax validation
+        current_file = self.shell.user_module.__file__
+
+        # Validate syntax before attempting reload
+        if not self.validate_syntax(current_file):
+            print("[ERROR] Reload cancelled due to syntax errors. Fix the errors and try again.")
+            return
+
         # Update the global run configuration.
         run_config = manim_config.run
         run_config.is_reload = True
