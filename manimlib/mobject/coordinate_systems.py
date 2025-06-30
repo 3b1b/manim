@@ -638,7 +638,10 @@ class NumberPlane(Axes):
             stroke_opacity=1,
         ),
         # Defaults to a faded version of line_config
-        faded_line_style: dict = dict(),
+        faded_line_style: dict = dict(
+            stroke_width=1,
+            stroke_opacity=0.25,
+        ),
         faded_line_ratio: int = 4,
         make_smooth_after_applying_functions: bool = True,
         **kwargs
@@ -651,14 +654,8 @@ class NumberPlane(Axes):
         self.init_background_lines()
 
     def init_background_lines(self) -> None:
-        if not self.faded_line_style:
-            style = dict(self.background_line_style)
-            # For anything numerical, like stroke_width
-            # and stroke_opacity, chop it in half
-            for key in style:
-                if isinstance(style[key], numbers.Number):
-                    style[key] *= 0.5
-            self.faded_line_style = style
+        if "stroke_color" not in self.faded_line_style:
+            self.faded_line_style["stroke_color"] = self.background_line_style["stroke_color"]
 
         self.background_lines, self.faded_lines = self.get_lines()
         self.background_lines.set_style(**self.background_line_style)
