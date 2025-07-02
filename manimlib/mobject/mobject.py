@@ -80,7 +80,7 @@ class Mobject(object):
         self,
         color: ManimColor = DEFAULT_MOBJECT_COLOR,
         opacity: float = 1.0,
-        shading: Tuple[float, float, float] = (0.0, 0.0, 0.0),
+        shading: Tuple[float, float, float, float] = (0.0, 0.0, 0.0, 0.0),
         # For shaders
         texture_paths: dict[str, str] | None = None,
         # If true, the mobject will not get rotated according to camera position
@@ -1432,16 +1432,21 @@ class Mobject(object):
         reflectiveness: float | None = None,
         gloss: float | None = None,
         shadow: float | None = None,
+        # TODO: `glow` does nothing at the moment;
+        # still needs to be implemented in the shader code in
+        # manimlib/shaders/inserts/finalize_color.glsl
+        glow: float | None = None,
         recurse: bool = True
     ) -> Self:
         """
         Larger reflectiveness makes things brighter when facing the light
         Larger shadow makes faces opposite the light darker
         Makes parts bright where light gets reflected toward the camera
+        Glow should add a glowing outline around the silhouette of the mobject
         """
         for mob in self.get_family(recurse):
             shading = mob.uniforms["shading"]
-            for i, value in enumerate([reflectiveness, gloss, shadow]):
+            for i, value in enumerate([reflectiveness, gloss, shadow, glow]):
                 if value is not None:
                     shading[i] = value
             mob.set_uniform(shading=shading, recurse=False)
