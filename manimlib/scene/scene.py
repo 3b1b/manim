@@ -303,8 +303,24 @@ class Scene(object):
         same type are grouped together, so this function creates
         Groups of all clusters of adjacent Mobjects in the scene
         """
+        transparent = []
+        opaque = []
+        for mob in self.mobjects:
+            for fam in mob.get_family():
+                if "rgba" in fam.data_dtype.names and any(op < 1 for op in fam.get_opacities()):
+                    transparent.append(mob)
+                else:
+                    opaque.append(mob)
+                
         batches = batch_by_property(
-            self.mobjects,
+            opaque,
+            lambda m: str(type(m)) + str(m.get_shader_wrapper(self.camera.ctx).get_id()) + str(m.z_index)
+        )
+
+        # render the furthest objects first but preserve user specified z index
+        transparent.sort(key=lambda m: (m.z_index, m.get_center()[2]))
+        batches_transparent = batch_by_property(
+            transparent,
             lambda m: str(type(m)) + str(m.get_shader_wrapper(self.camera.ctx).get_id()) + str(m.z_index)
         )
 
@@ -312,7 +328,7 @@ class Scene(object):
             group.clear()
         self.render_groups = [
             batch[0].get_group_class()(*batch)
-            for batch, key in batches
+            for batch, key in batches + batches_transparent
         ]
 
     @staticmethod
