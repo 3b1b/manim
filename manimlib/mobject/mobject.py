@@ -1325,6 +1325,9 @@ class Mobject(object):
     ) -> Self:
         """
         Func should take in a point in R3 and output an rgba value
+
+        **Note:**
+        func should accept an (N, 3) array and return an (N, 4) array of RGB values in [0,1]
         """
         for mob in self.get_family(recurse):
             mob.set_rgba_array(func(mob.get_points()))
@@ -1338,6 +1341,9 @@ class Mobject(object):
     ) -> Self:
         """
         Func should take in a point in R3 and output an rgb value
+
+        **Note:**
+        func should accept an (N, 3) array and return an (N, 3) array of RGB values in [0,1]
         """
         for mob in self.get_family(recurse):
             points = mob.get_points()
