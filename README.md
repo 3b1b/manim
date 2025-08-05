@@ -110,6 +110,13 @@ When running in the CLI, some useful flags include:
 
 Take a look at custom_config.yml for further configuration.  To add your customization, you can either edit this file, or add another file by the same name "custom_config.yml" to whatever directory you are running manim from.  For example [this is the one](https://github.com/3b1b/videos/blob/master/custom_config.yml) for 3blue1brown videos.  There you can specify where videos should be output to, where manim should look for image files and sounds you want to read in, and other defaults regarding style and video quality.
 
+### Troubleshooting
+If you experience unexpected behavior with window positioning and/or sizing, consider setting the environment
+variable `PYGLET_DPI_SCALING` to either `scaled` or `stretch`. For instance:
+```sh
+PYGLET_DPI_SCALING=scaled manimgl example_scenes.py OpeningManimExample
+```
+
 ### Documentation
 Documentation is in progress at [3b1b.github.io/manim](https://3b1b.github.io/manim/). And there is also a Chinese version maintained by [**@manim-kindergarten**](https://manim.org.cn): [docs.manim.org.cn](https://docs.manim.org.cn/) (in Chinese).
 
