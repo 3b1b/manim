@@ -1,3 +1,4 @@
+pyglet @ git+https://github.com/pyglet/pyglet.git@f08debc
 addict
 appdirs
 audioop-lts; python_version>='3.13'
