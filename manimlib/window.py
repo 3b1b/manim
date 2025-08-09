@@ -240,6 +240,12 @@ class Window(PygletWindow):
     @note_undrawn_event
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
+        if symbol == pyglet.window.key.F11:
+            if self.width == self.screen.width * self.screen.get_scale():
+                self.to_default_position()
+            else:
+                self.maximize()
+            return
         self.pressed_keys.add(symbol)  # Modifiers?
         if not self.scene:
             return
