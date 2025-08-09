@@ -34,6 +34,7 @@ class Window(PygletWindow):
         position_string: str = "UR",
         monitor_index: int = 1,
         full_screen: bool = False,
+        style: str = None,
         size: Optional[tuple[int, int]] = None,
         position: Optional[tuple[int, int]] = None,
         samples: int = 0,
@@ -63,10 +64,12 @@ class Window(PygletWindow):
             resizable=self.resizable,
             vsync=self.vsync,
             fullscreen=full_screen,
+            style=style,
             config=config,
         )
 
         self.set_mouse_visible(self.cursor)
+        self.set_mouse_passthrough(False)
         self.to_default_position()
 
         if self.scene:
