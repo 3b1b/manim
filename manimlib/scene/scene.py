@@ -11,6 +11,7 @@ from contextlib import ExitStack
 import numpy as np
 from tqdm.auto import tqdm as ProgressDisplay
 from pyglet.window import key as PygletWindowKeys
+import pyglet
 
 from manimlib.animation.animation import prepare_animation
 from manimlib.camera.camera import Camera
@@ -242,11 +243,14 @@ class Scene(object):
         if self.is_window_closing():
             raise EndScene()
 
-        if self.window and dt == 0 and not self.window.has_undrawn_event() and not force_draw:
-            # In this case, there's no need for new rendering, but we
-            # shoudl still listen for new events
-            self.window._window.dispatch_events()
-            return
+        if self.window:
+            pyglet.app.platform_event_loop.dispatch_posted_events()
+            pyglet.app.platform_event_loop.step(0)
+            self.window.dispatch_events()
+            if dt == 0 and not self.window.has_undrawn_event() and not force_draw:
+                # In this case, there's no need for new rendering, but we
+                # should still listen for new events
+                return
 
         self.camera.capture(*self.render_groups)
 

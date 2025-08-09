@@ -10,10 +10,10 @@ manimpango>=0.6.0
 mapbox-earcut
 matplotlib
 moderngl
-moderngl_window
 numpy
 Pillow
 pydub
+pyglet
 pygments
 PyOpenGL
 pyperclip
