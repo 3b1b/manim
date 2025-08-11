@@ -69,6 +69,7 @@ scene:
   preview_while_skipping: True
   # How long does a scene pause on Scene.wait calls
   default_wait_time: 1.0
+  fixed_aspect_ratio: False
 vmobject:
   default_stroke_width: 4.0
   default_stroke_color: "#DDDDDD"     # Default is GREY_A

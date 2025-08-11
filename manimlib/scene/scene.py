@@ -76,6 +76,7 @@ class Scene(object):
         preview_while_skipping: bool = True,
         presenter_mode: bool = False,
         default_wait_time: float = 1.0,
+        fixed_aspect_ratio: bool = False,
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
@@ -86,6 +87,7 @@ class Scene(object):
         self.preview_while_skipping = preview_while_skipping
         self.presenter_mode = presenter_mode
         self.default_wait_time = default_wait_time
+        self.fixed_aspect_ratio = fixed_aspect_ratio
 
         self.camera_config = merge_dicts_recursively(
             manim_config.camera,         # Global default
@@ -110,6 +112,9 @@ class Scene(object):
             samples=self.samples,
             **self.camera_config
         )
+        if self.window:
+            # Ensure viewport or frame matches current window size
+            self.on_resize(*self.window.size)
         self.frame: CameraFrame = self.camera.frame
         self.frame.reorient(*self.default_frame_orientation)
         self.frame.make_orientation_default()
@@ -858,7 +863,22 @@ class Scene(object):
             self.hold_on_wait = False
 
     def on_resize(self, width: int, height: int) -> None:
-        pass
+        if not hasattr(self, 'camera'):
+            return
+
+        if self.fixed_aspect_ratio:
+            aspect = self.camera.frame.get_aspect_ratio()
+            window_aspect = width / height
+            if window_aspect > aspect:
+                vp_height = height
+                vp_width = int(vp_height * aspect)
+            else:
+                vp_width = width
+                vp_height = int(vp_width / aspect)
+            vp_x = (width - vp_width) // 2
+            vp_y = (height - vp_height) // 2
+            if self.window:
+                self.window.ctx.viewport = (vp_x, vp_y, vp_width, vp_height)
 
     def on_show(self) -> None:
         pass
