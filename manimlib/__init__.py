@@ -1,6 +1,6 @@
-import pkg_resources
+from importlib.metadata import version
 
-__version__ = pkg_resources.get_distribution("manimgl").version
+__version__ = version("manimgl")
 
 from typing import TYPE_CHECKING
 
