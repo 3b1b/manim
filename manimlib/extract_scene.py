@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import inspect
+import ast
 import sys
 
 from manimlib.module_loader import ModuleLoader
@@ -145,36 +146,67 @@ def get_indent(code_lines: list[str], line_number: int) -> str:
 
 def insert_embed_line_to_module(module: Module, run_config: Dict) -> None:
     """
-    This is hacky, but convenient. When user includes the argument "-e", it will try
-    to recreate a file that inserts the line `self.embed()` into the end of the scene's
-    construct method. If there is an argument passed in, it will insert the line after
-    the last line in the sourcefile which includes that string.
+    Smarter embed injection with debug fallback:
+    Locate the correct Scene class and insert `self.embed()` inside its construct() method.
+    Retains original debug fallback if no class is found.
     """
-    lines = inspect.getsource(module).splitlines()
-    line_number = run_config.embed_line
+    source = inspect.getsource(module)
+    lines = source.splitlines(keepends=True)
 
-    # Add the relevant embed line to the code
-    indent = get_indent(lines, line_number)
-    lines.insert(line_number, indent + "self.embed()")
-    new_code = "\n".join(lines)
+    # Find target class name
+    target_class = None
+    if run_config.get("scene_names"):
+        target_class = run_config["scene_names"][0]
 
-    # When the user executes the `-e <line_number>` command
-    # without specifying scene_names, the nearest class name above
-    # `<line_number>` will be automatically used as 'scene_names'.
+    tree = ast.parse(source)
+    insert_at = None
 
-    if not run_config.scene_names:
-        classes = list(filter(lambda line: line.startswith("class"), lines[:line_number]))
-        if classes:
-            from re import search
+    # Find construct() inside the target class
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef) and (target_class is None or node.name == target_class):
+            for subnode in node.body:
+                if isinstance(subnode, ast.FunctionDef) and subnode.name == "construct":
+                    insert_at = subnode.lineno
+                    break
+        if insert_at:
+            break
 
-            scene_name = search(r"(\w+)\(", classes[-1])
-            run_config.update(scene_names=[scene_name.group(1)])
-        else:
-            log.error(f"No 'class' found above {line_number}!")
+    if insert_at:
+        # Insert self.embed() indented properly
+        indent = " " * 8  # Class + def (4 spaces each)
+        lines.insert(insert_at, f"{indent}self.embed()\n")
+    elif run_config.get("embed_line"):
+        # fallback: old style
+        indent = " " * 4
+        lines.insert(run_config["embed_line"], indent + "self.embed()\n")
 
-    # Execute the code, which presumably redefines the user's
-    # scene to include this embed line, within the relevant module.
-    code_object = compile(new_code, module.__name__, 'exec')
+    new_code = "".join(lines)
+
+    # Update scene name if not provided
+    if not run_config.get("scene_names"):
+        # Try AST method first
+        scene_found = False
+        for node in tree.body:
+            if isinstance(node, ast.ClassDef):
+                run_config.update(scene_names=[node.name])
+                scene_found = True
+                break
+
+        if not scene_found:
+            classes = list(filter(lambda line: line.strip().startswith("class"), lines[:run_config.get("embed_line", 0)]))
+            if classes:
+                scene_name = re.search(r"(\w+)\(", classes[-1])
+                if scene_name:
+                    run_config.update(scene_names=[scene_name.group(1)])
+                else:
+                    import logging
+                    logging.error(f"No valid class name found above line {run_config.get('embed_line')}")
+            else:
+                import logging
+                logging.error(f"No 'class' found above line {run_config.get('embed_line')}!")
+
+    # Execute patched code
+    code_object = compile(new_code, module.__name__, "exec")
     exec(code_object, module.__dict__)
 
 
