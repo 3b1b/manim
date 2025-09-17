@@ -15,7 +15,7 @@ from manimlib.scene.scene import Scene
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    Module = importlib.util.types.ModuleType
+    from types import ModuleType as Module
     from typing import Optional
     from addict import Dict
 
