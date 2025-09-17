@@ -31,7 +31,7 @@ from manimlib.utils.space_ops import rotation_between_vectors
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable, Optional
+    from typing import Iterable, Optional, Tuple
     from manimlib.typing import ManimColor, Vect3, Vect3Array, Self
 
 
