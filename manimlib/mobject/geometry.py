@@ -795,6 +795,15 @@ class Line(TipableVMobject):
             arc_len *= self.path_arc / (2 * math.sin(self.path_arc / 2))
         return arc_len
 
+    def set_perpendicular_to_camera(self, camera_frame):
+        to_cam = camera_frame.get_implied_camera_location() - self.get_center()
+        normal = self.get_unit_normal()
+        axis = normalize(self.get_vector())
+        # Project to be perpendicular to axis
+        trg_normal = to_cam - np.dot(to_cam, axis) * axis
+        mat = rotation_between_vectors(normal, trg_normal)
+        self.apply_matrix(mat, about_point=self.get_start())
+        return self
 
 class DashedLine(Line):
     '''
@@ -1201,16 +1210,6 @@ class Arrow(Line):
     def set_thickness(self, thickness: float) -> Self:
         self.thickness = thickness
         self.reset_points_around_ends()
-        return self
-
-    def set_perpendicular_to_camera(self, camera_frame):
-        to_cam = camera_frame.get_implied_camera_location() - self.get_center()
-        normal = self.get_unit_normal()
-        axis = normalize(self.get_vector())
-        # Project to be perpendicular to axis
-        trg_normal = to_cam - np.dot(to_cam, axis) * axis
-        mat = rotation_between_vectors(normal, trg_normal)
-        self.apply_matrix(mat, about_point=self.get_start())
         return self
 
 
