@@ -710,9 +710,9 @@ class Line(TipableVMobject):
         )
         return self
 
-    def set_path_arc(self, new_value: float) -> Self:
-        self.path_arc = new_value
-        self.init_points()
+    def set_path_arc(self, path_arc: float) -> Self:
+        self.path_arc = path_arc
+        self.reset_points_around_ends()
         return self
 
     def set_start_and_end_attrs(self, start: Vect3 | Mobject, end: Vect3 | Mobject):
@@ -1200,11 +1200,6 @@ class Arrow(Line):
 
     def set_thickness(self, thickness: float) -> Self:
         self.thickness = thickness
-        self.reset_points_around_ends()
-        return self
-
-    def set_path_arc(self, path_arc: float) -> Self:
-        self.path_arc = path_arc
         self.reset_points_around_ends()
         return self
 
