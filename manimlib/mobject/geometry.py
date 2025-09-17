@@ -701,6 +701,14 @@ class Line(TipableVMobject):
             alpha = min(buff / length, 0.5)
             self.pointwise_become_partial(self, alpha, 1 - alpha)
         return self
+    
+    def reset_points_around_ends(self) -> Self:
+        self.set_points_by_ends(
+            self.get_start().copy(),
+            self.get_end().copy(),
+            path_arc=self.path_arc
+        )
+        return self
 
     def set_path_arc(self, new_value: float) -> Self:
         self.path_arc = new_value
@@ -1169,14 +1177,6 @@ class Arrow(Line):
             axis=rotate_vector(self.get_unit_vector(), -PI / 2),
         )
         self.shift(start - self.get_start())
-        return self
-
-    def reset_points_around_ends(self) -> Self:
-        self.set_points_by_ends(
-            self.get_start().copy(),
-            self.get_end().copy(),
-            path_arc=self.path_arc
-        )
         return self
 
     def get_start(self) -> Vect3:
