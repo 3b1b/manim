@@ -727,11 +727,10 @@ class NumberPlane(Axes):
 
 
 class ComplexPlane(NumberPlane):
-    def number_to_point(self, number: complex | float) -> Vect3:
-        number = complex(number)
-        return self.coords_to_point(number.real, number.imag)
+    def number_to_point(self, number: complex | float | np.array) -> Vect3:
+        return self.coords_to_point(np.real(number), np.imag(number))
 
-    def n2p(self, number: complex | float) -> Vect3:
+    def n2p(self, number: complex | float | np.array) -> Vect3:
         return self.number_to_point(number)
 
     def point_to_number(self, point: Vect3) -> complex:
