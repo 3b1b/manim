@@ -117,7 +117,6 @@ class TracedPath(VMobject):
         self.time_traced = time_traced
         self.time_per_anchor = time_per_anchor
         self.time: float = 0
-        curr_point = traced_point_func()
         self.traced_points: list[np.ndarray] = []
         self.add_updater(lambda m, dt: m.update_path(dt))
 
@@ -172,4 +171,6 @@ class TracingTail(TracedPath):
             stroke_opacity=stroke_opacity,
             **kwargs
         )
-        self.traced_points: list[np.ndarray] = [curr_point.copy() for _ in range(int(time_traced / time_per_anchor))]
+        curr_point = self.traced_point_func()
+        n_points = int(self.time_traced / self.time_per_anchor)
+        self.traced_points: list[np.ndarray] = n_points * [curr_point]
