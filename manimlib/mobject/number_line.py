@@ -4,19 +4,23 @@ import numpy as np
 
 from manimlib.constants import DOWN, LEFT, RIGHT, UP
 from manimlib.constants import DEFAULT_LIGHT_COLOR
-from manimlib.constants import MED_SMALL_BUFF
-from manimlib.mobject.geometry import Line
+from manimlib.constants import MED_SMALL_BUFF, SMALL_BUFF
+from manimlib.constants import YELLOW, DEG
+from manimlib.mobject.geometry import Line, ArrowTip
 from manimlib.mobject.numbers import DecimalNumber
+from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.value_tracker import ValueTracker
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import outer_interpolate
 from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import fdiv
+from manimlib.utils.space_ops import rotate_vector, angle_of_vector
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable, Optional
+    from typing import Iterable, Optional, Tuple, Dict, Any
     from manimlib.typing import ManimColor, Vect3, Vect3Array, VectN, RangeSpecifier
 
 
@@ -235,3 +239,67 @@ class UnitInterval(NumberLine):
             decimal_number_config=decimal_number_config,
             **kwargs
         )
+
+
+class Slider(VGroup):
+    def __init__(
+        self,
+        value_tracker: ValueTracker,
+        x_range: Tuple[float, float] = (-5, 5),
+        var_name: Optional[str] = None,
+        width: float = 3,
+        unit_size: float = 1,
+        arrow_width: float = 0.15,
+        arrow_length: float = 0.15,
+        arrow_color: ManimColor = YELLOW,
+        font_size: int = 24,
+        label_buff: float = SMALL_BUFF,
+        num_decimal_places: int = 2,
+        tick_size: float = 0.05,
+        number_line_config: Dict[str, Any] = dict(),
+        arrow_tip_config: Dict[str, Any] = dict(),
+        decimal_config: Dict[str, Any] = dict(),
+        angle: float = 0,
+        label_direction: Optional[np.ndarray] = None,
+        add_tick_labels: bool = True,
+        tick_label_font_size: int = 16,
+    ):
+        get_value = value_tracker.get_value
+        if label_direction is None:
+            label_direction = np.round(rotate_vector(UP, angle), 2)
+
+        # Initialize number line
+        number_line_kw = dict(x_range=x_range, width=width, tick_size=tick_size)
+        number_line_kw.update(number_line_config)
+        number_line = NumberLine(**number_line_kw)
+        number_line.rotate(angle)
+        if add_tick_labels:
+            number_line.add_numbers(
+                font_size=tick_label_font_size,
+                buff=2 * tick_size,
+                direction=-label_direction
+            )
+
+        # Initialize arrow tip
+        arrow_tip_kw = dict(
+            width=arrow_width,
+            length=arrow_length,
+            fill_color=arrow_color,
+            angle=-180 * DEG + angle_of_vector(label_direction),
+        )
+        arrow_tip_kw.update(arrow_tip_config)
+        tip = ArrowTip(**arrow_tip_kw)
+        tip.add_updater(lambda m: m.move_to(number_line.n2p(get_value()), -label_direction))
+
+        # Initialize label
+        dec_string = f"{{:.{num_decimal_places}f}}".format(0)
+        lhs = f"{var_name} = " if var_name is not None else ""
+        label = Tex(lhs + dec_string, font_size=font_size)
+        label[var_name].set_fill(arrow_color)
+        decimal = label.make_number_changeable(dec_string)
+        decimal.add_updater(lambda m: m.set_value(get_value()))
+        label.add_updater(lambda m: m.next_to(tip, label_direction, label_buff))
+
+        # Assemble group
+        super().__init__(number_line, tip, label)
+        self.set_stroke(behind=True)
