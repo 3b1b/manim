@@ -24,7 +24,8 @@ default:
     \usepackage{pifont}
     \DisableLigatures{encoding = *, family = * }
     \linespread{1}
-
+    %% Borrowed from https://tex.stackexchange.com/questions/6058/making-a-shorter-minus
+    \DeclareMathSymbol{\minus}{\mathbin}{AMSa}{"39}
 ctex:
   description: ""
   compiler: xelatex
