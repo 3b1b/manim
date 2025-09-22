@@ -412,15 +412,19 @@ class CoordinateSystem(ABC):
                 rect.set_fill(negative_color)
         return result
 
-    def get_area_under_graph(self, graph, x_range, fill_color=BLUE, fill_opacity=0.5):
-        if not hasattr(graph, "x_range"):
-            raise Exception("Argument `graph` must have attribute `x_range`")
+    def get_area_under_graph(self, graph, x_range=None, fill_color=BLUE, fill_opacity=0.5):
+        if x_range is None:
+            x_range = [
+                self.x_axis.p2n(graph.get_start()),
+                self.x_axis.p2n(graph.get_end()),
+            ]
 
         alpha_bounds = [
-            inverse_interpolate(*graph.x_range, x)
+            inverse_interpolate(*graph.x_range[:2], x)
             for x in x_range
         ]
         sub_graph = graph.copy()
+        sub_graph.clear_updaters()
         sub_graph.pointwise_become_partial(graph, *alpha_bounds)
         sub_graph.add_line_to(self.c2p(x_range[1], 0))
         sub_graph.add_line_to(self.c2p(x_range[0], 0))
