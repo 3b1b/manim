@@ -1284,6 +1284,14 @@ class Mobject(object):
         self.scale((length + buff) / length)
         return self
 
+    def put_start_on(self, point: Vect3) -> Self:
+        self.shift(point - self.get_start())
+        return self
+
+    def put_end_on(self, point: Vect3) -> Self:
+        self.shift(point - self.get_end())
+        return self
+
     def put_start_and_end_on(self, start: Vect3, end: Vect3) -> Self:
         curr_start, curr_end = self.get_start_and_end()
         curr_vect = curr_end - curr_start
