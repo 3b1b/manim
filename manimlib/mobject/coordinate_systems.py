@@ -417,7 +417,7 @@ class CoordinateSystem(ABC):
             raise Exception("Argument `graph` must have attribute `x_range`")
 
         alpha_bounds = [
-            inverse_interpolate(*graph.x_range, x)
+            inverse_interpolate(*graph.x_range[:2], x)
             for x in x_range
         ]
         sub_graph = graph.copy()
