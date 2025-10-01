@@ -917,10 +917,11 @@ class SceneState():
     def restore_scene(self, scene: Scene):
         scene.time = self.time
         scene.num_plays = self.num_plays
-        scene.mobjects = [
-            mob.become(mob_copy)
-            for mob, mob_copy in self.mobjects_to_copies.items()
-        ]
+        scene.mobjects = []
+        for mob, mob_copy in self.mobjects_to_copies.items():
+            if mob.has_updaters():
+                mob.clear_updaters()
+            scene.mobjects.append(mob.become(mob_copy))
 
 
 class EndScene(Exception):
