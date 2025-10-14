@@ -104,6 +104,7 @@ TEX_TO_SYMBOL_COUNT = {
     R"\mapsto": 2,
     R"\markright": 0,
     R"\mathds": 0,
+    R"\mathcal": 0,
     R"\max": 3,
     R"\mbox": 0,
     R"\medskip": 0,
