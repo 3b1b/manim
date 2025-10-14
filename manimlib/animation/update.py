@@ -46,7 +46,8 @@ class UpdateFromAlphaFunc(Animation):
         super().__init__(mobject, suspend_mobject_updating=suspend_mobject_updating, **kwargs)
 
     def interpolate_mobject(self, alpha: float) -> None:
-        self.update_function(self.mobject, alpha)
+        true_alpha = self.rate_func(self.time_spanned_alpha(alpha))
+        self.update_function(self.mobject, true_alpha)
 
 
 class MaintainPositionRelativeTo(Animation):

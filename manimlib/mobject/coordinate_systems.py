@@ -412,15 +412,19 @@ class CoordinateSystem(ABC):
                 rect.set_fill(negative_color)
         return result
 
-    def get_area_under_graph(self, graph, x_range, fill_color=BLUE, fill_opacity=0.5):
-        if not hasattr(graph, "x_range"):
-            raise Exception("Argument `graph` must have attribute `x_range`")
+    def get_area_under_graph(self, graph, x_range=None, fill_color=BLUE, fill_opacity=0.5):
+        if x_range is None:
+            x_range = [
+                self.x_axis.p2n(graph.get_start()),
+                self.x_axis.p2n(graph.get_end()),
+            ]
 
         alpha_bounds = [
-            inverse_interpolate(*graph.x_range, x)
+            inverse_interpolate(*graph.x_range[:2], x)
             for x in x_range
         ]
         sub_graph = graph.copy()
+        sub_graph.clear_updaters()
         sub_graph.pointwise_become_partial(graph, *alpha_bounds)
         sub_graph.add_line_to(self.c2p(x_range[1], 0))
         sub_graph.add_line_to(self.c2p(x_range[0], 0))
@@ -638,7 +642,10 @@ class NumberPlane(Axes):
             stroke_opacity=1,
         ),
         # Defaults to a faded version of line_config
-        faded_line_style: dict = dict(),
+        faded_line_style: dict = dict(
+            stroke_width=1,
+            stroke_opacity=0.25,
+        ),
         faded_line_ratio: int = 4,
         make_smooth_after_applying_functions: bool = True,
         **kwargs
@@ -651,14 +658,8 @@ class NumberPlane(Axes):
         self.init_background_lines()
 
     def init_background_lines(self) -> None:
-        if not self.faded_line_style:
-            style = dict(self.background_line_style)
-            # For anything numerical, like stroke_width
-            # and stroke_opacity, chop it in half
-            for key in style:
-                if isinstance(style[key], numbers.Number):
-                    style[key] *= 0.5
-            self.faded_line_style = style
+        if "stroke_color" not in self.faded_line_style:
+            self.faded_line_style["stroke_color"] = self.background_line_style["stroke_color"]
 
         self.background_lines, self.faded_lines = self.get_lines()
         self.background_lines.set_style(**self.background_line_style)
@@ -726,11 +727,10 @@ class NumberPlane(Axes):
 
 
 class ComplexPlane(NumberPlane):
-    def number_to_point(self, number: complex | float) -> Vect3:
-        number = complex(number)
-        return self.coords_to_point(number.real, number.imag)
+    def number_to_point(self, number: complex | float | np.array) -> Vect3:
+        return self.coords_to_point(np.real(number), np.imag(number))
 
-    def n2p(self, number: complex | float) -> Vect3:
+    def n2p(self, number: complex | float | np.array) -> Vect3:
         return self.number_to_point(number)
 
     def point_to_number(self, point: Vect3) -> complex:

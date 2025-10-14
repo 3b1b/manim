@@ -1232,8 +1232,9 @@ class Mobject(object):
     def set_z(self, z: float, direction: Vect3 = ORIGIN) -> Self:
         return self.set_coord(z, 2, direction)
 
-    def set_z_index(self, z_index: int) -> Self:
-        self.z_index = z_index
+    def set_z_index(self, z_index: int, recurse=True) -> Self:
+        for mob in self.get_family(recurse):
+            mob.z_index = z_index
         return self
 
     def space_out_submobjects(self, factor: float = 1.5, **kwargs) -> Self:
@@ -1282,6 +1283,14 @@ class Mobject(object):
         self.replace(mobject, dim_to_match, stretch)
         length = mobject.length_over_dim(dim_to_match)
         self.scale((length + buff) / length)
+        return self
+
+    def put_start_on(self, point: Vect3) -> Self:
+        self.shift(point - self.get_start())
+        return self
+
+    def put_end_on(self, point: Vect3) -> Self:
+        self.shift(point - self.get_end())
         return self
 
     def put_start_and_end_on(self, start: Vect3, end: Vect3) -> Self:

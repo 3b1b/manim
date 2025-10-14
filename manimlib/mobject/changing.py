@@ -101,10 +101,17 @@ class TracedPath(VMobject):
         traced_point_func: Callable[[], Vect3],
         time_traced: float = np.inf,
         time_per_anchor: float = 1.0 / 15,
-        stroke_width: float | Iterable[float] = 2.0,
         stroke_color: ManimColor = DEFAULT_MOBJECT_COLOR,
+        stroke_width: float | Iterable[float] = 2.0,
+        stroke_opacity: float = 1.0,
         **kwargs
     ):
+        self.stroke_config = dict(
+            color=stroke_color,
+            width=stroke_width,
+            opacity=stroke_opacity,
+        )
+
         super().__init__(**kwargs)
         self.traced_point_func = traced_point_func
         self.time_traced = time_traced
@@ -112,7 +119,6 @@ class TracedPath(VMobject):
         self.time: float = 0
         self.traced_points: list[np.ndarray] = []
         self.add_updater(lambda m, dt: m.update_path(dt))
-        self.always.set_stroke(stroke_color, stroke_width)
 
     def update_path(self, dt: float) -> Self:
         if dt == 0:
@@ -136,6 +142,8 @@ class TracedPath(VMobject):
         if points:
             self.set_points_smoothly(points)
 
+        self.set_stroke(**self.stroke_config)
+
         self.time += dt
         return self
 
@@ -145,21 +153,24 @@ class TracingTail(TracedPath):
         self,
         mobject_or_func: Mobject | Callable[[], np.ndarray],
         time_traced: float = 1.0,
+        stroke_color: ManimColor = DEFAULT_MOBJECT_COLOR,
         stroke_width: float | Iterable[float] = (0, 3),
         stroke_opacity: float | Iterable[float] = (0, 1),
-        stroke_color: ManimColor = DEFAULT_MOBJECT_COLOR,
         **kwargs
     ):
         if isinstance(mobject_or_func, Mobject):
             func = mobject_or_func.get_center
         else:
             func = mobject_or_func
+
         super().__init__(
             func,
             time_traced=time_traced,
+            stroke_color=stroke_color,
             stroke_width=stroke_width,
             stroke_opacity=stroke_opacity,
-            stroke_color=stroke_color,
             **kwargs
         )
-        self.add_updater(lambda m: m.set_stroke(width=stroke_width, opacity=stroke_opacity))
+        curr_point = self.traced_point_func()
+        n_points = int(self.time_traced / self.time_per_anchor)
+        self.traced_points: list[np.ndarray] = n_points * [curr_point]

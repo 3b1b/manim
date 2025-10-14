@@ -78,19 +78,25 @@ def int_to_hex(rgb_int: int) -> str:
 
 def color_gradient(
     reference_colors: Iterable[ManimColor],
-    length_of_output: int
+    length_of_output: int,
+    interp_by_hsl: bool = False,
 ) -> list[Color]:
     if length_of_output == 0:
         return []
-    rgbs = list(map(color_to_rgb, reference_colors))
-    alphas = np.linspace(0, (len(rgbs) - 1), length_of_output)
+    n_ref_colors = len(reference_colors)
+    alphas = np.linspace(0, (n_ref_colors - 1), length_of_output)
     floors = alphas.astype('int')
     alphas_mod1 = alphas % 1
     # End edge case
     alphas_mod1[-1] = 1
-    floors[-1] = len(rgbs) - 2
+    floors[-1] = n_ref_colors - 2
     return [
-        rgb_to_color(np.sqrt(interpolate(rgbs[i]**2, rgbs[i + 1]**2, alpha)))
+        interpolate_color(
+            reference_colors[i],
+            reference_colors[i + 1],
+            alpha,
+            interp_by_hsl=interp_by_hsl,
+        )
         for i, alpha in zip(floors, alphas_mod1)
     ]
 
@@ -98,10 +104,16 @@ def color_gradient(
 def interpolate_color(
     color1: ManimColor,
     color2: ManimColor,
-    alpha: float
+    alpha: float,
+    interp_by_hsl: bool = False,
 ) -> Color:
-    rgb = np.sqrt(interpolate(color_to_rgb(color1)**2, color_to_rgb(color2)**2, alpha))
-    return rgb_to_color(rgb)
+    if interp_by_hsl:
+        hsl1 = np.array(Color(color1).get_hsl())
+        hsl2 = np.array(Color(color2).get_hsl())
+        return Color(hsl=interpolate(hsl1, hsl2, alpha))
+    else:
+        rgb = np.sqrt(interpolate(color_to_rgb(color1)**2, color_to_rgb(color2)**2, alpha))
+        return rgb_to_color(rgb)
 
 
 def interpolate_color_by_hsl(
@@ -109,9 +121,7 @@ def interpolate_color_by_hsl(
     color2: ManimColor,
     alpha: float
 ) -> Color:
-    hsl1 = np.array(Color(color1).get_hsl())
-    hsl2 = np.array(Color(color2).get_hsl())
-    return Color(hsl=interpolate(hsl1, hsl2, alpha))
+    return interpolate_color(color1, color2, alpha, interp_by_hsl=True)
 
 
 def average_color(*colors: ManimColor) -> Color:
