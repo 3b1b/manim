@@ -154,8 +154,8 @@ class TransformMatchingStrings(TransformMatchingParts):
         counts2 = list(map(target.substr_to_path_count, syms2))
 
         # Start with user specified matches
-        blocks = [(source[key], target[key]) for key in matched_keys]
-        blocks += [(source[key1], target[key2]) for key1, key2 in key_map.items()]
+        blocks = [(source[key1], target[key2]) for key1, key2 in key_map.items()]
+        blocks += [(source[key], target[key]) for key in matched_keys]
 
         # Nullify any intersections with those matches in the two symbol lists
         for sub_source, sub_target in blocks:
