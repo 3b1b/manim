@@ -303,6 +303,11 @@ class VMobject(Mobject):
         self.set_stroke(opacity=opacity, recurse=recurse)
         return self
 
+    def set_color_by_proportion(self, prop_to_color: Callable[[float], Color]) -> Self:
+        colors = list(map(prop_to_color, np.linspace(0, 1, self.get_num_points())))
+        self.set_stroke(color=colors)
+        return self
+
     def set_anti_alias_width(self, anti_alias_width: float, recurse: bool = True) -> Self:
         self.set_uniform(recurse, anti_alias_width=anti_alias_width)
         return self
