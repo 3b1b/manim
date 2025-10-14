@@ -1232,8 +1232,9 @@ class Mobject(object):
     def set_z(self, z: float, direction: Vect3 = ORIGIN) -> Self:
         return self.set_coord(z, 2, direction)
 
-    def set_z_index(self, z_index: int) -> Self:
-        self.z_index = z_index
+    def set_z_index(self, z_index: int, recurse=True) -> Self:
+        for mob in self.get_family(recurse):
+            mob.z_index = z_index
         return self
 
     def space_out_submobjects(self, factor: float = 1.5, **kwargs) -> Self:
