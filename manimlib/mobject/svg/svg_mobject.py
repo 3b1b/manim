@@ -73,7 +73,7 @@ class SVGMobject(VMobject):
         elif file_name != "":
             self.svg_string = self.file_name_to_svg_string(file_name)
         elif self.file_name != "":
-            self.file_name_to_svg_string(self.file_name)
+            self.svg_string = self.file_name_to_svg_string(self.file_name)
         else:
             raise Exception("Must specify either a file_name or svg_string SVGMobject")
 
