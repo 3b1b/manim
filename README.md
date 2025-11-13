@@ -86,7 +86,7 @@ manim-render example_scenes.py OpeningManimExample
 ## Anaconda Install
 
 1. Install LaTeX as above.
-2. Create a conda environment using `conda create -n manim python=3.8`.
+2. Create a conda environment using `conda create -n manim python=3.9`.
 3. Activate the environment using `conda activate manim`.
 4. Install manimgl using `pip install -e .`.
 
