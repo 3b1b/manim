@@ -872,17 +872,22 @@ class VMobject(Mobject):
         if not self.has_points():
             return np.zeros(3)
 
-        p0 = self.get_anchors()
-        p1 = np.vstack([p0[1:], p0[0]])
+        area = np.zeros(3)
+        for subpath in self.get_subpaths():
+            p0 = subpath[::2]  # anchors for this subpath
+            if len(p0) == 0:
+                continue
+            p1 = np.vstack([p0[1:], p0[0]])
 
-        # Each term goes through all edges [(x0, y0, z0), (x1, y1, z1)]
-        sums = p0 + p1
-        diffs = p1 - p0
-        return 0.5 * np.array([
-            (sums[:, 1] * diffs[:, 2]).sum(),  # Add up (y0 + y1)*(z1 - z0)
-            (sums[:, 2] * diffs[:, 0]).sum(),  # Add up (z0 + z1)*(x1 - x0)
-            (sums[:, 0] * diffs[:, 1]).sum(),  # Add up (x0 + x1)*(y1 - y0)
-        ])
+            # Each term goes through all edges [(x0, y0, z0), (x1, y1, z1)]
+            sums = p0 + p1
+            diffs = p1 - p0
+            area += 0.5 * np.array([
+                (sums[:, 1] * diffs[:, 2]).sum(),  # Add up (y0 + y1)*(z1 - z0)
+                (sums[:, 2] * diffs[:, 0]).sum(),  # Add up (z0 + z1)*(x1 - x0)
+                (sums[:, 0] * diffs[:, 1]).sum(),  # Add up (x0 + x1)*(y1 - y0)
+            ])
+        return area
 
     def get_unit_normal(self, refresh: bool = False) -> Vect3:
         if self.get_num_points() < 3:
