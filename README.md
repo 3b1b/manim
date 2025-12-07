@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <p align="center">
     <a href="https://github.com/3b1b/manim">
         <img src="https://raw.githubusercontent.com/3b1b/manim/master/logo/cropped.png">
@@ -66,59 +67,70 @@ manim-render example_scenes.py OpeningManimExample
 ### Mac OSX
 
 1. Install FFmpeg, LaTeX in terminal using homebrew.
-    ```sh
-    brew install ffmpeg mactex
+    ## Manim Example
+
+    This folder contains a minimal Manim example in `Animation.py` and helper scripts to install dependencies and render scenes.
+
+    ## Quick Setup (Arch/Manjaro)
+
+    Run the automated install script:
+
+    ```bash
+    bash install.sh
     ```
 
-2. If you are using an ARM-based processor, install Cairo. 
-    ```sh
-    arch -arm64 brew install pkg-config cairo
+    This will update your system, install FFmpeg and build tools, create a Python virtual environment, and install Manim and other Python dependencies.
+
+    ## Manual Setup
+
+    If you prefer manual installation:
+
+    ```bash
+    # Install system dependencies (Arch/Manjaro)
+    sudo pacman -S --needed base-devel ffmpeg pkgconf python-pycairo mesa libxrandr libxinerama libxcursor libxi
+
+    # Create and activate virtual environment
+    python3.13 -m venv .venv
+    source .venv/bin/activate
+
+    # Install Python packages
+    pip install --upgrade pip
+    pip install -r requirements.txt
     ```
-   
-3. Install latest version of manim using these command.
-    ```sh
-    git clone https://github.com/3b1b/manim.git
-    cd manim
-    pip install -e .
-    manimgl example_scenes.py OpeningManimExample (make sure to add manimgl to path first.)
+
+    ## Rendering Animations
+
+    ```bash
+    # Render the JecklesTV lightning animation (low quality, fast)
+    manim -pql Animation.py JecklesLightning
+
+    # Render other scenes
+    manim -pql Animation.py SimpleTransform
+    manim -pql Animation.py TextWrite
     ```
 
-## Anaconda Install
+    ### Quality Options
 
-1. Install LaTeX as above.
-2. Create a conda environment using `conda create -n manim python=3.8`.
-3. Activate the environment using `conda activate manim`.
-4. Install manimgl using `pip install -e .`.
+    - `-ql` = low quality (fast, for testing)
+    - `-qm` = medium quality (balance)
+    - `-qh` = high quality (slower, better output)
 
+    ### Output Location
 
-## Using manim
-Try running the following:
-```sh
-manimgl example_scenes.py OpeningManimExample
-```
-This should pop up a window playing a simple scene.
+    Rendered videos are saved to:
 
-Look through the [example scenes](https://3b1b.github.io/manim/getting_started/example_scenes.html) to see examples of the library's syntax, animation types and object types. In the [3b1b/videos](https://github.com/3b1b/videos) repo, you can see all the code for 3blue1brown videos, though code from older videos may not be compatible with the most recent version of manim. The readme of that repo also outlines some details for how to set up a more interactive workflow, as shown in [this manim demo video](https://www.youtube.com/watch?v=rbu7Zu5X1zI) for example.
+    ```
+    media/videos/Animation/480p15/  (low quality)
+    media/videos/Animation/1080p60/ (high quality)
+    ```
 
-When running in the CLI, some useful flags include:
-* `-w` to write the scene to a file
-* `-o` to write the scene to a file and open the result
-* `-s` to skip to the end and just show the final frame.
-    * `-so` will save the final frame to an image and show it
-* `-n <number>` to skip ahead to the `n`'th animation of a scene.
-* `-f` to make the playback window fullscreen
+    ### Convert MP4 to GIF
 
-Take a look at custom_config.yml for further configuration.  To add your customization, you can either edit this file, or add another file by the same name "custom_config.yml" to whatever directory you are running manim from.  For example [this is the one](https://github.com/3b1b/videos/blob/master/custom_config.yml) for 3blue1brown videos.  There you can specify where videos should be output to, where manim should look for image files and sounds you want to read in, and other defaults regarding style and video quality.
+    ```bash
+    ffmpeg -i media/videos/Animation/480p15/JecklesLightning.mp4 \
+      -vf "fps=15,scale=960:-1:flags=lanczos" \
+      -loop 0 jeckles.gif
+    ```
 
-### Documentation
-Documentation is in progress at [3b1b.github.io/manim](https://3b1b.github.io/manim/). And there is also a Chinese version maintained by [**@manim-kindergarten**](https://manim.org.cn): [docs.manim.org.cn](https://docs.manim.org.cn/) (in Chinese).
-
-[manim-kindergarten](https://github.com/manim-kindergarten/) wrote and collected some useful extra classes and some codes of videos in [manim_sandbox repo](https://github.com/manim-kindergarten/manim_sandbox).
-
-
-## Contributing
-Is always welcome.  As mentioned above, the [community edition](https://github.com/ManimCommunity/manim) has the most active ecosystem for contributions, with testing and continuous integration, but pull requests are welcome here too.  Please explain the motivation for a given change and examples of its effect.
-
-
-## License
-This project falls under the MIT license.
+    For more details, see `install.sh` and `README.md` in this directory.
+python -m venv .venv
