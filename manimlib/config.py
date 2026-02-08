@@ -386,8 +386,11 @@ def get_output_directory(args: Namespace, config: Dict) -> str:
     out_dir = args.video_dir or dir_config.output
     if dir_config.mirror_module_path and args.file:
         file_path = Path(args.file).absolute()
-        rel_path = file_path.relative_to(dir_config.removed_mirror_prefix)
-        rel_path = Path(str(rel_path).lstrip("_"))
+        if str(file_path).startswith(dir_config.removed_mirror_prefix):
+            rel_path = file_path.relative_to(dir_config.removed_mirror_prefix)
+            rel_path = Path(str(rel_path).lstrip("_"))
+        else:
+            rel_path = file_path.stem
         out_dir = Path(out_dir, rel_path).with_suffix("")
     return out_dir
 

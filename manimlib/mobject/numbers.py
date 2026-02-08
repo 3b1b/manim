@@ -4,7 +4,7 @@ from functools import lru_cache
 import numpy as np
 
 from manimlib.constants import DOWN, LEFT, RIGHT, UP
-from manimlib.constants import WHITE
+from manimlib.constants import DEFAULT_MOBJECT_COLOR
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -35,7 +35,7 @@ class DecimalNumber(VMobject):
     def __init__(
         self,
         number: float | complex = 0,
-        color: ManimColor = WHITE,
+        color: ManimColor = DEFAULT_MOBJECT_COLOR,
         stroke_width: float = 0,
         fill_opacity: float = 1.0,
         fill_border_width: float = 0.5,
@@ -47,6 +47,7 @@ class DecimalNumber(VMobject):
         show_ellipsis: bool = False,
         unit: str | None = None,  # Aligned to bottom unless it starts with "^"
         include_background_rectangle: bool = False,
+        hide_zero_components_on_complex: bool = True,
         edge_to_fix: Vect3 = LEFT,
         font_size: float = 48,
         text_config: dict = dict(),  # Do not pass in font_size here
@@ -60,6 +61,7 @@ class DecimalNumber(VMobject):
         self.show_ellipsis = show_ellipsis
         self.unit = unit
         self.include_background_rectangle = include_background_rectangle
+        self.hide_zero_components_on_complex = hide_zero_components_on_complex
         self.edge_to_fix = edge_to_fix
         self.font_size = font_size
         self.text_config = dict(text_config)
@@ -120,7 +122,14 @@ class DecimalNumber(VMobject):
 
     def get_num_string(self, number: float | complex) -> str:
         if isinstance(number, complex):
-            formatter = self.get_complex_formatter()
+            if self.hide_zero_components_on_complex and number.imag == 0:
+                number = number.real
+                formatter = self.get_formatter()
+            elif self.hide_zero_components_on_complex and number.real == 0:
+                number = number.imag
+                formatter = self.get_formatter() + "i"
+            else:
+                formatter = self.get_complex_formatter()
         else:
             formatter = self.get_formatter()
         if self.num_decimal_places == 0 and isinstance(number, float):

@@ -1,6 +1,6 @@
 addict
 appdirs
-audioop-lts
+audioop-lts; python_version>='3.13'
 colour
 diskcache
 ipython>=8.18.0

@@ -326,7 +326,7 @@ class UpdatersExample(Scene):
         )
         self.wait()
 
-        # In general, you can alway call Mobject.add_updater, and pass in
+        # In general, you can always call Mobject.add_updater, and pass in
         # a function that you want to be called on every frame.  The function
         # should take in either one argument, the mobject, or two arguments,
         # the mobject and the amount of time since the last frame.
@@ -534,7 +534,7 @@ class TexAndNumbersExample(Scene):
             rate_func=there_and_back,
         )
 
-        # By default, tex.make_number_changeable replaces the first occurance
+        # By default, tex.make_number_changeable replaces the first occurrence
         # of the number,but by passing replace_all=True it replaces all and
         # returns a group of the results
         exponents = tex.make_number_changeable("2", replace_all=True)

@@ -4,7 +4,7 @@ from functools import reduce
 import operator as op
 import re
 
-from manimlib.constants import BLACK, WHITE
+from manimlib.constants import BLACK, DEFAULT_MOBJECT_COLOR
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.tex_file_writing import latex_to_svg
@@ -26,10 +26,10 @@ class SingleStringTex(SVGMobject):
         self,
         tex_string: str,
         height: float | None = None,
-        fill_color: ManimColor = WHITE,
+        fill_color: ManimColor = DEFAULT_MOBJECT_COLOR,
         fill_opacity: float = 1.0,
         stroke_width: float = 0,
-        svg_default: dict = dict(fill_color=WHITE),
+        svg_default: dict = dict(fill_color=DEFAULT_MOBJECT_COLOR),
         path_string_config: dict = dict(),
         font_size: int = 48,
         alignment: str = R"\centering",

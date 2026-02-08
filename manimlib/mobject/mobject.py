@@ -18,7 +18,7 @@ from manimlib.constants import DOWN, IN, LEFT, ORIGIN, OUT, RIGHT, UP
 from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
 from manimlib.constants import MED_SMALL_BUFF
 from manimlib.constants import TAU
-from manimlib.constants import WHITE
+from manimlib.constants import DEFAULT_MOBJECT_COLOR
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_listner import EventListener
 from manimlib.event_handler.event_type import EventType
@@ -78,7 +78,7 @@ class Mobject(object):
 
     def __init__(
         self,
-        color: ManimColor = WHITE,
+        color: ManimColor = DEFAULT_MOBJECT_COLOR,
         opacity: float = 1.0,
         shading: Tuple[float, float, float] = (0.0, 0.0, 0.0),
         # For shaders
@@ -160,7 +160,7 @@ class Mobject(object):
         return self
 
     @property
-    def animate(self) -> _AnimationBuilder:
+    def animate(self) -> _AnimationBuilder | Self:
         """
         Methods called with Mobject.animate.method() can be passed
         into a Scene.play call, as if you were calling
@@ -1232,8 +1232,9 @@ class Mobject(object):
     def set_z(self, z: float, direction: Vect3 = ORIGIN) -> Self:
         return self.set_coord(z, 2, direction)
 
-    def set_z_index(self, z_index: int) -> Self:
-        self.z_index = z_index
+    def set_z_index(self, z_index: int, recurse=True) -> Self:
+        for mob in self.get_family(recurse):
+            mob.z_index = z_index
         return self
 
     def space_out_submobjects(self, factor: float = 1.5, **kwargs) -> Self:
@@ -1282,6 +1283,14 @@ class Mobject(object):
         self.replace(mobject, dim_to_match, stretch)
         length = mobject.length_over_dim(dim_to_match)
         self.scale((length + buff) / length)
+        return self
+
+    def put_start_on(self, point: Vect3) -> Self:
+        self.shift(point - self.get_start())
+        return self
+
+    def put_end_on(self, point: Vect3) -> Self:
+        self.shift(point - self.get_end())
         return self
 
     def put_start_and_end_on(self, start: Vect3, end: Vect3) -> Self:
@@ -1361,7 +1370,7 @@ class Mobject(object):
                     rgbs = resize_with_interpolation(rgbs, len(data))
                 data[name][:, :3] = rgbs
             if opacity is not None:
-                if not isinstance(opacity, (float, int)):
+                if not isinstance(opacity, (float, int, np.floating)):
                     opacity = resize_with_interpolation(np.array(opacity), len(data))
                 data[name][:, 3] = opacity
         return self
@@ -2255,6 +2264,18 @@ class _AnimationBuilder:
 
     def __call__(self, **kwargs):
         return self.set_anim_args(**kwargs)
+
+    def __dir__(self) -> list[str]:
+        """
+        Extend attribute list of _AnimationBuilder object to include mobject attributes
+        for better autocompletion in the IPython terminal when using interactive mode.
+        """
+        methods = super().__dir__()
+        mobject_methods = [
+            attr for attr in dir(self.mobject)
+            if not attr.startswith('_')
+        ]
+        return sorted(set(methods+mobject_methods))
 
     def set_anim_args(self, **kwargs):
         '''

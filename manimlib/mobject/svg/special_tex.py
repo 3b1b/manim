@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from manimlib.constants import MED_SMALL_BUFF, WHITE, GREY_C
+from manimlib.constants import MED_SMALL_BUFF, DEFAULT_MOBJECT_COLOR, GREY_C
 from manimlib.constants import DOWN, LEFT, RIGHT, UP
 from manimlib.constants import FRAME_WIDTH
 from manimlib.constants import MED_LARGE_BUFF, SMALL_BUFF
@@ -46,7 +46,7 @@ class BulletedList(VGroup):
 
 class TexTextFromPresetString(TexText):
     tex: str = ""
-    default_color: ManimColor = WHITE
+    default_color: ManimColor = DEFAULT_MOBJECT_COLOR
 
     def __init__(self, **kwargs):
         super().__init__(

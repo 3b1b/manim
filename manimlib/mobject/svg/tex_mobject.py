@@ -242,15 +242,10 @@ class Tex(StringMobject):
 
         decimal_mobs = []
         for part in parts:
-            if "." in substr:
-                num_decimal_places = len(substr.split(".")[1])
-            else:
-                num_decimal_places = 0
-            decimal_mob = DecimalNumber(
-                float(value),
-                num_decimal_places=num_decimal_places,
-                **config,
-            )
+            if "num_decimal_places" not in config:
+                ndp = len(substr.split(".")[1]) if "." in substr else 0
+                config["num_decimal_places"] = ndp
+            decimal_mob = DecimalNumber(float(value), **config)
             decimal_mob.replace(part)
             decimal_mob.match_style(part)
             if len(part) > 1:

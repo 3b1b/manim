@@ -24,7 +24,7 @@ Note, there are two versions of manim.  This repository began as a personal proj
 Manim runs on Python 3.7 or higher.
 
 System requirements are [FFmpeg](https://ffmpeg.org/), [OpenGL](https://www.opengl.org/) and [LaTeX](https://www.latex-project.org) (optional, if you want to use LaTeX).
-For Linux, [Pango](https://pango.gnome.org) along with its development headers are required. See instruction [here](https://github.com/ManimCommunity/ManimPango#building).
+For Linux, [Pango](https://pango.org) along with its development headers are required. See instruction [here](https://github.com/ManimCommunity/ManimPango#building).
 
 
 ### Directly
@@ -69,13 +69,18 @@ manim-render example_scenes.py OpeningManimExample
     ```sh
     brew install ffmpeg mactex
     ```
+
+2. If you are using an ARM-based processor, install Cairo. 
+    ```sh
+    arch -arm64 brew install pkg-config cairo
+    ```
    
-2. Install latest version of manim using these command.
+3. Install latest version of manim using these command.
     ```sh
     git clone https://github.com/3b1b/manim.git
     cd manim
     pip install -e .
-    manimgl example_scenes.py OpeningManimExample
+    manimgl example_scenes.py OpeningManimExample (make sure to add manimgl to path first.)
     ```
 
 ## Anaconda Install
