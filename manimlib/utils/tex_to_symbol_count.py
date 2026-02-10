@@ -31,6 +31,7 @@ TEX_TO_SYMBOL_COUNT = {
     R"\cdots": 3,
     R"\centering": 0,
     R"\cite": 2,
+    R"\circ": 1,
     R"\cong": 2,
     R"\contentsline": 0,
     R"\cos": 3,
