@@ -475,7 +475,10 @@ class InteractiveScene(Scene):
     # Key actions
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
-        char = chr(symbol)
+        try:
+            char = chr(symbol)
+        except OverflowError:
+            return
         if char == SELECT_KEY and (modifiers & ALL_MODIFIERS) == 0:
             self.enable_selection()
         if char == UNSELECT_KEY:
