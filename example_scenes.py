@@ -375,7 +375,7 @@ class CoordinateSystemExample(Scene):
         # you can call call axes.coords_to_point, abbreviated to
         # axes.c2p, to associate a set of coordinates with a point,
         # like so:
-        dot = Dot(color=RED)
+        dot = Dot(fill_color=RED)
         dot.move_to(axes.c2p(0, 0))
         self.play(FadeIn(dot, scale=0.5))
         self.play(dot.animate.move_to(axes.c2p(3, 2)))
@@ -480,7 +480,7 @@ class GraphExample(Scene):
 
         # You can use axes.input_to_graph_point, abbreviated
         # to axes.i2gp, to find a particular point on a graph
-        dot = Dot(color=RED)
+        dot = Dot(fill_color=RED)
         dot.move_to(axes.i2gp(2, parabola))
         self.play(FadeIn(dot, scale=0.5))
 
