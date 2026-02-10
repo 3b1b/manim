@@ -119,6 +119,7 @@ key_bindings:
   grab: "g"
   x_grab: "h"
   y_grab: "v"
+  z_grab: "z"
   resize: "t"
   color: "c"
   information: "i"
