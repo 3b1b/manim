@@ -31,7 +31,7 @@ from manimlib.utils.space_ops import rotation_between_vectors
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable, Optional
+    from typing import Iterable, Optional, Tuple
     from manimlib.typing import ManimColor, Vect3, Vect3Array, Self
 
 
@@ -701,10 +701,18 @@ class Line(TipableVMobject):
             alpha = min(buff / length, 0.5)
             self.pointwise_become_partial(self, alpha, 1 - alpha)
         return self
+    
+    def reset_points_around_ends(self) -> Self:
+        self.set_points_by_ends(
+            self.get_start().copy(),
+            self.get_end().copy(),
+            path_arc=self.path_arc
+        )
+        return self
 
-    def set_path_arc(self, new_value: float) -> Self:
-        self.path_arc = new_value
-        self.init_points()
+    def set_path_arc(self, path_arc: float) -> Self:
+        self.path_arc = path_arc
+        self.reset_points_around_ends()
         return self
 
     def set_start_and_end_attrs(self, start: Vect3 | Mobject, end: Vect3 | Mobject):
@@ -787,6 +795,15 @@ class Line(TipableVMobject):
             arc_len *= self.path_arc / (2 * math.sin(self.path_arc / 2))
         return arc_len
 
+    def set_perpendicular_to_camera(self, camera_frame):
+        to_cam = camera_frame.get_implied_camera_location() - self.get_center()
+        normal = self.get_unit_normal()
+        axis = normalize(self.get_vector())
+        # Project to be perpendicular to axis
+        trg_normal = to_cam - np.dot(to_cam, axis) * axis
+        mat = rotation_between_vectors(normal, trg_normal)
+        self.apply_matrix(mat, about_point=self.get_start())
+        return self
 
 class DashedLine(Line):
     '''
@@ -1171,14 +1188,6 @@ class Arrow(Line):
         self.shift(start - self.get_start())
         return self
 
-    def reset_points_around_ends(self) -> Self:
-        self.set_points_by_ends(
-            self.get_start().copy(),
-            self.get_end().copy(),
-            path_arc=self.path_arc
-        )
-        return self
-
     def get_start(self) -> Vect3:
         points = self.get_points()
         return 0.5 * (points[0] + points[-3])
@@ -1201,21 +1210,6 @@ class Arrow(Line):
     def set_thickness(self, thickness: float) -> Self:
         self.thickness = thickness
         self.reset_points_around_ends()
-        return self
-
-    def set_path_arc(self, path_arc: float) -> Self:
-        self.path_arc = path_arc
-        self.reset_points_around_ends()
-        return self
-
-    def set_perpendicular_to_camera(self, camera_frame):
-        to_cam = camera_frame.get_implied_camera_location() - self.get_center()
-        normal = self.get_unit_normal()
-        axis = normalize(self.get_vector())
-        # Project to be perpendicular to axis
-        trg_normal = to_cam - np.dot(to_cam, axis) * axis
-        mat = rotation_between_vectors(normal, trg_normal)
-        self.apply_matrix(mat, about_point=self.get_start())
         return self
 
 
