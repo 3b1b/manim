@@ -1,6 +1,13 @@
-import pkg_resources
+try:
+    from importlib.metadata import version, PackageNotFoundError
+except ImportError:  # For Python <3.8 fallback
+    from importlib_metadata import version, PackageNotFoundError  # type: ignore
 
-__version__ = pkg_resources.get_distribution("manimgl").version
+try:
+    __version__ = version("manimgl")
+except PackageNotFoundError:
+    __version__ = "unknown"
+
 
 from typing import TYPE_CHECKING
 
