@@ -69,6 +69,15 @@ manim-render example_scenes.py OpeningManimExample
     ```sh
     brew install ffmpeg mactex
     ```
+    <details>
+      <summary>💡 An alternative to heavyweight MacTeX bundle.</summary>
+
+      > To avoid installing the full MacTeX bundle, which is ~6GB, you can alternatively install the
+      > lightweight [BasicTeX](https://formulae.brew.sh/cask/basictex) and then gradually add
+      > only the LaTeX packages you actually need. A list of packages sufficient to run examples can 
+      > be found [here](https://github.com/3b1b/manim/issues/2133#issuecomment-2414547866).
+      > For an overview of the MacTeX installer bundles, see https://www.tug.org/mactex/.
+    </details>
 
 2. If you are using an ARM-based processor, install Cairo. 
     ```sh
