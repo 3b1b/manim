@@ -32,8 +32,8 @@ class ShowPartial(Animation, ABC):
 
     def interpolate_submobject(
         self,
-        submob: VMobject,
-        start_submob: VMobject,
+        submob: Mobject,
+        start_submob: Mobject,
         alpha: float
     ) -> None:
         submob.pointwise_become_partial(
