@@ -24,6 +24,7 @@ directories:
     # If you want to use images, manim will look to these folders to find them
     raster_images: "raster_images"
     vector_images: "vector_images"
+    three_d_models: "three_d_models"
     # If you want to use sounds, manim will look here to find it.
     sounds: "sounds"
     # Place for other forms of data relevant to any projects, like csv's

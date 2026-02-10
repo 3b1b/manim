@@ -17,6 +17,7 @@ pydub
 pygments
 PyOpenGL
 pyperclip
+pywavefront
 pyyaml
 rich
 scipy
@@ -25,6 +26,7 @@ setuptools
 skia-pathops
 svgelements>=1.8.1
 sympy
+trimesh
 tqdm
 typing-extensions; python_version < "3.11"
 validators
