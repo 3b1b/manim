@@ -66,6 +66,7 @@ class InteractiveSceneEmbed:
             wait=scene.wait,
             add=scene.add,
             remove=scene.remove,
+            remove_all_except=scene.remove_all_except,
             clear=scene.clear,
             focus=scene.focus,
             save_state=scene.save_state,

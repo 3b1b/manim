@@ -137,9 +137,10 @@ class CoordinateSystem(ABC):
         edge: Vect3,
         direction: Vect3,
         buff: float = MED_SMALL_BUFF,
-        ensure_on_screen: bool = False
+        ensure_on_screen: bool = False,
+        **kwargs
     ) -> Tex:
-        label = Tex(label_tex)
+        label = Tex(label_tex, **kwargs)
         label.next_to(
             axis.get_edge_center(edge), direction,
             buff=buff
@@ -151,11 +152,12 @@ class CoordinateSystem(ABC):
     def get_axis_labels(
         self,
         x_label_tex: str = "x",
-        y_label_tex: str = "y"
+        y_label_tex: str = "y",
+        **kwargs
     ) -> VGroup:
         self.axis_labels = VGroup(
-            self.get_x_axis_label(x_label_tex),
-            self.get_y_axis_label(y_label_tex),
+            self.get_x_axis_label(x_label_tex, **kwargs),
+            self.get_y_axis_label(y_label_tex, **kwargs),
         )
         return self.axis_labels
 
