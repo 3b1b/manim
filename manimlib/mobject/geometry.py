@@ -981,15 +981,13 @@ class StrokeArrow(Line):
         prev_end = self.get_end()
         arc_len = self.get_arc_length()
         tip_len = self.get_stroke_width() * self.tip_width_ratio * self.tip_len_to_width
-        if tip_len >= self.max_tip_length_to_length_ratio * arc_len or arc_len == 0:
+        if tip_len >= self.max_tip_length_to_length_ratio * arc_len:
             alpha = self.max_tip_length_to_length_ratio
         else:
             alpha = tip_len / arc_len
-
-        if self.path_arc > 0 and self.buff > 0:
-            self.insert_n_curves(10)  # Is this needed?
         self.pointwise_become_partial(self, 0.0, 1.0 - alpha)
-        self.add_line_to(self.get_end())
+        # Dumb that this is needed
+        self.start_new_path(self.point_from_proportion(1 - 1e-5))
         self.add_line_to(prev_end)
         self.n_tip_points = 3
         return self
@@ -998,11 +996,10 @@ class StrokeArrow(Line):
     def create_tip_with_stroke_width(self) -> Self:
         if self.get_num_points() < 3:
             return self
-        stroke_width = min(
-            self.original_stroke_width,
+        tip_width = self.tip_width_ratio * min(
+            float(self.original_stroke_width),
             self.max_width_to_length_ratio * self.get_length(),
         )
-        tip_width = self.tip_width_ratio * stroke_width
         ntp = self.n_tip_points
         self.data['stroke_width'][:-ntp] = self.data['stroke_width'][0]
         self.data['stroke_width'][-ntp:, 0] = tip_width * np.linspace(1, 0, ntp)
