@@ -918,7 +918,7 @@ class SceneState():
         scene.time = self.time
         scene.num_plays = self.num_plays
         scene.mobjects = [
-            mob.become(mob_copy)
+            mob.become(mob_copy, match_updaters=True)
             for mob, mob_copy in self.mobjects_to_copies.items()
         ]
 
