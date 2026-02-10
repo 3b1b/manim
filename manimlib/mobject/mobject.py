@@ -1416,7 +1416,7 @@ class Mobject(object):
             self.set_submobject_colors_by_gradient(*colors)
         return self
 
-    def set_submobject_colors_by_gradient(self, *colors: ManimColor) -> Self:
+    def set_submobject_colors_by_gradient(self, *colors: ManimColor, interp_by_hsl=False) -> Self:
         if len(colors) == 0:
             raise Exception("Need at least one color")
         elif len(colors) == 1:
@@ -1424,7 +1424,7 @@ class Mobject(object):
 
         # mobs = self.family_members_with_points()
         mobs = self.submobjects
-        new_colors = color_gradient(colors, len(mobs))
+        new_colors = color_gradient(colors, len(mobs), interp_by_hsl=interp_by_hsl)
 
         for mob, color in zip(mobs, new_colors):
             mob.set_color(color)

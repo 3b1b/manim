@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 import itertools as it
 import random
+import math
 
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.rotation import Rotating
@@ -304,18 +305,18 @@ class Clock(VGroup):
     ):
         style = dict(stroke_color=stroke_color, stroke_width=stroke_width)
         circle = Circle(**style)
-        ticks = []
-        for x, point in enumerate(compass_directions(12, UP)):
+        self.ticks = VGroup()
+        for x, angle in enumerate(np.arange(0, TAU, TAU / 12)):
+            point = math.cos(angle) * UP + math.sin(angle) * RIGHT
             length = tick_length
             if x % 3 == 0:
                 length *= 2
-            ticks.append(Line(point, (1 - length) * point, **style))
+            self.ticks.add(Line(point, (1 - length) * point, **style))
         self.hour_hand = Line(ORIGIN, hour_hand_height * UP, **style)
         self.minute_hand = Line(ORIGIN, minute_hand_height * UP, **style)
 
         super().__init__(
-            circle, self.hour_hand, self.minute_hand,
-            *ticks
+            circle, self.hour_hand, self.minute_hand, self.ticks
         )
 
 

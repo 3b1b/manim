@@ -2,14 +2,20 @@ from __future__ import annotations
 
 import moderngl
 import numpy as np
+import trimesh
+import pywavefront
+import logging
+from pathlib import Path
 
 from manimlib.constants import GREY
 from manimlib.constants import OUT
 from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.images import get_full_raster_image_path
+from manimlib.utils.images import get_full_three_d_model_path
 from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.simple_functions import clip
@@ -234,7 +240,7 @@ class Surface(Mobject):
         tri_is = self.triangle_indices
         points = self.get_points()
 
-        dots = (points[tri_is[::3]] * vect).sum(1)
+        dots = np.dot(points[tri_is[::3]], vect.T)
         indices = np.argsort(dots)
         for k in range(3):
             tri_is[k::3] = tri_is[k::3][indices]
@@ -380,3 +386,83 @@ class TexturedSurface(Surface):
             im_coords, a, b, (nu, nv, 2), axis
         )
         return self
+
+
+class TexturedGeometry(TexturedSurface):
+    def __init__(self, geometry: trimesh.base.Trimesh, texture_file: str, **kwargs):
+        self.num_textures = 1
+        self.geometry = geometry
+        self.texture_file = texture_file
+        self.triangle_indices = geometry.faces.flatten()
+        Mobject.__init__(
+            self,
+            texture_paths={"LightTexture": get_full_raster_image_path(texture_file)}
+        )
+
+    def init_points(self):
+        points = self.geometry.vertices
+        uv = np.array(self.geometry.visual.uv)
+        uv[:, 1] = 1.0 - uv[:, 1]
+
+        v0 = points[self.triangle_indices[0::3]]
+        v1 = points[self.triangle_indices[0::3]]
+        v2 = points[self.triangle_indices[0::3]]
+        normals = points
+        epsilon = 1e-5 * 0
+
+        self.set_points(points)
+        self.data["d_normal_point"] = points + epsilon * normals
+        self.data["im_coords"] = uv
+        self.data["opacity"] = self.opacity
+
+
+class ThreeDModel(Group):
+    def __init__(self, obj_file: str, height=3):
+        super().__init__()
+        obj_file = get_full_three_d_model_path(obj_file)
+
+        default_texture = Path(Path(obj_file).parent, "texture.png")
+        if not default_texture.exists():
+            default_texture = get_full_raster_image_path("White.png")
+
+        texture_files = self.get_textures_from_mtl(obj_file)
+        mesh = trimesh.load(obj_file)
+
+        if isinstance(mesh, trimesh.Scene):
+            self.add(*(
+                TexturedGeometry(geom, texture or default_texture)
+                for geom, texture in zip(mesh.geometry.values(), texture_files.values())
+            ))
+        elif isinstance(mesh, trimesh.Geometry):
+            # TODO
+            self.add(TexturedGeometry(mesh, default_texture))
+
+        self.apply_depth_test()
+        self.set_height(height)
+        self.center()
+
+    def get_textures_from_mtl(self, obj_filepath, suppress_warnings=True):
+        """
+        Load an OBJ file and extract all texture filenames from its MTL file.
+
+        Returns:
+            dict: {material_name: texture_filepath}
+        """
+
+        # Suppress pywavefront warnings if desired
+        if suppress_warnings:
+            logging.getLogger('pywavefront').setLevel(logging.ERROR)
+
+        # Load the OBJ file (automatically loads MTL)
+        obj_scene = pywavefront.Wavefront(obj_filepath, collect_faces=True)
+
+        textures = {}
+
+        # Iterate through materials
+        for material_name, material in obj_scene.materials.items():
+            if material.texture:
+                textures[material_name] = material.texture.path
+            else:
+                textures[material_name] = None
+
+        return textures

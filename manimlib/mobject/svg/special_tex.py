@@ -21,13 +21,15 @@ class BulletedList(VGroup):
         *items: str,
         buff: float = MED_LARGE_BUFF,
         aligned_edge: Vect3 = LEFT,
+        numbered: bool = False,
         **kwargs
     ):
         labelled_content = [R"\item " + item for item in items]
+        enum_str = "enumerate" if numbered else "itemize"
         tex_string = "\n".join([
-            R"\begin{itemize}",
+            fR"\begin{{{enum_str}}}",
             *labelled_content,
-            R"\end{itemize}"
+            fR"\end{{{enum_str}}}"
         ])
         tex_text = TexText(tex_string, isolate=labelled_content, **kwargs)
         lines = (tex_text.select_part(part) for part in labelled_content)
