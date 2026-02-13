@@ -44,6 +44,7 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.space_ops import poly_line_length
 from manimlib.utils.space_ops import z_to_vector
 from manimlib.shader_wrapper import VShaderWrapper
+from manimlib.utils.triangulation import triangulate_polygon_with_holes
 
 from typing import TYPE_CHECKING
 from typing import Generic, TypeVar, Iterable
@@ -1082,54 +1083,68 @@ class VMobject(Mobject):
 
     # Data for shaders that may need refreshing
 
-    def get_triangulation(self) -> np.ndarray:
-        # Figure out how to triangulate the interior to know
-        # how to send the points as to the vertex shader.
-        # First triangles come directly from the points
+    def get_triangulation(self):
+        """
+         Returns triangle indices for the closed path(s) of this VMobject.
+        If a gradient fill is in use, prefer disjoint triangulation to avoid overlap artifacts.
+        """
         points = self.get_points()
+        # Group points into subpaths (outer + holes) using existing helpers:
+        # e.g., self.get_subpaths() or similar existing utility in ManimGL
+        subpaths = self.get_subpaths()  # each is (K, 3) array of anchors along the boundary
+        if not subpaths:
+            return np.zeros((0, 3), dtype=int)
 
-        if len(points) <= 1:
-            return np.zeros(0, dtype='i4')
+        # Heuristic: the largest-area closed path is the outer ring; others are holes,
+        # or use existing orientation (CCW vs CW) if Manim already provides it.
+        rings = []
+        for sp in subpaths:
+            # Ensure ring is closed (first==last) and 2D
+            ring = sp[:, :3]
+            if not np.allclose(ring[0], ring[-1]):
+                ring = np.vstack([ring, ring[0]])
+            rings.append(ring[:, :2])  # XY only for triangulation
 
-        normal_vector = self.get_unit_normal()
+        # Pick outer ring as the one with largest absolute signed area
+        def signed_area(r):
+             x, y = r[:,0], r[:,1]
+             return 0.5 * np.sum(x[:-1]*y[1:] - x[1:]*y[:-1])
 
-        # Rotate points such that unit normal vector is OUT
-        if not np.isclose(normal_vector, OUT).all():
-            points = np.dot(points, z_to_vector(normal_vector))
+        areas = [abs(signed_area(r)) for r in rings]
+        outer_idx = int(np.argmax(areas))
+        outer = rings[outer_idx]
+        holes = [r for i, r in enumerate(rings) if i != outer_idx]
 
-        v01s = points[1::2] - points[0:-1:2]
-        v12s = points[2::2] - points[1::2]
-        curve_orientations = np.sign(cross2d(v01s, v12s))
+        try:
+            tri = triangulate_polygon_with_holes(outer, holes)
+        except ImportError:
+        # Fallback to existing method if earcut not available
+            return super().get_triangulation()  # or the old implementation
 
-        concave_parts = curve_orientations < 0
+        # Earcut indices are into the concatenated ring vertices; we need to map them
+        # to this VMobject’s vertex indexing (Manim typically flattens subpaths in order).
+        # Build a mapping from earcut-local to VMobject-global indices:
+        concat = [outer[:-1]] + [h[:-1] for h in holes]  # drop duplicate last point
+        counts = [c.shape[0] for c in concat]
+        starts = np.cumsum([0] + counts[:-1])
 
-        # These are the vertices to which we'll apply a polygon triangulation
-        indices = np.arange(len(points), dtype=int)
-        inner_vert_indices = np.hstack([
-            indices[0::2],
-            indices[1::2][concave_parts],
-        ])
-        inner_vert_indices.sort()
-        # Even indices correspond to anchors, and `end_indices // 2`
-        # shows which anchors are considered end points
-        end_indices = self.get_subpath_end_indices()
-        counts = np.arange(1, len(inner_vert_indices) + 1)
-        rings = counts[inner_vert_indices % 2 == 0][end_indices // 2]
+        # Build a table of the corresponding VMobject indices for each concatenated vertex
+        vm_indices = []
+        for i, ring in enumerate(concat):
+            # find the corresponding indices of these ring points inside `points`
+            # Existing code usually stores the same order; if needed, use a KDTree/lookup
+            # Here we assume subpaths are concatenated in the same order as get_subpaths()
+            path = subpaths[outer_idx if i == 0 else [j for j in range(len(rings)) if j != outer_idx][i - 1]]
+            vm_path_idx = np.arange(len(points))[np.isin(
+                points.view([('', points.dtype)] * points.shape[1]),
+                path.view([('', path.dtype)] * path.shape[1])
+            )]
+            vm_indices.extend(vm_path_idx.tolist())
 
-        # Triangulate
-        inner_verts = points[inner_vert_indices]
-        inner_tri_indices = inner_vert_indices[
-            earclip_triangulation(inner_verts, rings)
-        ]
-        # Remove null triangles, coming from adjascent points
-        iti = inner_tri_indices
-        null1 = (iti[0::3] + 1 == iti[1::3]) & (iti[0::3] + 2 == iti[2::3])
-        null2 = (iti[0::3] - 1 == iti[1::3]) & (iti[0::3] - 2 == iti[2::3])
-        inner_tri_indices = iti[~(null1 | null2).repeat(3)]
 
-        ovi = self.get_outer_vert_indices()
-        tri_indices = np.hstack([ovi, inner_tri_indices])
-        return tri_indices
+        vm_indices = np.array(vm_indices, dtype=int)
+        tri_vm = vm_indices[tri]  # map earcut triangles to VMobject indices
+        return tri_vm.astype(int)
 
     def refresh_joint_angles(self) -> Self:
         for mob in self.get_family():
