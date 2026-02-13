@@ -3,7 +3,11 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from functools import lru_cache
+
+from manimlib.config import manim_config
 from manimlib.mobject.svg.string_mobject import StringMobject
+from manimlib.mobject.svg.svg_mobject import get_svg_content_height
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.color import color_to_hex
@@ -18,7 +22,14 @@ if TYPE_CHECKING:
     from manimlib.typing import ManimColor, Span, Selector, Self
 
 
-TEX_MOB_SCALE_FACTOR = 0.001
+@lru_cache(maxsize=1)
+def get_tex_mob_scale_factor() -> float:
+    # Render a reference "0" and calibrate so that font_size_for_unit_height
+    # gives a height of 1 manim unit. Compensates for platform dvisvgm differences.
+    font_size_for_unit_height = manim_config.tex.font_size_for_unit_height
+    svg_string = latex_to_svg("0", show_message_during_execution=False)
+    svg_height = get_svg_content_height(svg_string)
+    return 1.0 / (font_size_for_unit_height * svg_height)
 
 
 class Tex(StringMobject):
@@ -63,7 +74,7 @@ class Tex(StringMobject):
         )
 
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
-        self.scale(TEX_MOB_SCALE_FACTOR * font_size)
+        self.scale(get_tex_mob_scale_factor() * font_size)
 
         self.font_size = font_size  # Important for this to go after the scale call
 

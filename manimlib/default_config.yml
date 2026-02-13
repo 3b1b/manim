@@ -82,10 +82,14 @@ mobject:
 tex:
   # See tex_templates.yml
   template: "default"
+  # The font size at which Tex("0") has a height of 1 manim unit
+  font_size_for_unit_height: 144
 text:
   # font: "Cambria Math"
   font: "Consolas"
   alignment: "LEFT"
+  # The font size at which Text("0") has a height of 1 manim unit
+  font_size_for_unit_height: 144
 embed:
   exception_mode: "Verbose"
   autoreload: False

@@ -31,6 +31,21 @@ SVG_HASH_TO_MOB_MAP: dict[int, list[VMobject]] = {}
 PATH_TO_POINTS: dict[str, Vect3Array] = {}
 
 
+def get_svg_content_height(svg_string: str) -> float:
+    # Strip root attributes to match SVGMobject.modify_xml_tree,
+    # which avoids viewBox unit conversions (e.g. pt to px for dvisvgm)
+    root = ET.fromstring(svg_string)
+    root.attrib.clear()
+    data_stream = io.BytesIO()
+    ET.ElementTree(root).write(data_stream)
+    data_stream.seek(0)
+    svg = se.SVG.parse(data_stream)
+    bbox = svg.bbox()
+    if bbox is None:
+        raise ValueError("SVG has no content to measure")
+    return bbox[3] - bbox[1]
+
+
 def _convert_point_to_3d(x: float, y: float) -> np.ndarray:
     return np.array([x, y, 0.0])
 
