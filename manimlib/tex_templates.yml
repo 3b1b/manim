@@ -26,6 +26,12 @@ default:
     \linespread{1}
     %% Borrowed from https://tex.stackexchange.com/questions/6058/making-a-shorter-minus
     \DeclareMathSymbol{\minus}{\mathbin}{AMSa}{"39}
+
+typst:
+  description: ""
+  preamble: |-
+    #set page(width: auto, height: auto, margin: 0pt, fill: none)
+
 ctex:
   description: ""
   compiler: xelatex
