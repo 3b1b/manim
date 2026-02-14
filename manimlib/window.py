@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import numpy as np
-
-import moderngl_window as mglw
-from moderngl_window.context.pyglet.window import Window as PygletWindow
-from moderngl_window.timers.clock import Timer
 from functools import wraps
+
+import moderngl
+import numpy as np
+import pyglet
 import screeninfo
+
+from pyglet.window import Window as PygletWindow
 
 from manimlib.constants import ASPECT_RATIO
 from manimlib.constants import FRAME_SHAPE
@@ -33,17 +34,42 @@ class Window(PygletWindow):
         position_string: str = "UR",
         monitor_index: int = 1,
         full_screen: bool = False,
+        style: str = None,
         size: Optional[tuple[int, int]] = None,
         position: Optional[tuple[int, int]] = None,
-        samples: int = 0
+        samples: int = 0,
     ):
         self.scene = scene
         self.monitor = self.get_monitor(monitor_index)
         self.default_size = size or self.get_default_size(full_screen)
         self.default_position = position or self.position_from_string(position_string)
         self.pressed_keys = set()
+        self._has_undrawn_event = True
 
-        super().__init__(samples=samples)
+        config = pyglet.gl.Config(
+            sample_buffers=1 if samples > 0 else 0,
+            samples=samples,
+            major_version=self.gl_version[0],
+            minor_version=self.gl_version[1],
+            double_buffer=True,
+            depth_size=24,
+            stencil_size=8,
+        )
+
+        pyglet.app.platform_event_loop.start()
+
+        super().__init__(
+            width=self.default_size[0],
+            height=self.default_size[1],
+            resizable=self.resizable,
+            vsync=self.vsync,
+            fullscreen=full_screen,
+            style=style,
+            config=config,
+        )
+
+        self.set_mouse_visible(self.cursor)
+        self.set_mouse_passthrough(False)
         self.to_default_position()
 
         if self.scene:
@@ -60,17 +86,33 @@ class Window(PygletWindow):
         self._has_undrawn_event = True
 
         self.scene = scene
-        self.title = str(scene)
+        self.set_caption(str(scene))
 
         self.init_mgl_context()
 
-        self.timer = Timer()
-        self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
-        mglw.activate_context(window=self, ctx=self.ctx)
-        self.timer.start()
-
         # This line seems to resync the viewport
         self.on_resize(*self.size)
+
+    def init_mgl_context(self) -> None:
+        self.ctx = moderngl.create_context()
+        self.ctx.viewport = (0, 0, self.width, self.height)
+
+    # Helper properties for width/height and position
+    @property
+    def size(self) -> tuple[int, int]:
+        return (self.width, self.height)
+
+    @size.setter
+    def size(self, size: tuple[int, int]) -> None:
+        self.set_size(*size)
+
+    @property
+    def position(self) -> tuple[int, int]:
+        return self.get_location()
+
+    @position.setter
+    def position(self, pos: tuple[int, int]) -> None:
+        self.set_location(*pos)
 
     def get_monitor(self, index):
         try:
@@ -105,8 +147,8 @@ class Window(PygletWindow):
         flicker on the window but at least reliably focuses it. It may also
         offset the window position slightly.
         """
-        self._window.set_visible(False)
-        self._window.set_visible(True)
+        self.set_visible(False)
+        self.set_visible(True)
 
     def to_default_position(self):
         self.position = self.default_position
@@ -139,8 +181,14 @@ class Window(PygletWindow):
     def has_undrawn_event(self) -> bool:
         return self._has_undrawn_event
 
-    def swap_buffers(self):
-        super().swap_buffers()
+    def clear(self, r: float = 0.0, g: float = 0.0, b: float = 0.0, a: float = 1.0) -> None:
+        if hasattr(self, "ctx"):
+            self.ctx.clear(r, g, b, a, depth=1.0)
+        else:
+            super().clear()
+
+    def swap_buffers(self) -> None:
+        self.flip()
         self._has_undrawn_event = False
 
     @staticmethod
@@ -153,7 +201,6 @@ class Window(PygletWindow):
 
     @note_undrawn_event
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int) -> None:
-        super().on_mouse_motion(x, y, dx, dy)
         if not self.scene:
             return
         point = self.pixel_coords_to_space_coords(x, y)
@@ -162,7 +209,6 @@ class Window(PygletWindow):
 
     @note_undrawn_event
     def on_mouse_drag(self, x: int, y: int, dx: int, dy: int, buttons: int, modifiers: int) -> None:
-        super().on_mouse_drag(x, y, dx, dy, buttons, modifiers)
         if not self.scene:
             return
         point = self.pixel_coords_to_space_coords(x, y)
@@ -171,7 +217,6 @@ class Window(PygletWindow):
 
     @note_undrawn_event
     def on_mouse_press(self, x: int, y: int, button: int, mods: int) -> None:
-        super().on_mouse_press(x, y, button, mods)
         if not self.scene:
             return
         point = self.pixel_coords_to_space_coords(x, y)
@@ -179,7 +224,6 @@ class Window(PygletWindow):
 
     @note_undrawn_event
     def on_mouse_release(self, x: int, y: int, button: int, mods: int) -> None:
-        super().on_mouse_release(x, y, button, mods)
         if not self.scene:
             return
         point = self.pixel_coords_to_space_coords(x, y)
@@ -187,7 +231,6 @@ class Window(PygletWindow):
 
     @note_undrawn_event
     def on_mouse_scroll(self, x: int, y: int, x_offset: float, y_offset: float) -> None:
-        super().on_mouse_scroll(x, y, x_offset, y_offset)
         if not self.scene:
             return
         point = self.pixel_coords_to_space_coords(x, y)
@@ -196,8 +239,14 @@ class Window(PygletWindow):
 
     @note_undrawn_event
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        self.pressed_keys.add(symbol)  # Modifiers?
         super().on_key_press(symbol, modifiers)
+        if symbol == pyglet.window.key.F11:
+            if self.width == self.screen.width * self.screen.get_scale():
+                self.to_default_position()
+            else:
+                self.maximize()
+            return
+        self.pressed_keys.add(symbol)  # Modifiers?
         if not self.scene:
             return
         self.scene.on_key_press(symbol, modifiers)
@@ -205,28 +254,26 @@ class Window(PygletWindow):
     @note_undrawn_event
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         self.pressed_keys.difference_update({symbol})  # Modifiers?
-        super().on_key_release(symbol, modifiers)
         if not self.scene:
             return
         self.scene.on_key_release(symbol, modifiers)
 
     @note_undrawn_event
     def on_resize(self, width: int, height: int) -> None:
-        super().on_resize(width, height)
+        if hasattr(self, 'ctx'):
+            self.ctx.viewport = (0, 0, width, height)
         if not self.scene:
             return
         self.scene.on_resize(width, height)
 
     @note_undrawn_event
     def on_show(self) -> None:
-        super().on_show()
         if not self.scene:
             return
         self.scene.on_show()
 
     @note_undrawn_event
     def on_hide(self) -> None:
-        super().on_hide()
         if not self.scene:
             return
         self.scene.on_hide()
@@ -240,3 +287,14 @@ class Window(PygletWindow):
 
     def is_key_pressed(self, symbol: int) -> bool:
         return (symbol in self.pressed_keys)
+
+    # Methods for compatibility with previous window wrapper
+    @property
+    def is_closing(self) -> bool:
+        return self.has_exit
+
+    def destroy(self) -> None:
+        if hasattr(self, "ctx"):
+            self.ctx.release()
+        self.close()
+        pyglet.app.platform_event_loop.stop()
