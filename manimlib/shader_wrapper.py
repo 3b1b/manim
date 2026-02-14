@@ -228,6 +228,7 @@ class VShaderWrapper(ShaderWrapper):
         depth_test: bool = False,
         render_primitive: int = moderngl.TRIANGLES,
         code_replacements: dict[str, str] = dict(),
+        program_type: str | None = None,
         stroke_behind: bool = False,
     ):
         self.stroke_behind = stroke_behind
@@ -238,12 +239,13 @@ class VShaderWrapper(ShaderWrapper):
             mobject_uniforms=mobject_uniforms,
             texture_paths=texture_paths,
             depth_test=depth_test,
-            render_primitive=render_primitive,
-            code_replacements=code_replacements,
+            render_primitive=render_primitive
         )
         self.fill_canvas = VShaderWrapper.get_fill_canvas(self.ctx)
         self.add_texture('Texture', self.fill_canvas[0].color_attachments[0])
         self.add_texture('DepthTexture', self.fill_canvas[2].color_attachments[0])
+        for old, new in code_replacements.items():
+            self.replace_code_program(old, new, program_type)
 
     def init_program_code(self) -> None:
         self.program_code = {
@@ -340,6 +342,26 @@ class VShaderWrapper(ShaderWrapper):
     def refresh_id(self):
         super().refresh_id()
         self.id = hash(str(self.id) + str(self.stroke_behind))
+        
+    def replace_code_program(self, old: str, new: str, program_type: str | None = None):
+        if program_type is None:
+            # fallback to generic behaviour
+            super().replace_code(old, new)
+            return
+
+        valid = {"stroke", "fill", "depth"}
+        if program_type not in valid:
+            raise ValueError(f"Invalid program_type: {program_type}")
+
+        for name in self.program_code:
+            if self.program_code[name] is None:
+                continue
+            if not name.startswith(program_type):
+                continue
+            self.program_code[name] = re.sub(old, new, self.program_code[name])
+
+        self.init_program()
+        self.refresh_id()
 
     # Rendering
     def render_stroke(self):
@@ -478,3 +500,5 @@ class VShaderWrapper(ShaderWrapper):
         else:
             self.render_fill()
             self.render_stroke()
+
+
