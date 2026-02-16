@@ -1,59 +1,81 @@
 Contributing
 ============
 
-Accept any contribution you make :)
+We welcome and appreciate any contributions you make to Manim! :)
 
-- **Contribute to the manim source code**: 
-
-Please fork to your own repository and make changes, submit a pull request, and fill in 
-the motivation for the change following the instructions in the template. We will check 
-your pull request in detail (this usually takes a while, please be patient)
-
-- **Contribute to the documentation**: 
-
-Also submit a pull request and write down the main changes.
-
-- **If you find a bug in the code**: 
-
-Please open an issue and fill in the found problem and your environment according 
-to the template. (But please note that if you think this problem is just a problem 
-of yourself, rather than a problem of source code, it is recommended that you ask a 
-question in the `Q&A category <https://github.com/3b1b/manim/discussions/categories/q-a>`_ 
-of the discussion page)
-
-- **You are welcome to share the content you made with manim**: 
-
-Post it in the `show and tell category <https://github.com/3b1b/manim/discussions/categories/show-and-tell>`_
-of the discussion page.
-
-- **You are also welcome to share some of your suggestions and ideas**: 
-
-Post them in the `ideas category <https://github.com/3b1b/manim/discussions/categories/ideas>`_ 
-of the discussion page.
-
-How to build this documentation
+Contributing to the Source Code
 -------------------------------
 
-- Clone the 3b1b/manim repository
+- **Fork the repository** to your own GitHub account.
+- Make your changes locally.
+- Submit a **pull request** to the main repository.
+- Fill in the **motivation for your change** following the instructions in the provided template.
+
+.. note::
+
+    Pull requests will be reviewed in detail. This process may take some time, so please be patient.
+
+Contributing to the Documentation
+---------------------------------
+
+- Make edits to the documentation files in your fork.
+- Submit a **pull request** describing the main changes you made.
+
+Reporting Bugs
+--------------
+
+If you find a bug in the code:
+
+1. Open a new **issue** in the repository.
+2. Describe the problem clearly.
+3. Include details about your **environment** (Python version, OS, Manim version, etc.) according to the issue template.
+
+.. note::
+
+    If you suspect the problem is local to your setup rather than the source code, it is recommended to ask a question in the
+    `Q&A category <https://github.com/3b1b/manim/discussions/categories/q-a>`_ of the discussion page.
+
+Sharing Your Work
+-----------------
+
+- You are welcome to share content you created using Manim.
+- Post it in the `Show and Tell category <https://github.com/3b1b/manim/discussions/categories/show-and-tell>`_ of the discussion page.
+
+Sharing Ideas and Suggestions
+-----------------------------
+
+- Suggestions, feature requests, and ideas are encouraged!
+- Post them in the `Ideas category <https://github.com/3b1b/manim/discussions/categories/ideas>`_ of the discussion page.
+
+How to Build the Documentation
+------------------------------
+
+Follow these steps to build the Manim documentation locally:
+
+1. **Clone the repository**
 
 .. code-block:: sh
 
     git clone https://github.com/3b1b/manim.git
-    # or your own repo
-    # git clone https://github.com/<your user name>/manim.git
+    # Or clone your own fork
+    # git clone https://github.com/<your-username>/manim.git
     cd manim
 
-- Install python package dependencies
+2. **Install Python package dependencies**
 
 .. code-block:: sh
 
     pip install -r docs/requirements.txt
 
-- Go to the ``docs/`` folder and build
+3. **Navigate to the docs folder and build HTML**
 
 .. code-block:: sh
 
     cd docs/
     make html
 
-- The output document is located in ``docs/build/html/``
+4. **Find the built documentation**
+
+    The output HTML files will be located in::
+
+        docs/build/html/

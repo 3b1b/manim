@@ -1,6 +1,6 @@
 name: docs
 
-on: 
+on:
   push:
     paths:
       - 'docs/**'
@@ -10,31 +10,38 @@ on:
 
 jobs:
   docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     name: build up document and deploy
 
     steps:
     - name: Checkout
-      uses: actions/checkout@master
-    
-    - name: Install sphinx and manim env
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install system dependencies
       run: |
-        pip3 install --upgrade pip
-        sudo apt install python3-setuptools libpango1.0-dev
-        pip3 install -r docs/requirements.txt
-        pip3 install -r requirements.txt
-    
+        sudo apt-get update
+        sudo apt-get install -y python3-setuptools libpango1.0-dev
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r docs/requirements.txt
+        pip install -r requirements.txt
+
     - name: Build document with Sphinx
       run: |
         cd docs
-        export PATH="$PATH:/home/runner/.local/bin"
-        export SPHINXBUILD="python3 -m sphinx"
         make html
-        
+
     - name: Deploy to GitHub pages
       if: ${{ github.event_name == 'push' }}
-      uses: JamesIves/github-pages-deploy-action@3.7.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        ACCESS_TOKEN: ${{ secrets.DOC_DEPLOY_TOKEN }}
-        BRANCH: gh-pages
-        FOLDER: docs/build/html
+        token: ${{ secrets.GITHUB_TOKEN }}
+        branch: gh-pages
+        folder: docs/build/html
