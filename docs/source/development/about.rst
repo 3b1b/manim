@@ -4,28 +4,43 @@ About
 About Manim
 -----------
 
-Manim is an animation engine for explanatory math videos. 
-You can use it to make math videos (or other fields) like 3Blue1Brown.
+Manim is a powerful animation engine designed for creating 
+**explanatory math videos**.
+It is widely used to create videos similar to those of 3Blue1Brown,
+but it can also be applied to other domains that require precise
+and visually appealing animations.
 
-There are mainly two versions here:
+There are mainly **two versions** of Manim:
 
-- `3b1b/manim <https://github.com/3b1b/manim>`_ : Maintained by Grant Sanderson of 3Blue1Brown.
+- `3b1b/manim <https://github.com/3b1b/manim>`__
+  
+  Maintained by Grant Sanderson of 3Blue1Brown.
 
-Using OpenGL and its GLSL language to use GPU for rendering. It has higher efficiency, 
-faster rendering speed, and supports real-time rendering and interaction.
+  - Uses **OpenGL** and its **GLSL language** to leverage the GPU.
+  - Offers higher efficiency, faster rendering, and real-time interaction.
+  - Best suited for high-quality production-ready videos.
 
-- `ManimCommunity/manim <https://github.com/ManimCommunity/manim>`_ : Maintained by Manim Community Dev Team.
+- `ManimCommunity/manim <https://github.com/ManimCommunity/manim>`__
+  
+  Maintained by the Manim Community Development Team.
 
-Using multiple backend rendering. There is better documentation and 
-a more open contribution community.
+  - Uses multiple backend rendering options.
+  - Provides better documentation and open contribution workflow.
+  - Ideal for learners and educators.
 
-About this documentation
+About this Documentation
 ------------------------
 
-This documentation is based on the version in `3b1b/manim <https://github.com/3b1b/manim>`_. 
-Created by `TonyCrane <https://github.com/TonyCrane>`_ ("鹤翔万里" in Chinese) and in production.
+This documentation is primarily based on:
 
-Among them, the ``manim_example_ext`` extension for Sphinx refers to 
-`the documentation of ManimCommunity <https://docs.manim.community/>`_.
+`3b1b/manim <https://github.com/3b1b/manim>`__
 
-If you want to contribute to manim or this document, please see: :doc:`contributing`
+- Created by `TonyCrane <https://github.com/TonyCrane>`__.
+- Continuously updated for clarity and accuracy.
+
+.. note::
+
+   Some features such as ``manim_example_ext`` are inspired by
+   the `ManimCommunity documentation <https://docs.manim.community/>`__.
+
+If you want to contribute, please see :doc:`contributing`.
