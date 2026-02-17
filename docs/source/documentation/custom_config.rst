@@ -1,176 +1,165 @@
 custom_config
-==============
+=============
 
-``directories``
----------------
+This file determines the default configuration for how Manim is run, including
+names for directories it will write to, default parameters for various classes,
+style choices, etc. To customize your own, create a ``custom_config.yml`` file
+in whatever directory you are running Manim.  
+
+Alternatively, you can create it wherever you like, and on running Manim, pass in
+``--config_file /path/to/custom/config/file.yml``.
+
+directories
+-----------
 
 - ``mirror_module_path``
-    (``True`` or ``False``) Whether to create a folder named the name of the 
-    running file under the ``output`` path, and save the output (``images/`` 
-    or ``videos/``) in it.
+    (``True`` or ``False``) Whether to create a folder named the name of the
+    running file under the ``output`` path, and save the output
+    (``images/`` or ``videos/``) in it.
+
+- ``removed_mirror_prefix``
+    Path prefix to remove from mirrored directories.
 
 - ``base``
-    The root directory that will hold files, such as video files manim renders,
-    or image resources that it pulls from
+    The root directory that will hold files, such as video files Manim renders,
+    or image resources that it pulls from.
 
-- ``output``
-    Output file path, the videos will be saved in the ``videos/`` folder under it, 
-    and the pictures will be saved in the ``images/`` folder under it.
+- ``subdirs``
+    Subdirectories under ``base`` for various resources:
 
-    For example, if you set ``output`` to ``"/.../manim/output"`` and 
-    ``mirror_module_path`` to ``False``, then you exported ``Scene1`` in the code 
-    file and saved the last frame, then the final directory structure will be like:
-
-    .. code-block:: text
-        :emphasize-lines: 9, 11
-
-            manim/
-            ├── manimlib/
-            │   ├── animation/
-            │   ├── ...
-            │   ├── default_config.yml
-            │   └── window.py
-            ├── output/
-            │   ├── images
-            │   │   └── Scene1.png
-            │   └── videos
-            │       └── Scene1.mp4
-            ├── code.py
-            └── custom_config.yml
-
-    But if you set ``mirror_module_path`` to ``True``, the directory structure will be:
-
-    .. code-block:: text
-        :emphasize-lines: 8
-
-            manim/
-            ├── manimlib/
-            │   ├── animation/
-            │   ├── ...
-            │   ├── default_config.yml
-            │   └── window.py
-            ├── output/
-            │   └── code/
-            │       ├── images
-            │       │   └── Scene1.png
-            │       └── videos
-            │           └── Scene1.mp4
-            ├── code.py
-            └── custom_config.yml
-
-- ``raster_images`` 
-    The directory for storing raster images to be used in the code (including 
-    ``.jpg``, ``.jpeg``, ``.png`` and ``.gif``), which will be read by ``ImageMobject``.
-
-- ``vector_images``
-    The directory for storing vector images to be used in the code (including 
-    ``.svg`` and ``.xdv``), which will be read by ``SVGMobject``.
-
-- ``sounds``
-    The directory for storing sound files to be used in ``Scene.add_sound()`` (
-    including ``.wav`` and ``.mp3``).
+    - ``output``: Where Manim saves video and image files.
+    - ``raster_images``: For ``.jpg``, ``.jpeg``, ``.png``, ``.gif`` used by ``ImageMobject``.
+    - ``vector_images``: For ``.svg`` and ``.xdv`` used by ``SVGMobject``.
+    - ``pi_creature_images``: SVG images for Pi creatures.
+    - ``three_d_models``: For 3D model files.
+    - ``sounds``: For audio files used in ``Scene.add_sound()``.
+    - ``data``: Any project-related data like CSVs.
+    - ``downloads``: Default folder for downloaded assets.
+    - ``latex_cache``: For storing cached LaTeX compilation results.
 
 - ``cache``
-    The directory for storing temporarily generated cache files, including 
-    ``Tex`` cache, ``Text`` cache and storage of object points.
+    Directory for storing temporary cache files, including Tex/Text caches.
 
+window
+------
 
-``window``
-----------
+- ``position_string``: Position of the playback window on screen (e.g. UR → Upper Right).
+- ``monitor_index``: Which monitor to display the window on.
+- ``full_screen``: Whether to use full screen.
+- ``position``: Optional pixel coordinates to manually set window position.
+- ``size``: Optional pixel dimensions to manually set window size.
 
-- ``position_string``
-    The relative position of the playback window on the display (two characters, 
-    the first character means upper(U) / middle(O) / lower(D), the second character 
-    means left(L) / middle(O) / right(R)).
+camera
+------
 
-- ``monitor_index``
-    If using multiple monitors, which one should the window show up in?
+- ``resolution``: Output resolution, e.g. (1920, 1080).
+- ``background_color``: Default scene background color.
+- ``fps``: Frames per second.
+- ``background_opacity``: Opacity of background.
 
-- ``full_screen``
-    Should the preview window be full screen. If not, it defaults to half the screen
+file_writer
+-----------
 
-- ``position``
-    This is an option to more manually set the default window position, in pixel
-    coordinates, e.g. (500, 300)
+Configuration for file writing, e.g., ffmpeg parameters:
 
-- ``size``
-    Option to more manually set the default window size, in pixel coordinates,
-    e.g. (1920, 1080)
+- ``ffmpeg_bin``: Path to ffmpeg.
+- ``video_codec``: Codec to use.
+- ``pixel_format``: Pixel format.
+- ``saturation``: Saturation value.
+- ``gamma``: Gamma correction.
 
+scene
+-----
 
-``camera``
-----------
+Default configuration for the ``Scene`` class:
 
-- ``resolution``
-    Resolution to render at, e.g. (1920, 1080)
+- ``show_animation_progress``: Show progress bars.
+- ``leave_progress_bars``: Keep progress bars visible.
+- ``preview_while_skipping``: Render a single frame when skipping animations.
+- ``default_wait_time``: Duration for ``Scene.wait()`` calls.
 
-- ``background_color``
-    Default background color of scenes
+vmobject
+--------
 
-- ``fps``
-    Framerate
+- ``default_stroke_width``: Stroke width.
+- ``default_stroke_color``: Default stroke color.
+- ``default_fill_color``: Default fill color.
 
-- ``background_opacity``
-    Opacity of the background
-
-
-``file_writer``
----------------
-Configuration specifying how files are written, e.g. what ffmpeg parameters to use
-
-
-``scene``
--------
-Some default configuration for the Scene class
-
-
-``text``
+mobject
 -------
 
-- ``font`` 
-    Default font of Text
+- ``default_mobject_color``: Default mobject color.
+- ``default_light_color``: Default light color.
 
-- ``text_alignment``
-    Default text alignment for LaTeX
+tex
+---
 
-``tex``
--------
+- ``template``: Tex template to use (see ``tex_templates.yml``).
 
-- ``template``
-    Which configuration from the manimlib/tex_template.yml file should be used
-    to determine the latex compiler to use, and what preamble to include for 
-    rendering tex. 
+text
+----
 
+- ``font``: Default font for Text.
+- ``alignment``: Default alignment for LaTeX text.
 
-``sizes``
----------
+embed
+-----
 
-Valuess for various constants used in manimm to specify distances, like the height
-of the frame, the value of SMALL_BUFF, LARGE_BUFF, etc.
+- ``exception_mode``: Mode for displaying exceptions.
+- ``autoreload``: Whether to automatically reload scripts.
 
+resolution_options
+------------------
 
-``colors``
-----------
+- ``low``: Low resolution (854, 480)
+- ``med``: Medium resolution (1280, 720)
+- ``high``: High resolution (1920, 1080)
+- ``4k``: Ultra HD (3840, 2160)
 
-Color pallete to use, determining values of color constants like RED, BLUE_E, TEAL, etc.
+sizes
+-----
 
-``loglevel``
+- ``frame_height``: Frame height for Manim coordinate system.
+- ``small_buff``, ``med_small_buff``, ``med_large_buff``, ``large_buff``: Default spacing constants.
+- ``default_mobject_to_edge_buff``: Buffer for ``Mobject.to_edge``.
+- ``default_mobject_to_mobject_buff``: Buffer for ``Mobject.next_to``.
+
+key_bindings
 ------------
 
-Can be DEBUG / INFO / WARNING / ERROR / CRITICAL
+Default keyboard bindings:
 
+- ``pan_3d``: d
+- ``pan``: f
+- ``reset``: r
+- ``quit``: q
+- ``select``: s
+- ``unselect``: u
+- ``grab``: g
+- ``x_grab``: h
+- ``y_grab``: v
+- ``z_grab``: z
+- ``resize``: t
+- ``color``: c
+- ``information``: i
+- ``cursor``: k
 
-``universal_import_line``
--------------------------
+colors
+------
 
-Import line that need to execute when entering interactive mode directly.
+Defined in ``custom_config.yml`` (see colors section above).
 
+log_level
+---------
 
-``ignore_manimlib_modules_on_reload``
--------------------------------------
+Can be DEBUG / INFO / WARNING / ERROR / CRITICAL.
 
-When calling ``reload`` during the interactive mode, imported modules are
-by default reloaded, in case the user writing a scene which pulls from various
-other files they have written. By default, modules withinn the manim library will
-be ignored, but one developing manim may want to set this to be False so that 
-edits to the library are reloaded as well.
+universal_import_line
+---------------------
+
+Python import line to execute in interactive mode.
+
+ignore_manimlib_modules_on_reload
+---------------------------------
+
+If False, modules inside Manim are reloaded when calling ``reload`` in interactive mode.

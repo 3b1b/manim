@@ -3,125 +3,139 @@ Manim's structure
 
 
 Manim's directory structure
----------------------------
+----------------------------
 
-The manim directory looks very complicated, with a lot of files, 
+The manim directory looks very complicated, with a lot of files,
 but the structure is clear.
 
 Below is the directory structure of manim:
 
 .. code-block:: text
 
-    manimlib/ # manim library
-    ├── __init__.py          
-    ├── __main__.py          
-    ├── default_config.yml   # Default configuration file
-    ├── config.py            # Process CLI flags
-    ├── constants.py         # Defined some constants
-    ├── extract_scene.py     # Extract and run the scene
-    ├── shader_wrapper.py    # Shaders' Wrapper for convenient control
-    ├── window.py            # Playback window
-    ├── tex_templates/ # Templates preset for LaTeX
-    │   ├── tex_templates.tex   # Tex template (will be compiled with latex, default)
-    │   └── ctex_templates.tex  # Tex template that support Chinese (will be compiled with xelatex)
-    ├── camera/
-    │   └── camera.py        # Including Camera and CameraFrame
-    ├── scene/
-    │   ├── scene_file_writer.py     # Used to write scene to video file
-    │   ├── scene.py                 # The basic Scene class
-    │   ├── three_d_scene.py         # Three-dimensional scene
-    │   ├── sample_space_scene.py    # Probability related sample space scene
-    │   └── vector_space_scene.py    # Vector field scene
-    ├── animation/
-    │   ├── animation.py     # The basic class of animation
-    │   ├── composition.py   # Animation group
-    │   ├── creation.py      # Animation related to Create
-    │   ├── fading.py        # Fade related animation
-    │   ├── growing.py       # Animation related to Grow
-    │   ├── indication.py    # Some animations for emphasis
-    │   ├── movement.py      # Animation related to movement
-    │   ├── numbers.py       # Realize changes to DecimalNumber
-    │   ├── rotation.py      # Animation related to rotation
-    │   ├── specialized.py   # Some uncommon animations for special projects
-    │   ├── transform_matching_parts.py # Transform which can automatically match parts
-    │   ├── transform.py     # Some Transforms
-    │   └── update.py        # Realize update from function
-    ├── mobject/
-    │   ├── mobject.py       # The basic class of all math object
-    │   ├── types/ # 4 types of mobject
-    │   │   ├── dot_cloud.py            # Dot cloud (an subclass of PMobject)
-    │   │   ├── image_mobject.py        # Insert pictures
-    │   │   ├── point_cloud_mobject.py  # PMobject (mobject composed of points)
-    │   │   ├── surface.py              # ParametricSurface
-    │   │   └── vectorized_mobject.py   # VMobject (vectorized mobject)
-    │   ├── svg/ # mobject related to svg
-    │   │   ├── svg_mobject.py          # SVGMobject
-    │   │   ├── brace.py                # Brace
-    │   │   ├── drawings.py             # Some special mobject of svg image
-    │   │   ├── tex_mobject.py          # Tex and TexText implemented by LaTeX
-    │   │   └── text_mobject.py         # Text implemented by manimpango
-    │   ├── changing.py             # Dynamically changing mobject
-    │   ├── coordinate_systems.py   # coordinate system
-    │   ├── frame.py                # mobject related to frame
-    │   ├── functions.py            # ParametricFunction
-    │   ├── geometry.py             # geometry mobjects
-    │   ├── matrix.py               # matrix
-    │   ├── mobject_update_utils.py # some defined updater
-    │   ├── number_line.py          # Number line
-    │   ├── numbers.py              # Numbers that can be changed
-    │   ├── probability.py          # mobject related to probability
-    │   ├── shape_matchers.py       # mobject adapted to the size of other objects
-    │   ├── three_dimensions.py     # Three-dimensional objects
-    │   ├── value_tracker.py        # ValueTracker which storage number
-    │   └── vector_field.py         # VectorField
-    ├── once_useful_constructs/  # 3b1b's Common scenes written for some videos
-    │   └── ...
-    ├── shaders/ # GLSL scripts for rendering
-    │   ├── simple_vert.glsl    # a simple glsl script for position
-    │   ├── insert/ # glsl scripts to be inserted in other glsl scripts
-    │   │   ├── NOTE.md   # explain how to insert glsl scripts
-    │   │   └── ...       # useful scripts
-    │   ├── image/ # glsl for images
-    │   │   └── ... # containing shaders for vertex and fragment
-    │   ├── quadratic_bezier_fill/ # glsl for the fill of quadratic bezier curve
-    │   │   └── ... # containing shaders for vertex, fragment and geometry
-    │   ├── quadratic_bezier_stroke/ # glsl for the stroke of quadratic bezier curve
-    │   │   └── ... # containing shaders for vertex, fragment and geometry
-    │   ├── surface/ # glsl for surfaces
-    │   │   └── ... # containing shaders for vertex and fragment
-    │   ├── textured_surface/ # glsl for textured_surface
-    │   │   └── ... # containing shaders for vertex and fragment
-    │   └── true_dot/ # glsl for a dot
-    │       └── ... # containing shaders for vertex, fragment and geometry
-    └── utils/ # Some useful utility functions
-        ├── bezier.py             # For bezier curve
-        ├── color.py              # For color
-        ├── dict_ops.py           # Functions related to dictionary processing
-        ├── customization.py      # Read from custom_config.yml
-        ├── debug.py              # Utilities for debugging in program
-        ├── directories.py        # Read directories from config file
-        ├── family_ops.py         # Process family members
-        ├── file_ops.py           # Process files and directories
-        ├── images.py             # Read image
-        ├── iterables.py          # Functions related to list/dictionary processing
-        ├── paths.py              # Curve path
-        ├── rate_functions.py     # Some defined rate_functions
-        ├── simple_functions.py   # Some commonly used functions
-        ├── sounds.py             # Process sounds
-        ├── space_ops.py          # Space coordinate calculation
-        ├── strings.py            # Process strings
-        └── tex_file_writing.py   # Use LaTeX to write strings as svg
+    manimlib/                         # Main Manim library package
+    ├── __init__.py                   # Package initializer
+    ├── __main__.py                   # CLI entry point
+    ├── config.py                     # Configuration handling
+    ├── constants.py                  # Global constants (colors, directions, etc.)
+    ├── default_config.yml            # Default configuration file
+    ├── extract_scene.py              # Extract and run scenes
+    ├── logger.py                     # Logging utilities
+    ├── module_loader.py              # Dynamic module loading
+    ├── shader_wrapper.py             # Shader wrapper for convenient control
+    ├── tex_templates.yml             # LaTeX templates
+    ├── typing.py                     # Custom typing definitions
+    ├── window.py                     # Playback window
 
-Inheritance structure of manim's classes
+    ├── animation/                    # Animation system
+    │   ├── animation.py              # Base Animation class
+    │   ├── composition.py            # AnimationGroup, Succession, etc.
+    │   ├── creation.py               # Create / Write animations
+    │   ├── fading.py                 # FadeIn, FadeOut
+    │   ├── growing.py                # Grow animations
+    │   ├── indication.py             # Emphasis animations
+    │   ├── movement.py               # Movement animations
+    │   ├── numbers.py                # DecimalNumber animations
+    │   ├── rotation.py               # Rotation animations
+    │   ├── specialized.py            # Special project animations
+    │   ├── transform.py              # Transform animations
+    │   ├── transform_matching_parts.py # Smart matching transforms
+    │   └── update.py                 # UpdateFromFunc animations
+
+    ├── camera/                       # Camera system
+    │   ├── camera.py                 # Camera and CameraFrame
+    │   └── camera_frame.py           # CameraFrame definition
+
+    ├── event_handle/                 # Event handling (keyboard, mouse)
+    │   ├── event_dispatcher.py       # Event dispatcher
+    │   ├── event_listner.py          # Event listeners
+    │   └── event_type.py             # Event type definitions
+
+    ├── mobject/                      # Core visual objects
+    │   ├── mobject.py                # Base Mobject class
+    │   ├── mobject_update_utils.py   # Updater utilities
+    │   ├── boolean_ops.py            # Union, intersection, difference
+    │   ├── changing.py               # Dynamically changing mobjects
+    │   ├── coordinate_systems.py     # Axes, NumberPlane
+    │   ├── frame.py                  # Frame-related mobjects
+    │   ├── functions.py              # ParametricFunction
+    │   ├── geometry.py               # Circle, Square, Line, etc.
+    │   ├── interactive.py            # Interactive mobjects
+    │   ├── matrix.py                 # Matrix mobject
+    │   ├── number_line.py            # NumberLine
+    │   ├── numbers.py                # DecimalNumber, Integer
+    │   ├── probability.py            # Probability visuals
+    │   ├── shape_matchers.py         # SurroundingRectangle, etc.
+    │   ├── three_dimensions.py       # 3D objects
+    │   ├── value_tracker.py          # ValueTracker
+    │   └── vector_field.py           # VectorField
+
+    │   ├── types/                    # Core mobject types
+    │   │   ├── vectorized_mobject.py # VMobject (Bezier-based)
+    │   │   ├── point_cloud_mobject.py# PMobject (points-based)
+    │   │   ├── dot_cloud.py          # DotCloud
+    │   │   ├── image_mobject.py      # ImageMobject
+    │   │   └── surface.py            # ParametricSurface
+
+    │   └── svg/                      # SVG & LaTeX-based mobjects
+    │       ├── svg_mobject.py        # SVG loader
+    │       ├── tex_mobject.py        # Tex (LaTeX)
+    │       ├── text_mobject.py       # Text (Pango)
+    │       ├── string_mobject.py     # String-based objects
+    │       ├── special_tex.py        # Special LaTeX
+    │       ├── old_tex_mobject.py    # Legacy Tex
+    │       ├── brace.py              # Brace object
+    │       └── drawings.py           # Custom SVG drawings
+
+    ├── scene/                        # Scene system
+    │   ├── scene.py                  # Base Scene class
+    │   ├── interactive_scene.py      # Interactive scenes
+    │   ├── scene_embed.py            # Embed mode
+    │   └── scene_file_writer.py      # Video writer
+
+    ├── shaders/                      # GLSL shaders
+    │   ├── simple_vert.glsl          # Basic vertex shader
+    │   ├── insert/                   # GLSL snippets
+    │   ├── image/                    # Image shaders
+    │   ├── surface/                  # Surface shaders
+    │   ├── textured_surface/         # Textured surface shaders
+    │   ├── quadratic_bezier/         # Bezier fill shaders
+    │   ├── true_dot/                 # Dot shader
+    │   ├── mandelbrot_fractal/       # Mandelbrot shader
+    │   └── newton_fractal/           # Newton fractal shader
+
+    └── utils/                        # Utility functions
+        ├── bezier.py                 # Bezier curve math
+        ├── cache.py                  # Caching utilities
+        ├── color.py                  # Color utilities
+        ├── debug.py                  # Debug helpers
+        ├── dict_ops.py               # Dictionary operations
+        ├── directories.py            # Directory management
+        ├── family_ops.py             # Mobject family handling
+        ├── file_ops.py               # File utilities
+        ├── images.py                 # Image processing
+        ├── iterables.py              # Iterable helpers
+        ├── paths.py                  # Path calculations
+        ├── rate_functions.py         # Animation easing functions
+        ├── shaders.py                # Shader utilities
+        ├── simple_functions.py       # Common helper functions
+        ├── sounds.py                 # Sound processing
+        ├── space_ops.py              # Vector/space math
+        ├── text.py                   # Text utilities
+        ├── tex_file_writing.py       # LaTeX compilation
+        └── tex_to_symbol_count.py    # LaTeX symbol counting
+
+
+Inheritance structure of Manim's classes
 ----------------------------------------
 
-`Here <https://github.com/3b1b/manim/files/5824383/manim_shaders_structure.pdf>`_ 
-is a pdf showed inheritance structure of manim's classes, large, 
-but basically all classes have included:
+Here is a PDF showing the inheritance structure of Manim's classes:
 
-.. image:: https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/manim_shaders_structure.png
+https://github.com/3b1b/manim/files/5824383/manim_shaders_structure.pdf
 
-Manim execution process
------------------------
+The structure is large, but fundamentally most components are built upon:
 
-.. image:: https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/manim_shaders_process_en.png
+- Mobject
+- VMobject / PMobject
+- Animation
+- Scene
+- Camera
