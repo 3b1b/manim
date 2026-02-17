@@ -1,6 +1,6 @@
 uniform vec3 light_position;
 uniform vec3 camera_position;
-uniform vec3 shading;
+uniform vec4 shading;
 
 vec3 float_to_color(float value, float min_val, float max_val, vec3[9] colormap_data){
     float alpha = clamp((value - min_val) / (max_val - min_val), 0.0, 1.0);
@@ -14,11 +14,14 @@ vec3 float_to_color(float value, float min_val, float max_val, vec3[9] colormap_
 
 
 vec4 add_light(vec4 color, vec3 point, vec3 unit_normal){
-    if(shading == vec3(0.0)) return color;
+    if(shading == vec4(0.0)) return color;
 
     float reflectiveness = shading.x;
     float gloss = shading.y;
     float shadow = shading.z;
+    // glow does noting at the moment;
+    // shader code needs to be implemented to create a glow around the mobject
+    float glow = shading.w;
 
     vec4 result = color;
     vec3 to_camera = normalize(camera_position - point);
