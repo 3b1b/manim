@@ -531,6 +531,16 @@ class Axes(VGroup, CoordinateSystem):
             self.coordinate_labels.add(labels)
         return self.coordinate_labels
 
+    def add_axis_labels(self, x_tex="x", y_tex="y", font_size=24, buff=0.2):
+        x_label, y_label = labels = VGroup(*(
+            Tex(tex, font_size=font_size)
+            for tex in [x_tex, y_tex]
+        ))
+        for label, axis in zip(labels, self):
+            label.next_to(axis, normalize(np.round(axis.get_vector()), 2), buff=buff)
+            axis.add(label)
+        self.axis_labels = labels
+
 
 class ThreeDAxes(Axes):
     dimension: int = 3
