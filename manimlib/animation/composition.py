@@ -172,10 +172,8 @@ class LaggedStartMap(LaggedStart):
         lag_ratio: float = DEFAULT_LAGGED_START_LAG_RATIO,
         **kwargs
     ):
-        anim_kwargs = dict(kwargs)
-        anim_kwargs.pop("lag_ratio", None)
         super().__init__(
-            *(anim_func(submob, **anim_kwargs) for submob in group),
+            *(anim_func(submob, **kwargs) for submob in group),
             run_time=run_time,
             lag_ratio=lag_ratio,
             group=group
