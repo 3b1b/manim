@@ -349,6 +349,20 @@ class TexturedSurface(Surface):
             for v in np.linspace(1, 0, nv)  # Reverse y-direction
         ])
 
+    @Mobject.affects_data
+    def set_image_coords_by_uv_func(self, uv_func) -> Self:
+        """
+        uv_func takes in a pair (u, v), and returns a new pair (u', v') used
+        for coordinates when reading from the texture
+        """
+        nu, nv = self.uv_surface.resolution
+        self.data["im_coords"][:] = np.array([
+            uv_func(u, v)
+            for u in np.linspace(0, 1, nu)
+            for v in np.linspace(1, 0, nv)  # Reverse y-direction
+        ])
+        return self
+
     def init_uniforms(self):
         super().init_uniforms()
         self.uniforms["num_textures"] = self.num_textures
