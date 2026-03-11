@@ -52,7 +52,7 @@ class Surface(Mobject):
         # each coordinate is one more than the the number of
         # rows/columns of approximating squares
         resolution: Tuple[int, int] = (101, 101),
-        prefered_creation_axis: int = 1,
+        preferred_creation_axis: int = 1,
         # For du and dv steps.
         epsilon: float = 1e-3,
         # Step off the surface to a new point which will
@@ -63,7 +63,7 @@ class Surface(Mobject):
         self.u_range = u_range
         self.v_range = v_range
         self.resolution = resolution
-        self.prefered_creation_axis = prefered_creation_axis
+        self.preferred_creation_axis = preferred_creation_axis
         self.epsilon = epsilon
         self.normal_nudge = normal_nudge
 
@@ -182,7 +182,7 @@ class Surface(Mobject):
     ) -> Self:
         assert isinstance(smobject, Surface)
         if axis is None:
-            axis = self.prefered_creation_axis
+            axis = self.preferred_creation_axis
         if a <= 0 and b >= 1:
             self.match_points(smobject)
             return self
@@ -388,8 +388,10 @@ class TexturedSurface(Surface):
         tsmobject: "TexturedSurface",
         a: float,
         b: float,
-        axis: int = 1
+        axis: int | None = None
     ) -> Self:
+        if axis is None:
+            axis = self.preferred_creation_axis
         super().pointwise_become_partial(tsmobject, a, b, axis)
         im_coords = self.data["im_coords"]
         im_coords[:] = tsmobject.data["im_coords"]
