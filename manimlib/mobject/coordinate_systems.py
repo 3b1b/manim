@@ -742,6 +742,9 @@ class ComplexPlane(NumberPlane):
     def p2n(self, point: Vect3) -> complex:
         return self.point_to_number(point)
 
+    def get_unit_size(self) -> float:
+        return self.x_axis.get_unit_size()
+
     def get_default_coordinate_values(
         self,
         skip_first: bool = True
