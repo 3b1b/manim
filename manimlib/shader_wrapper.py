@@ -133,10 +133,13 @@ class ShaderWrapper(object):
         self.refresh_id()
 
     # Changing context
-    def use_clip_plane(self):
-        if "clip_plane" not in self.mobject_uniforms:
-            return False
-        return any(self.mobject_uniforms["clip_plane"])
+    def num_clip_planes(self):
+        count = 0
+        for n in range(4):
+            key = f"clip_plane{n}"
+            if key in self.mobject_uniforms and any(self.mobject_uniforms[key]):
+                count = n + 1
+        return count
 
     def set_ctx_depth_test(self, enable: bool = True) -> None:
         if enable:
@@ -144,9 +147,18 @@ class ShaderWrapper(object):
         else:
             self.ctx.disable(moderngl.DEPTH_TEST)
 
-    def set_ctx_clip_plane(self, enable: bool = True) -> None:
-        if enable:
-            gl.glEnable(gl.GL_CLIP_DISTANCE0)
+    def set_ctx_clip_plane(self, num_planes: int = 0) -> None:
+        clip_distances = [
+            gl.GL_CLIP_DISTANCE0,
+            gl.GL_CLIP_DISTANCE1,
+            gl.GL_CLIP_DISTANCE2,
+            gl.GL_CLIP_DISTANCE3,
+        ]
+        for n, clip_dist in enumerate(clip_distances):
+            if n < num_planes:
+                gl.glEnable(clip_dist)
+            else:
+                gl.glDisable(clip_dist)
 
     # Adding data
 
@@ -187,7 +199,7 @@ class ShaderWrapper(object):
     # Related to data and rendering
     def pre_render(self):
         self.set_ctx_depth_test(self.depth_test)
-        self.set_ctx_clip_plane(self.use_clip_plane())
+        self.set_ctx_clip_plane(self.num_clip_planes())
         for tid, texture in enumerate(self.textures):
             texture.use(tid)
 

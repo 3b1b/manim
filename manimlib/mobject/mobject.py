@@ -142,7 +142,10 @@ class Mobject(object):
         self.uniforms: UniformDict = {
             "is_fixed_in_frame": 0.0,
             "shading": np.array(self.shading, dtype=float),
-            "clip_plane": np.zeros(4),
+            "clip_plane0": np.zeros(4),
+            "clip_plane1": np.zeros(4),
+            "clip_plane2": np.zeros(4),
+            "clip_plane3": np.zeros(4),
         }
 
     def init_colors(self):
@@ -1942,22 +1945,37 @@ class Mobject(object):
             mob.depth_test = False
         return self
 
-    def set_clip_plane(
+    def set_clip_plane(self, vect: Vect3, threshold: float, recurse=True) -> Self:
+        for submob in self.get_family(recurse):
+            submob.uniforms["clip_plane0"] = (*vect, threshold)
+        return self
+
+    def set_clip_planes(
         self,
-        vect: Vect3 | None = None,
-        threshold: float | None = None,
+        *vect_threshold_pairs: Iterable[Tuple[Vect3, float]],
         recurse=True
     ) -> Self:
         for submob in self.get_family(recurse):
-            if vect is not None:
-                submob.uniforms["clip_plane"][:3] = vect
-            if threshold is not None:
-                submob.uniforms["clip_plane"][3] = threshold
+            for n in range(4):
+                submob.uniforms[f"clip_plane{n}"][:] = 0
+            for n, (vect, threshold) in enumerate(vect_threshold_pairs):
+                submob.uniforms[f"clip_plane{n}"][:] = (*vect, threshold)
         return self
 
-    def deactivate_clip_plane(self) -> Self:
-        self.uniforms["clip_plane"][:] = 0
+    def deactivate_clip_plane(self, recurse=True) -> Self:
+        for submob in self.get_family(recurse):
+            for n in range(4):
+                submob.uniforms[f"clip_plane{n}"][:] = 0
         return self
+
+    def clip_to_box(self, box: Mobject, recurse=True) -> Self:
+        return self.set_clip_planes(
+            (RIGHT, -box.get_x(LEFT)),   # keep x >= left edge
+            (LEFT, box.get_x(RIGHT)),    # keep x <= right edge
+            (UP, -box.get_y(DOWN)),      # keep y >= bottom edge
+            (DOWN, box.get_y(UP)),       # keep y <= top edge
+            recurse=recurse,
+        )
 
     # Shader code manipulation
 
