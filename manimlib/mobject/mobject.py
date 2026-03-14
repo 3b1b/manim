@@ -1968,6 +1968,15 @@ class Mobject(object):
                 submob.uniforms[f"clip_plane{n}"][:] = 0
         return self
 
+    def clip_to_box(self, box: Mobject, recurse=True) -> Self:
+        return self.set_clip_planes(
+            (RIGHT, -box.get_x(LEFT)),   # keep x >= left edge
+            (LEFT, box.get_x(RIGHT)),    # keep x <= right edge
+            (UP, -box.get_y(DOWN)),      # keep y >= bottom edge
+            (DOWN, box.get_y(UP)),       # keep y <= top edge
+            recurse=recurse,
+        )
+
     # Shader code manipulation
 
     @affects_data
