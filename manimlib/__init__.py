@@ -82,4 +82,5 @@ from manimlib.utils.simple_functions import *
 from manimlib.utils.shaders import *
 from manimlib.utils.sounds import *
 from manimlib.utils.space_ops import *
+from manimlib.utils.svg_export import *
 from manimlib.utils.tex import *

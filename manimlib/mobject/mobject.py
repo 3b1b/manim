@@ -1947,7 +1947,7 @@ class Mobject(object):
 
     def set_clip_plane(self, vect: Vect3, threshold: float, recurse=True) -> Self:
         for submob in self.get_family(recurse):
-            submob.uniforms["clip_plane0"] = (*vect, threshold)
+            submob.uniforms["clip_plane0"][:] = [*vect, threshold]
         return self
 
     def set_clip_planes(
@@ -1959,7 +1959,7 @@ class Mobject(object):
             for n in range(4):
                 submob.uniforms[f"clip_plane{n}"][:] = 0
             for n, (vect, threshold) in enumerate(vect_threshold_pairs):
-                submob.uniforms[f"clip_plane{n}"][:] = (*vect, threshold)
+                submob.uniforms[f"clip_plane{n}"][:] = [*vect, threshold]
         return self
 
     def deactivate_clip_plane(self, recurse=True) -> Self:
