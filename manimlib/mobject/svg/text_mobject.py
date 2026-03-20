@@ -303,9 +303,8 @@ class MarkupText(StringMobject):
             )
         ]
 
-    @staticmethod
     def get_command_string(
-        attr_dict: dict[str, str], is_end: bool, label_hex: str | None
+        self, attr_dict: dict[str, str], is_end: bool, label_hex: str | None
     ) -> str:
         if is_end:
             return "</span>"

@@ -93,7 +93,16 @@ class TypstTex(Tex):
 
     @staticmethod
     def get_color_command(rgb_hex: str) -> str:
-        return f'#set text(fill: rgb("{rgb_hex}"))'
+        return f'#text(fill: rgb("{rgb_hex}"))'
+
+    def get_command_string(
+        self, attr_dict: dict[str, str], is_end: bool, label_hex: str | None
+    ) -> str:
+        if label_hex is None:
+            return ""
+        if is_end:
+            return f"{self.tex_environment}]"
+        return self.get_color_command(label_hex) + f"[{self.tex_environment}"
 
     def get_content_prefix_and_suffix(self, is_labelled: bool) -> tuple[str, str]:
         prefix_lines = []
@@ -178,10 +187,10 @@ class TypstTex(Tex):
             escape_pat = re.escape(pattern)
             if pattern[0].isalnum():
                 escape_pat = r"(?<![a-zA-Z0-9_])" + escape_pat
-    
+
             if pattern[-1].isalnum():
                 escape_pat = escape_pat + r"(?![a-zA-Z0-9_])"
-            
+
             matches = re.finditer(escape_pat, self.string)
 
         result = []

@@ -156,15 +156,14 @@ class Tex(StringMobject):
         r, g = divmod(rg, 256)
         return f"\\color[RGB]{{{r}, {g}, {b}}}"
 
-    @staticmethod
     def get_command_string(
-        attr_dict: dict[str, str], is_end: bool, label_hex: str | None
+        self, attr_dict: dict[str, str], is_end: bool, label_hex: str | None
     ) -> str:
         if label_hex is None:
             return ""
         if is_end:
             return "}}"
-        return "{{" + Tex.get_color_command(label_hex)
+        return "{{" + self.get_color_command(label_hex)
 
     def get_content_prefix_and_suffix(
         self, is_labelled: bool
