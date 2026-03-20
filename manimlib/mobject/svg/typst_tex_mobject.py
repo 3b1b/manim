@@ -72,6 +72,7 @@ def typst_latex2svg(
 
 
 class TypstTex(Tex):
+    # NOTE: To render fraction, kindly use `frac(a, b)` instead of `a/b` for proper indexing.
     tex_environment: str = "$"
 
     def __init__(
