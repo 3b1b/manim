@@ -171,17 +171,20 @@ class TypstTex(Tex):
 
     def select_unisolated_substring(self, pattern: str | re.Pattern) -> VGroup:
         counts = self.symbol_count
-        pat = re.escape(pattern)
-
-        if pattern[0].isalnum():
-            pat = r"(?<![a-zA-Z0-9_])" + pat
-
-        if pattern[-1].isalnum():
-            pat = pat + r"(?![a-zA-Z0-9_])"
+        if isinstance(pattern, re.Pattern):
+            matches = pattern.finditer(self.string)
+        else:
+            escape_pat = re.escape(pattern)
+            if pattern[0].isalnum():
+                escape_pat = r"(?<![a-zA-Z0-9_])" + escape_pat
+    
+            if pattern[-1].isalnum():
+                escape_pat = escape_pat + r"(?![a-zA-Z0-9_])"
+            
+            matches = re.finditer(escape_pat, self.string)
 
         result = []
-
-        for match in re.finditer(pat, self.string):
+        for match in matches:
             start, end = match.start(), match.end()
             start_idx = sum(counts[:start])
             end_idx = start_idx + sum(counts[start:end])
