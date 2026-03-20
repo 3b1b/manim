@@ -5,9 +5,16 @@ from pathlib import Path
 from functools import lru_cache
 
 from manimlib.config import manim_config
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.color import color_to_hex
 from manimlib.utils.cache import cache_on_disk
 from manimlib.mobject.svg.tex_mobject import Tex
+from manimlib.mobject.geometry import RoundedRectangle
+from manimlib.utils.typst_tex_symbol_count import (
+    ACCENT_COMMANDS,
+    TYPST_TEX_SYMBOL_COUNT,
+    DELIMITER_COMMANDS,
+)
 from manimlib.utils.tex_file_writing import LatexError, get_tex_template_config
 
 
@@ -75,9 +82,13 @@ class TypstTex(Tex):
             *tex_strings, alignment=alignment, fill_border_width=fill_border_width, **kwargs
         )
 
+        # horizontal line has no fill.
         for mob in self.family_members_with_points():
             if not mob.get_fill_opacity():
-                mob.set_stroke(width=2)
+                rect = RoundedRectangle(width=mob.get_width(), height=0.025, corner_radius=0.01)
+                rect.set_fill(mob.get_color(), 1).set_stroke(width=0).move_to(mob)
+                mob.become(rect)
+        self.set_symbol_count()
 
     @staticmethod
     def get_color_command(rgb_hex: str) -> str:
@@ -105,6 +116,94 @@ class TypstTex(Tex):
             content, self.template, self.additional_preamble, short_tex=self.tex_string
         )
 
+    def set_symbol_count(self):
+        pattern = "|".join([re.escape(k) for k in TYPST_TEX_SYMBOL_COUNT.keys() if k.strip()])
+        regex_pattern = rf"""
+            (?P<cmd>[a-zA-Z][a-zA-Z0-9\.]{{2,}})|{pattern}|
+            (?P<script>[_^])|
+            (?P<fraction>\bfrac\b)|
+            (?P<char>\S)
+        """
+
+        counts = [0] * len(self.string)
+        group_stack = []
+        current_group = "normal"
+
+        for match in re.finditer(regex_pattern, self.string, re.VERBOSE):
+            text = match.group()
+            start = match.start()
+            num = TYPST_TEX_SYMBOL_COUNT.get(text, 1)
+
+            if text == "(":
+                group_stack.append(current_group)
+                to_hide = current_group != "normal"
+                current_group = "normal"
+                if to_hide:
+                    continue
+
+            elif text == ")":
+                if group_stack:
+                    if (group := group_stack.pop()) != "normal":
+                        if group in ("frac", "delimiter"):
+                            counts[start] += 1
+                        continue
+
+            elif text == ",":
+                if group_stack and group_stack[-1] == "frac":
+                    continue
+
+            elif match.group("script") or (match.group("command") and num == 0):
+                current_group = "wrapper"
+                continue
+
+            elif text in ACCENT_COMMANDS:
+                current_group = "wrapper"
+
+            elif current_group in DELIMITER_COMMANDS:
+                current_group = "delimiter"
+
+            else:
+                current_group = "normal"
+
+            counts[start] += num if match.group("command") else 1
+
+        self.symbol_count = counts
+
+    def select_unisolated_substring(self, pattern: str | re.Pattern) -> VGroup:
+        counts = self.symbol_count
+        pat = re.escape(pattern)
+
+        if pattern[0].isalnum():
+            pat = r"(?<![a-zA-Z0-9_])" + pat
+
+        if pattern[-1].isalnum():
+            pat = pat + r"(?![a-zA-Z0-9_])"
+
+        result = []
+
+        for match in re.finditer(pat, self.string):
+            start, end = match.start(), match.end()
+            start_idx = sum(counts[:start])
+            end_idx = start_idx + sum(counts[start:end])
+            result.append(self[start_idx:end_idx])
+
+        return VGroup(*result)
+
 
 class TypstTexText(TypstTex):
     tex_environment: str = ""
+
+    def set_symbol_count(self):
+        pattern = r"""
+            (?P<escape_char>\\[\S])|
+            (?P<char>\S)
+        """
+        counts = [0] * len(self.string)
+        for match in re.finditer(pattern, self.string, re.VERBOSE):
+            start = match.start()
+            if match.group("escape_char"):
+                counts[start + 1] = 1
+            else:
+                counts[start] = 1
+
+        self.symbol_count = counts
