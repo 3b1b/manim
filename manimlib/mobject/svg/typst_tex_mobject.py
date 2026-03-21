@@ -12,6 +12,7 @@ from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.geometry import RoundedRectangle
 from manimlib.utils.typst_tex_symbol_count import (
     ACCENT_COMMANDS,
+    OPERATORS,
     TYPST_TEX_SYMBOL_COUNT,
     DELIMITER_COMMANDS,
 )
@@ -128,10 +129,11 @@ class TypstTex(Tex):
         )
 
     def set_symbol_count(self):
-        pattern = "|".join([re.escape(k) for k in TYPST_TEX_SYMBOL_COUNT.keys() if k.strip()])
-        regex_pattern = rf"""
-            (?P<cmd>[a-zA-Z][a-zA-Z0-9\.]{{2,}})|{pattern}|
+        operators = "|".join(re.escape(op) for op in OPERATORS)
+        pattern = rf"""
+            (?P<cmd>[a-zA-Z][a-zA-Z0-9\.]*[a-zA-Z0-9])|
             (?P<script>[_^])|
+            (?P<operator>{operators})|
             (?P<fraction>\bfrac\b)|
             (?P<char>\S)
         """
@@ -140,7 +142,7 @@ class TypstTex(Tex):
         group_stack = []
         current_group = "normal"
 
-        for match in re.finditer(regex_pattern, self.string, re.VERBOSE):
+        for match in re.finditer(pattern, self.string, re.VERBOSE):
             text = match.group()
             start = match.start()
             num = TYPST_TEX_SYMBOL_COUNT.get(text, 1)
