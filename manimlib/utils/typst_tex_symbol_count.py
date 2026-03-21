@@ -62,7 +62,6 @@ TYPST_TEX_SYMBOL_COUNT = {
     **{sym: 1 for sym in DELIMITER_COMMANDS},
     "": 0,
     " ": 0,
-    "-": 0,
     "/": 0,
     "^": 0,
     "_": 0,

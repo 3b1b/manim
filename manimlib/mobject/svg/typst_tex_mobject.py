@@ -16,6 +16,7 @@ from manimlib.utils.typst_tex_symbol_count import (
     DELIMITER_COMMANDS,
 )
 from manimlib.utils.tex_file_writing import LatexError, get_tex_template_config
+from manimlib.logger import log
 
 
 @lru_cache(maxsize=128)
@@ -176,8 +177,24 @@ class TypstTex(Tex):
                 current_group = "normal"
 
             counts[start] += num if match.group("command") else 1
-
+        if sum(counts) != len(self):
+            log.warning(f"Estimated size of {self.get_tex()} does not match true size")
         self.symbol_count = counts
+
+    def get_symbol_substrings(self):
+        pattern = "|".join(
+            (
+                r"[a-zA-Z](?:[a-zA-Z0-9\.]*[a-zA-Z0-9])?",
+                r"->|=>|<=|>=|==|!=|\.\.\.",
+                r"[0-9]+",
+                r"[^\^\{\}\s\_\$\&\\\"]",
+            )
+        )
+        return re.findall(pattern, self.string)
+
+    # TransformMatchingTex uses this function
+    def substr_to_path_count(self, substr: str) -> int:
+        return TYPST_TEX_SYMBOL_COUNT.get(substr, 1)
 
     def select_unisolated_substring(self, pattern: str | re.Pattern) -> VGroup:
         counts = self.symbol_count
