@@ -10,12 +10,8 @@ from manimlib.utils.color import color_to_hex
 from manimlib.utils.cache import cache_on_disk
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.geometry import RoundedRectangle
-from manimlib.utils.typst_tex_symbol_count import (
-    ACCENT_COMMANDS,
-    OPERATORS,
-    TYPST_TEX_SYMBOL_COUNT,
-    DELIMITER_COMMANDS,
-)
+from manimlib.utils.typst_tex_symbol_count import ACCENT_COMMANDS, OPERATORS
+from manimlib.utils.typst_tex_symbol_count import TYPST_TEX_SYMBOL_COUNT, DELIMITER_COMMANDS
 from manimlib.utils.tex_file_writing import LatexError, get_tex_template_config
 from manimlib.logger import log
 
@@ -135,6 +131,7 @@ class TypstTex(Tex):
             (?P<script>[_^])|
             (?P<operator>{operators})|
             (?P<fraction>\bfrac\b)|
+            (?P<root>\broot\b)|
             (?P<char>\S)
         """
 
@@ -162,8 +159,13 @@ class TypstTex(Tex):
                         continue
 
             elif text == ",":
-                if group_stack and group_stack[-1] == "frac":
+                if group_stack and group_stack[-1] in ("frac", "root"):
+                    counts[start] += TYPST_TEX_SYMBOL_COUNT.get(group_stack[-1], 0)
                     continue
+            
+            elif text in ("frac", "root"):
+                current_group = text
+                continue
 
             elif match.group("script") or (match.group("command") and num == 0):
                 current_group = "wrapper"

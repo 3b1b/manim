@@ -106,6 +106,7 @@ TYPST_TEX_SYMBOL_COUNT = {
     "lg": 2,
     "ln": 2,
     "sqrt": 2,
+    "root": 2,
     "lim": 3,
     "log": 3,
     "cos": 3,
