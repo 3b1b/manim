@@ -19,6 +19,19 @@ if TYPE_CHECKING:
 
     T = TypeVar("T")
 
+import os, sys, pyglet
+
+# It should be natively supported by Pyglet, but it doesn't work at the moment.
+# See https://github.com/pyglet/pyglet/issues/1342
+dpi_scaling = os.environ.get('PYGLET_DPI_SCALING')
+if dpi_scaling:
+    # dpi_scaling introduced in Pyglet 2.1
+    if hasattr(pyglet.options, 'dpi_scaling'):
+        pyglet.options.dpi_scaling = dpi_scaling
+    else:
+        print("Installed Pyglet doesn't support DPI scaling.",
+              file=sys.stderr)
+
 
 class Window(PygletWindow):
     fullscreen: bool = False
