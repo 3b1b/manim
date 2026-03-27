@@ -8,6 +8,8 @@ from functools import wraps
 from contextlib import contextmanager
 from contextlib import ExitStack
 
+import imgui
+
 import numpy as np
 from tqdm.auto import tqdm as ProgressDisplay
 from pyglet.window import key as PygletWindowKeys
@@ -60,6 +62,7 @@ class Scene(object):
     samples = 0
     # Euler angles, in degrees
     default_frame_orientation = (0, 0)
+    imgui: bool = False
 
     def __init__(
         self,
@@ -102,10 +105,12 @@ class Scene(object):
             self.window.init_for_scene(self)
             # Make sure camera and Pyglet window sync
             self.camera_config["fps"] = 30
+            self.camera_config["imgui"] = self.imgui
 
         # Core state of the scene
         self.camera: Camera = Camera(
             window=self.window,
+            scene=self,
             samples=self.samples,
             **self.camera_config
         )
@@ -154,6 +159,7 @@ class Scene(object):
         self.setup()
         try:
             self.construct()
+            self.construct_imgui_window()
             self.interact()
         except EndScene:
             pass
@@ -174,6 +180,9 @@ class Scene(object):
     def construct(self) -> None:
         # Where all the animation happens
         # To be implemented in subclasses
+        pass
+
+    def construct_imgui_window(self):
         pass
 
     def tear_down(self) -> None:
@@ -219,6 +228,10 @@ class Scene(object):
             raise EndScene()
 
     # Only these methods should touch the camera
+
+    def render_imgui(self):
+        imgui.render()
+        self.window.impl.render(imgui.get_draw_data())
 
     def get_image(self) -> Image:
         if self.window is not None:
@@ -766,7 +779,8 @@ class Scene(object):
     ) -> None:
         self.mouse_drag_point.move_to(point)
         if self.drag_to_pan:
-            self.frame.shift(-d_point)
+            if not self.window.io.want_capture_mouse:
+                self.frame.shift(-d_point)
 
         event_data = {"point": point, "d_point": d_point, "buttons": buttons, "modifiers": modifiers}
         propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseDragEvent, **event_data)
@@ -809,10 +823,11 @@ class Scene(object):
             return
 
         rel_offset = y_pixel_offset / self.camera.get_pixel_height()
-        self.frame.scale(
-            1 - self.scroll_sensitivity * rel_offset,
-            about_point=point
-        )
+        if not self.window.io.want_capture_mouse:
+            self.frame.scale(
+                1 - self.scroll_sensitivity * rel_offset,
+                about_point=point
+            )
 
     def on_key_release(
         self,

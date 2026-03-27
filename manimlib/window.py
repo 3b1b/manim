@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 
+import imgui
+from moderngl_window.integrations.imgui import ModernglWindowRenderer
+from moderngl_window.context.pyglet.keys import Keys as PygletKeys
+
 import moderngl_window as mglw
 from moderngl_window.context.pyglet.window import Window as PygletWindow
 from moderngl_window.timers.clock import Timer
@@ -48,6 +52,10 @@ class Window(PygletWindow):
 
         if self.scene:
             self.init_for_scene(scene)
+        
+        imgui.create_context()
+        self.impl = ModernglWindowRenderer(self)
+        self.io = imgui.get_io()
 
     def init_for_scene(self, scene: Scene):
         """
@@ -150,6 +158,9 @@ class Window(PygletWindow):
             func(self, *args, **kwargs)
             self._has_undrawn_event = True
         return wrapper
+    
+    def imgui_y(self, y):
+        return self.height - y
 
     @note_undrawn_event
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int) -> None:
@@ -159,6 +170,7 @@ class Window(PygletWindow):
         point = self.pixel_coords_to_space_coords(x, y)
         d_point = self.pixel_coords_to_space_coords(dx, dy, relative=True)
         self.scene.on_mouse_motion(point, d_point)
+        self.impl.mouse_position_event(x, self.imgui_y(y), dx, dy)
 
     @note_undrawn_event
     def on_mouse_drag(self, x: int, y: int, dx: int, dy: int, buttons: int, modifiers: int) -> None:
@@ -168,6 +180,7 @@ class Window(PygletWindow):
         point = self.pixel_coords_to_space_coords(x, y)
         d_point = self.pixel_coords_to_space_coords(dx, dy, relative=True)
         self.scene.on_mouse_drag(point, d_point, buttons, modifiers)
+        self.impl.mouse_drag_event(x, self.imgui_y(y), dx, dy)
 
     @note_undrawn_event
     def on_mouse_press(self, x: int, y: int, button: int, mods: int) -> None:
@@ -176,6 +189,7 @@ class Window(PygletWindow):
             return
         point = self.pixel_coords_to_space_coords(x, y)
         self.scene.on_mouse_press(point, button, mods)
+        self.impl.mouse_press_event(x, self.imgui_y(y), button)
 
     @note_undrawn_event
     def on_mouse_release(self, x: int, y: int, button: int, mods: int) -> None:
@@ -184,6 +198,7 @@ class Window(PygletWindow):
             return
         point = self.pixel_coords_to_space_coords(x, y)
         self.scene.on_mouse_release(point, button, mods)
+        self.impl.mouse_release_event(x, self.imgui_y(y), button)
 
     @note_undrawn_event
     def on_mouse_scroll(self, x: int, y: int, x_offset: float, y_offset: float) -> None:
@@ -193,6 +208,7 @@ class Window(PygletWindow):
         point = self.pixel_coords_to_space_coords(x, y)
         offset = self.pixel_coords_to_space_coords(x_offset, y_offset, relative=True)
         self.scene.on_mouse_scroll(point, offset, x_offset, y_offset)
+        self.impl.mouse_scroll_event(x_offset, y_offset)
 
     @note_undrawn_event
     def on_key_press(self, symbol: int, modifiers: int) -> None:
@@ -201,6 +217,8 @@ class Window(PygletWindow):
         if not self.scene:
             return
         self.scene.on_key_press(symbol, modifiers)
+        self.impl.key_event(symbol, PygletKeys.ACTION_PRESS, modifiers)
+        self.io.add_input_character(symbol)
 
     @note_undrawn_event
     def on_key_release(self, symbol: int, modifiers: int) -> None:
@@ -209,6 +227,7 @@ class Window(PygletWindow):
         if not self.scene:
             return
         self.scene.on_key_release(symbol, modifiers)
+        self.impl.key_event(symbol, PygletKeys.ACTION_RELEASE, modifiers)
 
     @note_undrawn_event
     def on_resize(self, width: int, height: int) -> None:
@@ -216,6 +235,7 @@ class Window(PygletWindow):
         if not self.scene:
             return
         self.scene.on_resize(width, height)
+        self.impl.resize(width, height)
 
     @note_undrawn_event
     def on_show(self) -> None:

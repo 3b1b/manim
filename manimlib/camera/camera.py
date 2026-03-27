@@ -20,12 +20,14 @@ if TYPE_CHECKING:
     from typing import Optional
     from manimlib.typing import ManimColor, Vect3
     from manimlib.window import Window
+    from manimlib.scene.scene import Scene
 
 
 class Camera(object):
     def __init__(
         self,
         window: Optional[Window] = None,
+        scene: Optional[Scene] = None,
         background_image: Optional[str] = None,
         frame_config: dict = dict(),
         # Note: frame height and width will be resized to match this resolution aspect ratio
@@ -44,8 +46,10 @@ class Camera(object):
         # without multisampling, for 3d scenes one might want
         # to set samples to be greater than 0.
         samples: int = 0,
+        imgui: bool = True,
     ):
         self.window = window
+        self.scene = scene
         self.background_image = background_image
         self.default_pixel_shape = resolution  # Rename?
         self.fps = fps
@@ -55,6 +59,7 @@ class Camera(object):
         self.pixel_array_dtype = pixel_array_dtype
         self.light_source_position = light_source_position
         self.samples = samples
+        self.imgui = imgui
 
         self.rgb_max_val: float = np.iinfo(self.pixel_array_dtype).max
         self.background_rgba: list[float] = list(color_to_rgba(
@@ -230,6 +235,9 @@ class Camera(object):
             mobject.render(self.ctx, self.uniforms)
 
         if self.window:
+            if self.imgui and self.scene is not None:
+                self.scene.construct_imgui_window()
+                self.scene.render_imgui()
             self.window.swap_buffers()
             if self.fbo is not self.window_fbo:
                 self.blit(self.fbo, self.window_fbo)
