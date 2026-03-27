@@ -24,7 +24,7 @@ Note, there are two versions of manim.  This repository began as a personal proj
 Manim runs on Python 3.7 or higher.
 
 System requirements are [FFmpeg](https://ffmpeg.org/), [OpenGL](https://www.opengl.org/) and [LaTeX](https://www.latex-project.org) (optional, if you want to use LaTeX).
-For Linux, [Pango](https://pango.org) along with its development headers are required. See instruction [here](https://github.com/ManimCommunity/ManimPango#building).
+For Linux, [Pango](https://pango.org) along with its development headers are required. See instructions [here](https://github.com/ManimCommunity/ManimPango#building).
 
 
 ### Directly
@@ -84,7 +84,7 @@ manim-render example_scenes.py OpeningManimExample
     arch -arm64 brew install pkg-config cairo
     ```
    
-3. Install latest version of manim using these command.
+3. Install latest version of manim using these commands.
     ```sh
     git clone https://github.com/3b1b/manim.git
     cd manim
@@ -122,7 +122,7 @@ Take a look at custom_config.yml for further configuration.  To add your customi
 ### Documentation
 Documentation is in progress at [3b1b.github.io/manim](https://3b1b.github.io/manim/). And there is also a Chinese version maintained by [**@manim-kindergarten**](https://manim.org.cn): [docs.manim.org.cn](https://docs.manim.org.cn/) (in Chinese).
 
-[manim-kindergarten](https://github.com/manim-kindergarten/) wrote and collected some useful extra classes and some codes of videos in [manim_sandbox repo](https://github.com/manim-kindergarten/manim_sandbox).
+[manim-kindergarten](https://github.com/manim-kindergarten/) wrote and collected some useful extra classes and some code of videos in [manim_sandbox repo](https://github.com/manim-kindergarten/manim_sandbox).
 
 
 ## Contributing
