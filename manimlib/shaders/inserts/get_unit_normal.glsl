@@ -7,7 +7,7 @@ vec3 get_unit_normal(vec3 p0, vec3 p1, vec3 p2){
 
     if(cp_norm > tol) return cp / cp_norm;
 
-    // Otherwise, three pionts form a line, so find
+    // Otherwise, three points form a line, so find
     // a normal vector to that line in the plane shared
     // with the z-axis
     vec3 comb = v1 + v2;
