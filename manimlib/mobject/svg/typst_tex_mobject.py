@@ -173,7 +173,7 @@ class TypstTex(Tex):
                 current_group = text
                 continue
 
-            elif match.group("script") or (match.group("command") and num == 0):
+            elif match.group("script") or (match.group("cmd") and num == 0):
                 current_group = "wrapper"
                 continue
 
@@ -186,7 +186,7 @@ class TypstTex(Tex):
             else:
                 current_group = "normal"
 
-            counts[start] += num if match.group("command") else 1
+            counts[start] += num if match.group("cmd") else 1
         if sum(counts) != len(self):
             log.warning(f"Estimated size of {self.get_tex()} does not match true size")
         self.symbol_count = counts
