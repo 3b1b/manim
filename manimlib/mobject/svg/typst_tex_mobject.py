@@ -127,6 +127,7 @@ class TypstTex(Tex):
     def set_symbol_count(self):
         operators = "|".join(re.escape(op) for op in OPERATORS)
         pattern = rf"""
+            (?P<txt>"[^"]*")|
             (?P<cmd>[a-zA-Z][a-zA-Z0-9\.]*[a-zA-Z0-9])|
             (?P<script>[_^])|
             (?P<operator>{operators})|
@@ -144,7 +145,12 @@ class TypstTex(Tex):
             start = match.start()
             num = TYPST_TEX_SYMBOL_COUNT.get(text, 1)
 
-            if text == "(":
+            if match.group("txt"):
+                num = len(text.replace('"', "").replace(" ", ""))
+                counts[start] += num
+                continue
+
+            elif text == "(":
                 group_stack.append(current_group)
                 to_hide = current_group != "normal"
                 current_group = "normal"
@@ -162,7 +168,7 @@ class TypstTex(Tex):
                 if group_stack and group_stack[-1] in ("frac", "root"):
                     counts[start] += TYPST_TEX_SYMBOL_COUNT.get(group_stack[-1], 0)
                     continue
-            
+
             elif text in ("frac", "root"):
                 current_group = text
                 continue
