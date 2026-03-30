@@ -78,12 +78,12 @@ if TYPE_CHECKING:
 
 
 class Checkmark(TexTextFromPresetString):
-    tex: str = R"\ding{51}"
+    tex: str = "sym.checkmark"
     default_color: ManimColor = GREEN
 
 
 class Exmark(TexTextFromPresetString):
-    tex: str = R"\ding{55}"
+    tex: str = "sym.crossmark"
     default_color: ManimColor = RED
 
 

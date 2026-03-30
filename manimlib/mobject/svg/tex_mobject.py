@@ -1,22 +1,23 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 from functools import lru_cache
 
 from manimlib.config import manim_config
+from manimlib.mobject.geometry import RoundedRectangle
 from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.mobject.svg.svg_mobject import get_svg_content_height
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.color import color_to_hex
-from manimlib.utils.color import hex_to_int
-from manimlib.utils.tex_file_writing import latex_to_svg
-from manimlib.utils.tex import num_tex_symbols
+from manimlib.utils.tex_file_writing import latex2svg
 from manimlib.logger import log
 
 from typing import TYPE_CHECKING
+
+from manimlib.utils.tex_to_symbol_count import ACCENT_COMMANDS, DELIMITER_COMMANDS
+from manimlib.utils.tex_to_symbol_count import OPERATORS, TEX_TO_SYMBOL_COUNT
 
 if TYPE_CHECKING:
     from manimlib.typing import ManimColor, Span, Selector, Self
@@ -27,26 +28,28 @@ def get_tex_mob_scale_factor() -> float:
     # Render a reference "0" and calibrate so that font_size_for_unit_height
     # gives a height of 1 manim unit. Compensates for platform dvisvgm differences.
     font_size_for_unit_height = manim_config.tex.font_size_for_unit_height
-    svg_string = latex_to_svg("0", show_message_during_execution=False)
+    svg_string = latex2svg("0")
     svg_height = get_svg_content_height(svg_string)
     return 1.0 / (font_size_for_unit_height * svg_height)
 
 
 class Tex(StringMobject):
-    tex_environment: str = "align*"
+    # NOTE: To render fraction, kindly use `frac(a, b)` instead of `a/b` for proper indexing.
+    tex_environment: str = "$"
 
     def __init__(
         self,
         *tex_strings: str,
         font_size: int = 48,
-        alignment: str = R"\centering",
+        alignment: str = "center",
         template: str = "",
         additional_preamble: str = "",
         tex_to_color_map: dict = dict(),
         t2c: dict = dict(),
         isolate: Selector = [],
         use_labelled_svg: bool = True,
-        **kwargs
+        fill_border_width: int = 0,
+        **kwargs,
     ):
         # Combine multi-string arg, but mark them to isolate
         if len(tex_strings) > 1:
@@ -60,6 +63,7 @@ class Tex(StringMobject):
         if not tex_string.strip():
             tex_string = R"\\"
 
+        alignment = f"#set align({alignment})"
         self.tex_string = tex_string
         self.alignment = alignment
         self.template = template
@@ -70,16 +74,24 @@ class Tex(StringMobject):
             tex_string,
             use_labelled_svg=use_labelled_svg,
             isolate=isolate,
-            **kwargs
+            fill_border_width=fill_border_width,
+            **kwargs,
         )
 
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
         self.scale(get_tex_mob_scale_factor() * font_size)
-
         self.font_size = font_size  # Important for this to go after the scale call
 
+        # horizontal line has no fill.
+        for mob in self.family_members_with_points():
+            if not mob.get_fill_opacity():
+                rect = RoundedRectangle(width=mob.get_width(), height=0.025, corner_radius=0.01)
+                rect.set_fill(mob.get_color(), 1).set_stroke(width=0).move_to(mob)
+                mob.become(rect)
+        self.set_symbol_count()
+
     def get_svg_string_by_content(self, content: str) -> str:
-        return latex_to_svg(content, self.template, self.additional_preamble, short_tex=self.tex_string)
+        return latex2svg(content, self.template, self.additional_preamble)
 
     def _handle_scale_side_effects(self, scale_factor: float) -> Self:
         if hasattr(self, "font_size"):
@@ -91,11 +103,14 @@ class Tex(StringMobject):
     @staticmethod
     def get_command_matches(string: str) -> list[re.Match]:
         # Lump together adjacent brace pairs
-        pattern = re.compile(r"""
+        pattern = re.compile(
+            r"""
             (?P<command>\\(?:[a-zA-Z]+|.))
             |(?P<open>{+)
             |(?P<close>}+)
-        """, flags=re.X | re.S)
+        """,
+            flags=re.X | re.S,
+        )
         result = []
         open_stack = []
         for match_obj in pattern.finditer(string):
@@ -105,15 +120,15 @@ class Tex(StringMobject):
                 close_start, close_end = match_obj.span()
                 while True:
                     if not open_stack:
-                        raise ValueError("Missing '{' inserted")
+                        raise ValueError("Missing '(' inserted")
                     (open_start, open_end), index = open_stack.pop()
                     n = min(open_end - open_start, close_end - close_start)
-                    result.insert(index, pattern.fullmatch(
-                        string, pos=open_end - n, endpos=open_end
-                    ))
-                    result.append(pattern.fullmatch(
-                        string, pos=close_start, endpos=close_start + n
-                    ))
+                    result.insert(
+                        index, pattern.fullmatch(string, pos=open_end - n, endpos=open_end)
+                    )
+                    result.append(
+                        pattern.fullmatch(string, pos=close_start, endpos=close_start + n)
+                    )
                     close_start += n
                     if close_start < close_end:
                         continue
@@ -124,7 +139,7 @@ class Tex(StringMobject):
             else:
                 result.append(match_obj)
         if open_stack:
-            raise ValueError("Missing '}' inserted")
+            raise ValueError("Missing ')' inserted")
         return result
 
     @staticmethod
@@ -162,39 +177,33 @@ class Tex(StringMobject):
 
     @staticmethod
     def get_color_command(rgb_hex: str) -> str:
-        rgb = hex_to_int(rgb_hex)
-        rg, b = divmod(rgb, 256)
-        r, g = divmod(rg, 256)
-        return f"\\color[RGB]{{{r}, {g}, {b}}}"
+        return f'#text(fill: rgb("{rgb_hex}"))'
 
-    @staticmethod
     def get_command_string(
-        attr_dict: dict[str, str], is_end: bool, label_hex: str | None
+        self, attr_dict: dict[str, str], is_end: bool, label_hex: str | None
     ) -> str:
         if label_hex is None:
             return ""
         if is_end:
-            return "}}"
-        return "{{" + Tex.get_color_command(label_hex)
+            return f"{self.tex_environment}]"
+        return self.get_color_command(label_hex) + f"[{self.tex_environment}"
 
-    def get_content_prefix_and_suffix(
-        self, is_labelled: bool
-    ) -> tuple[str, str]:
+    def get_content_prefix_and_suffix(self, is_labelled: bool) -> tuple[str, str]:
         prefix_lines = []
-        suffix_lines = []
+        suffix_line = ""
+
         if not is_labelled:
-            prefix_lines.append(self.get_color_command(
-                color_to_hex(self.base_color)
-            ))
+            prefix_lines.append(self.get_color_command(color_to_hex(self.base_color)))
         if self.alignment:
             prefix_lines.append(self.alignment)
+
+        prefix_lines = "".join([line + "\n" for line in prefix_lines])
+
         if self.tex_environment:
-            prefix_lines.append(f"\\begin{{{self.tex_environment}}}")
-            suffix_lines.append(f"\\end{{{self.tex_environment}}}")
-        return (
-            "".join([line + "\n" for line in prefix_lines]),
-            "".join(["\n" + line for line in suffix_lines])
-        )
+            prefix_lines += f"{self.tex_environment} "
+            suffix_line = f" {self.tex_environment}"
+
+        return prefix_lines, suffix_line
 
     # Method alias
 
@@ -207,28 +216,116 @@ class Tex(StringMobject):
     def set_color_by_tex(self, selector: Selector, color: ManimColor):
         return self.set_parts_color(selector, color)
 
-    def set_color_by_tex_to_color_map(
-        self, color_map: dict[Selector, ManimColor]
-    ):
+    def set_color_by_tex_to_color_map(self, color_map: dict[Selector, ManimColor]):
         return self.set_parts_color_by_dict(color_map)
 
     def get_tex(self) -> str:
         return self.get_string()
 
+    def set_symbol_count(self):
+        operators = "|".join(re.escape(op) for op in OPERATORS)
+        pattern = rf"""
+            (?P<txt>"[^"]*")|
+            (?P<cmd>[a-zA-Z][a-zA-Z0-9\.]*[a-zA-Z0-9])|
+            (?P<script>[_^])|
+            (?P<operator>{operators})|
+            (?P<fraction>\bfrac\b)|
+            (?P<root>\broot\b)|
+            (?P<char>\S)
+        """
+
+        counts = [0] * len(self.string)
+        group_stack = []
+        current_group = "normal"
+
+        for match in re.finditer(pattern, self.string, re.VERBOSE):
+            text = match.group()
+            start = match.start()
+            num = TEX_TO_SYMBOL_COUNT.get(text, 1)
+
+            if match.group("txt"):
+                num = len(text.replace('"', "").replace(" ", ""))
+                counts[start] += num
+                continue
+
+            elif text == "(":
+                group_stack.append(current_group)
+                to_hide = current_group != "normal"
+                current_group = "normal"
+                if to_hide:
+                    continue
+
+            elif text == ")":
+                if group_stack:
+                    if (group := group_stack.pop()) != "normal":
+                        if group in ("frac", "delimiter"):
+                            counts[start] += 1
+                        continue
+
+            elif text == ",":
+                if group_stack and group_stack[-1] in ("frac", "root"):
+                    counts[start] += TEX_TO_SYMBOL_COUNT.get(group_stack[-1], 0)
+                    continue
+
+            elif text in ("frac", "root"):
+                current_group = text
+                continue
+
+            elif match.group("script") or (match.group("cmd") and num == 0):
+                current_group = "wrapper"
+                continue
+
+            elif text in ACCENT_COMMANDS:
+                current_group = "wrapper"
+
+            elif current_group in DELIMITER_COMMANDS:
+                current_group = "delimiter"
+
+            else:
+                current_group = "normal"
+
+            counts[start] += num if match.group("cmd") else 1
+        if sum(counts) != len(self):
+            log.warning(f"Estimated size of {self.get_tex()} does not match true size")
+        self.symbol_count = counts
+
+    def select_unisolated_substring(self, pattern: str | re.Pattern) -> VGroup:
+        counts = self.symbol_count
+        if isinstance(pattern, re.Pattern):
+            matches = pattern.finditer(self.string)
+        else:
+            escape_pat = re.escape(pattern)
+            if pattern[0].isalnum():
+                escape_pat = r"(?<![a-zA-Z0-9_])" + escape_pat
+
+            if pattern[-1].isalnum():
+                escape_pat = escape_pat + r"(?![a-zA-Z0-9_])"
+
+            matches = re.finditer(escape_pat, self.string)
+
+        result = []
+        for match in matches:
+            start, end = match.start(), match.end()
+            start_idx = sum(counts[:start])
+            end_idx = start_idx + sum(counts[start:end])
+            result.append(self[start_idx:end_idx])
+
+        return VGroup(*result)
+
     # Specific to Tex
+    # TransformMatchingTex uses this function
     def substr_to_path_count(self, substr: str) -> int:
-        tex = self.get_tex()
-        if len(self) != num_tex_symbols(tex):
-            log.warning(f"Estimated size of {tex} does not match true size")
-        return num_tex_symbols(substr)
+        return TEX_TO_SYMBOL_COUNT.get(substr, 1)
 
     def get_symbol_substrings(self):
-        pattern = "|".join((
-            # Tex commands
-            r"\\[a-zA-Z]+",
-            # And most single characters, with these exceptions
-            r"[^\^\{\}\s\_\$\\\&]",
-        ))
+        pattern = "|".join(
+            (
+                r"[a-zA-Z](?:[a-zA-Z0-9\.]*[a-zA-Z0-9])?",
+                r"->|=>|<=|>=|==|!=|\.\.\.",
+                r"[0-9]+",
+                r"[^\^\{\}\s\_\$\&\\\"]",
+            )
+        )
         return re.findall(pattern, self.string)
 
     def make_number_changeable(
@@ -258,7 +355,7 @@ class Tex(StringMobject):
                 config["num_decimal_places"] = ndp
             decimal_mob = DecimalNumber(float(value), **config)
             decimal_mob.replace(part)
-            decimal_mob.match_style(part)
+            decimal_mob.match_style(part).match_height(part)
             if len(part) > 1:
                 self.remove(*part[1:])
             self.replace_submobject(self.submobjects.index(part[0]), decimal_mob)
@@ -266,7 +363,7 @@ class Tex(StringMobject):
 
             # Replace substr with something that looks like a tex command. This
             # is to ensure Tex.substr_to_path_count counts it correctly.
-            self.string = self.string.replace(substr, R"\decimalmob", 1)
+            self.string = self.string.replace(substr, "decimalmob", 1)
 
         if replace_all:
             return VGroup(*decimal_mobs)
@@ -275,3 +372,18 @@ class Tex(StringMobject):
 
 class TexText(Tex):
     tex_environment: str = ""
+
+    def set_symbol_count(self):
+        pattern = r"""
+            (?P<escape_char>\\[\S])|
+            (?P<char>\S)
+        """
+        counts = [0] * len(self.string)
+        for match in re.finditer(pattern, self.string, re.VERBOSE):
+            start = match.start()
+            if match.group("escape_char"):
+                counts[start + 1] = 1
+            else:
+                counts[start] = 1
+
+        self.symbol_count = counts
