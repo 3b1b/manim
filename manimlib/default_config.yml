@@ -24,12 +24,15 @@ directories:
     # If you want to use images, manim will look to these folders to find them
     raster_images: "raster_images"
     vector_images: "vector_images"
+    three_d_models: "three_d_models"
     # If you want to use sounds, manim will look here to find it.
     sounds: "sounds"
     # Place for other forms of data relevant to any projects, like csv's
     data: "data"
     # When downloading, say an image, where will it go?
     downloads: "downloads"
+    # For storing cached LaTeX compilation results
+    latex_cache: "latex_cache"
   # For certain object types, especially Tex and Text, manim will save information
   # to file to prevent the need to re-compute, e.g. recompiling the latex. By default,
   # it stores this saved data to whatever directory appdirs.user_cache_dir("manim") returns,
@@ -79,10 +82,14 @@ mobject:
 tex:
   # See tex_templates.yml
   template: "default"
+  # The font size at which Tex("0") has a height of 1 manim unit
+  font_size_for_unit_height: 144
 text:
   # font: "Cambria Math"
   font: "Consolas"
   alignment: "LEFT"
+  # The font size at which Text("0") has a height of 1 manim unit
+  font_size_for_unit_height: 144
 embed:
   exception_mode: "Verbose"
   autoreload: False
@@ -116,6 +123,7 @@ key_bindings:
   grab: "g"
   x_grab: "h"
   y_grab: "v"
+  z_grab: "z"
   resize: "t"
   color: "c"
   information: "i"

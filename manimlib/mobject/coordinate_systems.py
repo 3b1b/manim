@@ -151,11 +151,12 @@ class CoordinateSystem(ABC):
     def get_axis_labels(
         self,
         x_label_tex: str = "x",
-        y_label_tex: str = "y"
+        y_label_tex: str = "y",
+        **kwargs
     ) -> VGroup:
         self.axis_labels = VGroup(
-            self.get_x_axis_label(x_label_tex),
-            self.get_y_axis_label(y_label_tex),
+            self.get_x_axis_label(x_label_tex, **kwargs),
+            self.get_y_axis_label(y_label_tex, **kwargs),
         )
         return self.axis_labels
 
@@ -739,6 +740,9 @@ class ComplexPlane(NumberPlane):
 
     def p2n(self, point: Vect3) -> complex:
         return self.point_to_number(point)
+
+    def get_unit_size(self) -> float:
+        return self.x_axis.get_unit_size()
 
     def get_default_coordinate_values(
         self,

@@ -6,6 +6,7 @@ import re
 
 from manimlib.constants import BLACK, DEFAULT_MOBJECT_COLOR
 from manimlib.mobject.svg.svg_mobject import SVGMobject
+from manimlib.mobject.svg.tex_mobject import get_tex_mob_scale_factor
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.tex_file_writing import latex_to_svg
 
@@ -14,9 +15,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Iterable, List, Dict
     from manimlib.typing import ManimColor
-
-
-SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
 class SingleStringTex(SVGMobject):
@@ -59,7 +57,7 @@ class SingleStringTex(SVGMobject):
         )
 
         if self.height is None:
-            self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
+            self.scale(get_tex_mob_scale_factor() * self.font_size)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 

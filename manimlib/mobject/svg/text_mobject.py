@@ -17,6 +17,7 @@ from manimlib.constants import DEFAULT_PIXEL_WIDTH, FRAME_WIDTH
 from manimlib.constants import NORMAL
 from manimlib.logger import log
 from manimlib.mobject.svg.string_mobject import StringMobject
+from manimlib.mobject.svg.svg_mobject import get_svg_content_height
 from manimlib.utils.cache import cache_on_disk
 from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import int_to_hex
@@ -31,7 +32,6 @@ if TYPE_CHECKING:
     from manimlib.typing import ManimColor, Span, Selector
 
 
-TEXT_MOB_SCALE_FACTOR = 0.0076
 DEFAULT_LINE_SPACING_SCALE = 0.6
 # Ensure the canvas is large enough to hold all glyphs.
 DEFAULT_CANVAS_WIDTH = 16384
@@ -98,6 +98,18 @@ def markup_to_svg(
     result = temp_file.read_text()
     os.remove(temp_file)
     return result
+
+
+@lru_cache(maxsize=1)
+def get_text_mob_scale_factor() -> float:
+    # Render a reference "0" and calibrate so that font_size_for_unit_height
+    # gives a height of 1 manim unit. Compensates for platform DPI differences.
+    ref_size = 48
+    font_size_for_unit_height = manim_config.text.font_size_for_unit_height
+    pango_size = str(round(ref_size * 1024))
+    svg_string = markup_to_svg(f'<span font_size="{pango_size}">0</span>')
+    svg_height = get_svg_content_height(svg_string)
+    return ref_size / (font_size_for_unit_height * svg_height)
 
 
 class MarkupText(StringMobject):
@@ -188,7 +200,7 @@ class MarkupText(StringMobject):
         if self.t2c:
             self.set_color_by_text_to_color_map(self.t2c)
         if height is None:
-            self.scale(TEXT_MOB_SCALE_FACTOR)
+            self.scale(get_text_mob_scale_factor())
 
     def get_svg_string_by_content(self, content: str) -> str:
         self.content = content

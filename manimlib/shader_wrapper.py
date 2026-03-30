@@ -133,10 +133,13 @@ class ShaderWrapper(object):
         self.refresh_id()
 
     # Changing context
-    def use_clip_plane(self):
-        if "clip_plane" not in self.mobject_uniforms:
-            return False
-        return any(self.mobject_uniforms["clip_plane"])
+    def num_clip_planes(self):
+        count = 0
+        for n in range(4):
+            key = f"clip_plane{n}"
+            if key in self.mobject_uniforms and any(self.mobject_uniforms[key]):
+                count = n + 1
+        return count
 
     def set_ctx_depth_test(self, enable: bool = True) -> None:
         if enable:
@@ -144,9 +147,18 @@ class ShaderWrapper(object):
         else:
             self.ctx.disable(moderngl.DEPTH_TEST)
 
-    def set_ctx_clip_plane(self, enable: bool = True) -> None:
-        if enable:
-            gl.glEnable(gl.GL_CLIP_DISTANCE0)
+    def set_ctx_clip_plane(self, num_planes: int = 0) -> None:
+        clip_distances = [
+            gl.GL_CLIP_DISTANCE0,
+            gl.GL_CLIP_DISTANCE1,
+            gl.GL_CLIP_DISTANCE2,
+            gl.GL_CLIP_DISTANCE3,
+        ]
+        for n, clip_dist in enumerate(clip_distances):
+            if n < num_planes:
+                gl.glEnable(clip_dist)
+            else:
+                gl.glDisable(clip_dist)
 
     # Adding data
 
@@ -187,7 +199,7 @@ class ShaderWrapper(object):
     # Related to data and rendering
     def pre_render(self):
         self.set_ctx_depth_test(self.depth_test)
-        self.set_ctx_clip_plane(self.use_clip_plane())
+        self.set_ctx_clip_plane(self.num_clip_planes())
         for tid, texture in enumerate(self.textures):
             texture.use(tid)
 
@@ -228,6 +240,7 @@ class VShaderWrapper(ShaderWrapper):
         depth_test: bool = False,
         render_primitive: int = moderngl.TRIANGLES,
         code_replacements: dict[str, str] = dict(),
+        program_type: str | None = None,
         stroke_behind: bool = False,
     ):
         self.stroke_behind = stroke_behind
@@ -238,12 +251,13 @@ class VShaderWrapper(ShaderWrapper):
             mobject_uniforms=mobject_uniforms,
             texture_paths=texture_paths,
             depth_test=depth_test,
-            render_primitive=render_primitive,
-            code_replacements=code_replacements,
+            render_primitive=render_primitive
         )
         self.fill_canvas = VShaderWrapper.get_fill_canvas(self.ctx)
         self.add_texture('Texture', self.fill_canvas[0].color_attachments[0])
         self.add_texture('DepthTexture', self.fill_canvas[2].color_attachments[0])
+        for old, new in code_replacements.items():
+            self.replace_code_program(old, new, program_type)
 
     def init_program_code(self) -> None:
         self.program_code = {
@@ -340,6 +354,26 @@ class VShaderWrapper(ShaderWrapper):
     def refresh_id(self):
         super().refresh_id()
         self.id = hash(str(self.id) + str(self.stroke_behind))
+        
+    def replace_code_program(self, old: str, new: str, program_type: str | None = None):
+        if program_type is None:
+            # fallback to generic behaviour
+            super().replace_code(old, new)
+            return
+
+        valid = {"stroke", "fill", "depth"}
+        if program_type not in valid:
+            raise ValueError(f"Invalid program_type: {program_type}")
+
+        for name in self.program_code:
+            if self.program_code[name] is None:
+                continue
+            if not name.startswith(program_type):
+                continue
+            self.program_code[name] = re.sub(old, new, self.program_code[name])
+
+        self.init_program()
+        self.refresh_id()
 
     # Rendering
     def render_stroke(self):
@@ -478,3 +512,5 @@ class VShaderWrapper(ShaderWrapper):
         else:
             self.render_fill()
             self.render_stroke()
+
+

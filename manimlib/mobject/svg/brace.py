@@ -13,6 +13,7 @@ from manimlib.animation.fading import FadeIn
 from manimlib.animation.growing import GrowFromCenter
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import TexText
+from manimlib.mobject.geometry import Line
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -35,7 +36,7 @@ class Brace(Tex):
         mobject: Mobject,
         direction: Vect3 = DOWN,
         buff: float = 0.2,
-        tex_string: str = R"\underbrace{\qquad}",
+        tex_string: str = "underbrace(quad quad)",
         **kwargs
     ):
         super().__init__(tex_string, **kwargs)

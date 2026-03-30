@@ -31,6 +31,21 @@ SVG_HASH_TO_MOB_MAP: dict[int, list[VMobject]] = {}
 PATH_TO_POINTS: dict[str, Vect3Array] = {}
 
 
+def get_svg_content_height(svg_string: str) -> float:
+    # Strip root attributes to match SVGMobject.modify_xml_tree,
+    # which avoids viewBox unit conversions (e.g. pt to px for dvisvgm)
+    root = ET.fromstring(svg_string)
+    root.attrib.clear()
+    data_stream = io.BytesIO()
+    ET.ElementTree(root).write(data_stream)
+    data_stream.seek(0)
+    svg = se.SVG.parse(data_stream)
+    bbox = svg.bbox()
+    if bbox is None:
+        raise ValueError("SVG has no content to measure")
+    return bbox[3] - bbox[1]
+
+
 def _convert_point_to_3d(x: float, y: float) -> np.ndarray:
     return np.array([x, y, 0.0])
 
@@ -191,7 +206,7 @@ class SVGMobject(VMobject):
             if isinstance(shape, (se.Group, se.Use)):
                 continue
             elif isinstance(shape, se.Path):
-                mob = self.path_to_mobject(shape)
+                mob = self.path_to_mobject(shape, svg)
             elif isinstance(shape, se.SimpleLine):
                 mob = self.line_to_mobject(shape)
             elif isinstance(shape, se.Rect):
@@ -243,8 +258,29 @@ class SVGMobject(VMobject):
         )
         return mob
 
-    def path_to_mobject(self, path: se.Path) -> VMobjectFromSVGPath:
-        return VMobjectFromSVGPath(path, **self.path_string_config)
+    def path_to_mobject(self, path: se.Path, svg: se.SVG) -> VMobjectFromSVGPath:
+        if path.id in svg.objects:
+            # If this path reuses a referenced definition (<use>), build the mobject from
+            # the original geometry.
+            # We apply the transform ourselves so we (1) keep the full precision of the 
+            # reference and (2) only store one entry in PATH_TO_POINTS.
+            ref_path = svg.objects[path.id]
+            mob = VMobjectFromSVGPath(ref_path, **self.path_string_config)
+            if 'transform' in path.values:
+                matrix = se.Matrix(path.values['transform'])
+                rotation = np.array([[matrix.a, matrix.b],
+                                     [matrix.c, matrix.d]])
+                translation = np.array([[matrix.e, matrix.f]])
+                mob.apply_points_function(
+                    lambda points: np.concatenate([points[:, :2] @ rotation + translation,
+                                                   points[:, [2]]],
+                                                  axis=1),
+                    about_point=None,
+                    about_edge=None,
+                    works_on_bounding_box=False)
+            return mob
+        else:
+            return VMobjectFromSVGPath(path, **self.path_string_config)
 
     def line_to_mobject(self, line: se.SimpleLine) -> Line:
         return Line(

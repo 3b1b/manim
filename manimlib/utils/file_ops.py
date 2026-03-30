@@ -29,13 +29,15 @@ def find_file(
     extensions: Iterable[str] | None = None
 ) -> Path:
     # Check if this is a file online first, and if so, download
-    # it to a temporary directory
+    # it to the configured downloads directory
     if validators.url(file_name):
         suffix = Path(file_name).suffix
         file_hash = hash_string(file_name)
         folder = manimlib.utils.directories.get_downloads_dir()
-
         path = Path(folder, file_hash).with_suffix(suffix)
+
+        # ensure that the target folder exists before downloading
+        guarantee_existence(folder)
         urllib.request.urlretrieve(file_name, path)
         return path
 

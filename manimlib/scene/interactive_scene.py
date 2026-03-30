@@ -10,10 +10,8 @@ from manimlib.animation.fading import FadeIn
 from manimlib.config import manim_config
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, RIGHT, UL, UP, UR
 from manimlib.constants import FRAME_WIDTH, FRAME_HEIGHT, SMALL_BUFF
-from manimlib.constants import PI
 from manimlib.constants import DEG
 from manimlib.constants import MANIM_COLORS, WHITE, GREY_A, GREY_C
-from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.mobject import Group
@@ -42,7 +40,8 @@ UNSELECT_KEY = manim_config.key_bindings.unselect
 GRAB_KEY = manim_config.key_bindings.grab
 X_GRAB_KEY = manim_config.key_bindings.x_grab
 Y_GRAB_KEY = manim_config.key_bindings.y_grab
-GRAB_KEYS = [GRAB_KEY, X_GRAB_KEY, Y_GRAB_KEY]
+Z_GRAB_KEY = manim_config.key_bindings.z_grab
+GRAB_KEYS = [GRAB_KEY, X_GRAB_KEY, Y_GRAB_KEY, Z_GRAB_KEY]
 RESIZE_KEY = manim_config.key_bindings.resize  # TODO
 COLOR_KEY = manim_config.key_bindings.color
 INFORMATION_KEY = manim_config.key_bindings.information
@@ -475,7 +474,10 @@ class InteractiveScene(Scene):
     # Key actions
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
-        char = chr(symbol)
+        try:
+            char = chr(symbol)
+        except OverflowError:
+            return
         if char == SELECT_KEY and (modifiers & ALL_MODIFIERS) == 0:
             self.enable_selection()
         if char == UNSELECT_KEY:
@@ -528,7 +530,7 @@ class InteractiveScene(Scene):
             self.add(self.crosshair)
 
         # Conditions for saving state
-        if char in [GRAB_KEY, X_GRAB_KEY, Y_GRAB_KEY, RESIZE_KEY]:
+        if char in [GRAB_KEY, X_GRAB_KEY, Y_GRAB_KEY, Z_GRAB_KEY, RESIZE_KEY]:
             self.save_state()
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
@@ -551,6 +553,8 @@ class InteractiveScene(Scene):
             self.selection.set_x(diff[0])
         elif self.window.is_key_pressed(ord(Y_GRAB_KEY)):
             self.selection.set_y(diff[1])
+        elif self.window.is_key_pressed(ord(Z_GRAB_KEY)):
+            self.selection.set_z(diff[2])
 
     def handle_resizing(self, point: Vect3):
         if not hasattr(self, "scale_about_point"):

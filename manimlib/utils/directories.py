@@ -38,6 +38,10 @@ def get_vector_image_dir() -> str:
     return get_directories()["vector_images"]
 
 
+def get_three_d_model_dir() -> str:
+    return get_directories()["three_d_models"]
+
+
 def get_sound_dir() -> str:
     return get_directories()["sounds"]
 

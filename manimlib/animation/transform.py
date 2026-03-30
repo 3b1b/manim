@@ -28,7 +28,7 @@ class Transform(Animation):
         self,
         mobject: Mobject,
         target_mobject: Mobject | None = None,
-        path_arc: float = 0.0,
+        path_arc: float | Tuple[float, float] = 0.0,
         path_arc_axis: np.ndarray = OUT,
         path_func: Callable | None = None,
         **kwargs
@@ -43,7 +43,7 @@ class Transform(Animation):
     def init_path_func(self) -> None:
         if self.path_func is not None:
             return
-        elif self.path_arc == 0:
+        elif isinstance(self.path_arc, float) and self.path_arc == 0:
             self.path_func = straight_path
         else:
             self.path_func = path_along_arc(
