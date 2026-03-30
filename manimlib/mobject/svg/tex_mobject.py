@@ -221,7 +221,7 @@ class Tex(StringMobject):
     def get_tex(self) -> str:
         return self.get_string()
 
-    def set_symbol_count(self):
+    def set_symbol_count(self) -> None:
         pattern = rf"""
             (?P<txt>"[^"]*")|
             (?P<cmd>[a-zA-Z][a-zA-Z0-9\.]*[a-zA-Z0-9])|
