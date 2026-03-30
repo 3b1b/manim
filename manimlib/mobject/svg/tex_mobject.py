@@ -85,7 +85,7 @@ class Tex(StringMobject):
                 rect = RoundedRectangle(width=mob.get_width(), height=0.025, corner_radius=0.01)
                 rect.set_fill(mob.get_color(), 1).set_stroke(width=0).move_to(mob)
                 mob.become(rect)
-        
+
         self.set_color(color)
         self.set_symbol_count()
 
@@ -222,12 +222,11 @@ class Tex(StringMobject):
         return self.get_string()
 
     def set_symbol_count(self):
-        operators = "|".join(re.escape(op) for op in OPERATORS)
         pattern = rf"""
             (?P<txt>"[^"]*")|
             (?P<cmd>[a-zA-Z][a-zA-Z0-9\.]*[a-zA-Z0-9])|
             (?P<script>[_^])|
-            (?P<operator>{operators})|
+            (?P<operator>{"|".join(re.escape(op) for op in OPERATORS)})|
             (?P<fraction>\bfrac\b)|
             (?P<root>\broot\b)|
             (?P<char>\S)
@@ -320,7 +319,7 @@ class Tex(StringMobject):
         pattern = "|".join(
             (
                 r"[a-zA-Z](?:[a-zA-Z0-9\.]*[a-zA-Z0-9])?",
-                r"->|=>|<=|>=|==|!=|\.\.\.",
+                f"{'|'.join(re.escape(op) for op in OPERATORS)}",
                 r"[0-9]+",
                 r"[^\^\{\}\s\_\$\&\\\"]",
             )
