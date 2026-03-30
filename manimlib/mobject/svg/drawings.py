@@ -78,12 +78,12 @@ if TYPE_CHECKING:
 
 
 class Checkmark(TexTextFromPresetString):
-    tex: str = "sym.checkmark"
+    tex: str = "#sym.checkmark"
     default_color: ManimColor = GREEN
 
 
 class Exmark(TexTextFromPresetString):
-    tex: str = "sym.crossmark"
+    tex: str = "#sym.crossmark"
     default_color: ManimColor = RED
 
 

@@ -5,6 +5,7 @@ import re
 from functools import lru_cache
 
 from manimlib.config import manim_config
+from manimlib.constants import DEFAULT_MOBJECT_COLOR
 from manimlib.mobject.geometry import RoundedRectangle
 from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.mobject.svg.svg_mobject import get_svg_content_height
@@ -43,6 +44,7 @@ class Tex(StringMobject):
         font_size: int = 48,
         alignment: str = "center",
         template: str = "",
+        color: ManimColor = DEFAULT_MOBJECT_COLOR,
         additional_preamble: str = "",
         tex_to_color_map: dict = dict(),
         t2c: dict = dict(),
@@ -59,13 +61,8 @@ class Tex(StringMobject):
 
         tex_string = (" ".join(tex_strings)).strip()
 
-        # Prevent from passing an empty string.
-        if not tex_string.strip():
-            tex_string = R"\\"
-
-        alignment = f"#set align({alignment})"
         self.tex_string = tex_string
-        self.alignment = alignment
+        self.alignment = f"#set align({alignment})"
         self.template = template
         self.additional_preamble = additional_preamble
         self.tex_to_color_map = dict(**t2c, **tex_to_color_map)
@@ -88,6 +85,8 @@ class Tex(StringMobject):
                 rect = RoundedRectangle(width=mob.get_width(), height=0.025, corner_radius=0.01)
                 rect.set_fill(mob.get_color(), 1).set_stroke(width=0).move_to(mob)
                 mob.become(rect)
+        
+        self.set_color(color)
         self.set_symbol_count()
 
     def get_svg_string_by_content(self, content: str) -> str:
@@ -106,8 +105,8 @@ class Tex(StringMobject):
         pattern = re.compile(
             r"""
             (?P<command>\\(?:[a-zA-Z]+|.))
-            |(?P<open>{+)
-            |(?P<close>}+)
+            |(?P<open>\(+)
+            |(?P<close>\)+)
         """,
             flags=re.X | re.S,
         )

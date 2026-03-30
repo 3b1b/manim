@@ -221,7 +221,7 @@ class TexIndexing(Scene):
         self.add(equation)
         self.play(FlashAround(equation["e"]))
         self.wait()
-        self.play(Indicate(equation[R"\pi"]))
+        self.play(Indicate(equation["pi"]))
         self.wait()
         self.play(
             TransformFromCopy(
