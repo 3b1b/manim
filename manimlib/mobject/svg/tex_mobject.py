@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import re
-
 from functools import lru_cache
-
 from manimlib.config import manim_config
 from manimlib.constants import DEFAULT_MOBJECT_COLOR
 from manimlib.mobject.geometry import RoundedRectangle
@@ -14,11 +12,10 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.color import color_to_hex
 from manimlib.utils.tex_file_writing import latex2svg
 from manimlib.logger import log
-
-from typing import TYPE_CHECKING
-
 from manimlib.utils.tex_to_symbol_count import ACCENT_COMMANDS, DELIMITER_COMMANDS
 from manimlib.utils.tex_to_symbol_count import OPERATORS, TEX_TO_SYMBOL_COUNT
+
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from manimlib.typing import ManimColor, Span, Selector, Self
@@ -50,7 +47,6 @@ class Tex(StringMobject):
         t2c: dict = dict(),
         isolate: Selector = [],
         use_labelled_svg: bool = True,
-        fill_border_width: int = 0,
         **kwargs,
     ):
         # Combine multi-string arg, but mark them to isolate
@@ -71,7 +67,6 @@ class Tex(StringMobject):
             tex_string,
             use_labelled_svg=use_labelled_svg,
             isolate=isolate,
-            fill_border_width=fill_border_width,
             **kwargs,
         )
 
@@ -98,7 +93,6 @@ class Tex(StringMobject):
         return self
 
     # Parsing
-
     @staticmethod
     def get_command_matches(string: str) -> list[re.Match]:
         # Lump together adjacent brace pairs
