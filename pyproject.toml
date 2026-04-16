@@ -1,2 +1,75 @@
+[project]
+name = "manimgl"
+version = "1.7.2"
+description = "Animation engine for explanatory math videos"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Grant Sanderson", email = "grant@3blue1brown.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Multimedia :: Graphics",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Natural Language :: English",
+]
+dependencies = [
+    "addict",
+    "appdirs",
+    "audioop-lts; python_version >= '3.13'",
+    "colour",
+    "diskcache",
+    "ipython>=8.18.0",
+    "isosurfaces",
+    "fontTools",
+    "manimpango>=0.6.0",
+    "mapbox-earcut",
+    "matplotlib",
+    "moderngl",
+    "moderngl-window",
+    "numpy",
+    "Pillow",
+    "pydub",
+    "pygments",
+    "PyOpenGL",
+    "pyperclip",
+    "pyyaml",
+    "rich",
+    "scipy",
+    "screeninfo",
+    "skia-pathops",
+    "svgelements>=1.8.1",
+    "sympy",
+    "trimesh",
+    "tqdm",
+    "validators",
+    "pywavefront",
+]
+
+[project.urls]
+Homepage = "https://github.com/3b1b/manim"
+Documentation = "https://3b1b.github.io/manim/"
+"Bug Tracker" = "https://github.com/3b1b/manim/issues"
+"Source Code" = "https://github.com/3b1b/manim"
+
+[project.scripts]
+manimgl = "manimlib.__main__:main"
+manim-render = "manimlib.__main__:main"
+
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["manimlib"]
+
+[tool.hatch.build.targets.sdist]
+include = ["manimlib/**", "README.md", "LICENSE.md"]
