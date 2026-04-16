@@ -21,51 +21,58 @@ Note, there are two versions of manim.  This repository began as a personal proj
 > [!Note]
 > **Note**: To install manim directly through pip, please pay attention to the name of the installed package. This repository is ManimGL of 3b1b. The package name is `manimgl` instead of `manim` or `manimlib`. Please use `pip install manimgl` to install the version in this repository.
 
-Manim runs on Python 3.7 or higher.
+Manim runs on Python 3.10 or higher (3.12+ recommended).
 
 System requirements are [FFmpeg](https://ffmpeg.org/), [OpenGL](https://www.opengl.org/) and [LaTeX](https://www.latex-project.org) (optional, if you want to use LaTeX).
 For Linux, [Pango](https://pango.org) along with its development headers are required. See instruction [here](https://github.com/ManimCommunity/ManimPango#building).
 
+### Using uv (recommended)
 
-### Directly
+This project uses [uv](https://docs.astral.sh/uv/) for environment and dependency management.
 
 ```sh
-# Install manimgl
+# Install uv if you don't have it
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clone and sync
+git clone https://github.com/3b1b/manim.git
+cd manim
+uv sync
+
+# Try it out
+uv run manimgl example_scenes.py OpeningManimExample
+# or
+uv run manim-render example_scenes.py OpeningManimExample
+```
+
+### Using pip
+
+```sh
+# Install manimgl from PyPI
 pip install manimgl
 
 # Try it out
 manimgl
 ```
 
-For more options, take a look at the [Using manim](#using-manim) sections further below.
-
-If you want to hack on manimlib itself, clone this repository and in that directory execute:
+If you want to hack on manimlib itself, clone this repository and install in editable mode:
 
 ```sh
-# Install manimgl
+git clone https://github.com/3b1b/manim.git
+cd manim
 pip install -e .
-
-# Try it out
 manimgl example_scenes.py OpeningManimExample
-# or
-manim-render example_scenes.py OpeningManimExample
 ```
 
-### Directly (Windows)
+### Platform-specific notes
 
+**Windows:**
 1. [Install FFmpeg](https://www.wikihow.com/Install-FFmpeg-on-Windows).
 2. Install a LaTeX distribution. [MiKTeX](https://miktex.org/download) is recommended.
-3. Install the remaining Python packages.
-    ```sh
-    git clone https://github.com/3b1b/manim.git
-    cd manim
-    pip install -e .
-    manimgl example_scenes.py OpeningManimExample
-    ```
+3. Clone and install as above.
 
-### Mac OSX
-
-1. Install FFmpeg, LaTeX in terminal using homebrew.
+**Mac OSX:**
+1. Install FFmpeg and LaTeX via homebrew:
     ```sh
     brew install ffmpeg mactex
     ```
@@ -74,31 +81,23 @@ manim-render example_scenes.py OpeningManimExample
 
       > To avoid installing the full MacTeX bundle, which is ~6GB, you can alternatively install the
       > lightweight [BasicTeX](https://formulae.brew.sh/cask/basictex) and then gradually add
-      > only the LaTeX packages you actually need. A list of packages sufficient to run examples can 
+      > only the LaTeX packages you actually need. A list of packages sufficient to run examples can
       > be found [here](https://github.com/3b1b/manim/issues/2133#issuecomment-2414547866).
       > For an overview of the MacTeX installer bundles, see https://www.tug.org/mactex/.
     </details>
 
-2. If you are using an ARM-based processor, install Cairo. 
+2. If you are using an ARM-based processor, install Cairo:
     ```sh
     arch -arm64 brew install pkg-config cairo
     ```
-   
-3. Install latest version of manim using these command.
-    ```sh
-    git clone https://github.com/3b1b/manim.git
-    cd manim
-    pip install -e .
-    manimgl example_scenes.py OpeningManimExample (make sure to add manimgl to path first.)
-    ```
 
-## Anaconda Install
+3. Clone and install as above.
 
-1. Install LaTeX as above.
-2. Create a conda environment using `conda create -n manim python=3.9`.
-3. Activate the environment using `conda activate manim`.
-4. Install manimgl using `pip install -e .`.
-
+**Linux:**
+Install Pango development headers (required for `manimpango`):
+```sh
+sudo apt-get install libpango1.0-dev  # Debian/Ubuntu
+```
 
 ## Using manim
 Try running the following:
@@ -119,7 +118,45 @@ When running in the CLI, some useful flags include:
 
 Take a look at custom_config.yml for further configuration.  To add your customization, you can either edit this file, or add another file by the same name "custom_config.yml" to whatever directory you are running manim from.  For example [this is the one](https://github.com/3b1b/videos/blob/master/custom_config.yml) for 3blue1brown videos.  There you can specify where videos should be output to, where manim should look for image files and sounds you want to read in, and other defaults regarding style and video quality.
 
-### Documentation
+## MCP Server
+
+This repository includes an [MCP](https://modelcontextprotocol.io/) (Model Context Protocol) server that exposes ManimGL's functionality to LLMs. This lets AI assistants generate and render animations, inspect available objects and animations, and validate scene code.
+
+### Setup
+
+```sh
+uv sync --extra mcp
+uv run manimgl-mcp
+```
+
+### Tools
+
+| Tool | Description |
+|---|---|
+| `render` | Render a scene to mp4, gif, or png from Python code |
+| `preview` | Capture a single frame as base64 PNG for quick feedback |
+| `validate` | Check scene code for syntax/import errors without rendering |
+| `list_mobjects` | List available mathematical object classes with signatures |
+| `list_animations` | List available animation classes with signatures |
+| `get_example` | Get working example code for common patterns |
+
+### Client configuration
+
+To use the MCP server with an LLM client (Claude Desktop, Kiro, etc.), add the following to your MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "manimgl": {
+      "command": "uv",
+      "args": ["run", "--extra", "mcp", "manimgl-mcp"],
+      "cwd": "/path/to/this/repo"
+    }
+  }
+}
+```
+
+## Documentation
 Documentation is in progress at [3b1b.github.io/manim](https://3b1b.github.io/manim/). And there is also a Chinese version maintained by [**@manim-kindergarten**](https://manim.org.cn): [docs.manim.org.cn](https://docs.manim.org.cn/) (in Chinese).
 
 [manim-kindergarten](https://github.com/manim-kindergarten/) wrote and collected some useful extra classes and some codes of videos in [manim_sandbox repo](https://github.com/manim-kindergarten/manim_sandbox).

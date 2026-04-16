@@ -91,6 +91,10 @@ def _build_command(
     if fmt == "png":
         cmd.append("-s")
 
+    # For gif output
+    if fmt == "gif":
+        cmd.append("-i")
+
     return cmd
 
 
