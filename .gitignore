@@ -16,6 +16,10 @@ build/
 develop-eggs/
 dist/
 manimlib.egg-info/
+*.egg-info/
+
+# uv
+uv.lock
 
 downloads/
 eggs/
