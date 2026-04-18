@@ -415,8 +415,17 @@ class InteractiveScene(Scene):
         if self.selection_rectangle in self.mobjects:
             self.remove(self.selection_rectangle)
             additions = []
+            rect_bb = self.selection_rectangle.get_bounding_box()
+            buff = 1e-2
             for mob in reversed(self.get_selection_search_set()):
-                if self.selection_rectangle.is_touching(mob):
+                mob_bb = mob.get_bounding_box()
+                ff_min = self.frame.to_fixed_frame_point(mob_bb[0])
+                ff_max = self.frame.to_fixed_frame_point(mob_bb[2])
+                is_in_selection = not any((
+                    (ff_max < rect_bb[0] - buff).any(),
+                    (ff_min > rect_bb[2] + buff).any(),
+                ))
+                if is_in_selection:
                     additions.append(mob)
                     if self.selection_rectangle.get_arc_length() < 1e-2:
                         break
