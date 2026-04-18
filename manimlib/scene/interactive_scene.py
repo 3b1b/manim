@@ -354,6 +354,7 @@ class InteractiveScene(Scene):
             for sm in mob.get_family():
                 if sm in self.unselectables:
                     self.unselectables.remove(sm)
+        self.regenerate_selection_search_set()
 
     # Functions for keyboard actions
 
