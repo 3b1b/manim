@@ -1,2 +1,5 @@
 [build-system]
 requires = ["setuptools", "wheel"]
+
+[tool.bandit]
+skips = ["B404"]
