@@ -118,7 +118,7 @@ def full_tex_to_svg(full_tex: str, compiler: str = "latex", message: str = ""):
         text=True
     )
 
-    if process.returncode != 0:
+    if process.returncode != 0 and not dvi_path.exists():
         # Handle error
         error_str = ""
         log_path = tex_path.with_suffix(".log")
