@@ -34,12 +34,14 @@ def get_tex_mob_scale_factor() -> float:
 class Tex(StringMobject):
     # NOTE: To render fraction, kindly use `frac(a, b)` instead of `a/b` for proper indexing.
     tex_environment: str = "$"
+    font: str = ""
 
     def __init__(
         self,
         *tex_strings: str,
         font_size: int = 48,
         alignment: str = "center",
+        font: str = "",
         template: str = "",
         color: ManimColor = DEFAULT_MOBJECT_COLOR,
         additional_preamble: str = "",
@@ -63,6 +65,9 @@ class Tex(StringMobject):
         self.additional_preamble = additional_preamble
         self.tex_to_color_map = dict(**t2c, **tex_to_color_map)
 
+        if font := font or self.font:
+            self.set_font(font)
+
         super().__init__(
             tex_string,
             use_labelled_svg=use_labelled_svg,
@@ -70,7 +75,6 @@ class Tex(StringMobject):
             **kwargs,
         )
 
-        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
         self.scale(get_tex_mob_scale_factor() * font_size)
         self.font_size = font_size  # Important for this to go after the scale call
 
@@ -82,7 +86,12 @@ class Tex(StringMobject):
                 mob.become(rect)
 
         self.set_color(color)
+        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
         self.set_symbol_count()
+
+    def set_font(self, font) -> Self:
+        self.additional_preamble += f'\n#show math.equation: set text(font: "{font}")'
+        return self
 
     def get_svg_string_by_content(self, content: str) -> str:
         return latex2svg(content, self.template, self.additional_preamble)
@@ -364,6 +373,11 @@ class Tex(StringMobject):
 
 class TexText(Tex):
     tex_environment: str = ""
+    font: str = ""
+
+    def set_font(self, font) -> Self:
+        self.additional_preamble += f'\n#set text(font: "{font}")'
+        return self
 
     def set_symbol_count(self):
         pattern = r"""
