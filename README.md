@@ -120,7 +120,7 @@ Take a look at custom_config.yml for further configuration.  To add your customi
 
 ## MCP Server
 
-This repository includes an [MCP](https://modelcontextprotocol.io/) (Model Context Protocol) server that exposes ManimGL's functionality to LLMs. This lets AI assistants generate and render animations, inspect available objects and animations, and validate scene code.
+This repository includes an [MCP](https://modelcontextprotocol.io/) (Model Context Protocol) server that exposes ManimGL's functionality to LLMs. This lets AI assistants generate and render math explainer videos, inspect available objects and animations, and validate scene code.
 
 ### Setup
 
@@ -133,12 +133,25 @@ uv run manimgl-mcp
 
 | Tool | Description |
 |---|---|
+| `create_math_video` | Create a structured video plan from a natural language math topic description |
 | `render` | Render a scene to mp4, gif, or png from Python code |
 | `preview` | Capture a single frame as base64 PNG for quick feedback |
 | `validate` | Check scene code for syntax/import errors without rendering |
+| `list_topics` | Browse available math video topic templates by category and level |
+| `get_topic_template` | Get a full video template with concept arc and renderable scene code |
+| `get_math_helpers` | Get reusable math helper functions for a domain (calculus, linear algebra, etc.) |
+| `get_example` | Get working example code for 18 common animation patterns |
 | `list_mobjects` | List available mathematical object classes with signatures |
 | `list_animations` | List available animation classes with signatures |
-| `get_example` | Get working example code for common patterns |
+
+### Resources
+
+| Resource | Description |
+|---|---|
+| `manim://style-guide` | Animation timing, color conventions, camera work, and common pitfalls |
+| `manim://pedagogy` | 3Blue1Brown visual teaching principles: concrete before abstract, geometry before algebra |
+| `manim://constants` | Direction vectors, frame dimensions, buffer sizes, and color palette |
+| `manim://config` | Default rendering configuration (resolution, FPS, background) |
 
 ### Client configuration
 
