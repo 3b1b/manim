@@ -16,6 +16,10 @@ build/
 develop-eggs/
 dist/
 manimlib.egg-info/
+*.egg-info/
+
+# uv
+uv.lock
 
 downloads/
 eggs/
@@ -151,5 +155,6 @@ dmypy.json
 # For manim
 /videos
 /custom_config.yml
+/latex_cache
 test.py
 CLAUDE.md
