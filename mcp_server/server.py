@@ -137,8 +137,14 @@ def get_example(topic: str) -> str:
     the render or preview tools.
 
     Args:
-        topic: One of "basic_shapes", "transform", "tex", "graph",
-               "3d", "number_line", "complex_plane", "text_animation".
+        topic: Example topic. Options include "basic_shapes",
+               "transform", "tex", "graph", "3d", "number_line",
+               "complex_plane", "text_animation",
+               "value_tracker_graph", "grid_transformation",
+               "vector_field_2d", "color_gradient_surface",
+               "progressive_equation", "parametric_curve",
+               "side_by_side", "camera_orbit_3d",
+               "staggered_animation", "updater_chain".
     """
     result = _get_example(topic)
     return json.dumps(result, indent=2)
