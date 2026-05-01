@@ -28,6 +28,7 @@ from mcp_server.topics import (
 )
 from mcp_server.math_helpers import get_math_helpers as _get_math_helpers, HELPERS
 from mcp_server.style_guide import STYLE_GUIDE, PEDAGOGY_GUIDE
+from mcp_server.video_planner import create_video_plan as _create_video_plan
 
 mcp = FastMCP("manimgl")
 
@@ -203,6 +204,40 @@ def get_math_helpers(domain: str) -> str:
     """
     result = _get_math_helpers(domain)
     return json.dumps(result, indent=2)
+
+
+@mcp.tool
+def create_math_video(
+    topic: str,
+    level: str = "intermediate",
+    duration_hint: str = "medium",
+) -> str:
+    """Create a structured plan for a math explainer video.
+
+    Takes a natural language description of a math concept and
+    returns a complete video plan with:
+    - Matched topic templates with renderable scene code
+    - Relevant math helper functions
+    - Technique examples to draw from
+    - Pedagogical guidance (3Blue1Brown style)
+    - Duration and pacing notes
+
+    The scene code in matched templates can be passed directly
+    to the render tool. For topics without an exact template
+    match, use the returned examples and helpers as building
+    blocks to write new scene code.
+
+    Args:
+        topic: Natural language description, e.g. "how the
+               derivative relates to the slope of a tangent line"
+               or "visualize Gaussian curvature on different surfaces".
+        level: Target difficulty. One of "basic", "intermediate",
+               "calculus", "advanced".
+        duration_hint: Target length. One of "short" (~10s),
+                       "medium" (~30s), "long" (~60s+).
+    """
+    result = _create_video_plan(topic, level, duration_hint)
+    return json.dumps(result, indent=2, default=str)
 
 
 # ---------------------------------------------------------------------------
