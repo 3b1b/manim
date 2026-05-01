@@ -20,6 +20,14 @@ from mcp_server.introspection import (
     ANIMATION_CATEGORIES,
 )
 from mcp_server.examples import get_example as _get_example, EXAMPLES
+from mcp_server.topics import (
+    list_topics as _list_topics,
+    get_topic_template as _get_topic_template,
+    LEVELS as TOPIC_LEVELS,
+    CATEGORIES as TOPIC_CATEGORIES,
+)
+from mcp_server.math_helpers import get_math_helpers as _get_math_helpers, HELPERS
+from mcp_server.style_guide import STYLE_GUIDE, PEDAGOGY_GUIDE
 
 mcp = FastMCP("manimgl")
 
@@ -136,6 +144,61 @@ def get_example(topic: str) -> str:
     return json.dumps(result, indent=2)
 
 
+@mcp.tool
+def list_topics(
+    category: str | None = None,
+    level: str | None = None,
+) -> str:
+    """Browse available math video topic templates.
+
+    Each topic is a structured video plan with concept arc,
+    scene code, and pedagogical notes following 3Blue1Brown's
+    visual-first teaching approach.
+
+    Args:
+        category: Filter by math category. Options: "geometry",
+                  "linear_algebra", "complex_analysis", "calculus",
+                  "differential_geometry". Omit for all.
+        level: Filter by difficulty. Options: "basic",
+               "intermediate", "calculus", "advanced". Omit for all.
+    """
+    results = _list_topics(category, level)
+    return json.dumps(results, indent=2)
+
+
+@mcp.tool
+def get_topic_template(topic_id: str) -> str:
+    """Get the full video template for a math topic.
+
+    Returns the concept arc (pedagogical outline), complete
+    renderable scene code, and visual design notes.
+
+    The scene code can be passed directly to the render tool.
+
+    Args:
+        topic_id: Topic identifier from list_topics.
+    """
+    result = _get_topic_template(topic_id)
+    return json.dumps(result, indent=2, default=str)
+
+
+@mcp.tool
+def get_math_helpers(domain: str) -> str:
+    """Get reusable math helper functions for a domain.
+
+    Returns Python code with documented helper functions you can
+    incorporate into scene code. Covers common mathematical
+    operations for visualization.
+
+    Args:
+        domain: One of "calculus", "linear_algebra",
+                "complex_analysis", "vector_calculus",
+                "differential_geometry", "probability".
+    """
+    result = _get_math_helpers(domain)
+    return json.dumps(result, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Resources
 # ---------------------------------------------------------------------------
@@ -218,6 +281,31 @@ def get_default_config() -> str:
     if config_path.exists():
         return config_path.read_text()
     return "default_config.yml not found"
+
+
+@mcp.resource("manim://style-guide")
+def get_style_guide() -> str:
+    """Visual style guide for creating ManimGL animations.
+
+    Covers animation timing, color conventions, camera work,
+    text/equation presentation, updaters, staggered animations,
+    and common pitfalls. Distilled from 3Blue1Brown production code.
+    """
+    return STYLE_GUIDE
+
+
+@mcp.resource("manim://pedagogy")
+def get_pedagogy_guide() -> str:
+    """Visual mathematics pedagogy principles.
+
+    The 3Blue1Brown approach to teaching math through animation:
+    concrete before abstract, geometry before algebra, animation
+    shows process, one concept per scene, let the eye follow.
+
+    Includes video structure patterns and color conventions
+    for different math domains.
+    """
+    return PEDAGOGY_GUIDE
 
 
 # ---------------------------------------------------------------------------
