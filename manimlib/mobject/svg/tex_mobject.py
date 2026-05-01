@@ -34,7 +34,7 @@ def get_tex_mob_scale_factor() -> float:
 class Tex(StringMobject):
     # NOTE: To render fraction, kindly use `frac(a, b)` instead of `a/b` for proper indexing.
     tex_environment: str = "$"
-    font: str = ""
+    font: str = manim_config.tex.math_font
 
     def __init__(
         self,
@@ -65,8 +65,8 @@ class Tex(StringMobject):
         self.additional_preamble = additional_preamble
         self.tex_to_color_map = dict(**t2c, **tex_to_color_map)
 
-        if font := font or self.font:
-            self.set_font(font)
+        self.font = font or self.font
+        self.set_font()
 
         super().__init__(
             tex_string,
@@ -89,8 +89,10 @@ class Tex(StringMobject):
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
         self.set_symbol_count()
 
-    def set_font(self, font) -> Self:
-        self.additional_preamble += f'\n#show math.equation: set text(font: "{font}")'
+    def set_font(self) -> Self:
+        self.additional_preamble += f'\n#show math.equation: set text(font: "{self.font}")'
+        if text_font := manim_config.tex.text_font:
+            self.additional_preamble += f'\n#set text(font: "{text_font}")'
         return self
 
     def get_svg_string_by_content(self, content: str) -> str:
@@ -373,10 +375,12 @@ class Tex(StringMobject):
 
 class TexText(Tex):
     tex_environment: str = ""
-    font: str = ""
+    font: str = manim_config.tex.text_font
 
-    def set_font(self, font) -> Self:
-        self.additional_preamble += f'\n#set text(font: "{font}")'
+    def set_font(self) -> Self:
+        self.additional_preamble += f'\n#set text(font: "{self.font}")'
+        if math_font := manim_config.tex.math_font:
+            self.additional_preamble += f'\n#show math.equation: set text(font: "{math_font}")'
         return self
 
     def set_symbol_count(self):
