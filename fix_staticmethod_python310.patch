@@ -1,0 +1,62 @@
+diff --git a/manimlib/mobject/mobject.py b/manimlib/mobject/mobject.py
+index 7a5253ac..450eae3f 100644
+--- a/manimlib/mobject/mobject.py
++++ b/manimlib/mobject/mobject.py
+@@ -212,7 +212,6 @@ class Mobject(object):
+                 mob.note_changed_data()
+         return self
+ 
+-    @staticmethod
+     def affects_data(func: Callable[..., T]) -> Callable[..., T]:
+         @wraps(func)
+         def wrapper(self, *args, **kwargs):
+@@ -221,7 +220,6 @@ class Mobject(object):
+             return result
+         return wrapper
+ 
+-    @staticmethod
+     def affects_family_data(func: Callable[..., T]) -> Callable[..., T]:
+         @wraps(func)
+         def wrapper(self, *args, **kwargs):
+@@ -632,7 +630,6 @@ class Mobject(object):
+ 
+     # Copying and serialization
+ 
+-    @staticmethod
+     def stash_mobject_pointers(func: Callable[..., T]) -> Callable[..., T]:
+         @wraps(func)
+         def wrapper(self, *args, **kwargs):
+@@ -1905,7 +1902,6 @@ class Mobject(object):
+ 
+     # Operations touching shader uniforms
+ 
+-    @staticmethod
+     def affects_shader_info_id(func: Callable[..., T]) -> Callable[..., T]:
+         @wraps(func)
+         def wrapper(self, *args, **kwargs):
+diff --git a/manimlib/scene/scene.py b/manimlib/scene/scene.py
+index defeaa68..4beb8585 100644
+--- a/manimlib/scene/scene.py
++++ b/manimlib/scene/scene.py
+@@ -315,7 +315,6 @@ class Scene(object):
+             for batch, key in batches
+         ]
+ 
+-    @staticmethod
+     def affects_mobject_list(func: Callable[..., T]) -> Callable[..., T]:
+         @wraps(func)
+         def wrapper(self, *args, **kwargs):
+diff --git a/manimlib/shader_wrapper.py b/manimlib/shader_wrapper.py
+index 154cb60f..51c11799 100644
+--- a/manimlib/shader_wrapper.py
++++ b/manimlib/shader_wrapper.py
+@@ -431,8 +431,8 @@ class VShaderWrapper(ShaderWrapper):
+         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+ 
+     # Static method returning one shared value across all VShaderWrappers
+-    @lru_cache
+     @staticmethod
++    @lru_cache()
+     def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Framebuffer]:
+         """
+         Because VMobjects with fill are rendered in a funny way, using
