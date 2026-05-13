@@ -90,6 +90,6 @@ For Anaconda
    
    git clone https://github.com/3b1b/manim.git
    cd manim 
-   conda create -n manim python=3.8
+   conda create -n manim python=3.9
    conda activate manim
    pip install -e .
