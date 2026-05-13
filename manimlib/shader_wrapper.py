@@ -431,8 +431,8 @@ class VShaderWrapper(ShaderWrapper):
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
     # Static method returning one shared value across all VShaderWrappers
-    @lru_cache
     @staticmethod
+    @lru_cache()
     def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Framebuffer]:
         """
         Because VMobjects with fill are rendered in a funny way, using

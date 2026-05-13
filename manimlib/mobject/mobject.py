@@ -212,7 +212,6 @@ class Mobject(object):
                 mob.note_changed_data()
         return self
 
-    @staticmethod
     def affects_data(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -221,7 +220,6 @@ class Mobject(object):
             return result
         return wrapper
 
-    @staticmethod
     def affects_family_data(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -632,7 +630,6 @@ class Mobject(object):
 
     # Copying and serialization
 
-    @staticmethod
     def stash_mobject_pointers(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -1905,7 +1902,6 @@ class Mobject(object):
 
     # Operations touching shader uniforms
 
-    @staticmethod
     def affects_shader_info_id(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
