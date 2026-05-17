@@ -298,21 +298,15 @@ class Tex(StringMobject):
             matches = pattern.finditer(self.string)
         else:
             escape_pat = re.escape(pattern)
-            if pattern[0].isalnum():
-                escape_pat = r"(?<![a-zA-Z0-9_])" + escape_pat
-
-            if pattern[-1].isalnum():
-                escape_pat = escape_pat + r"(?![a-zA-Z0-9_])"
-
-            matches = re.finditer(escape_pat, self.string)
-
+            prefix = r"(?<![a-zA-Z0-9])" if pattern[0].isalnum() else ""
+            suffix = r"(?![a-zA-Z0-9])" if pattern[-1].isalnum() else ""
+            matches = re.finditer(prefix + escape_pat + suffix, self.string)
         result = []
         for match in matches:
             start, end = match.start(), match.end()
             start_idx = sum(counts[:start])
             end_idx = start_idx + sum(counts[start:end])
             result.append(self[start_idx:end_idx])
-
         return VGroup(*result)
 
     # Specific to Tex
@@ -332,11 +326,7 @@ class Tex(StringMobject):
         return re.findall(pattern, self.string)
 
     def make_number_changeable(
-        self,
-        value: float | int | str,
-        index: int = 0,
-        replace_all: bool = False,
-        **config,
+        self, value: float | int | str, index: int = 0, replace_all: bool = False, **config
     ) -> VMobject:
         substr = str(value)
         parts = self.select_parts(substr)
