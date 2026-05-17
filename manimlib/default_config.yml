@@ -84,6 +84,8 @@ tex:
   template: "default"
   # The font size at which Tex("0") has a height of 1 manim unit
   font_size_for_unit_height: 144
+  text_font: ""
+  math_font: ""
 text:
   # font: "Cambria Math"
   font: "Consolas"

@@ -22,17 +22,16 @@ class BulletedList(VGroup):
         buff: float = MED_LARGE_BUFF,
         aligned_edge: Vect3 = LEFT,
         numbered: bool = False,
-        **kwargs
+        **kwargs,
     ):
-        labelled_content = [R"\item " + item for item in items]
-        enum_str = "enumerate" if numbered else "itemize"
-        tex_string = "\n".join([
-            fR"\begin{{{enum_str}}}",
-            *labelled_content,
-            fR"\end{{{enum_str}}}"
-        ])
-        tex_text = TexText(tex_string, isolate=labelled_content, **kwargs)
-        lines = (tex_text.select_part(part) for part in labelled_content)
+        if numbered:
+            labelled_content = [f"{num + 1}. " + item for num, item in enumerate(items)]
+        else:
+            labelled_content = ["- " + item for item in items]
+        tex_string = "\n".join([*labelled_content])
+        alignment = kwargs.pop("alignment", "left")
+        tex_text = TexText(tex_string, alignment=alignment, **kwargs)
+        lines = (tex_text[part] for part in labelled_content)
 
         super().__init__(*lines)
 
@@ -51,11 +50,7 @@ class TexTextFromPresetString(TexText):
     default_color: ManimColor = DEFAULT_MOBJECT_COLOR
 
     def __init__(self, **kwargs):
-        super().__init__(
-            self.tex,
-            color=kwargs.pop("color", self.default_color),
-            **kwargs
-        )
+        super().__init__(self.tex, color=kwargs.pop("color", self.default_color), **kwargs)
 
 
 class Title(TexText):
@@ -69,7 +64,7 @@ class Title(TexText):
         match_underline_width_to_text: bool = False,
         underline_buff: float = SMALL_BUFF,
         underline_style: dict = dict(stroke_width=2, stroke_color=GREY_C),
-        **kwargs
+        **kwargs,
     ):
         super().__init__(*text_parts, font_size=font_size, **kwargs)
         self.to_edge(UP, buff=MED_SMALL_BUFF)

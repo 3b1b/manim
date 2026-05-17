@@ -137,10 +137,9 @@ class CoordinateSystem(ABC):
         edge: Vect3,
         direction: Vect3,
         buff: float = MED_SMALL_BUFF,
-        ensure_on_screen: bool = False,
-        **kwargs
+        ensure_on_screen: bool = False
     ) -> Tex:
-        label = Tex(label_tex, **kwargs)
+        label = Tex(label_tex)
         label.next_to(
             axis.get_edge_center(edge), direction,
             buff=buff

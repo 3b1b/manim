@@ -13,6 +13,7 @@ from manimlib.animation.fading import FadeIn
 from manimlib.animation.growing import GrowFromCenter
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import TexText
+from manimlib.mobject.geometry import Line
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -35,8 +36,8 @@ class Brace(Tex):
         mobject: Mobject,
         direction: Vect3 = DOWN,
         buff: float = 0.2,
-        tex_string: str = R"\underbrace{\qquad}",
-        **kwargs
+        tex_string: str = "underbrace(#h(5em))",
+        **kwargs,
     ):
         super().__init__(tex_string, **kwargs)
 
@@ -55,28 +56,16 @@ class Brace(Tex):
     def set_initial_width(self, width: float):
         width_diff = width - self.get_width()
         if width_diff > 0:
-            for tip, rect, vect in [(self[0], self[1], RIGHT), (self[5], self[4], LEFT)]:
-                rect.set_width(
-                    width_diff / 2 + rect.get_width(),
-                    about_edge=vect, stretch=True
-                )
+            for tip, rect, vect in [(self[0], self[1], RIGHT), (self[-1], self[-2], LEFT)]:
+                rect.set_width(width_diff / 2 + rect.get_width(), about_edge=vect, stretch=True)
                 tip.shift(-width_diff / 2 * vect)
         else:
             self.set_width(width, stretch=True)
         return self
 
-    def put_at_tip(
-        self,
-        mob: Mobject,
-        use_next_to: bool = True,
-        **kwargs
-    ):
+    def put_at_tip(self, mob: Mobject, use_next_to: bool = True, **kwargs):
         if use_next_to:
-            mob.next_to(
-                self.get_tip(),
-                np.round(self.get_direction()),
-                **kwargs
-            )
+            mob.next_to(self.get_tip(), np.round(self.get_direction()), **kwargs)
         else:
             mob.move_to(self.get_tip())
             buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_MOBJECT_BUFF)
@@ -84,13 +73,13 @@ class Brace(Tex):
             mob.shift(self.get_direction() * shift_distance)
         return self
 
-    def get_text(self, text: str, **kwargs) -> Text:
+    def get_brace_text(self, text: str, **kwargs) -> Text:
         buff = kwargs.pop("buff", SMALL_BUFF)
         text_mob = Text(text, **kwargs)
         self.put_at_tip(text_mob, buff=buff)
         return text_mob
 
-    def get_tex(self, *tex: str, **kwargs) -> Tex:
+    def get_brace_tex(self, *tex: str, **kwargs) -> Tex:
         buff = kwargs.pop("buff", SMALL_BUFF)
         tex_mob = Tex(*tex, **kwargs)
         self.put_at_tip(tex_mob, buff=buff)
@@ -106,6 +95,10 @@ class Brace(Tex):
         vect = self.get_tip() - self.get_center()
         return vect / get_norm(vect)
 
+    def set_symbol_count(self) -> None:
+        self.symbol_count = [0] * len(self.string)
+        self.symbol_count[-1] = len(self)
+
 
 class BraceLabel(VMobject):
     label_constructor: type = Tex
@@ -117,7 +110,7 @@ class BraceLabel(VMobject):
         brace_direction: np.ndarray = DOWN,
         label_scale: float = 1.0,
         label_buff: float = DEFAULT_MOBJECT_TO_MOBJECT_BUFF,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.brace_direction = brace_direction
@@ -135,9 +128,7 @@ class BraceLabel(VMobject):
         self.set_submobjects([self.brace, self.label])
 
     def creation_anim(
-        self,
-        label_anim: Animation = FadeIn,
-        brace_anim: Animation = GrowFromCenter
+        self, label_anim: Animation = FadeIn, brace_anim: Animation = GrowFromCenter
     ) -> AnimationGroup:
         return AnimationGroup(brace_anim(self.brace), label_anim(self.label))
 
