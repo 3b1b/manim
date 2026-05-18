@@ -51,6 +51,60 @@ manimgl example_scenes.py OpeningManimExample
 manim-render example_scenes.py OpeningManimExample
 ```
 
+### Linux (Ubuntu/Debian)
+
+1. Install system dependencies.
+
+```sh
+sudo apt update
+
+sudo apt install ffmpeg
+sudo apt install python3-pip
+sudo apt install libpango1.0-dev
+```
+
+2. Install a lightweight LaTeX distribution (optional, for LaTeX rendering).
+
+```sh
+sudo apt install texlive-science texlive-fonts-extra texlive-latex-extra
+```
+
+This lightweight setup is significantly smaller than installing `texlive-full`
+while still supporting most Manim projects.
+
+3. Clone and install ManimGL.
+
+```sh
+git clone https://github.com/3b1b/manim.git
+cd manim
+
+python3 -m pip install -e .
+
+manimgl example_scenes.py OpeningManimExample
+```
+
+<details>
+  <summary>💡 Optional: Using a virtual environment (venv)</summary>
+
+It is recommended to use a virtual environment to avoid conflicts with system packages.
+
+```sh
+sudo apt install python3-venv
+
+python3 -m venv venv
+source venv/bin/activate
+
+python3 -m pip install -e .
+```
+
+If `python3-venv` is unavailable on your system, try installing the version-specific package instead:
+
+```sh
+sudo apt install python3.12-venv
+```
+
+</details>
+
 ### Directly (Windows)
 
 1. [Install FFmpeg](https://www.wikihow.com/Install-FFmpeg-on-Windows).
