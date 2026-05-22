@@ -143,7 +143,6 @@ class Window(PygletWindow):
         super().swap_buffers()
         self._has_undrawn_event = False
 
-    @staticmethod
     def note_undrawn_event(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(self, *args, **kwargs):

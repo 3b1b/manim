@@ -15,7 +15,6 @@ default:
     \usepackage{relsize}
     \usepackage{textcomp}
     \usepackage{mathrsfs}
-    \usepackage{calligra}
     \usepackage{wasysym}
     \usepackage{ragged2e}
     \usepackage{physics}
@@ -40,7 +39,6 @@ ctex:
     \usepackage{relsize}
     \usepackage{textcomp}
     \usepackage{mathrsfs}
-    \usepackage{calligra}
     \usepackage{wasysym}
     \usepackage{ragged2e}
     \usepackage{physics}
