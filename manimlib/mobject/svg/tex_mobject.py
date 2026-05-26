@@ -85,9 +85,9 @@ class Tex(StringMobject):
                 rect.set_fill(mob.get_color(), 1).set_stroke(width=0).move_to(mob)
                 mob.become(rect)
 
+        self.set_symbol_count()
         self.set_color(color)
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
-        self.set_symbol_count()
 
     def set_font(self) -> Self:
         self.additional_preamble += f'\n#show math.equation: set text(font: "{self.font}")'
@@ -173,11 +173,7 @@ class Tex(StringMobject):
         return None
 
     def get_configured_items(self) -> list[tuple[Span, dict[str, str]]]:
-        return [
-            (span, {})
-            for selector in self.tex_to_color_map
-            for span in self.find_spans_by_selector(selector)
-        ]
+        return []
 
     @staticmethod
     def get_color_command(rgb_hex: str) -> str:
