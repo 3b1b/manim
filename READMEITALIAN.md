@@ -30,10 +30,10 @@ Per Linux, sono richiesti [Pango](https://pango.org) insieme ai suoi header di s
 ### Direttamente
 
 ```sh
-# Install manimgl
+# Installa manimgl
 pip install manimgl
 
-# Try it out
+# Provalo
 manimgl
 ```
 
@@ -42,12 +42,12 @@ Per ulteriori opzioni, dai un'occhiata alle sezioni [Utilizzare Manim](#using-ma
 Se vuoi lavorare sul codice sorgente di manimlib stesso, clona questo repository e nella directory esegui:
 
 ```sh
-# Install manimgl
+# Installa manimgl
 pip install -e .
 
-# Try it out
+# Provalo
 manimgl example_scenes.py OpeningManimExample
-# or
+# oppure
 manim-render example_scenes.py OpeningManimExample
 ```
 
