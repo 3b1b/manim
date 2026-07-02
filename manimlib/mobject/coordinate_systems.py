@@ -591,20 +591,25 @@ class ThreeDAxes(Axes):
         v_range=None,
         **kwargs
     ) -> ParametricSurface:
-        xu = self.x_axis.get_unit_size()
-        yu = self.y_axis.get_unit_size()
-        zu = self.z_axis.get_unit_size()
-        x0, y0, z0 = self.get_origin()
         u_range = u_range or self.x_range[:2]
         v_range = v_range or self.y_range[:2]
-        return ParametricSurface(
-            lambda u, v: [xu * u + x0, yu * v + y0, zu * func(u, v) + z0],
+        # Basis vectors defining the (possibly rotated) axes' linear transform
+        matrix = np.array([
+            self.x_axis.n2p(1) - self.x_axis.n2p(0),
+            self.y_axis.n2p(1) - self.y_axis.n2p(0),
+            self.z_axis.n2p(1) - self.z_axis.n2p(0),
+        ]).T
+        surface = ParametricSurface(
+            lambda u, v: [u, v, func(u, v)],
             u_range=u_range,
             v_range=v_range,
             color=color,
             opacity=opacity,
             **kwargs
         )
+        surface.apply_matrix(matrix, about_point=ORIGIN)
+        surface.shift(self.c2p(0, 0, 0))
+        return surface
 
     def get_parametric_surface(
         self,
