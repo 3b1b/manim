@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import inspect
 import pyperclip
+import textwrap
 import traceback
 
 from IPython.terminal import pt_inputhooks
@@ -207,6 +208,9 @@ class CheckpointManager:
         was called on a block of code starting with that comment.
         """
         code_string = pyperclip.paste()
+        clean_lines = [line.rstrip() for line in code_string.splitlines()]
+        code_string = "\n".join(clean_lines)
+        code_string = textwrap.dedent(code_string)
         checkpoint_key = self.get_leading_comment(code_string)
         self.handle_checkpoint_key(scene, checkpoint_key)
         shell.run_cell(code_string)

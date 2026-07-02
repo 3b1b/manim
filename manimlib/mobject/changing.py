@@ -173,4 +173,4 @@ class TracingTail(TracedPath):
         )
         curr_point = self.traced_point_func()
         n_points = int(self.time_traced / self.time_per_anchor)
-        self.traced_points: list[np.ndarray] = n_points * [curr_point]
+        self.traced_points: list[np.ndarray] = [curr_point.copy() for _ in range(n_points)]

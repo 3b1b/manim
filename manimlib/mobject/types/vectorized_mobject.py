@@ -52,7 +52,7 @@ SubVmobjectType = TypeVar('SubVmobjectType', bound='VMobject')
 if TYPE_CHECKING:
     from typing import Callable, Tuple, Any, Optional
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Self
-    from moderngl.context import Context
+    from moderngl import Context
 
 
 class VMobject(Mobject):
@@ -116,6 +116,8 @@ class VMobject(Mobject):
         self.needs_new_unit_normal = True
         self.subpath_end_indices = None
         self.outer_vert_indices = np.zeros(0, dtype=int)
+        
+        self.shader_program_type = None
 
         super().__init__(**kwargs)
 
@@ -306,6 +308,29 @@ class VMobject(Mobject):
     def set_color_by_proportion(self, prop_to_color: Callable[[float], Color]) -> Self:
         colors = list(map(prop_to_color, np.linspace(0, 1, self.get_num_points())))
         self.set_stroke(color=colors)
+        return self
+        
+    def set_color_by_code(self, glsl_code: str, program_type: str | None = None) -> Self:
+        self.replace_shader_code(
+            "///// INSERT COLOR FUNCTION HERE /////",
+            glsl_code,
+            program_type
+        )
+        return self
+        
+    @Mobject.affects_data
+    def replace_shader_code(
+        self,
+        old: str,
+        new: str,
+        program_type: str | None = None
+    ) -> Self:
+        for mob in self.get_family():
+            if program_type is not None:
+                mob.shader_program_type = program_type
+            if program_type is not None:
+                mob.shader_code_replacements[old] = new
+        super().replace_shader_code(old, new)
         return self
 
     def set_anti_alias_width(self, anti_alias_width: float, recurse: bool = True) -> Self:
@@ -1288,6 +1313,7 @@ class VMobject(Mobject):
             vert_data=self.data,
             mobject_uniforms=self.uniforms,
             code_replacements=self.shader_code_replacements,
+            program_type=self.shader_program_type,
             stroke_behind=self.stroke_behind,
             depth_test=self.depth_test
         )
