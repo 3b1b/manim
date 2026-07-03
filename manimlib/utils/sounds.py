@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import threading
 import platform
@@ -19,14 +20,22 @@ def get_full_sound_file_path(sound_file_name: str) -> str:
 def play_sound(sound_file):
     """Play a sound file using the system's audio player"""
     full_path = get_full_sound_file_path(sound_file)
+
+    # Resolve the real path and validate it exists to prevent path traversal attacks
+    full_path = os.path.realpath(full_path)
+    if not os.path.isfile(full_path):
+        raise FileNotFoundError(f"Sound file not found: {full_path}")
+
     system = platform.system()
 
     if system == "Windows":
-        # Windows
+        # Windows - escape single quotes in path to prevent PowerShell injection
+        # Single-quoted PowerShell strings only require doubling of single quotes
+        escaped_path = full_path.replace("'", "''")
         subprocess.Popen(
-            ["powershell", "-c", f"(New-Object Media.SoundPlayer '{full_path}').PlaySync()"],
-            shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-    )
+            ["powershell", "-c", f"(New-Object Media.SoundPlayer '{escaped_path}').PlaySync()"],
+            shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
     elif system == "Darwin":
         # macOS
         subprocess.Popen(
