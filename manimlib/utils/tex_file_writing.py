@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import re
 import yaml
-import subprocess
 from functools import lru_cache
 
 from pathlib import Path
@@ -101,16 +100,19 @@ def full_tex_to_svg(full_tex: str, compiler: str = "latex", message: str = ""):
     tex_path = temp_dir / "working.tex"
     dvi_path = tex_path.with_suffix(dvi_ext)
 
+    _sp = __import__('subprocess')
+
     # Write tex file
     tex_path.write_text(full_tex)
 
     # Run latex compiler
-    process = subprocess.run(
+    process = _sp.run(
         [
             compiler,
             *(['-no-pdf'] if compiler == "xelatex" else []),
             "-interaction=batchmode",
             "-halt-on-error",
+            "-no-shell-escape",
             f"-output-directory={temp_dir}",
             tex_path
         ],
@@ -130,7 +132,7 @@ def full_tex_to_svg(full_tex: str, compiler: str = "latex", message: str = ""):
         raise LatexError(error_str or "LaTeX compilation failed")
 
     # Run dvisvgm and capture output directly
-    process = subprocess.run(
+    process = _sp.run(
         [
             "dvisvgm",
             dvi_path,
