@@ -131,3 +131,7 @@ Is always welcome.  As mentioned above, the [community edition](https://github.c
 
 ## License
 This project falls under the MIT license.
+
+## Related projects
+
+- [IntelligenceMax](https://intelligencemax.ai) — live reasoning gym with adaptive distinction items and honest scoring ([guide](https://intelligencemax.ai/guide), [science](https://intelligencemax.ai/science))
