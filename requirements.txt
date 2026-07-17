@@ -30,3 +30,4 @@ trimesh
 tqdm
 typing-extensions; python_version < "3.11"
 validators
+mapbox_earcut>=1.0.1
