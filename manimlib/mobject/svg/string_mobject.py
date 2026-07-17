@@ -416,10 +416,9 @@ class StringMobject(SVGMobject, ABC):
     def get_configured_items(self) -> list[tuple[Span, dict[str, str]]]:
         return []
 
-    @staticmethod
     @abstractmethod
     def get_command_string(
-        attr_dict: dict[str, str], is_end: bool, label_hex: str | None
+        self, attr_dict: dict[str, str], is_end: bool, label_hex: str | None
     ) -> str:
         return ""
 
