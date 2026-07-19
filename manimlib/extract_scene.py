@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import copy
+import importlib.util
 import inspect
+import os
 import sys
+import tempfile
 
 from manimlib.module_loader import ModuleLoader
 
@@ -21,7 +24,9 @@ if TYPE_CHECKING:
 
 class BlankScene(InteractiveScene):
     def construct(self):
-        exec(manim_config.universal_import_line)
+        import manimlib
+        _ns = {k: getattr(manimlib, k) for k in getattr(manimlib, '__all__', [])}
+        globals().update(_ns)
         self.embed()
 
 
@@ -174,8 +179,16 @@ def insert_embed_line_to_module(module: Module, run_config: Dict) -> None:
 
     # Execute the code, which presumably redefines the user's
     # scene to include this embed line, within the relevant module.
-    code_object = compile(new_code, module.__name__, 'exec')
-    exec(code_object, module.__dict__)
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as tmp_file:
+        tmp_file.write(new_code)
+        tmp_path = tmp_file.name
+    try:
+        spec = importlib.util.spec_from_file_location(module.__name__, tmp_path)
+        tmp_mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(tmp_mod)
+        module.__dict__.update(tmp_mod.__dict__)
+    finally:
+        os.unlink(tmp_path)
 
 
 def get_module(run_config: Dict) -> Module:
