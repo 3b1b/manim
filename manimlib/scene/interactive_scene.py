@@ -16,6 +16,7 @@ from manimlib.constants import MANIM_COLORS, WHITE, GREY_A, GREY_C
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import Square
+from manimlib.mobject.geometry import Triangle
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.numbers import DecimalNumber
@@ -103,10 +104,12 @@ class InteractiveScene(Scene):
         fill_color=GREY_C,
         num_decimal_places=1,
     )
-    crosshair_width = 0.2
+    crosshair_wing_shape = (0.02, 0.2)
     crosshair_style = dict(
-        stroke_color=GREY_A,
-        stroke_width=[3, 0, 3],
+        fill_color=GREY_A,
+        fill_opacity=1,
+        fill_border_width=1,
+        stroke_width=0,
     )
 
     def setup(self):
@@ -180,13 +183,12 @@ class InteractiveScene(Scene):
             pass
 
     def get_crosshair(self):
-        lines = VMobject().replicate(2)
-        lines[0].set_points([LEFT, ORIGIN, RIGHT])
-        lines[1].set_points([UP, ORIGIN, DOWN])
-        crosshair = VGroup(*lines)
-
-        crosshair.set_width(self.crosshair_width)
-        crosshair.set_style(**self.crosshair_style)
+        tri = Triangle(**self.crosshair_style)
+        tri.set_shape(*self.crosshair_wing_shape)
+        tri.move_to(ORIGIN, UP)
+        crosshair = VGroup(
+            tri, *(tri.copy().rotate(90 * DEG * n) for n in range(1, 4))
+        )
         crosshair.set_animating_status(True)
         crosshair.fix_in_frame()
         return crosshair
