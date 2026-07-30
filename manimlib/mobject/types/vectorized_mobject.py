@@ -90,7 +90,10 @@ class VMobject(Mobject):
         # Could also be "no_joint", "bevel", "miter"
         joint_type: str = "auto",
         flat_stroke: bool = False,
-        scale_stroke_with_zoom: bool = False,
+        # If false, stroke width is measured relative to the frame, so that a given
+        # width looks the same at any zoom level. If true, it's measured relative to
+        # the scene, so that zooming in makes the stroke look thicker.
+        stroke_width_in_scene_units: bool = False,
         use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
         anti_alias_width: float = 1.5,
@@ -107,7 +110,7 @@ class VMobject(Mobject):
         self.long_lines = long_lines
         self.joint_type = joint_type
         self.flat_stroke = flat_stroke
-        self.scale_stroke_with_zoom = scale_stroke_with_zoom
+        self.stroke_width_in_scene_units = stroke_width_in_scene_units
         self.use_simple_quadratic_approx = use_simple_quadratic_approx
         self.anti_alias_width = anti_alias_width
         self.fill_border_width = fill_border_width
@@ -130,7 +133,7 @@ class VMobject(Mobject):
             anti_alias_width=self.anti_alias_width,
             joint_type=self.joint_type_map[self.joint_type],
             flat_stroke=float(self.flat_stroke),
-            scale_stroke_with_zoom=float(self.scale_stroke_with_zoom)
+            stroke_width_in_scene_units=float(self.stroke_width_in_scene_units)
         )
 
     def add(self, *vmobjects: VMobject) -> Self:
@@ -430,12 +433,19 @@ class VMobject(Mobject):
     def get_flat_stroke(self) -> bool:
         return self.uniforms["flat_stroke"] == 1.0
 
+    def set_stroke_width_in_scene_units(self, value: bool = True, recurse: bool = True) -> Self:
+        self.set_uniform(recurse, stroke_width_in_scene_units=float(value))
+        return self
+
+    def get_stroke_width_in_scene_units(self) -> bool:
+        return self.uniforms["stroke_width_in_scene_units"] == 1.0
+
+    # Old names, kept so that existing scenes don't break
     def set_scale_stroke_with_zoom(self, scale_stroke_with_zoom: bool = True, recurse: bool = True) -> Self:
-        self.set_uniform(recurse, scale_stroke_with_zoom=float(scale_stroke_with_zoom))
-        pass
+        return self.set_stroke_width_in_scene_units(scale_stroke_with_zoom, recurse)
 
     def get_scale_stroke_with_zoom(self) -> bool:
-        return self.uniforms["flat_stroke"] == 1.0
+        return self.get_stroke_width_in_scene_units()
 
     def set_joint_type(self, joint_type: str, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):

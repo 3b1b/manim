@@ -5,9 +5,7 @@ layout (triangle_strip, max_vertices = 64) out;  // Related to MAX_STEPS below
 
 uniform float anti_alias_width;
 uniform float flat_stroke;
-uniform float pixel_size;
 uniform float joint_type;
-uniform float frame_scale;
 
 in vec3 verts[3];
 
@@ -141,7 +139,8 @@ void emit_point_with_width(
     // Figure out the step from the point to the corners of the
     // triangle strip around the polyline
     vec3 step = step_to_corner(point, tangent, unit_normal, joint_angle, inside_curve, draw_flat);
-    float aaw = max(anti_alias_width * pixel_size, 1e-8);
+    // anti_alias_width is measured in pixels
+    float aaw = max(anti_alias_width * get_pixel_unit_size(), 1e-8);
 
     // Emit two corners
     // The frag shader will receive a value from -1 to 1,
@@ -175,7 +174,7 @@ void main() {
     // Estimate how many line segment the curve should be divided into
     // based on the area of the triangle defined by these control points
     float area = 0.5 * length(cross(verts[1] - verts[0], verts[2] - verts[0]));
-    int count = int(round(POLYLINE_FACTOR * sqrt(area) / frame_scale));
+    int count = int(round(POLYLINE_FACTOR * sqrt(area) / get_frame_unit_size()));
     int n_steps = min(2 + count, MAX_STEPS);
 
     // Emit vertex pairs aroudn subdivided points

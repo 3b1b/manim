@@ -1,4 +1,3 @@
-uniform float is_fixed_in_frame;
 uniform mat4 view;
 uniform float focal_distance;
 uniform vec3 frame_rescale_factors;
@@ -6,6 +5,8 @@ uniform vec4 clip_plane0;
 uniform vec4 clip_plane1;
 uniform vec4 clip_plane2;
 uniform vec4 clip_plane3;
+
+#INSERT frame_units.glsl
 
 void emit_gl_Position(vec3 point){
     vec4 result = vec4(point, 1.0);
