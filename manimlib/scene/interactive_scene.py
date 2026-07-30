@@ -644,15 +644,14 @@ class InteractiveScene(Scene):
         height = frame.get_height()
         angles = frame.get_euler_angles()
 
-        call = f"reorient("
-        theta, phi, gamma = (angles / DEG).astype(int)
-        call += f"{theta}, {phi}, {gamma}"
+        call = "reorient("
+        call += "%d, %d, %d" % tuple(angles / DEG)
         if any(center != 0):
-            call += f", {tuple(np.round(center, 2))}"
+            call += ", (%.2f, %.2f, %.2f)" % tuple(center)
         if height != FRAME_HEIGHT:
-            call += ", {:.2f}".format(height)
+            call += ", %.2f" % height
         call += ")"
         pyperclip.copy(call)
 
     def copy_cursor_position(self):
-        pyperclip.copy(str(tuple(self.mouse_point.get_center().round(2))))
+        pyperclip.copy("(%.2f, %.2f, %.2f)" % tuple(self.mouse_point.get_center()))
