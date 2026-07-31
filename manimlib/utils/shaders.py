@@ -35,12 +35,10 @@ def get_shader_program(
         ctx: moderngl.context.Context,
         vertex_shader: str,
         fragment_shader: Optional[str] = None,
-        geometry_shader: Optional[str] = None,
 ) -> moderngl.Program:
     return ctx.program(
         vertex_shader=vertex_shader,
         fragment_shader=fragment_shader,
-        geometry_shader=geometry_shader,
     )
 
 

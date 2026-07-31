@@ -75,7 +75,6 @@ class ShaderWrapper(object):
 
         self.program_code: dict[str, str | None] = {
             "vertex_shader": get_code("vert"),
-            "geometry_shader": get_code("geom"),
             "fragment_shader": get_code("frag"),
         }
         if self.verts_per_record:
@@ -290,6 +289,15 @@ class ShaderWrapper(object):
 
 
 class VShaderWrapper(ShaderWrapper):
+    """
+    A bezier sits in three consecutive records of the buffer, and both shaders
+    read those records themselves rather than being handed vertex attributes.
+    The fill shader turns each curve into two triangles, and the stroke shader
+    into one quad per polyline segment, up to MAX_STEPS of them.
+    """
+    fill_verts_per_record = 6 // 3
+    stroke_verts_per_record = 6 * (32 - 1) // 3  # MAX_STEPS in stroke/vert.glsl
+
     def __init__(
         self,
         ctx: moderngl.context.Context,
@@ -312,10 +320,7 @@ class VShaderWrapper(ShaderWrapper):
             texture_paths=texture_paths,
             depth_test=depth_test,
             render_primitive=render_primitive,
-            # The fill shader turns each bezier, held as three records, into the
-            # six vertices of two triangles. Strokes are still handed vertex
-            # attributes, and read from the same buffer the ordinary way.
-            verts_per_record=2,
+            verts_per_record=self.fill_verts_per_record,
         )
         for old, new in code_replacements.items():
             self.replace_code_program(old, new, program_type)
@@ -326,7 +331,7 @@ class VShaderWrapper(ShaderWrapper):
                 os.path.join("quadratic_bezier", f"{vtype}", f"{name}.glsl")
             )
             for vtype in ["stroke", "fill"]
-            for name in ["vert", "geom", "frag"]
+            for name in ["vert", "frag"]
         }
         layout = self.get_data_layout_code()
         for name, code in self.program_code.items():
@@ -337,7 +342,6 @@ class VShaderWrapper(ShaderWrapper):
         self.stroke_program = get_shader_program(
             self.ctx,
             vertex_shader=self.program_code["stroke_vert"],
-            geometry_shader=self.program_code["stroke_geom"],
             fragment_shader=self.program_code["stroke_frag"],
         )
         self.fill_program = get_shader_program(
@@ -347,50 +351,26 @@ class VShaderWrapper(ShaderWrapper):
         )
         self.programs = [self.stroke_program, self.fill_program]
 
-        # Full vert format looks like this (total of 4x23 = 92 bytes):
-        # point 3
-        # stroke_rgba 4
-        # stroke_width 1
-        # joint_angle 1
-        # fill_rgba 4
-        # base_normal 3
-        # fill_border_width 1
-        self.stroke_vert_format = '3f 4f 1f 1f 16x 3f 4x'
-        self.stroke_vert_attributes = ['point', 'stroke_rgba', 'stroke_width', 'joint_angle', 'unit_normal']
-
-        # Note how the border reads fill_rgba and fill_border_width where an
-        # ordinary stroke reads stroke_rgba and stroke_width
-        self.fill_border_vert_format = '3f 20x 1f 4f 3f 1f'
-        self.fill_border_vert_attributes = ['point', 'joint_angle', 'stroke_rgba', 'unit_normal', 'stroke_width']
-
     def init_vertex_objects(self):
         self.vbo = None
         self.stroke_vao = None
         self.fill_vao = None
-        self.fill_border_vao = None
         self.vaos = []
         self.vert_counts = []
         self.data_texture = None
 
     def generate_vaos(self):
         self.init_data_texture()
+        # Neither shader is handed any vertex attributes, since both read the
+        # buffer themselves. The border around a fill comes from the stroke
+        # program too, differing only by the is_fill_border uniform.
         self.stroke_vao = self.ctx.vertex_array(
-            program=self.stroke_program,
-            content=[(self.vbo, self.stroke_vert_format, *self.stroke_vert_attributes)],
-            mode=self.render_primitive,
+            program=self.stroke_program, content=[], mode=self.render_primitive
         )
-        # The fill shader takes no attributes, reading the buffer itself instead
         self.fill_vao = self.ctx.vertex_array(
-            program=self.fill_program,
-            content=[],
-            mode=self.render_primitive,
+            program=self.fill_program, content=[], mode=self.render_primitive
         )
-        self.fill_border_vao = self.ctx.vertex_array(
-            program=self.stroke_program,
-            content=[(self.vbo, self.fill_border_vert_format, *self.fill_border_vert_attributes)],
-            mode=self.render_primitive,
-        )
-        self.vaos = [self.stroke_vao, self.fill_vao, self.fill_border_vao]
+        self.vaos = [self.stroke_vao, self.fill_vao]
 
     def set_backstroke(self, value: bool = True):
         self.stroke_behind = value
@@ -423,8 +403,8 @@ class VShaderWrapper(ShaderWrapper):
     def render_stroke(self):
         if self.stroke_vao is None:
             return
-        set_program_uniform(self.stroke_program, "skip_zero_width", True)
-        self.stroke_vao.render()
+        set_program_uniform(self.stroke_program, "is_fill_border", False)
+        self.stroke_vao.render(vertices=self.stroke_verts_per_record * len(self.vert_data))
 
     def render_fill(self):
         """
@@ -450,7 +430,7 @@ class VShaderWrapper(ShaderWrapper):
             return
 
         gl.glEnable(gl.GL_STENCIL_TEST)
-        set_program_uniform(self.stroke_program, "skip_zero_width", False)
+        set_program_uniform(self.stroke_program, "is_fill_border", True)
         for first, count in self.get_fill_ranges():
             self.render_fill_range(first, count)
         gl.glDisable(gl.GL_STENCIL_TEST)
@@ -540,10 +520,12 @@ class VShaderWrapper(ShaderWrapper):
         return mins.tolist(), maxs.tolist()
 
     def render_fill_range(self, first: int, count: int):
-        # The range is given in records, which the fill shader turns into several
-        # vertices each, while the border reads records as attributes directly
-        fill_first = first * self.verts_per_record
-        fill_count = count * self.verts_per_record
+        # The range is given in records, which each shader turns into a different
+        # number of vertices
+        fill_first = first * self.fill_verts_per_record
+        fill_count = count * self.fill_verts_per_record
+        border_first = first * self.stroke_verts_per_record
+        border_count = count * self.stroke_verts_per_record
 
         # Pass 1: Count the winding number around each pixel. Depth testing must
         # be off here, since an occluded triangle which failed to contribute
@@ -569,7 +551,7 @@ class VShaderWrapper(ShaderWrapper):
         # a seam along the boundary for partially transparent colors.
         gl.glStencilFunc(gl.GL_EQUAL, 0, 0xFF)
         gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, gl.GL_KEEP)
-        self.fill_border_vao.render(first=first, vertices=count)
+        self.stroke_vao.render(first=border_first, vertices=border_count)
 
         # Pass 2: Color in everywhere the winding number is nonzero. Zeroing the
         # stencil on the way through means the first triangle to cover a pixel
