@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 from functools import wraps
+import inspect
 import itertools as it
 import os
 import pickle
@@ -58,7 +59,43 @@ if TYPE_CHECKING:
     T = TypeVar('T')
     TimeBasedUpdater = Callable[["Mobject", float], "Mobject" | None]
     NonTimeUpdater = Callable[["Mobject"], "Mobject" | None]
-    Updater = Union[TimeBasedUpdater, NonTimeUpdater]
+    UpdateFunction = Union[TimeBasedUpdater, NonTimeUpdater]
+
+
+class Updater(object):
+    """
+    Light wrapper for a function meant to be called on a mobject every frame.
+    Such a function may take in a second argument, which is passed the change
+    in time since the last frame. This way users need not think about which of
+    the two forms they've written, and the distinction is only worked out once,
+    rather than on every call.
+    """
+    def __init__(self, func: UpdateFunction):
+        self.func = func
+        self.takes_dt = self.func_takes_dt(func)
+
+    @staticmethod
+    def func_takes_dt(func: UpdateFunction) -> bool:
+        try:
+            inspect.signature(func).bind(None, None)
+            return True
+        except (TypeError, ValueError):
+            # Either it takes no second argument, or it's one of the
+            # rare callables which cannot be inspected, like some builtins
+            return False
+
+    def __call__(self, mobject: Mobject, dt: float = 0, frame_rate: float | None = None) -> None:
+        if not self.takes_dt:
+            self.func(mobject)
+            return
+        # When animations are skipped, dt can span many frames at once. Time
+        # based updaters are written as if called once per frame, and often
+        # accumulate state in a way which depends on the size of the steps they
+        # take, so given a frame rate, such a jump is broken back up into the
+        # number of frames it stands in for.
+        n_steps = 1 if frame_rate is None else max(int(dt * frame_rate), 1)
+        for _ in range(n_steps):
+            self.func(mobject, dt / n_steps)
 
 
 class Mobject(object):
@@ -820,51 +857,61 @@ class Mobject(object):
     def init_updaters(self):
         self.updaters: list[Updater] = list()
         self._has_updaters_in_family: Optional[bool] = False
+        self._has_time_based_updaters_in_family: Optional[bool] = False
         self.updating_suspended: bool = False
 
-    def update(self, dt: float = 0, recurse: bool = True) -> Self:
+    def update(
+        self,
+        dt: float = 0,
+        recurse: bool = True,
+        frame_rate: float | None = None
+    ) -> Self:
+        """
+        Calls all updaters in the family. Passing in a frame_rate accounts for
+        the possibility that dt spans multiple frames, as happens when
+        animations are being skipped, in which case time based updaters are
+        called once for each frame that dt stands in for.
+        """
         if not self.has_updaters() or self.updating_suspended:
             return self
         if recurse:
             for submob in self.submobjects:
-                submob.update(dt, recurse)
+                submob.update(dt, recurse, frame_rate)
         for updater in self.updaters:
-            # This is hacky, but if an updater takes dt as an arg,
-            # it will be passed the change in time from here
-            if "dt" in updater.__code__.co_varnames:
-                updater(self, dt=dt)
-            else:
-                updater(self)
+            updater(self, dt, frame_rate)
         return self
 
-    def get_updaters(self) -> list[Updater]:
-        return self.updaters
+    def get_updaters(self) -> list[UpdateFunction]:
+        return [updater.func for updater in self.updaters]
 
-    def add_updater(self, update_func: Updater, call: bool = True) -> Self:
-        self.updaters.append(update_func)
+    def add_updater(self, update_func: UpdateFunction, call: bool = True) -> Self:
+        self.updaters.append(Updater(update_func))
+        self.refresh_has_updater_status()
         if call:
             self.update(dt=0)
-        self.refresh_has_updater_status()
-        self.update()
         return self
 
-    def insert_updater(self, update_func: Updater, index=0):
-        self.updaters.insert(index, update_func)
+    def insert_updater(self, update_func: UpdateFunction, index=0):
+        self.updaters.insert(index, Updater(update_func))
         self.refresh_has_updater_status()
         return self
 
-    def remove_updater(self, update_func: Updater) -> Self:
-        while update_func in self.updaters:
-            self.updaters.remove(update_func)
+    def remove_updater(self, update_func: UpdateFunction) -> Self:
+        self.updaters = [
+            updater for updater in self.updaters
+            if updater.func is not update_func
+        ]
         self.refresh_has_updater_status()
         return self
 
     def clear_updaters(self, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):
             mob.updaters = []
-            mob._has_updaters_in_family = False
-        for parent in self.get_ancestors():
-            parent._has_updaters_in_family = False
+            mob._has_updaters_in_family = None
+            mob._has_time_based_updaters_in_family = None
+        # Note this also propagates up to any ancestors, which may
+        # still have other descendants with updaters
+        self.refresh_has_updater_status()
         return self
 
     def match_updaters(self, mobject: Mobject) -> Self:
@@ -898,8 +945,19 @@ class Mobject(object):
             )
         return self._has_updaters_in_family
 
+    def has_time_based_updaters(self) -> bool:
+        if self._has_time_based_updaters_in_family is None:
+            # Recompute and save
+            self._has_time_based_updaters_in_family = any(
+                updater.takes_dt
+                for mob in self.get_family()
+                for updater in mob.updaters
+            )
+        return self._has_time_based_updaters_in_family
+
     def refresh_has_updater_status(self) -> Self:
         self._has_updaters_in_family = None
+        self._has_time_based_updaters_in_family = None
         for parent in self.parents:
             parent.refresh_has_updater_status()
         return self

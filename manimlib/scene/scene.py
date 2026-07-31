@@ -263,7 +263,10 @@ class Scene(object):
 
     def update_mobjects(self, dt: float) -> None:
         for mobject in self.mobjects:
-            mobject.update(dt)
+            # The frame rate is passed in so that if dt spans multiple frames,
+            # as it does when animations are skipped, time based updaters are
+            # still called once per frame that would have been rendered
+            mobject.update(dt, frame_rate=self.camera.fps)
 
     def should_update_mobjects(self) -> bool:
         return self.always_update_mobjects or any(
@@ -568,10 +571,9 @@ class Scene(object):
         for animation in animations:
             animation.finish()
             animation.clean_up_from_scene(self)
-        if self.skip_animations:
-            self.update_mobjects(self.get_run_time(animations))
-        else:
-            self.update_mobjects(0)
+        # Note that the passage of time during the animation, including
+        # for the case of skipped animations, is handled by update_frame
+        self.update_mobjects(0)
 
     @affects_mobject_list
     def play(
