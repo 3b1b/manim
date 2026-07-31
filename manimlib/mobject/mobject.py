@@ -62,42 +62,6 @@ if TYPE_CHECKING:
     UpdateFunction = Union[TimeBasedUpdater, NonTimeUpdater]
 
 
-class Updater(object):
-    """
-    Light wrapper for a function meant to be called on a mobject every frame.
-    Such a function may take in a second argument, which is passed the change
-    in time since the last frame. This way users need not think about which of
-    the two forms they've written, and the distinction is only worked out once,
-    rather than on every call.
-    """
-    def __init__(self, func: UpdateFunction):
-        self.func = func
-        self.takes_dt = self.func_takes_dt(func)
-
-    @staticmethod
-    def func_takes_dt(func: UpdateFunction) -> bool:
-        try:
-            inspect.signature(func).bind(None, None)
-            return True
-        except (TypeError, ValueError):
-            # Either it takes no second argument, or it's one of the
-            # rare callables which cannot be inspected, like some builtins
-            return False
-
-    def __call__(self, mobject: Mobject, dt: float = 0, frame_rate: float | None = None) -> None:
-        if not self.takes_dt:
-            self.func(mobject)
-            return
-        # When animations are skipped, dt can span many frames at once. Time
-        # based updaters are written as if called once per frame, and often
-        # accumulate state in a way which depends on the size of the steps they
-        # take, so given a frame rate, such a jump is broken back up into the
-        # number of frames it stands in for.
-        n_steps = 1 if frame_rate is None else max(int(dt * frame_rate), 1)
-        for _ in range(n_steps):
-            self.func(mobject, dt / n_steps)
-
-
 class Mobject(object):
     """
     Mathematical Object
@@ -2392,6 +2356,43 @@ def override_animate(method):
         return animation_method
 
     return decorator
+
+
+class Updater(object):
+    """
+    Light wrapper for a function meant to be called on a mobject every frame.
+    Such a function may take in a second argument, which is passed the change
+    in time since the last frame. This way users need not think about which of
+    the two forms they've written, and the distinction is only worked out once,
+    rather than on every call.
+    """
+
+    def __init__(self, func: UpdateFunction):
+        self.func = func
+        self.takes_dt = self.func_takes_dt(func)
+
+    @staticmethod
+    def func_takes_dt(func: UpdateFunction) -> bool:
+        try:
+            inspect.signature(func).bind(None, None)
+            return True
+        except (TypeError, ValueError):
+            # Either it takes no second argument, or it's one of the
+            # rare callables which cannot be inspected, like some builtins
+            return False
+
+    def __call__(self, mobject: Mobject, dt: float = 0, frame_rate: float | None = None) -> None:
+        if not self.takes_dt:
+            self.func(mobject)
+            return
+        # When animations are skipped, dt can span many frames at once. Time
+        # based updaters are written as if called once per frame, and often
+        # accumulate state in a way which depends on the size of the steps they
+        # take, so given a frame rate, such a jump is broken back up into the
+        # number of frames it stands in for.
+        n_steps = 1 if frame_rate is None else max(int(dt * frame_rate), 1)
+        for _ in range(n_steps):
+            self.func(mobject, dt / n_steps)
 
 
 class _UpdaterBuilder:
