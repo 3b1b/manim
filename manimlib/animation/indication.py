@@ -399,10 +399,7 @@ class TurnInsideOut(Transform):
         super().__init__(mobject, path_arc=path_arc, **kwargs)
 
     def create_target(self) -> Mobject:
-        result = self.mobject.copy().reverse_points()
-        if isinstance(result, VMobject):
-            result.refresh_triangulation()
-        return result
+        return self.mobject.copy().reverse_points()
 
 
 class FlashyFadeIn(AnimationGroup):
