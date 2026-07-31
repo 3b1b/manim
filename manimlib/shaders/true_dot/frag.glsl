@@ -26,7 +26,7 @@ void main() {
         frag_color.a *= pow(1 - r, glow_factor);
     }
 
-    if(shading != vec3(0.0)){
+    if(shading != vec4(0.0)){
         vec3 point_3d = point + radius * sqrt(1 - r * r) * to_cam;
         vec3 normal = normalize(point_3d - center);
         frag_color = finalize_color(frag_color, point_3d, normal);
