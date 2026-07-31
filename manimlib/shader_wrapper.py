@@ -7,10 +7,8 @@ import re
 import OpenGL.GL as gl
 import moderngl
 import numpy as np
-from functools import lru_cache
 
 from manimlib.config import parse_cli
-from manimlib.config import manim_config
 from manimlib.utils.shaders import get_shader_code_from_file
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
@@ -19,10 +17,8 @@ from manimlib.utils.shaders import set_program_uniform
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Optional, Tuple, Iterable
+    from typing import Optional, Iterable
     from manimlib.typing import UniformDict
-    from moderngl.vertex_array import VertexArray
-    from moderngl.framebuffer import Framebuffer
 
 # Mobjects that should be rendered with
 # the same shader will be organized and
@@ -52,6 +48,7 @@ class ShaderWrapper(object):
         self.texture_paths = texture_paths or dict()
 
         self.program_uniform_mirror: UniformDict = dict()
+        self.camera_uniforms: UniformDict = dict()
         self.bind_to_mobject_uniforms(mobject_uniforms or dict())
 
         self.init_program_code()
@@ -99,6 +96,7 @@ class ShaderWrapper(object):
     def init_vertex_objects(self):
         self.vbo = None
         self.vaos = []
+        self.vert_counts = []
 
     def add_texture(self, name: str, texture: moderngl.Texture):
         max_units = self.ctx.info['GL_MAX_TEXTURE_IMAGE_UNITS']
@@ -163,7 +161,11 @@ class ShaderWrapper(object):
     # Adding data
 
     def read_in(self, data_list: Iterable[np.ndarray]):
-        total_len = sum(map(len, data_list))
+        data_list = list(data_list)
+        # Keep track of which stretch of the buffer belongs to which mobject,
+        # since fills must be drawn one mobject at a time. See render_fill.
+        self.vert_counts = [len(data) for data in data_list]
+        total_len = sum(self.vert_counts)
         if total_len == 0:
             if self.vbo is not None:
                 self.vbo.clear()
@@ -208,6 +210,7 @@ class ShaderWrapper(object):
             vao.render()
 
     def update_program_uniforms(self, camera_uniforms: UniformDict):
+        self.camera_uniforms = camera_uniforms
         for program in self.programs:
             if program is None:
                 continue
@@ -253,9 +256,6 @@ class VShaderWrapper(ShaderWrapper):
             depth_test=depth_test,
             render_primitive=render_primitive
         )
-        self.fill_canvas = VShaderWrapper.get_fill_canvas(self.ctx)
-        self.add_texture('Texture', self.fill_canvas[0].color_attachments[0])
-        self.add_texture('DepthTexture', self.fill_canvas[2].color_attachments[0])
         for old, new in code_replacements.items():
             self.replace_code_program(old, new, program_type)
 
@@ -264,7 +264,7 @@ class VShaderWrapper(ShaderWrapper):
             f"{vtype}_{name}": get_shader_code_from_file(
                 os.path.join("quadratic_bezier", f"{vtype}", f"{name}.glsl")
             )
-            for vtype in ["stroke", "fill", "depth"]
+            for vtype in ["stroke", "fill"]
             for name in ["vert", "geom", "frag"]
         }
 
@@ -281,22 +281,7 @@ class VShaderWrapper(ShaderWrapper):
             geometry_shader=self.program_code["fill_geom"],
             fragment_shader=self.program_code["fill_frag"],
         )
-        self.fill_border_program = get_shader_program(
-            self.ctx,
-            vertex_shader=self.program_code["stroke_vert"],
-            geometry_shader=self.program_code["stroke_geom"],
-            fragment_shader=self.program_code["stroke_frag"].replace(
-                "// MODIFY FRAG COLOR",
-                "frag_color.a *= 0.95; frag_color.rgb *= frag_color.a;",
-            )
-        )
-        self.fill_depth_program = get_shader_program(
-            self.ctx,
-            vertex_shader=self.program_code["depth_vert"],
-            geometry_shader=self.program_code["depth_geom"],
-            fragment_shader=self.program_code["depth_frag"],
-        )
-        self.programs = [self.stroke_program, self.fill_program, self.fill_border_program, self.fill_depth_program]
+        self.programs = [self.stroke_program, self.fill_program]
 
         # Full vert format looks like this (total of 4x23 = 92 bytes):
         # point 3
@@ -312,11 +297,10 @@ class VShaderWrapper(ShaderWrapper):
         self.fill_vert_format = '3f 24x 4f 3f 4x'
         self.fill_vert_attributes = ['point', 'fill_rgba', 'base_normal']
 
+        # Note how the border reads fill_rgba and fill_border_width where an
+        # ordinary stroke reads stroke_rgba and stroke_width
         self.fill_border_vert_format = '3f 20x 1f 4f 3f 1f'
         self.fill_border_vert_attributes = ['point', 'joint_angle', 'stroke_rgba', 'unit_normal', 'stroke_width']
-
-        self.fill_depth_vert_format = '3f 40x 3f 4x'
-        self.fill_depth_vert_attributes = ['point', 'base_normal']
 
     def init_vertex_objects(self):
         self.vbo = None
@@ -324,6 +308,7 @@ class VShaderWrapper(ShaderWrapper):
         self.fill_vao = None
         self.fill_border_vao = None
         self.vaos = []
+        self.vert_counts = []
 
     def generate_vaos(self):
         self.stroke_vao = self.ctx.vertex_array(
@@ -337,16 +322,11 @@ class VShaderWrapper(ShaderWrapper):
             mode=self.render_primitive,
         )
         self.fill_border_vao = self.ctx.vertex_array(
-            program=self.fill_border_program,
+            program=self.stroke_program,
             content=[(self.vbo, self.fill_border_vert_format, *self.fill_border_vert_attributes)],
             mode=self.render_primitive,
         )
-        self.fill_depth_vao = self.ctx.vertex_array(
-            program=self.fill_depth_program,
-            content=[(self.vbo, self.fill_depth_vert_format, *self.fill_depth_vert_attributes)],
-            mode=self.render_primitive,
-        )
-        self.vaos = [self.stroke_vao, self.fill_vao, self.fill_border_vao, self.fill_depth_vao]
+        self.vaos = [self.stroke_vao, self.fill_vao, self.fill_border_vao]
 
     def set_backstroke(self, value: bool = True):
         self.stroke_behind = value
@@ -361,7 +341,7 @@ class VShaderWrapper(ShaderWrapper):
             super().replace_code(old, new)
             return
 
-        valid = {"stroke", "fill", "depth"}
+        valid = {"stroke", "fill"}
         if program_type not in valid:
             raise ValueError(f"Invalid program_type: {program_type}")
 
@@ -379,131 +359,157 @@ class VShaderWrapper(ShaderWrapper):
     def render_stroke(self):
         if self.stroke_vao is None:
             return
+        set_program_uniform(self.stroke_program, "skip_zero_width", True)
         self.stroke_vao.render()
 
     def render_fill(self):
+        """
+        Fill is drawn with a "stencil then cover" approach.
+
+        The first pass rasterizes the fill triangles into the stencil buffer
+        alone, incrementing for front facing triangles and decrementing for back
+        facing ones. Since facing is just the sign of a triangle's area in screen
+        space, each pixel ends up holding the winding number of the path around
+        it, with no need for a triangulation of the shape.
+
+        The second pass draws those same triangles again, but only where that
+        winding number is nonzero, and zeros out the stencil as it goes. This
+        means each pixel is colored exactly once, using ordinary alpha blending,
+        and that the stencil buffer is left clean for whatever draws next.
+
+        This has to happen one mobject at a time. Sharing a single pair of passes
+        across the whole batch would merge their winding numbers into one region,
+        so that overlapping mobjects would color a shared pixel once between them
+        rather than each blending in turn.
+        """
         if self.fill_vao is None:
             return
 
-        original_fbo = self.ctx.fbo
-        fill_tx_fbo, fill_tx_vao, depth_tx_fbo = self.fill_canvas
+        gl.glEnable(gl.GL_STENCIL_TEST)
+        set_program_uniform(self.stroke_program, "skip_zero_width", False)
+        for first, count in self.get_fill_ranges():
+            self.render_fill_range(first, count)
+        gl.glDisable(gl.GL_STENCIL_TEST)
 
-        # Render to a separate texture, due to strange alpha compositing
-        # for the blended winding calculation
-        fill_tx_fbo.clear()
-        fill_tx_fbo.use()
+    def get_fill_ranges(self) -> list[tuple[int, int]]:
+        """
+        Groups the mobjects in this batch into as few stretches of the buffer as
+        possible, such that no two mobjects sharing a stretch overlap on screen.
 
-        # Be sure not to apply depth test while rendering fill
-        # but set it back to where it was after
-        apply_depth_test = bool(gl.glGetBooleanv(gl.GL_DEPTH_TEST))
+        Mobjects which don't overlap can be filled together, since then no pixel
+        is touched by more than one of them, and it's worth finding these runs
+        because each stretch costs a few draw calls to render.
+        """
+        counts = self.vert_counts
+        if len(counts) == 0:
+            return []
+        if len(counts) == 1:
+            return [(0, counts[0])]
+
+        lows, highs = self.get_screen_bounding_boxes()
+        if lows is None:
+            # Without knowing where things land on screen, every mobject has to
+            # be treated as if it might overlap the others
+            return list(zip(np.cumsum([0, *counts[:-1]]).tolist(), counts))
+
+        ranges = []
+        first, count = 0, counts[0]
+        (run_x0, run_y0), (run_x1, run_y1) = lows[0], highs[0]
+        for i in range(1, len(counts)):
+            (x0, y0), (x1, y1) = lows[i], highs[i]
+            if x0 < run_x1 and x1 > run_x0 and y0 < run_y1 and y1 > run_y0:
+                # Overlaps what's accumulated so far, so start a new stretch
+                ranges.append((first, count))
+                first, count = first + count, counts[i]
+                run_x0, run_y0, run_x1, run_y1 = x0, y0, x1, y1
+            else:
+                count += counts[i]
+                run_x0, run_y0 = min(run_x0, x0), min(run_y0, y0)
+                run_x1, run_y1 = max(run_x1, x1), max(run_y1, y1)
+        ranges.append((first, count))
+        return ranges
+
+    def get_screen_bounding_boxes(self):
+        """
+        Returns the lower and upper corners, in screen coordinates, of the box
+        bounding each mobject in this batch.
+
+        The projection here mirrors what emit_gl_Position.glsl does, and needs to
+        stay in step with it. Bezier control points bound their curve, so taking
+        the extremes of the raw points gives a box which is a little generous,
+        but never too small.
+        """
+        uniforms = self.camera_uniforms
+        if "view" not in uniforms or min(self.vert_counts) == 0:
+            return None, None
+
+        offsets = np.cumsum([0, *self.vert_counts[:-1]])
+        points = self.vert_data["point"]
+        lows = np.minimum.reduceat(points, offsets)
+        highs = np.maximum.reduceat(points, offsets)
+
+        # All eight corners of each box, as an (n, 8, 3) array
+        pairs = np.stack([lows, highs])
+        corners = np.stack([
+            np.stack([pairs[i, :, 0], pairs[j, :, 1], pairs[k, :, 2]], axis=-1)
+            for i in (0, 1) for j in (0, 1) for k in (0, 1)
+        ], axis=1)
+
+        # Uniforms hold the view matrix flattened in column major order. Points
+        # fixed in frame skip it, and may be partway through being fixed.
+        view = np.array(uniforms["view"]).reshape((4, 4)).T
+        fixed = float(self.mobject_uniforms.get("is_fixed_in_frame", 0.0))
+        viewed = corners @ view[:3, :3].T + view[:3, 3]
+        viewed = fixed * corners + (1 - fixed) * viewed
+        viewed = viewed * np.array(uniforms["frame_rescale_factors"])
+
+        # Points at or behind the camera plane have no meaningful projection, so
+        # whichever mobjects contain them get a box covering everything, which
+        # keeps them from being grouped with anything else
+        ws = 1.0 - viewed[:, :, 2]
+        offscreen = (ws <= 1e-6).any(axis=1)
+        screen = viewed[:, :, :2] / np.where(ws <= 1e-6, 1.0, ws)[:, :, np.newaxis]
+        mins, maxs = screen.min(axis=1), screen.max(axis=1)
+        mins[offscreen] = -np.inf
+        maxs[offscreen] = np.inf
+
+        return mins.tolist(), maxs.tolist()
+
+    def render_fill_range(self, first: int, count: int):
+        # Pass 1: Count the winding number around each pixel. Depth testing must
+        # be off here, since an occluded triangle which failed to contribute
+        # would throw off the count, and depth writing must be off so that these
+        # invisible triangles don't clobber the depth buffer.
         self.ctx.disable(moderngl.DEPTH_TEST)
+        gl.glDepthMask(gl.GL_FALSE)
+        gl.glColorMask(*4 * [gl.GL_FALSE])
+        gl.glStencilFunc(gl.GL_ALWAYS, 0, 0xFF)
+        gl.glStencilOpSeparate(gl.GL_FRONT, gl.GL_KEEP, gl.GL_INCR_WRAP, gl.GL_INCR_WRAP)
+        gl.glStencilOpSeparate(gl.GL_BACK, gl.GL_KEEP, gl.GL_DECR_WRAP, gl.GL_DECR_WRAP)
+        self.fill_vao.render(first=first, vertices=count)
 
-        # With this blend function, the effect of blending alpha a with
-        # -a / (1 - a) cancels out, so we can cancel positively and negatively
-        # oriented triangles
-        gl.glBlendFuncSeparate(
-            gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
-            gl.GL_ONE_MINUS_DST_ALPHA, gl.GL_ONE
-        )
-        self.fill_vao.render()
+        gl.glColorMask(*4 * [gl.GL_TRUE])
+        gl.glDepthMask(gl.GL_TRUE)
+        self.set_ctx_depth_test(self.depth_test)
 
-        if apply_depth_test:
-            self.ctx.enable(moderngl.DEPTH_TEST)
-            depth_tx_fbo.clear(1.0)
-            depth_tx_fbo.use()
-            gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE)
-            gl.glBlendEquation(gl.GL_MIN)
-            self.fill_depth_vao.render()
+        # Trace the boundary of the shape with a stroke in the fill color, which
+        # is what anti-aliases the fill, since a stencil test is all or nothing.
+        # It's drawn only where the winding number is zero, meaning outside the
+        # shape, both because the inside is about to be filled in anyway, and so
+        # that its faded edge never blends on top of the fill, which would leave
+        # a seam along the boundary for partially transparent colors.
+        gl.glStencilFunc(gl.GL_EQUAL, 0, 0xFF)
+        gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, gl.GL_KEEP)
+        self.fill_border_vao.render(first=first, vertices=count)
 
-        # Now add border, just taking the max alpha
-        gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE)
-        gl.glBlendEquation(gl.GL_MAX)
-        self.fill_border_vao.render()
-
-        # Take the texture we were just drawing to, and render it to
-        # the main scene. Account for how alphas have been premultiplied
-        original_fbo.use()
-        gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
-        gl.glBlendEquation(gl.GL_FUNC_ADD)
-        fill_tx_vao.render()
-
-        # Return to original blending state
-        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-
-    # Static method returning one shared value across all VShaderWrappers
-    @lru_cache
-    @staticmethod
-    def get_fill_canvas(ctx: moderngl.Context) -> Tuple[Framebuffer, VertexArray, Framebuffer]:
-        """
-        Because VMobjects with fill are rendered in a funny way, using
-        alpha blending to effectively compute the winding number around
-        each pixel, they need to be rendered to a separate texture, which
-        is then composited onto the ordinary frame buffer.
-
-        This returns a texture, loaded into a frame buffer, and a vao
-        which can display that texture as a simple quad onto a screen,
-        along with the rgb value which is meant to be discarded.
-        """
-        size = manim_config.camera.resolution
-        double_size = (2 * size[0], 2 * size[1])
-
-        # Important to make sure dtype is floating point (not fixed point)
-        # so that alpha values can be negative and are not clipped
-        fill_texture = ctx.texture(size=double_size, components=4, dtype='f2')
-        # Use another one to keep track of depth
-        depth_texture = ctx.texture(size=size, components=1, dtype='f4')
-
-        fill_texture_fbo = ctx.framebuffer(fill_texture)
-        depth_texture_fbo = ctx.framebuffer(depth_texture)
-
-        simple_vert = '''
-            #version 330
-
-            in vec2 texcoord;
-            out vec2 uv;
-
-            void main() {
-                gl_Position = vec4((2.0 * texcoord - 1.0), 0.0, 1.0);
-                uv = texcoord;
-            }
-        '''
-        alpha_adjust_frag = '''
-            #version 330
-
-            uniform sampler2D Texture;
-            uniform sampler2D DepthTexture;
-
-            in vec2 uv;
-            out vec4 color;
-
-            void main() {
-                color = texture(Texture, uv);
-                if(color.a == 0) discard;
-
-                if(color.a < 0){
-                    color.a = -color.a / (1.0 - color.a);
-                    color.rgb *= (color.a - 1);
-                }
-
-                // Counteract scaling in fill frag
-                color *= 1.06;
-
-                gl_FragDepth = texture(DepthTexture, uv)[0];
-            }
-        '''
-        fill_program = ctx.program(
-            vertex_shader=simple_vert,
-            fragment_shader=alpha_adjust_frag,
-        )
-
-        verts = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-        simple_vbo = ctx.buffer(verts.astype('f4').tobytes())
-        fill_texture_vao = ctx.simple_vertex_array(
-            fill_program, simple_vbo, 'texcoord',
-            mode=moderngl.TRIANGLE_STRIP
-        )
-
-        return (fill_texture_fbo, fill_texture_vao, depth_texture_fbo)
+        # Pass 2: Color in everywhere the winding number is nonzero. Zeroing the
+        # stencil on the way through means the first triangle to cover a pixel
+        # is the only one to color it, and that no clearing is needed afterwards.
+        # Note that zeroing on depth failure matters just as much as on depth
+        # success, else occluded fills would leave the buffer dirty.
+        gl.glStencilFunc(gl.GL_NOTEQUAL, 0, 0xFF)
+        gl.glStencilOp(gl.GL_KEEP, gl.GL_ZERO, gl.GL_ZERO)
+        self.fill_vao.render(first=first, vertices=count)
 
     def render(self):
         if self.stroke_behind:

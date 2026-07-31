@@ -6,6 +6,12 @@ layout (triangle_strip, max_vertices = 64) out;  // Related to MAX_STEPS below
 uniform float anti_alias_width;
 uniform float flat_stroke;
 uniform float joint_type;
+/*
+A stroke of zero width is invisible, so it can be skipped. That's not true of the
+border drawn around a fill, though, where zero width means a band just wide
+enough to anti-alias the fill's edge, so VShaderWrapper turns this off for it.
+*/
+uniform bool skip_zero_width;
 
 in vec3 verts[3];
 
@@ -161,7 +167,7 @@ void main() {
     if (verts[0] == verts[1]) return;
 
     // Check null stroke
-    if (vec3(v_stroke_width[0], v_stroke_width[1], v_stroke_width[2]) == vec3(0.0, 0.0, 0.0)) return;
+    if (skip_zero_width && vec3(v_stroke_width[0], v_stroke_width[1], v_stroke_width[2]) == vec3(0.0, 0.0, 0.0)) return;
     if (vec3(v_color[0].a, v_color[1].a, v_color[2].a) == vec3(0.0, 0.0, 0.0)) return;
 
     bool draw_flat = bool(flat_stroke) || bool(is_fixed_in_frame);

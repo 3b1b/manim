@@ -9,7 +9,6 @@ in vec3 v_base_normal[3];
 
 out vec4 color;
 out float fill_all;
-out float orientation;
 // uv space is where the curve coincides with y = x^2
 out vec2 uv_coords;
 
@@ -26,12 +25,10 @@ const vec2 SIMPLE_QUADRATIC[3] = vec2[3](
 
 
 void emit_triangle(vec3 points[3], vec4 v_color[3], vec3 unit_normal){
-    orientation = sign(determinant(mat3(
-        unit_normal,
-        points[1] - points[0],
-        points[2] - points[0]
-    )));
-
+    // Note that no orientation is computed here. These triangles are rasterized
+    // into a stencil buffer, where the sign of each one's contribution to the
+    // winding number comes for free from whether it ends up front or back
+    // facing, i.e. from the sign of its area in screen space.
     for(int i = 0; i < 3; i++){
         uv_coords = SIMPLE_QUADRATIC[i];
         color = finalize_color(v_color[i], points[i], unit_normal);
