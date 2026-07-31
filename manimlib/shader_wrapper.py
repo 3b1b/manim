@@ -50,7 +50,6 @@ class ShaderWrapper(object):
         self.texture_paths = texture_paths or dict()
 
         self.program_uniform_mirror: UniformDict = dict()
-        self.camera_uniforms: UniformDict = dict()
         self.bind_to_mobject_uniforms(mobject_uniforms or dict())
 
         self.init_program_code()
@@ -264,7 +263,6 @@ class ShaderWrapper(object):
             vao.render(vertices=n_verts)
 
     def update_program_uniforms(self, camera_uniforms: UniformDict):
-        self.camera_uniforms = camera_uniforms
         for program in self.programs:
             if program is None:
                 continue
@@ -431,93 +429,11 @@ class VShaderWrapper(ShaderWrapper):
 
         gl.glEnable(gl.GL_STENCIL_TEST)
         set_program_uniform(self.stroke_program, "is_fill_border", True)
-        for first, count in self.get_fill_ranges():
+        first = 0
+        for count in self.vert_counts:
             self.render_fill_range(first, count)
+            first += count
         gl.glDisable(gl.GL_STENCIL_TEST)
-
-    def get_fill_ranges(self) -> list[tuple[int, int]]:
-        """
-        Groups the mobjects in this batch into as few stretches of the buffer as
-        possible, such that no two mobjects sharing a stretch overlap on screen.
-
-        Mobjects which don't overlap can be filled together, since then no pixel
-        is touched by more than one of them, and it's worth finding these runs
-        because each stretch costs a few draw calls to render.
-        """
-        counts = self.vert_counts
-        if len(counts) == 0:
-            return []
-        if len(counts) == 1:
-            return [(0, counts[0])]
-
-        lows, highs = self.get_screen_bounding_boxes()
-        if lows is None:
-            # Without knowing where things land on screen, every mobject has to
-            # be treated as if it might overlap the others
-            return list(zip(np.cumsum([0, *counts[:-1]]).tolist(), counts))
-
-        ranges = []
-        first, count = 0, counts[0]
-        (run_x0, run_y0), (run_x1, run_y1) = lows[0], highs[0]
-        for i in range(1, len(counts)):
-            (x0, y0), (x1, y1) = lows[i], highs[i]
-            if x0 < run_x1 and x1 > run_x0 and y0 < run_y1 and y1 > run_y0:
-                # Overlaps what's accumulated so far, so start a new stretch
-                ranges.append((first, count))
-                first, count = first + count, counts[i]
-                run_x0, run_y0, run_x1, run_y1 = x0, y0, x1, y1
-            else:
-                count += counts[i]
-                run_x0, run_y0 = min(run_x0, x0), min(run_y0, y0)
-                run_x1, run_y1 = max(run_x1, x1), max(run_y1, y1)
-        ranges.append((first, count))
-        return ranges
-
-    def get_screen_bounding_boxes(self):
-        """
-        Returns the lower and upper corners, in screen coordinates, of the box
-        bounding each mobject in this batch.
-
-        The projection here mirrors what emit_gl_Position.glsl does, and needs to
-        stay in step with it. Bezier control points bound their curve, so taking
-        the extremes of the raw points gives a box which is a little generous,
-        but never too small.
-        """
-        uniforms = self.camera_uniforms
-        if "view" not in uniforms or min(self.vert_counts) == 0:
-            return None, None
-
-        offsets = np.cumsum([0, *self.vert_counts[:-1]])
-        points = self.vert_data["point"]
-        lows = np.minimum.reduceat(points, offsets)
-        highs = np.maximum.reduceat(points, offsets)
-
-        # All eight corners of each box, as an (n, 8, 3) array
-        pairs = np.stack([lows, highs])
-        corners = np.stack([
-            np.stack([pairs[i, :, 0], pairs[j, :, 1], pairs[k, :, 2]], axis=-1)
-            for i in (0, 1) for j in (0, 1) for k in (0, 1)
-        ], axis=1)
-
-        # Uniforms hold the view matrix flattened in column major order. Points
-        # fixed in frame skip it, and may be partway through being fixed.
-        view = np.array(uniforms["view"]).reshape((4, 4)).T
-        fixed = float(self.mobject_uniforms.get("is_fixed_in_frame", 0.0))
-        viewed = corners @ view[:3, :3].T + view[:3, 3]
-        viewed = fixed * corners + (1 - fixed) * viewed
-        viewed = viewed * np.array(uniforms["frame_rescale_factors"])
-
-        # Points at or behind the camera plane have no meaningful projection, so
-        # whichever mobjects contain them get a box covering everything, which
-        # keeps them from being grouped with anything else
-        ws = 1.0 - viewed[:, :, 2]
-        offscreen = (ws <= 1e-6).any(axis=1)
-        screen = viewed[:, :, :2] / np.where(ws <= 1e-6, 1.0, ws)[:, :, np.newaxis]
-        mins, maxs = screen.min(axis=1), screen.max(axis=1)
-        mins[offscreen] = -np.inf
-        maxs[offscreen] = np.inf
-
-        return mins.tolist(), maxs.tolist()
 
     def render_fill_range(self, first: int, count: int):
         # The range is given in records, which each shader turns into a different
