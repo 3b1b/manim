@@ -337,6 +337,11 @@ class UpdatersExample(Scene):
         )
         self.wait(4 * PI)
 
+        # Time based
+        square.clear_updaters()
+        square.add_updater(lambda m, dt: m.rotate(dt))
+        self.wait(6)
+
 
 class CoordinateSystemExample(Scene):
     def construct(self):
