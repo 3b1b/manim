@@ -69,6 +69,10 @@ class Mobject(object):
     dim: int = 3
     shader_folder: str = ""
     render_primitive: int = moderngl.TRIANGLE_STRIP
+    # If positive, the shader is handed no vertex attributes, and instead reads
+    # each record out of the vertex buffer itself, turning it into this many
+    # vertices. This is how shapes are expanded without a geometry shader.
+    verts_per_record: int = 0
     # Must match in attributes of vert shader
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
@@ -2059,6 +2063,7 @@ class Mobject(object):
             depth_test=self.depth_test,
             render_primitive=self.render_primitive,
             code_replacements=self.shader_code_replacements,
+            verts_per_record=self.verts_per_record,
         )
 
     def refresh_shader_wrapper_id(self):

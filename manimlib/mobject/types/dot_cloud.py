@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import moderngl
 import numpy as np
 
 from manimlib.constants import GREY_C, YELLOW
@@ -25,7 +24,8 @@ DEFAULT_BUFF_RATIO = 0.5
 
 class DotCloud(PMobject):
     shader_folder: str = "true_dot"
-    render_primitive: int = moderngl.POINTS
+    # Each dot is expanded into a camera facing quad by the vertex shader
+    verts_per_record: int = 6
     data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
         ('radius', np.float32, (1,)),

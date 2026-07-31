@@ -38,13 +38,15 @@ class ShaderWrapper(object):
         depth_test: bool = False,
         render_primitive: int = moderngl.TRIANGLE_STRIP,
         code_replacements: dict[str, str] = dict(),
+        verts_per_record: int = 0,
     ):
         self.ctx = ctx
         self.vert_data = vert_data
         self.vert_attributes = vert_data.dtype.names
         self.shader_folder = shader_folder
         self.depth_test = depth_test
-        self.render_primitive = render_primitive
+        self.verts_per_record = verts_per_record
+        self.render_primitive = moderngl.TRIANGLES if verts_per_record else render_primitive
         self.texture_paths = texture_paths or dict()
 
         self.program_uniform_mirror: UniformDict = dict()
@@ -76,6 +78,28 @@ class ShaderWrapper(object):
             "geometry_shader": get_code("geom"),
             "fragment_shader": get_code("frag"),
         }
+        if self.verts_per_record:
+            layout = self.get_data_layout_code()
+            for name, code in self.program_code.items():
+                if code is not None:
+                    self.program_code[name] = code.replace("// DATA_LAYOUT", layout)
+
+    def get_data_layout_code(self) -> str:
+        """
+        Constants describing where each field of a vertex record sits within the
+        buffer, in units of floats.
+
+        Shaders which pull records out of the buffer themselves, rather than
+        having the fields handed to them as vertex attributes, use these to index
+        by field name, so that the layout doesn't have to be written out twice.
+        """
+        dtype = self.vert_data.dtype
+        lines = [f"const int DATA_STRIDE = {dtype.itemsize // 4};"]
+        lines.extend(
+            f"const int DATA_OFFSET_{name} = {dtype.fields[name][1] // 4};"
+            for name in dtype.names
+        )
+        return "\n".join(lines)
 
     def init_program(self):
         if not self.shader_folder:
@@ -84,7 +108,10 @@ class ShaderWrapper(object):
             self.programs = []
             return
         self.program = get_shader_program(self.ctx, **self.program_code)
-        self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
+        if self.verts_per_record:
+            self.vert_format = None
+        else:
+            self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
         self.programs = [self.program]
 
     def init_textures(self):
@@ -92,11 +119,15 @@ class ShaderWrapper(object):
         self.textures = []
         for name, path in self.texture_paths.items():
             self.add_texture(name, image_path_to_texture(path, self.ctx))
+        if self.verts_per_record:
+            # The vertex buffer, exposed to the shader as a texture it can index
+            self.texture_names_to_ids["Data"] = len(self.textures)
 
     def init_vertex_objects(self):
         self.vbo = None
         self.vaos = []
         self.vert_counts = []
+        self.data_texture = None
 
     def add_texture(self, name: str, texture: moderngl.Texture):
         max_units = self.ctx.info['GL_MAX_TEXTURE_IMAGE_UNITS']
@@ -188,6 +219,15 @@ class ShaderWrapper(object):
             self.vbo.write(self.vert_data)
 
     def generate_vaos(self):
+        if self.verts_per_record:
+            # Nothing is fed in as a vertex attribute. The shader reads records
+            # out of the buffer directly, expanding each into several vertices.
+            self.init_data_texture()
+            self.vaos = [
+                self.ctx.vertex_array(program=program, content=[], mode=self.render_primitive)
+                for program in self.programs
+            ]
+            return
         # Vertex array object
         self.vaos = [
             self.ctx.vertex_array(
@@ -198,16 +238,31 @@ class ShaderWrapper(object):
             for program in self.programs
         ]
 
+    def init_data_texture(self):
+        """
+        Points a buffer texture at the vertex buffer, so shaders can index into
+        it. This aliases the existing buffer rather than copying it, so it needs
+        to be redone whenever the buffer itself is replaced.
+        """
+        if self.data_texture is None:
+            self.data_texture = gl.glGenTextures(1)
+        gl.glBindTexture(gl.GL_TEXTURE_BUFFER, self.data_texture)
+        gl.glTexBuffer(gl.GL_TEXTURE_BUFFER, gl.GL_R32F, self.vbo.glo)
+
     # Related to data and rendering
     def pre_render(self):
         self.set_ctx_depth_test(self.depth_test)
         self.set_ctx_clip_plane(self.num_clip_planes())
         for tid, texture in enumerate(self.textures):
             texture.use(tid)
+        if self.data_texture is not None:
+            gl.glActiveTexture(gl.GL_TEXTURE0 + self.texture_names_to_ids["Data"])
+            gl.glBindTexture(gl.GL_TEXTURE_BUFFER, self.data_texture)
 
     def render(self):
+        n_verts = self.verts_per_record * len(self.vert_data) if self.verts_per_record else -1
         for vao in self.vaos:
-            vao.render()
+            vao.render(vertices=n_verts)
 
     def update_program_uniforms(self, camera_uniforms: UniformDict):
         self.camera_uniforms = camera_uniforms
@@ -222,6 +277,8 @@ class ShaderWrapper(object):
         for obj in (self.vbo, *self.vaos):
             if obj is not None:
                 obj.release()
+        if self.data_texture is not None:
+            gl.glDeleteTextures([self.data_texture])
         self.init_vertex_objects()
 
     def release_textures(self):
@@ -254,7 +311,11 @@ class VShaderWrapper(ShaderWrapper):
             mobject_uniforms=mobject_uniforms,
             texture_paths=texture_paths,
             depth_test=depth_test,
-            render_primitive=render_primitive
+            render_primitive=render_primitive,
+            # The fill shader turns each bezier, held as three records, into the
+            # six vertices of two triangles. Strokes are still handed vertex
+            # attributes, and read from the same buffer the ordinary way.
+            verts_per_record=2,
         )
         for old, new in code_replacements.items():
             self.replace_code_program(old, new, program_type)
@@ -267,6 +328,10 @@ class VShaderWrapper(ShaderWrapper):
             for vtype in ["stroke", "fill"]
             for name in ["vert", "geom", "frag"]
         }
+        layout = self.get_data_layout_code()
+        for name, code in self.program_code.items():
+            if code is not None:
+                self.program_code[name] = code.replace("// DATA_LAYOUT", layout)
 
     def init_program(self):
         self.stroke_program = get_shader_program(
@@ -278,7 +343,6 @@ class VShaderWrapper(ShaderWrapper):
         self.fill_program = get_shader_program(
             self.ctx,
             vertex_shader=self.program_code["fill_vert"],
-            geometry_shader=self.program_code["fill_geom"],
             fragment_shader=self.program_code["fill_frag"],
         )
         self.programs = [self.stroke_program, self.fill_program]
@@ -294,9 +358,6 @@ class VShaderWrapper(ShaderWrapper):
         self.stroke_vert_format = '3f 4f 1f 1f 16x 3f 4x'
         self.stroke_vert_attributes = ['point', 'stroke_rgba', 'stroke_width', 'joint_angle', 'unit_normal']
 
-        self.fill_vert_format = '3f 24x 4f 3f 4x'
-        self.fill_vert_attributes = ['point', 'fill_rgba', 'base_normal']
-
         # Note how the border reads fill_rgba and fill_border_width where an
         # ordinary stroke reads stroke_rgba and stroke_width
         self.fill_border_vert_format = '3f 20x 1f 4f 3f 1f'
@@ -309,16 +370,19 @@ class VShaderWrapper(ShaderWrapper):
         self.fill_border_vao = None
         self.vaos = []
         self.vert_counts = []
+        self.data_texture = None
 
     def generate_vaos(self):
+        self.init_data_texture()
         self.stroke_vao = self.ctx.vertex_array(
             program=self.stroke_program,
             content=[(self.vbo, self.stroke_vert_format, *self.stroke_vert_attributes)],
             mode=self.render_primitive,
         )
+        # The fill shader takes no attributes, reading the buffer itself instead
         self.fill_vao = self.ctx.vertex_array(
             program=self.fill_program,
-            content=[(self.vbo, self.fill_vert_format, *self.fill_vert_attributes)],
+            content=[],
             mode=self.render_primitive,
         )
         self.fill_border_vao = self.ctx.vertex_array(
@@ -476,6 +540,11 @@ class VShaderWrapper(ShaderWrapper):
         return mins.tolist(), maxs.tolist()
 
     def render_fill_range(self, first: int, count: int):
+        # The range is given in records, which the fill shader turns into several
+        # vertices each, while the border reads records as attributes directly
+        fill_first = first * self.verts_per_record
+        fill_count = count * self.verts_per_record
+
         # Pass 1: Count the winding number around each pixel. Depth testing must
         # be off here, since an occluded triangle which failed to contribute
         # would throw off the count, and depth writing must be off so that these
@@ -486,7 +555,7 @@ class VShaderWrapper(ShaderWrapper):
         gl.glStencilFunc(gl.GL_ALWAYS, 0, 0xFF)
         gl.glStencilOpSeparate(gl.GL_FRONT, gl.GL_KEEP, gl.GL_INCR_WRAP, gl.GL_INCR_WRAP)
         gl.glStencilOpSeparate(gl.GL_BACK, gl.GL_KEEP, gl.GL_DECR_WRAP, gl.GL_DECR_WRAP)
-        self.fill_vao.render(first=first, vertices=count)
+        self.fill_vao.render(first=fill_first, vertices=fill_count)
 
         gl.glColorMask(*4 * [gl.GL_TRUE])
         gl.glDepthMask(gl.GL_TRUE)
@@ -509,7 +578,7 @@ class VShaderWrapper(ShaderWrapper):
         # success, else occluded fills would leave the buffer dirty.
         gl.glStencilFunc(gl.GL_NOTEQUAL, 0, 0xFF)
         gl.glStencilOp(gl.GL_KEEP, gl.GL_ZERO, gl.GL_ZERO)
-        self.fill_vao.render(first=first, vertices=count)
+        self.fill_vao.render(first=fill_first, vertices=fill_count)
 
     def render(self):
         if self.stroke_behind:
