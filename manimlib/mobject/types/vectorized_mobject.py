@@ -71,8 +71,6 @@ class VMobject(Mobject):
     joint_type_map: dict = {
         "no_joint": 0,
         "auto": 1,
-        "bevel": 2,
-        "miter": 3,
     }
 
     def __init__(
@@ -86,7 +84,7 @@ class VMobject(Mobject):
         stroke_behind: bool = False,
         background_image_file: str | None = None,
         long_lines: bool = False,
-        # Could also be "no_joint", "bevel", "miter"
+        # Could also be "no_joint"
         joint_type: str = "auto",
         flat_stroke: bool = False,
         # If false, stroke width is measured relative to the frame, so that a given

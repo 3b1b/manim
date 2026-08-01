@@ -2,6 +2,7 @@
 
 uniform float anti_alias_width;
 uniform float flat_stroke;
+// Zero leaves joints between curves alone, anything else fills them in
 uniform float joint_type;
 uniform float stroke_width_in_scene_units;
 /*
@@ -17,12 +18,6 @@ out vec4 color;
 out float dist_to_aaw;
 out float half_width_to_aaw;
 
-// Codes for joint types
-const int NO_JOINT = 0;
-const int AUTO_JOINT = 1;
-const int BEVEL_JOINT = 2;
-const int MITER_JOINT = 3;
-
 // When the cosine of the angle between
 // two vectors is larger than this, we
 // consider them aligned
@@ -30,7 +25,11 @@ const float COS_THRESHOLD = 0.999;
 // Used to determine how many lines to break the curve into
 const float POLYLINE_FACTOR = 100;
 const int MAX_STEPS = 32;
-const float MITER_COS_ANGLE_THRESHOLD = -0.8;
+// Turns sharper than this get their joints flattened instead of mitered. The band
+// is deliberately narrow, because part way between the two is the one place a gap
+// can open up, see step_to_corner
+const float FLATTEN_COS_START = -0.8;
+const float FLATTEN_COS_END = -0.9;
 // A joint's turn is held as the (cos, sin) of its angle, so no turn looks like this
 const vec2 STRAIGHT = vec2(1.0, 0.0);
 // Stands in for a record index where there is no neighboring curve to read
@@ -127,14 +126,14 @@ vec3 step_to_corner(
         }
     }
 
-    if (inside_curve || int(joint_type) == NO_JOINT) return step;
+    if (inside_curve || joint_type == 0.0) return step;
 
     float cos_angle = turn.x;
     float sin_angle = turn.y;
 
     if (abs(cos_angle) > COS_THRESHOLD) return step;
 
-    // Below here, figure out the adjustment to bevel or miter a joint
+    // Below here, figure out how far along the tangent to shift for a joint
     if (!draw_flat){
         // Figure out what joint product would be for everything projected onto
         // the plane perpendicular to the normal direction (which here would be to_camera)
@@ -145,20 +144,15 @@ vec3 step_to_corner(
         sin_angle = sqrt(1 - cos_angle * cos_angle) * sign(turn.y) * sign(dot(facing_normal, unit_normal));
     }
 
-    // If joint type is auto, it will bevel for cos(angle) > MITER_COS_ANGLE_THRESHOLD,
-    // and smoothly transition to miter for those with sharper angles
-    float miter_factor;
-    if (joint_type == BEVEL_JOINT){
-        miter_factor = 0.0;
-    }else if (joint_type == MITER_JOINT){
-        miter_factor = 1.0;
-    }else {
-        float mcat1 = MITER_COS_ANGLE_THRESHOLD;
-        float mcat2 = mix(mcat1, -1.0, 0.5);
-        miter_factor = smoothstep(mcat1, mcat2, cos_angle);
-    }
-
-    float shift = (cos_angle + mix(-1, 1, miter_factor)) / sin_angle;
+    /*
+    Stepping out to where the two curves' offset edges meet, the exact miter, is the
+    only shift that leaves no gap between them. But it juts out arbitrarily far as
+    the turn approaches a full reversal, so past a threshold this blends towards a
+    flat cut. The gap that opens up in doing so closes again as the tangents become
+    antiparallel, which is why flattening is safe at exactly the angles miter isn't.
+    */
+    float flatten = smoothstep(FLATTEN_COS_START, FLATTEN_COS_END, cos_angle);
+    float shift = (cos_angle - 1.0 + 2.0 * flatten) / sin_angle;
     return step + shift * unit_tan;
 }
 
