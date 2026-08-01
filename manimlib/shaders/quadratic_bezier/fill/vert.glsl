@@ -1,7 +1,6 @@
 #version 330
 
 uniform vec3 unit_normal;
-uniform vec4 fill_rgba;
 
 out vec4 color;
 out float fill_all;
@@ -9,6 +8,7 @@ out float fill_all;
 out vec2 uv_coords;
 
 #INSERT emit_gl_Position.glsl
+#INSERT fill_color.glsl
 #INSERT finalize_color.glsl
 #INSERT read_data.glsl
 
@@ -41,7 +41,8 @@ void main(){
     // Curves are marked as ended when the handle after the first anchor is set
     // equal to that anchor. Nothing to draw for those, or for a clear fill, so
     // collapse all six corners onto one point to leave no area to rasterize.
-    bool blank = (controls[0] == controls[1]) || (fill_rgba.a == 0.0);
+    bool blank = (controls[0] == controls[1]) ||
+        (max(fill_rgba.a, fill_rgba_end.a) == 0.0);
     if (blank) {
         gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
         return;
@@ -65,6 +66,6 @@ void main(){
     }
 
     uv_coords = SIMPLE_QUADRATIC[index];
-    color = finalize_color(fill_rgba, point, unit_normal);
+    color = finalize_color(fill_color_at(point), point, unit_normal);
     emit_gl_Position(point);
 }

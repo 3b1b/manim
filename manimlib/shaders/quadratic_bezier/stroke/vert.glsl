@@ -16,7 +16,6 @@ of zero still draws a band just wide enough to anti-alias the fill's edge.
 uniform bool is_fill_border;
 uniform vec3 unit_normal;
 uniform float fill_border_width;
-uniform vec4 fill_rgba;
 
 out vec4 color;
 out float dist_to_aaw;
@@ -60,6 +59,7 @@ const vec2 CORNERS[6] = vec2[6](
 );
 
 #INSERT emit_gl_Position.glsl
+#INSERT fill_color.glsl
 #INSERT finalize_color.glsl
 #INSERT read_data.glsl
 
@@ -182,8 +182,7 @@ void main(){
         read_float(record + 1, DATA_OFFSET_stroke_width),
         read_float(record + 2, DATA_OFFSET_stroke_width)
     );
-    // A fill's border takes its colour from the fill, which is one value throughout
-    vec4 colors[3] = is_fill_border ? vec4[3](fill_rgba, fill_rgba, fill_rgba) : vec4[3](
+    vec4 colors[3] = vec4[3](
         read_vec4(record + 0, DATA_OFFSET_stroke_rgba),
         read_vec4(record + 1, DATA_OFFSET_stroke_rgba),
         read_vec4(record + 2, DATA_OFFSET_stroke_rgba)
@@ -212,7 +211,10 @@ void main(){
     if (!is_fill_border){
         blank = blank || (vec3(widths[0], widths[1], widths[2]) == vec3(0.0));
     }
-    blank = blank || (vec3(colors[0].a, colors[1].a, colors[2].a) == vec3(0.0));
+    // A fill's border takes its color from the fill rather than from the records
+    blank = blank || (is_fill_border ?
+        max(fill_rgba.a, fill_rgba_end.a) == 0.0 :
+        vec3(colors[0].a, colors[1].a, colors[2].a) == vec3(0.0));
     if (blank){
         gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
         return;
@@ -236,7 +238,10 @@ void main(){
     bool draw_flat = bool(flat_stroke) || bool(is_fixed_in_frame);
     vec3 facing_normal = draw_flat ? unit_normal : normalize(camera_position - point);
 
-    color = finalize_color(mix(colors[0], colors[2], t), point, facing_normal);
+    // The fill's color varies linearly, so reading it off at this very point comes to
+    // the same thing as interpolating between its ends, for a couple fewer operations
+    vec4 own_color = is_fill_border ? fill_color_at(point) : mix(colors[0], colors[2], t);
+    color = finalize_color(own_color, point, facing_normal);
 
     // anti_alias_width is measured in pixels. The frag shader receives a value
     // from -1 to 1, reflecting where in the stroke this corner is.

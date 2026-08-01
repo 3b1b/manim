@@ -10,7 +10,7 @@ from manimlib.constants import DEFAULT_VMOBJECT_FILL_COLOR, DEFAULT_VMOBJECT_STR
 from manimlib.constants import BLACK
 from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import DEG
-from manimlib.constants import ORIGIN, OUT
+from manimlib.constants import ORIGIN, OUT, RIGHT
 from manimlib.constants import TAU
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
@@ -41,6 +41,7 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import line_intersects_path
 from manimlib.utils.space_ops import midpoint
+from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.space_ops import poly_line_length
@@ -111,6 +112,8 @@ class VMobject(Mobject):
         self.fill_border_width = fill_border_width
 
         self.needs_new_unit_normal = True
+        self.gradient_direction = np.array(RIGHT, dtype=float)
+        self.fill_is_gradient = False
         self.subpath_end_indices = None
         self.outer_vert_indices = np.zeros(0, dtype=int)
         
@@ -132,9 +135,14 @@ class VMobject(Mobject):
             # be one value rather than one per point, and what makes the winding
             # count deciding its interior meaningful in the first place
             unit_normal=np.array(OUT, dtype=float),
-            # A fill is one flat region of one colour, so unlike stroke there is
+            # A fill is one flat region of one color, so unlike stroke there is
             # nothing for a per point value to mean
             fill_rgba=np.zeros(4),
+            # A second color, equal to the first unless a gradient was asked for,
+            # along with where that gradient sits, see inserts/fill_color.glsl
+            fill_rgba_end=np.zeros(4),
+            gradient_center=np.zeros(3),
+            gradient_axis=np.zeros(3),
             fill_border_width=float(self.fill_border_width),
         )
 
@@ -166,18 +174,67 @@ class VMobject(Mobject):
         color: ManimColor | Iterable[ManimColor] = None,
         opacity: float | Iterable[float] | None = None,
         border_width: float | None = None,
+        gradient_direction: Vect3 | None = None,
         recurse: bool = True
     ) -> Self:
+        """
+        Two colors, or two opacities, fill with a gradient running between them along
+        gradient_direction. Anything more than two of either is cut down to two.
+        """
+        set_colors = color is not None or opacity is not None
         for mob in self.get_family(recurse):
-            if color is not None or opacity is not None:
-                rgba = mob.uniforms["fill_rgba"].copy()
+            if set_colors:
+                ends = np.array([mob.uniforms["fill_rgba"], mob.uniforms["fill_rgba_end"]])
                 if color is not None:
-                    rgba[:3] = color_to_rgb(listify(color)[0])
+                    rgbs = np.array([color_to_rgb(c) for c in listify(color)[:2]])
+                    ends[:, :3] = rgbs if len(rgbs) == 2 else rgbs[0]
                 if opacity is not None:
-                    rgba[3] = listify(opacity)[0]
-                mob.uniforms["fill_rgba"] = rgba
+                    ops = np.array(listify(opacity)[:2], dtype=float)
+                    ends[:, 3] = ops if len(ops) == 2 else ops[0]
+                mob.uniforms["fill_rgba"] = ends[0]
+                mob.uniforms["fill_rgba_end"] = ends[1]
+                mob.fill_is_gradient = bool((ends[0] != ends[1]).any())
+            if gradient_direction is not None:
+                mob.gradient_direction = normalize(np.array(gradient_direction, dtype=float))
             if border_width is not None:
                 mob.uniforms["fill_border_width"] = float(border_width)
+        if set_colors and recurse and self.fill_is_gradient:
+            self.spread_fill_gradient()
+        return self
+
+    def spread_fill_gradient(self) -> Self:
+        """
+        Hands each member of the family the pair of colors this mobject's gradient
+        reaches at that member's own extremes. Each member going on to span its own
+        extent then carries on the one sweep rather than starting it over, which is
+        what lets a gradient over a group of glyphs read as a single gradient.
+        """
+        bbox = self.get_bounding_box()
+        direction = self.gradient_direction
+        reach = np.dot(np.abs(direction), 0.5 * (bbox[2] - bbox[0]))
+        if reach == 0:
+            return self
+        start = self.uniforms["fill_rgba"]
+        end = self.uniforms["fill_rgba_end"]
+        for mob in self.family_members_with_points():
+            sub = mob.get_bounding_box()
+            offset = np.dot(sub[1] - bbox[1], direction)
+            spread = np.dot(np.abs(direction), 0.5 * (sub[2] - sub[0]))
+            low, high = 0.5 + (offset + np.array([-spread, spread])) / (2 * reach)
+            mob.uniforms["fill_rgba"] = interpolate(start, end, low)
+            mob.uniforms["fill_rgba_end"] = interpolate(start, end, high)
+            mob.fill_is_gradient = spread > 0
+        return self
+
+    def refresh_fill_gradient(self) -> Self:
+        """
+        Centers the gradient on the mobject, and scales its axis so that the two colors
+        land on the extremes of the bounding box along the direction it runs.
+        """
+        bbox = self.get_bounding_box()
+        reach = np.dot(np.abs(self.gradient_direction), 0.5 * (bbox[2] - bbox[0]))
+        self.uniforms["gradient_center"] = bbox[1]
+        self.uniforms["gradient_axis"] = self.gradient_direction / (2 * reach) if reach > 0 else np.zeros(3)
         return self
 
     def set_stroke(
@@ -226,6 +283,7 @@ class VMobject(Mobject):
         fill_color: ManimColor | Iterable[ManimColor] | None = None,
         fill_opacity: float | Iterable[float] | None = None,
         fill_rgba: Vect4 | None = None,
+        fill_rgba_end: Vect4 | None = None,
         fill_border_width: float | None = None,
         stroke_color: ManimColor | Iterable[ManimColor] | None = None,
         stroke_opacity: float | Iterable[float] | None = None,
@@ -239,6 +297,9 @@ class VMobject(Mobject):
         for mob in self.get_family(recurse):
             if fill_rgba is not None:
                 mob.uniforms["fill_rgba"] = np.array(fill_rgba, dtype=float)
+                end = fill_rgba if fill_rgba_end is None else fill_rgba_end
+                mob.uniforms["fill_rgba_end"] = np.array(end, dtype=float)
+                mob.fill_is_gradient = bool((mob.uniforms["fill_rgba"] != mob.uniforms["fill_rgba_end"]).any())
             else:
                 mob.set_fill(
                     color=fill_color,
@@ -275,6 +336,7 @@ class VMobject(Mobject):
         data = self.data if self.get_num_points() > 0 else self._data_defaults
         return {
             "fill_rgba": self.uniforms["fill_rgba"].copy(),
+            "fill_rgba_end": self.uniforms["fill_rgba_end"].copy(),
             "fill_border_width": self.uniforms["fill_border_width"],
             "stroke_rgba": data['stroke_rgba'].copy(),
             "stroke_width": data['stroke_width'].copy(),
@@ -376,6 +438,9 @@ class VMobject(Mobject):
 
     # TODO, it's weird for these to return the first of various lists
     # rather than the full information
+    def get_fill_colors(self) -> list[str]:
+        return [rgb_to_hex(self.uniforms[name][:3]) for name in ["fill_rgba", "fill_rgba_end"]]
+
     def get_fill_color(self) -> str:
         return rgb_to_hex(self.uniforms["fill_rgba"][:3])
 
@@ -407,7 +472,7 @@ class VMobject(Mobject):
         return any(data['stroke_width']) and any(data['stroke_rgba'][:, 3])
 
     def has_fill(self) -> bool:
-        return bool(self.uniforms["fill_rgba"][3])
+        return bool(max(self.uniforms["fill_rgba"][3], self.uniforms["fill_rgba_end"][3]))
 
     def get_opacity(self) -> float:
         if self.has_fill():
@@ -953,6 +1018,8 @@ class VMobject(Mobject):
 
     def refresh_unit_normal(self) -> Self:
         self.needs_new_unit_normal = True
+        self.gradient_direction = np.array(RIGHT, dtype=float)
+        self.fill_is_gradient = False
         return self
 
     def rotate(
@@ -1271,6 +1338,8 @@ class VMobject(Mobject):
 
     def get_shader_data(self) -> np.ndarray:
         self.set_subpath_range()
+        if self.fill_is_gradient:
+            self.refresh_fill_gradient()
         return super().get_shader_data()
 
 
