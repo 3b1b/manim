@@ -2,8 +2,11 @@
 
 uniform float anti_alias_width;
 uniform float flat_stroke;
-// Zero leaves joints between curves alone, anything else fills them in
-uniform float joint_type;
+/*
+How much to round off the corner at a joint, from 0, which leaves corners as sharp as
+they can be without jutting out, up to 1, which rounds every one of them off.
+*/
+uniform float joint_roundness;
 uniform float stroke_width_in_scene_units;
 /*
 The border around a fill is a stroke like any other, except that it takes its
@@ -18,22 +21,17 @@ out vec4 color;
 out float dist_to_aaw;
 out float half_width_to_aaw;
 
-// When the cosine of the angle between
-// two vectors is larger than this, we
-// consider them aligned
-const float COS_THRESHOLD = 0.999;
+// Beyond this much alignment between the tangent and the view direction, the step
+// to the side of the curve gets adjusted to avoid glitches
+const float ALIGNMENT_THRESHOLD = 0.97;
 // Used to determine how many lines to break the curve into
 const float POLYLINE_FACTOR = 100;
 const int MAX_STEPS = 32;
-// Turns sharper than this get their joints flattened instead of mitered. The band
-// is deliberately narrow, because part way between the two is the one place a gap
-// can open up, see step_to_corner
-const float FLATTEN_COS_START = -0.8;
-const float FLATTEN_COS_END = -0.9;
-// A joint's turn is held as the (cos, sin) of its angle, so no turn looks like this
-const vec2 STRAIGHT = vec2(1.0, 0.0);
 // Stands in for a record index where there is no neighboring curve to read
 const int NONE = -1;
+// Over this range of turn cosines, a joint eases from a sharp miter to a round end
+const float ROUND_COS_START = -0.8;
+const float ROUND_COS_END = -0.95;
 // Number of units spanned by a stroke_width of 1 in a default scale frame,
 // so for instance a stroke_width of 100 comes out one unit thick
 const float STROKE_WIDTH_CONVERSION = 0.01;
@@ -43,9 +41,16 @@ A bezier is three consecutive records of the buffer, sharing its last with the
 next curve's first, so curve n begins at record 2n. It's drawn as one quad for
 each of the polyline segments it gets broken into, and that count per curve has
 to match what VShaderWrapper draws.
+
+The last few of those segments go instead to a fan of triangles rounding off the
+joint at the curve's end. A curve rarely needs anywhere near its full allowance of
+polyline steps, so this costs nothing that was being used.
 */
 const int RECORD_STEP = 2;
 const int VERTS_PER_CURVE = 6 * (MAX_STEPS - 1);
+const int JOINT_SEGMENTS = 3;
+const int POLYLINE_SEGMENTS = MAX_STEPS - 1 - JOINT_SEGMENTS;
+const int FAN_TRIANGLES = 2 * JOINT_SEGMENTS;
 
 // The two triangles of one segment's quad, as (which end of it, which side)
 const vec2 CORNERS[6] = vec2[6](
@@ -80,79 +85,77 @@ vec3 rotate_vector(vec3 vect, vec3 normal, vec2 turn){
 }
 
 
-vec2 turn_from(vec3 tangent, vec3 neighbor_tangent){
+vec3 neighbor_tangent(int record, bool at_start, vec3 anchor){
     /*
-    How the direction turns going from one tangent to the other, within the plane
-    the mobject is drawn in, as a (cos, sin) pair. A degenerate tangent, such as the
-    one at a repeated point, reads as no turn at all.
+    The tangent of the curve neighbouring this one at the given end, pointing the
+    same way along the path. Where the subpath ends, and so has no neighbour to make
+    a joint with, this comes back as zero.
     */
-    vec3 a = project(tangent, unit_normal);
-    vec3 b = project(neighbor_tangent, unit_normal);
-    if (a == vec3(0.0) || b == vec3(0.0)) return STRAIGHT;
-    a = normalize(a);
-    b = normalize(b);
-    return vec2(dot(a, b), dot(cross(a, b), unit_normal));
+    vec2 subpath_range = read_vec2(record, DATA_OFFSET_subpath_range);
+    int first = int(subpath_range.x);
+    int last = int(subpath_range.y);
+    bool closed = read_vec3(first, DATA_OFFSET_point) == read_vec3(last, DATA_OFFSET_point);
+    if (at_start){
+        int prev = record > first ? record - 1 : (closed ? last - 1 : NONE);
+        return prev == NONE ? vec3(0.0) : anchor - read_vec3(prev, DATA_OFFSET_point);
+    }
+    int next = record + 2 < last ? record + 3 : (closed ? first + 1 : NONE);
+    return next == NONE ? vec3(0.0) : read_vec3(next, DATA_OFFSET_point) - anchor;
 }
 
 
-vec3 step_to_corner(
-    vec3 tangent,
-    vec3 facing_normal,
-    vec2 turn,
-    bool inside_curve,
-    bool draw_flat
-){
+bool flatten_tangent(vec3 tangent, vec3 facing_normal, out vec3 result){
     /*
-    Step to the left of a curve.
-    First a perpendicular direction is calculated, then it is adjusted
-    so as to make a joint.
+    The tangent as it appears in the plane the stroke is drawn in. Comes back false
+    for anything degenerate, such as the tangent at a repeated point, which leaves
+    no direction to work with and so no joint to make.
+    */
+    vec3 flat_tan = project(tangent, facing_normal);
+    if (flat_tan == vec3(0.0)) return false;
+    result = normalize(flat_tan);
+    return true;
+}
+
+
+float joint_shift(vec3 tan_in, vec3 tan_out, vec3 facing_normal){
+    /*
+    How far along its tangent the incoming strip must run to reach where the outgoing
+    strip's edge meets it, the exact miter. That is the one place the two meet with no
+    gap, but it runs off arbitrarily far as the turn approaches a full reversal. So a
+    sharpening turn keeps less and less of that reach, and the roundness setting scales
+    back whatever is left. Either way the joint fan rounds off what gets given up.
+    */
+    vec3 a, b;
+    if (!flatten_tangent(tan_in, facing_normal, a)) return 0.0;
+    if (!flatten_tangent(tan_out, facing_normal, b)) return 0.0;
+    float sin_angle = dot(cross(a, b), facing_normal);
+    // Both a straight joint and a full reversal want no shift, and both have a
+    // vanishing sine, which would otherwise divide out to something unbounded
+    if (abs(sin_angle) < 1e-6) return 0.0;
+    float cos_angle = dot(a, b);
+    float keep = (1.0 - smoothstep(ROUND_COS_START, ROUND_COS_END, cos_angle))
+        * (1.0 - joint_roundness);
+    return keep * (cos_angle - 1.0) / sin_angle;
+}
+
+
+vec3 step_to_corner(vec3 tangent, vec3 facing_normal, float shift, bool draw_flat){
+    /*
+    Step perpendicular to the curve, out to the edge of the stroke, then along the
+    curve by however far the joint at this end reaches.
     */
     vec3 unit_tan = normalize(draw_flat ? tangent : project(tangent, facing_normal));
-
-    // Step to stroke width bound should be perpendicular
-    // both to the tangent and the normal direction
     vec3 step = normalize(cross(facing_normal, unit_tan));
 
-    // For non-flat stroke, there can be glitches when the tangent direction
-    // lines up very closely with the direction to the camera, treated here
-    // as the unit normal. To avoid those, this smoothly transitions to a step
-    // direction perpendicular to the true curve normal.
-    if(turn != STRAIGHT){
-        float alignment = abs(dot(normalize(tangent), facing_normal));
-        float alignment_threshold = 0.97;  // This could maybe be chosen in a more principled way based on stroke width
-        if (alignment > alignment_threshold) {
-            vec3 perp = normalize(cross(unit_normal, tangent));
-            step = mix(step, project(step, perp), smoothstep(alignment_threshold, 1.0, alignment));
-        }
+    // For non-flat stroke, there can be glitches when the tangent direction lines up
+    // very closely with the direction to the camera, treated here as the unit normal.
+    // To avoid those, this smoothly transitions to a step direction perpendicular to
+    // the true curve normal.
+    float alignment = abs(dot(normalize(tangent), facing_normal));
+    if (alignment > ALIGNMENT_THRESHOLD) {
+        vec3 perp = normalize(cross(unit_normal, tangent));
+        step = mix(step, project(step, perp), smoothstep(ALIGNMENT_THRESHOLD, 1.0, alignment));
     }
-
-    if (inside_curve || joint_type == 0.0) return step;
-
-    float cos_angle = turn.x;
-    float sin_angle = turn.y;
-
-    if (abs(cos_angle) > COS_THRESHOLD) return step;
-
-    // Below here, figure out how far along the tangent to shift for a joint
-    if (!draw_flat){
-        // Figure out what joint product would be for everything projected onto
-        // the plane perpendicular to the normal direction (which here would be to_camera)
-        step = normalize(cross(facing_normal, unit_tan));  // Back to original step
-        vec3 adj_tan = rotate_vector(tangent, unit_normal, turn);
-        adj_tan = project(adj_tan, facing_normal);
-        cos_angle = dot(unit_tan, normalize(adj_tan));
-        sin_angle = sqrt(1 - cos_angle * cos_angle) * sign(turn.y) * sign(dot(facing_normal, unit_normal));
-    }
-
-    /*
-    Stepping out to where the two curves' offset edges meet, the exact miter, is the
-    only shift that leaves no gap between them. But it juts out arbitrarily far as
-    the turn approaches a full reversal, so past a threshold this blends towards a
-    flat cut. The gap that opens up in doing so closes again as the tangents become
-    antiparallel, which is why flattening is safe at exactly the angles miter isn't.
-    */
-    float flatten = smoothstep(FLATTEN_COS_START, FLATTEN_COS_END, cos_angle);
-    float shift = (cos_angle - 1.0 + 2.0 * flatten) / sin_angle;
     return step + shift * unit_tan;
 }
 
@@ -161,8 +164,12 @@ void main(){
     int curve = gl_VertexID / VERTS_PER_CURVE;
     int within = gl_VertexID % VERTS_PER_CURVE;
     int segment = within / 6;
-    vec2 corner = CORNERS[within % 6];
+    int tri_vert = within % 6;
+    vec2 corner = CORNERS[tri_vert];
     int record = RECORD_STEP * curve;
+
+    // Segments past the polyline's allowance go to the fan rounding off the joint
+    bool joint_fan = (segment >= POLYLINE_SEGMENTS);
 
     int color_offset = is_fill_border ? DATA_OFFSET_fill_rgba : DATA_OFFSET_stroke_rgba;
 
@@ -191,15 +198,17 @@ void main(){
     // based on the area of the triangle defined by these control points
     float area = 0.5 * length(cross(controls[1] - controls[0], controls[2] - controls[0]));
     int count = int(round(POLYLINE_FACTOR * sqrt(area) / get_frame_unit_size()));
-    int n_steps = min(2 + count, MAX_STEPS);
+    int n_steps = min(2 + count, POLYLINE_SEGMENTS + 1);
 
     /*
     Nothing to draw for a curve marked as ended, by setting the handle after the
-    first anchor equal to that anchor, nor for one with no width or no opacity,
-    nor for segments past however many this curve was divided into. Collapsing
-    all six corners onto one point leaves no area to rasterize.
+    first anchor equal to that anchor, nor for one with no width or no opacity, nor
+    for polyline segments past however many this curve was divided into, nor for a
+    joint that has no neighbor to turn towards. Collapsing all six corners onto one
+    point leaves no area to rasterize.
     */
-    bool blank = (controls[0] == controls[1]) || (segment >= n_steps - 1);
+    bool blank = (controls[0] == controls[1]);
+    blank = blank || (!joint_fan && segment >= n_steps - 1);
     if (!is_fill_border){
         blank = blank || (vec3(widths[0], widths[1], widths[2]) == vec3(0.0));
     }
@@ -209,11 +218,10 @@ void main(){
         return;
     }
 
+    // The fan sits at the curve's end, where the polyline's last point also lands
     int index = segment + int(corner.x);
-    float t = float(index) / float(n_steps - 1);
-
-    // Point and tangent
-    vec3 point = point_on_quadratic(t, c0, c1, c2);
+    float t = joint_fan ? 1.0 : float(index) / float(n_steps - 1);
+    vec3 point = joint_fan ? controls[2] : point_on_quadratic(t, c0, c1, c2);
     vec3 tangent = tangent_on_quadratic(t, c1, c2);
 
     // By default stroke width is measured relative to the frame, so putting it in
@@ -224,52 +232,76 @@ void main(){
     float width = STROKE_WIDTH_CONVERSION
         * mix(get_frame_unit_size(), 1.0, stroke_width_in_scene_units)
         * (is_fill_border ? fill_border_width : mix(widths[0], widths[2], t));
-    vec4 joint_color = mix(colors[0], colors[2], t);
-
-    // This prevents needless joint creation
-    bool inside_curve = (index > 0 && index < n_steps - 1);
-
-    /*
-    A joint depends on the tangents to either side of the anchor it sits at, so at
-    the ends of this curve that means reaching into the neighboring one. Which record
-    holds its far handle, if there is a neighbor at all, follows from where the
-    subpath begins and ends. Either way the turn is measured from this curve outward,
-    which is the sense in which the strip's own end gets adjusted.
-    */
-    vec2 turn = STRAIGHT;
-    if (!inside_curve){
-        vec2 subpath_range = read_vec2(record, DATA_OFFSET_subpath_range);
-        int first = int(subpath_range.x);
-        int last = int(subpath_range.y);
-        bool closed = read_vec3(first, DATA_OFFSET_point) == read_vec3(last, DATA_OFFSET_point);
-        if (index == 0){
-            int prev = record > first ? record - 1 : (closed ? last - 1 : NONE);
-            if (prev != NONE){
-                turn = turn_from(tangent, controls[0] - read_vec3(prev, DATA_OFFSET_point));
-            }
-        } else {
-            int next = record + 2 < last ? record + 3 : (closed ? first + 1 : NONE);
-            if (next != NONE){
-                turn = turn_from(tangent, read_vec3(next, DATA_OFFSET_point) - controls[2]);
-            }
-        }
-    }
 
     bool draw_flat = bool(flat_stroke) || bool(is_fixed_in_frame);
     vec3 facing_normal = draw_flat ? unit_normal : normalize(camera_position - point);
 
-    color = finalize_color(joint_color, point, facing_normal);
-
-    // Step from the point to a corner of the strip around the polyline
-    vec3 step = step_to_corner(
-        tangent, facing_normal, turn, inside_curve, draw_flat
-    );
+    color = finalize_color(mix(colors[0], colors[2], t), point, facing_normal);
 
     // anti_alias_width is measured in pixels. The frag shader receives a value
     // from -1 to 1, reflecting where in the stroke this corner is.
     float aaw = max(anti_alias_width * get_pixel_unit_size(), 1e-8);
-    float dist_to_curve = corner.y * 0.5 * (width + aaw);
-    half_width_to_aaw = 0.5 * width / aaw;
+    float half_width = 0.5 * (width + aaw);
+
+    // Each end of a curve makes a joint with whatever neighbours it there
+    bool at_start = !joint_fan && index == 0;
+    bool at_joint = joint_fan || at_start || index == n_steps - 1;
+    vec3 neighbor = at_joint ? neighbor_tangent(record, at_start, point) : vec3(0.0);
+    bool has_joint = at_joint && neighbor != vec3(0.0);
+
+    /*
+    Measured from the incoming tangent to the outgoing one either way, so at a curve's
+    start, where this curve is the outgoing one, the shift runs the other direction.
+    */
+    float shift = 0.0;
+    if (has_joint){
+        shift = at_start ?
+            -joint_shift(neighbor, tangent, facing_normal) :
+            joint_shift(tangent, neighbor, facing_normal);
+    }
+
+    vec3 step;
+    float dist_to_curve;
+    float edge_dist;
+    if (joint_fan){
+        /*
+        Cutting the miter back leaves a wedge uncovered between the two strips, both
+        of which end on a line running through this joint. The fan sweeps an arc from
+        one of those lines to the other, at the radius the strips' own corners reach,
+        so the cut comes out rounded. For an exact miter the two lines coincide and
+        the sweep closes to nothing, leaving the corner sharp.
+        */
+        if (!has_joint){
+            gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+            return;
+        }
+        vec3 tan_in, tan_out;
+        if (!flatten_tangent(tangent, facing_normal, tan_in) ||
+            !flatten_tangent(neighbor, facing_normal, tan_out)){
+            gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+            return;
+        }
+        float outward = dot(cross(tan_in, tan_out), facing_normal) < 0.0 ? 1.0 : -1.0;
+        vec3 edge_in = outward * normalize(cross(facing_normal, tan_in) + shift * tan_in);
+        vec3 edge_out = outward * normalize(cross(facing_normal, tan_out) - shift * tan_out);
+        float sweep = atan(dot(cross(edge_in, edge_out), facing_normal), dot(edge_in, edge_out));
+
+        // Of each triangle's three vertices, one sits at the joint and two on the arc
+        int fan_tri = 2 * (segment - POLYLINE_SEGMENTS) + tri_vert / 3;
+        int fan_vert = tri_vert % 3;
+        float along = float(fan_tri + fan_vert - 1) / float(FAN_TRIANGLES);
+
+        step = rotate_vector(edge_in, facing_normal, vec2(cos(along * sweep), sin(along * sweep)));
+        // The corners reach out by this much, being a step out plus a shift along
+        edge_dist = sqrt(1.0 + shift * shift) * 0.5 * width;
+        dist_to_curve = fan_vert == 0 ? 0.0 : edge_dist + 0.5 * aaw;
+    } else {
+        step = step_to_corner(tangent, facing_normal, shift, draw_flat);
+        edge_dist = 0.5 * width;
+        dist_to_curve = corner.y * half_width;
+    }
+
+    half_width_to_aaw = edge_dist / aaw;
     dist_to_aaw = dist_to_curve / aaw;
     emit_gl_Position(point + dist_to_curve * step);
 }
