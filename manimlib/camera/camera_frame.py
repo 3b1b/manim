@@ -52,7 +52,7 @@ class CameraFrame(Mobject):
     # orientation, is only recomputed when something about the frame has changed
     @Mobject.affects_data
     def set_orientation(self, rotation: Rotation):
-        self.uniforms["orientation"][:] = rotation.as_quat()
+        self.uniforms["orientation"] = rotation.as_quat()
         return self
 
     def get_orientation(self):

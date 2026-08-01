@@ -41,7 +41,9 @@ class ValueTracker(Mobject):
         return result
 
     def set_value(self, value: float | complex | np.ndarray) -> Self:
+        # Written in place to keep the broadcasting behavior, so say so directly
         self.uniforms["value"][:] = value
+        self.uniforms.changed = True
         return self
 
     def increment_value(self, d_value: float | complex) -> None:

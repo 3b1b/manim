@@ -25,6 +25,7 @@ from manimlib.event_handler.event_listner import EventListener
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
 from manimlib.shader_wrapper import ShaderWrapper
+from manimlib.utils.shaders import Uniforms
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
@@ -143,14 +144,14 @@ class Mobject(object):
         self._data_defaults = np.ones(1, dtype=self.data.dtype)
 
     def init_uniforms(self):
-        self.uniforms: UniformDict = {
+        self.uniforms: Uniforms = Uniforms({
             "is_fixed_in_frame": 0.0,
             "shading": np.array(self.shading, dtype=float),
             "clip_plane0": np.zeros(4),
             "clip_plane1": np.zeros(4),
             "clip_plane2": np.zeros(4),
             "clip_plane3": np.zeros(4),
-        }
+        })
 
     def init_colors(self):
         self.set_color(self.color, self.opacity)
@@ -678,10 +679,10 @@ class Mobject(object):
         # copy.copy is only a shallow copy, so the internal
         # data which are numpy arrays or other mobjects still
         # need to be further copied.
-        result.uniforms = {
+        result.uniforms = Uniforms({
             key: value.copy() if isinstance(value, np.ndarray) else value
             for key, value in self.uniforms.items()
-        }
+        })
 
         # Instead of adding using result.add, which does some checks for updating
         # updater statues and bounding box, just directly modify the family-related
@@ -1972,7 +1973,7 @@ class Mobject(object):
 
     def set_clip_plane(self, vect: Vect3, threshold: float, recurse=True) -> Self:
         for submob in self.get_family(recurse):
-            submob.uniforms["clip_plane0"][:] = [*vect, threshold]
+            submob.uniforms["clip_plane0"] = np.array([*vect, threshold])
         return self
 
     def set_clip_planes(
@@ -1982,15 +1983,15 @@ class Mobject(object):
     ) -> Self:
         for submob in self.get_family(recurse):
             for n in range(4):
-                submob.uniforms[f"clip_plane{n}"][:] = 0
+                submob.uniforms[f"clip_plane{n}"] = np.zeros(4)
             for n, (vect, threshold) in enumerate(vect_threshold_pairs):
-                submob.uniforms[f"clip_plane{n}"][:] = [*vect, threshold]
+                submob.uniforms[f"clip_plane{n}"] = np.array([*vect, threshold])
         return self
 
     def deactivate_clip_plane(self, recurse=True) -> Self:
         for submob in self.get_family(recurse):
             for n in range(4):
-                submob.uniforms[f"clip_plane{n}"][:] = 0
+                submob.uniforms[f"clip_plane{n}"] = np.zeros(4)
         return self
 
     def clip_to_box(self, box: Mobject, recurse=True) -> Self:

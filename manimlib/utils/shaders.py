@@ -17,6 +17,28 @@ if TYPE_CHECKING:
     from manimlib.typing import UniformDict
 
 
+class Uniforms(dict):
+    """
+    A mobject's uniforms, which notes whenever one of them is set.
+
+    Uniforms are sent to the gpu in a buffer belonging to the mobject, and that
+    buffer only needs rewriting when a value has actually changed. Since dict.update
+    doesn't route through __setitem__, both are overridden here.
+
+    Values are expected to be replaced rather than written into, since mutating one
+    in place would go unnoticed. Anything that does so has to say so itself.
+    """
+    changed: bool = True
+
+    def __setitem__(self, key, value):
+        self.changed = True
+        super().__setitem__(key, value)
+
+    def update(self, *args, **kwargs):
+        self.changed = True
+        super().update(*args, **kwargs)
+
+
 # Global maps to reflect uniform status
 PROGRAM_UNIFORM_MIRRORS: dict[int, dict[str, float | tuple]] = dict()
 # Names each program turned out not to have, so they aren't looked up again
