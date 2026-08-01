@@ -80,6 +80,11 @@ class Camera(object):
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
         self.ctx.enable(moderngl.BLEND)
         gl.glClearStencil(0)
+        # Every vertex shader writes a distance for all four clip planes, using a
+        # plane of all zeros to mean nothing gets clipped, so these stay on
+        for clip_distance in [gl.GL_CLIP_DISTANCE0, gl.GL_CLIP_DISTANCE1,
+                              gl.GL_CLIP_DISTANCE2, gl.GL_CLIP_DISTANCE3]:
+            gl.glEnable(clip_distance)
 
     def init_fbo(self) -> None:
         # This is the buffer used when writing to a video/image file

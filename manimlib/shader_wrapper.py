@@ -185,38 +185,11 @@ class ShaderWrapper(object):
         self.refresh_id()
 
     # Changing context
-    def num_clip_planes(self):
-        count = 0
-        for n in range(4):
-            key = f"clip_plane{n}"
-            if key in self.mobject_uniforms and any(self.mobject_uniforms[key]):
-                count = n + 1
-        return count
-
     def set_ctx_depth_test(self, enable: bool = True) -> None:
         if enable:
             self.ctx.enable(moderngl.DEPTH_TEST)
         else:
             self.ctx.disable(moderngl.DEPTH_TEST)
-
-    def set_ctx_clip_plane(self, num_planes: int = 0) -> None:
-        # Which planes are enabled is a property of the context, and hardly
-        # anything uses them, so there's no sense in turning the same ones off
-        # again for every mobject
-        if num_planes == getattr(self.ctx, "n_clip_planes", 0):
-            return
-        clip_distances = [
-            gl.GL_CLIP_DISTANCE0,
-            gl.GL_CLIP_DISTANCE1,
-            gl.GL_CLIP_DISTANCE2,
-            gl.GL_CLIP_DISTANCE3,
-        ]
-        for n, clip_dist in enumerate(clip_distances):
-            if n < num_planes:
-                gl.glEnable(clip_dist)
-            else:
-                gl.glDisable(clip_dist)
-        self.ctx.n_clip_planes = num_planes
 
     # Adding data
 
@@ -271,7 +244,6 @@ class ShaderWrapper(object):
     # Related to data and rendering
     def pre_render(self):
         self.set_ctx_depth_test(self.depth_test)
-        self.set_ctx_clip_plane(self.num_clip_planes())
         for tid, texture in enumerate(self.textures):
             texture.use(tid)
         if self.data_texture is not None:
