@@ -1,6 +1,7 @@
 #version 330
 
 uniform vec3 unit_normal;
+uniform vec4 fill_rgba;
 
 out vec4 color;
 out float fill_all;
@@ -37,17 +38,10 @@ void main(){
         read_vec3(record + 1, DATA_OFFSET_point),
         read_vec3(record + 2, DATA_OFFSET_point)
     );
-    vec4 colors[3] = vec4[3](
-        read_vec4(record + 0, DATA_OFFSET_fill_rgba),
-        read_vec4(record + 1, DATA_OFFSET_fill_rgba),
-        read_vec4(record + 2, DATA_OFFSET_fill_rgba)
-    );
-
     // Curves are marked as ended when the handle after the first anchor is set
     // equal to that anchor. Nothing to draw for those, or for a clear fill, so
     // collapse all six corners onto one point to leave no area to rasterize.
-    bool blank = (controls[0] == controls[1]) ||
-        (vec3(colors[0].a, colors[1].a, colors[2].a) == vec3(0.0));
+    bool blank = (controls[0] == controls[1]) || (fill_rgba.a == 0.0);
     if (blank) {
         gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
         return;
@@ -65,14 +59,12 @@ void main(){
     if (corner < 3) {
         fill_all = 1.0;
         point = vec3[3](base_point, controls[0], controls[2])[index];
-        color = vec4[3](colors[1], colors[0], colors[2])[index];
     } else {
         fill_all = 0.0;
         point = controls[index];
-        color = colors[index];
     }
 
     uv_coords = SIMPLE_QUADRATIC[index];
-    color = finalize_color(color, point, unit_normal);
+    color = finalize_color(fill_rgba, point, unit_normal);
     emit_gl_Position(point);
 }

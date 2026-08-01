@@ -27,7 +27,9 @@ from manimlib.utils.bezier import outer_interpolate
 from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.bezier import quadratic_bezier_points_for_arc
 from manimlib.utils.color import color_gradient
+from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import rgb_to_hex
+from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
@@ -62,7 +64,6 @@ class VMobject(Mobject):
         ('stroke_width', np.float32, (1,)),
         # First and last record index of the subpath a point belongs to
         ('subpath_range', np.float32, (2,)),
-        ('fill_rgba', np.float32, (4,)),
     ])
     pre_function_handle_to_anchor_scale_factor: float = 0.01
     make_smooth_after_applying_functions: bool = False
@@ -131,6 +132,9 @@ class VMobject(Mobject):
             # be one value rather than one per point, and what makes the winding
             # count deciding its interior meaningful in the first place
             unit_normal=np.array(OUT, dtype=float),
+            # A fill is one flat region of one colour, so unlike stroke there is
+            # nothing for a per point value to mean
+            fill_rgba=np.zeros(4),
             fill_border_width=float(self.fill_border_width),
         )
 
@@ -164,9 +168,15 @@ class VMobject(Mobject):
         border_width: float | None = None,
         recurse: bool = True
     ) -> Self:
-        self.set_rgba_array_by_color(color, opacity, 'fill_rgba', recurse)
-        if border_width is not None:
-            for mob in self.get_family(recurse):
+        for mob in self.get_family(recurse):
+            if color is not None or opacity is not None:
+                rgba = mob.uniforms["fill_rgba"].copy()
+                if color is not None:
+                    rgba[:3] = color_to_rgb(listify(color)[0])
+                if opacity is not None:
+                    rgba[3] = listify(opacity)[0]
+                mob.uniforms["fill_rgba"] = rgba
+            if border_width is not None:
                 mob.uniforms["fill_border_width"] = float(border_width)
         return self
 
@@ -228,7 +238,7 @@ class VMobject(Mobject):
     ) -> Self:
         for mob in self.get_family(recurse):
             if fill_rgba is not None:
-                mob.data['fill_rgba'][:] = resize_with_interpolation(fill_rgba, len(mob.data['fill_rgba']))
+                mob.uniforms["fill_rgba"] = np.array(fill_rgba, dtype=float)
             else:
                 mob.set_fill(
                     color=fill_color,
@@ -264,7 +274,7 @@ class VMobject(Mobject):
     def get_style(self) -> dict[str, Any]:
         data = self.data if self.get_num_points() > 0 else self._data_defaults
         return {
-            "fill_rgba": data['fill_rgba'].copy(),
+            "fill_rgba": self.uniforms["fill_rgba"].copy(),
             "fill_border_width": self.uniforms["fill_border_width"],
             "stroke_rgba": data['stroke_rgba'].copy(),
             "stroke_width": data['stroke_width'].copy(),
@@ -352,15 +362,6 @@ class VMobject(Mobject):
             )
         return self
 
-    def get_fill_colors(self) -> list[str]:
-        return [
-            rgb_to_hex(rgba[:3])
-            for rgba in self.data['fill_rgba']
-        ]
-
-    def get_fill_opacities(self) -> np.ndarray:
-        return self.data['fill_rgba'][:, 3]
-
     def get_stroke_colors(self) -> list[str]:
         return [
             rgb_to_hex(rgba[:3])
@@ -376,20 +377,10 @@ class VMobject(Mobject):
     # TODO, it's weird for these to return the first of various lists
     # rather than the full information
     def get_fill_color(self) -> str:
-        """
-        If there are multiple colors (for gradient)
-        this returns the first one
-        """
-        data = self.data if self.has_points() else self._data_defaults
-        return rgb_to_hex(data["fill_rgba"][0, :3])
+        return rgb_to_hex(self.uniforms["fill_rgba"][:3])
 
     def get_fill_opacity(self) -> float:
-        """
-        If there are multiple opacities, this returns the
-        first
-        """
-        data = self.data if self.has_points() else self._data_defaults
-        return data["fill_rgba"][0, 3]
+        return float(self.uniforms["fill_rgba"][3])
 
     def get_stroke_color(self) -> str:
         data = self.data if self.has_points() else self._data_defaults
@@ -416,8 +407,7 @@ class VMobject(Mobject):
         return any(data['stroke_width']) and any(data['stroke_rgba'][:, 3])
 
     def has_fill(self) -> bool:
-        data = self.data if len(self.data) > 0 else self._data_defaults
-        return any(data['fill_rgba'][:, 3])
+        return bool(self.uniforms["fill_rgba"][3])
 
     def get_opacity(self) -> float:
         if self.has_fill():

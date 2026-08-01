@@ -16,6 +16,7 @@ of zero still draws a band just wide enough to anti-alias the fill's edge.
 uniform bool is_fill_border;
 uniform vec3 unit_normal;
 uniform float fill_border_width;
+uniform vec4 fill_rgba;
 
 out vec4 color;
 out float dist_to_aaw;
@@ -171,8 +172,6 @@ void main(){
     // Segments past the polyline's allowance go to the fan rounding off the joint
     bool joint_fan = (segment >= POLYLINE_SEGMENTS);
 
-    int color_offset = is_fill_border ? DATA_OFFSET_fill_rgba : DATA_OFFSET_stroke_rgba;
-
     vec3 controls[3] = vec3[3](
         read_vec3(record + 0, DATA_OFFSET_point),
         read_vec3(record + 1, DATA_OFFSET_point),
@@ -183,10 +182,11 @@ void main(){
         read_float(record + 1, DATA_OFFSET_stroke_width),
         read_float(record + 2, DATA_OFFSET_stroke_width)
     );
-    vec4 colors[3] = vec4[3](
-        read_vec4(record + 0, color_offset),
-        read_vec4(record + 1, color_offset),
-        read_vec4(record + 2, color_offset)
+    // A fill's border takes its colour from the fill, which is one value throughout
+    vec4 colors[3] = is_fill_border ? vec4[3](fill_rgba, fill_rgba, fill_rgba) : vec4[3](
+        read_vec4(record + 0, DATA_OFFSET_stroke_rgba),
+        read_vec4(record + 1, DATA_OFFSET_stroke_rgba),
+        read_vec4(record + 2, DATA_OFFSET_stroke_rgba)
     );
 
     // Coefficients such that the quadratic bezier is c0 + c1 * t  + c2 * t^2
