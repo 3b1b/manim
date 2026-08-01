@@ -48,6 +48,9 @@ class CameraFrame(Mobject):
         self.set_height(frame_shape[1], stretch=True)
         self.move_to(center_point)
 
+    # Noting the change matters because the view matrix, which depends on the
+    # orientation, is only recomputed when something about the frame has changed
+    @Mobject.affects_data
     def set_orientation(self, rotation: Rotation):
         self.uniforms["orientation"][:] = rotation.as_quat()
         return self
