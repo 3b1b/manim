@@ -129,6 +129,71 @@ def set_program_uniform(
     return True
 
 
+# The mobject's uniforms are gathered into one std140 block, given a vec4 slot
+# each so that the layout is simply 16 bytes per slot
+UNIFORM_BLOCK_NAME = "MobjectUniforms"
+UNIFORM_SLOTS_NAME = "_mob_uniforms"
+SWIZZLES = {1: "x", 2: "xy", 3: "xyz", 4: "xyzw"}
+
+
+@lru_cache()
+def get_shader_code(
+    filename: str,
+    uniform_slots: tuple[tuple[str, int], ...],
+    data_layout: tuple[int, tuple[tuple[str, int], ...]] | None,
+) -> str | None:
+    """
+    Reads a shader from file and fills in everything about it which depends on the
+    shape of a mobject's data, rather than on any of the values in it.
+
+    Namely, the mobject's uniforms are lifted out of their individual declarations
+    and into one block, with a define apiece so that the shader can go on naming
+    them, and shaders which read the vertex buffer themselves get constants
+    describing where each of its fields sits. Since none of that varies between
+    mobjects of a kind, the result is worth holding onto.
+    """
+    code = get_shader_code_from_file(filename)
+    if code is None:
+        return None
+    code = code.replace("// DATA_LAYOUT", get_data_layout_code(data_layout))
+    for name, _ in uniform_slots:
+        code = re.sub(rf"^uniform\s+\w+\s+{name}\s*;$", "", code, flags=re.MULTILINE)
+    block = get_uniform_block_code(uniform_slots)
+    return code.replace("#version 330", "#version 330\n" + block, 1)
+
+
+def get_uniform_block_code(uniform_slots: tuple[tuple[str, int], ...]) -> str:
+    """
+    Declares a block holding a mobject's uniforms, along with defines so that
+    shaders can go on referring to each of them by name.
+    """
+    if not uniform_slots:
+        return ""
+    defines = [
+        f"#define {name} {UNIFORM_SLOTS_NAME}[{index}].{SWIZZLES[size]}"
+        for index, (name, size) in enumerate(uniform_slots)
+    ]
+    return "\n".join([
+        f"layout (std140) uniform {UNIFORM_BLOCK_NAME} "
+        f"{{ vec4 {UNIFORM_SLOTS_NAME}[{len(uniform_slots)}]; }};",
+        *defines,
+    ])
+
+
+def get_data_layout_code(data_layout: tuple[int, tuple[tuple[str, int], ...]] | None) -> str:
+    """
+    Constants describing where each field of a vertex record sits within the
+    buffer, in units of floats, for shaders which index into it themselves.
+    """
+    if data_layout is None:
+        return ""
+    stride, fields = data_layout
+    return "\n".join([
+        f"const int DATA_STRIDE = {stride};",
+        *(f"const int DATA_OFFSET_{name} = {offset};" for name, offset in fields),
+    ])
+
+
 @lru_cache()
 def get_shader_code_from_file(filename: str) -> str | None:
     if not filename:

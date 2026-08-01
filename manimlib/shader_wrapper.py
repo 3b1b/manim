@@ -9,7 +9,9 @@ import moderngl
 import numpy as np
 
 from manimlib.config import parse_cli
-from manimlib.utils.shaders import get_shader_code_from_file
+from manimlib.utils.shaders import get_shader_code
+from manimlib.utils.shaders import SWIZZLES
+from manimlib.utils.shaders import UNIFORM_BLOCK_NAME
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
 from manimlib.utils.shaders import set_program_uniform
@@ -21,12 +23,7 @@ if TYPE_CHECKING:
     from typing import Optional
     from manimlib.typing import UniformDict
 
-# The mobject's uniforms are gathered into one std140 block, given a vec4 slot
-# each so that the layout is simply 16 bytes per slot
-UNIFORM_BLOCK_NAME = "MobjectUniforms"
 UNIFORM_BLOCK_BINDING = 0
-UNIFORM_SLOTS_NAME = "_mob_uniforms"
-SWIZZLES = {1: "x", 2: "xy", 3: "xyz", 4: "xyzw"}
 
 
 # Mobjects that should be rendered with
@@ -82,75 +79,43 @@ class ShaderWrapper(object):
         return None
 
     def init_program_code(self) -> None:
-        def get_code(name: str) -> str | None:
-            return get_shader_code_from_file(
-                os.path.join(self.shader_folder, f"{name}.glsl")
-            )
-
+        self.init_layouts()
         self.program_code: dict[str, str | None] = {
-            "vertex_shader": get_code("vert"),
-            "fragment_shader": get_code("frag"),
+            "vertex_shader": self.get_code("vert"),
+            "fragment_shader": self.get_code("frag"),
         }
-        self.finalize_program_code()
 
-    def finalize_program_code(self) -> None:
-        """
-        Rewrites the loaded source: the mobject's uniforms are pulled out of their
-        individual declarations and into one block, and shaders which read the
-        vertex buffer themselves get the constants describing its layout.
-        """
-        block = self.get_uniform_block_code()
-        layout = self.get_data_layout_code() if self.pulls_vertices else ""
-        for name, code in self.program_code.items():
-            if code is None:
-                continue
-            code = code.replace("// DATA_LAYOUT", layout)
-            for uniform_name in self.mobject_uniforms:
-                code = re.sub(
-                    rf"^uniform\s+\w+\s+{uniform_name}\s*;$", "", code, flags=re.MULTILINE
-                )
-            self.program_code[name] = code.replace("#version 330", "#version 330\n" + block, 1)
+    def get_code(self, name: str) -> str | None:
+        return get_shader_code(
+            os.path.join(self.shader_folder, f"{name}.glsl"),
+            self.uniform_slots,
+            self.data_layout,
+        )
 
-    def get_uniform_block_code(self) -> str:
+    def init_layouts(self) -> None:
         """
-        Declares a block holding the mobject's uniforms, along with defines so that
-        shaders can go on referring to each of them by name.
+        Describes the shapes of what gets sent to the gpu: which uniforms a mobject
+        of this kind has, and where the fields of one of its vertex records sit.
+        Everything generated into the shader source follows from these, so they also
+        serve as the key it gets cached under.
         """
-        self.uniform_slots = []
-        defines = []
-        for name, value in self.mobject_uniforms.items():
-            size = 1 if isinstance(value, (int, float, bool)) else len(value)
+        self.uniform_slots = tuple(
+            (name, 1 if isinstance(value, (int, float, bool)) else len(value))
+            for name, value in self.mobject_uniforms.items()
+        )
+        for name, size in self.uniform_slots:
             if size not in SWIZZLES:
                 raise ValueError(f"Uniform {name} has too many components to be a vec4")
-            defines.append(
-                f"#define {name} {UNIFORM_SLOTS_NAME}[{len(self.uniform_slots)}].{SWIZZLES[size]}"
-            )
-            self.uniform_slots.append((name, size))
         self.uniform_data = np.zeros((len(self.uniform_slots), 4), dtype='f4')
-        if not self.uniform_slots:
-            return ""
-        return "\n".join([
-            f"layout (std140) uniform {UNIFORM_BLOCK_NAME} "
-            f"{{ vec4 {UNIFORM_SLOTS_NAME}[{len(self.uniform_slots)}]; }};",
-            *defines,
-        ])
 
-    def get_data_layout_code(self) -> str:
-        """
-        Constants describing where each field of a vertex record sits within the
-        buffer, in units of floats.
-
-        Shaders which pull records out of the buffer themselves, rather than
-        having the fields handed to them as vertex attributes, use these to index
-        by field name, so that the layout doesn't have to be written out twice.
-        """
         dtype = self.vert_data.dtype
-        lines = [f"const int DATA_STRIDE = {dtype.itemsize // 4};"]
-        lines.extend(
-            f"const int DATA_OFFSET_{name} = {dtype.fields[name][1] // 4};"
-            for name in dtype.names
+        self.data_layout = (
+            (
+                dtype.itemsize // 4,
+                tuple((name, dtype.fields[name][1] // 4) for name in dtype.names),
+            )
+            if self.pulls_vertices else None
         )
-        return "\n".join(lines)
 
     def init_program(self):
         if not self.shader_folder:
@@ -403,14 +368,16 @@ class VShaderWrapper(ShaderWrapper):
             self.replace_code_program(old, new, program_type)
 
     def init_program_code(self) -> None:
+        self.init_layouts()
         self.program_code = {
-            f"{vtype}_{name}": get_shader_code_from_file(
-                os.path.join("quadratic_bezier", f"{vtype}", f"{name}.glsl")
+            f"{vtype}_{name}": get_shader_code(
+                os.path.join("quadratic_bezier", f"{vtype}", f"{name}.glsl"),
+                self.uniform_slots,
+                self.data_layout,
             )
             for vtype in ["stroke", "fill"]
             for name in ["vert", "frag"]
         }
-        self.finalize_program_code()
 
     def init_program(self):
         self.stroke_program = get_shader_program(
