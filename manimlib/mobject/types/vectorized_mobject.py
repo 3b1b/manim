@@ -110,7 +110,6 @@ class VMobject(Mobject):
         self.fill_border_width = fill_border_width
 
         self.needs_new_unit_normal = True
-        self.subpath_end_indices = None
 
         self.shader_program_type = None
 
@@ -658,8 +657,7 @@ class VMobject(Mobject):
     def close_path(self, smooth: bool = False) -> Self:
         if self.is_closed():
             return self
-        ends = self.get_subpath_end_indices()
-        last_path_start = self.get_points()[0 if len(ends) == 1 else ends[-2] + 2]
+        last_path_start = self.get_points()[self.get_subpath_range()[0]]
         if smooth:
             self.add_smooth_curve_to(last_path_start)
         else:
@@ -668,9 +666,8 @@ class VMobject(Mobject):
 
     def is_closed(self) -> bool:
         points = self.get_points()
-        ends = self.get_subpath_end_indices()
-        last_path_start = points[0 if len(ends) == 1 else ends[-2] + 2]
-        return self.consider_points_equal(last_path_start, points[-1])
+        start, end = self.get_subpath_range()
+        return self.consider_points_equal(points[start], points[end])
 
     def subdivide_curves_by_condition(
         self,
@@ -848,10 +845,33 @@ class VMobject(Mobject):
         end_indices = (2 * n for n, end in enumerate(is_end) if end)
         return np.array([*end_indices, len(points) - 1])
 
+    def set_subpath_range(self) -> Self:
+        """
+        Notes on every point where the subpath holding it begins and ends. The stroke
+        shader reads this to find the tangents either side of a joint, and to tell
+        whether a subpath closes back on itself, and everything else that needs to
+        know where the subpaths lie reads it from here rather than looking again.
+        """
+        points = self.get_points()
+        if len(points) == 0:
+            return self
+        ends = self.get_subpath_end_indices_from_points(points)
+        starts = [0, *(ends[:-1] + 2)]
+        for start, end in zip(starts, ends):
+            # Reaching one past the end takes in the null curve's handle sitting
+            # there, which belongs to no subpath, so that every point gets written
+            self.data["subpath_range"][start:end + 2] = (start, end)
+        return self
+
+    def get_subpath_range(self, index: int = -1) -> Tuple[int, int]:
+        """
+        Where the subpath holding the point at the given index begins and ends
+        """
+        start, end = self.data["subpath_range"][index]
+        return int(start), int(end)
+
     def get_subpath_end_indices(self) -> np.ndarray:
-        if self.subpath_end_indices is None:
-            self.subpath_end_indices = self.get_subpath_end_indices_from_points(self.get_points())
-        return self.subpath_end_indices
+        return np.unique(self.data["subpath_range"][:, 1]).astype(int)
 
     def get_subpaths_from_points(self, points: Vect3Array) -> list[Vect3Array]:
         if len(points) == 0:
@@ -1159,7 +1179,7 @@ class VMobject(Mobject):
         def wrapper(self, *args, refresh=True, **kwargs):
             func(self, *args, **kwargs)
             if refresh:
-                self.subpath_end_indices = None
+                self.set_subpath_range()
                 self.refresh_unit_normal()
             return self
         return wrapper
@@ -1175,16 +1195,18 @@ class VMobject(Mobject):
         return super().append_points(points)
 
     def reverse_points(self, recurse: bool = True) -> Self:
-        # This will reset which anchors are
-        # considered path ends
         for mob in self.get_family(recurse):
             if not mob.has_points():
                 continue
+            # Move the null curve marking the end of each subpath, so that it still
+            # marks an end once the order of the points is flipped
             inner_ends = mob.get_subpath_end_indices()[:-1]
             mob.data["point"][inner_ends + 1] = mob.data["point"][inner_ends + 2]
             mob.uniforms["unit_normal"] = -mob.uniforms["unit_normal"]
-            self.subpath_end_indices = None
-        return super().reverse_points()
+        super().reverse_points()
+        for mob in self.get_family(recurse):
+            mob.set_subpath_range()
+        return self
 
     @triggers_refresh
     def set_data(self, data: np.ndarray) -> Self:
@@ -1247,22 +1269,6 @@ class VMobject(Mobject):
                 submob.shader_wrapper.stroke_behind = submob.stroke_behind
         super().refresh_shader_wrapper()
         return self
-
-    def set_subpath_range(self) -> Self:
-        """
-        Tells each point where its subpath begins and ends, which is all the stroke
-        shader needs in order to find the neighboring tangents at a joint, and to
-        know whether a subpath closes back on itself.
-        """
-        ends = self.get_subpath_end_indices()
-        starts = [0, *(end + 2 for end in ends[:-1])]
-        for start, end in zip(starts, ends):
-            self.data["subpath_range"][start:end + 1] = (start, end)
-        return self
-
-    def get_shader_data(self) -> np.ndarray:
-        self.set_subpath_range()
-        return super().get_shader_data()
 
 
 class VGroup(Group, VMobject, Generic[SubVmobjectType]):
