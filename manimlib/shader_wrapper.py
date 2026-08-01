@@ -400,7 +400,6 @@ class VShaderWrapper(ShaderWrapper):
         self.vaos = []
         self.data_texture = None
         self.uniform_buffer = None
-        self.needs_fill_border = True
 
     def generate_vaos(self):
         self.init_data_texture()
@@ -414,27 +413,6 @@ class VShaderWrapper(ShaderWrapper):
             program=self.fill_program, content=[], mode=self.render_primitive
         )
         self.vaos = [self.stroke_vao, self.fill_vao]
-
-    def read_in(self, data: np.ndarray):
-        super().read_in(data)
-        self.needs_fill_border = self.get_needs_fill_border()
-
-    def get_needs_fill_border(self) -> bool:
-        """
-        The border traced around a fill is only there to soften its edge, so it can
-        be skipped when an opaque stroke is going to be drawn over that edge anyway.
-
-        A stroke thin enough to leave the edge showing is possible, but the sliver
-        it leaves is smaller than a pixel, whereas a stroke you can see through
-        would show the unsoftened edge plainly, so that case keeps its border.
-        """
-        if self.stroke_behind or len(self.vert_data) == 0:
-            return True
-        # Checked before the color, since having no stroke at all is much the most
-        # common reason to need the border, and settling it here saves a second pass
-        if self.vert_data["stroke_width"].min() == 0:
-            return True
-        return self.vert_data["stroke_rgba"][:, 3].min() < 1
 
     def get_num_curves(self) -> int:
         # Consecutive beziers share an anchor, so n points make n // 2 curves
@@ -521,11 +499,10 @@ class VShaderWrapper(ShaderWrapper):
         # shape, both because the inside is about to be filled in anyway, and so
         # that its faded edge never blends on top of the fill, which would leave
         # a seam along the boundary for partially transparent colors.
-        if self.needs_fill_border:
-            set_program_uniform(self.stroke_program, "is_fill_border", True)
-            gl.glStencilFunc(gl.GL_EQUAL, 0, 0xFF)
-            gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, gl.GL_KEEP)
-            self.stroke_vao.render(vertices=self.stroke_verts_per_curve * self.get_num_curves())
+        set_program_uniform(self.stroke_program, "is_fill_border", True)
+        gl.glStencilFunc(gl.GL_EQUAL, 0, 0xFF)
+        gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, gl.GL_KEEP)
+        self.stroke_vao.render(vertices=self.stroke_verts_per_curve * self.get_num_curves())
 
         # Pass 2: Color in everywhere the winding number is nonzero. Zeroing the
         # stencil on the way through means the first triangle to cover a pixel
