@@ -62,8 +62,6 @@ class VMobject(Mobject):
         ('stroke_width', np.float32, (1,)),
         ('joint_angle', np.float32, (1,)),
         ('fill_rgba', np.float32, (4,)),
-        ('base_normal', np.float32, (3,)),  # Base points and unit normal vectors are interleaved in this array
-        ('fill_border_width', np.float32, (1,)),
     ])
     pre_function_handle_to_anchor_scale_factor: float = 0.01
     make_smooth_after_applying_functions: bool = False
@@ -133,7 +131,12 @@ class VMobject(Mobject):
             anti_alias_width=self.anti_alias_width,
             joint_type=self.joint_type_map[self.joint_type],
             flat_stroke=float(self.flat_stroke),
-            stroke_width_in_scene_units=float(self.stroke_width_in_scene_units)
+            stroke_width_in_scene_units=float(self.stroke_width_in_scene_units),
+            # A filled VMobject is taken to be flat, which is what lets its normal
+            # be one value rather than one per point, and what makes the winding
+            # count deciding its interior meaningful in the first place
+            unit_normal=np.array(OUT, dtype=float),
+            fill_border_width=float(self.fill_border_width),
         )
 
     def add(self, *vmobjects: VMobject) -> Self:
@@ -168,10 +171,8 @@ class VMobject(Mobject):
     ) -> Self:
         self.set_rgba_array_by_color(color, opacity, 'fill_rgba', recurse)
         if border_width is not None:
-            self.border_width = border_width
             for mob in self.get_family(recurse):
-                data = mob.data if mob.has_points() > 0 else mob._data_defaults
-                data["fill_border_width"] = border_width
+                mob.uniforms["fill_border_width"] = float(border_width)
         return self
 
     def set_stroke(
@@ -237,9 +238,11 @@ class VMobject(Mobject):
                 mob.set_fill(
                     color=fill_color,
                     opacity=fill_opacity,
-                    border_width=fill_border_width,
                     recurse=False
                 )
+            # Applied either way, since passing in fill_rgba skips the branch above
+            if fill_border_width is not None:
+                mob.set_fill(border_width=fill_border_width, recurse=False)
 
             if stroke_rgba is not None:
                 mob.data['stroke_rgba'][:] = resize_with_interpolation(stroke_rgba, len(mob.data['stroke_rgba']))
@@ -267,7 +270,7 @@ class VMobject(Mobject):
         data = self.data if self.get_num_points() > 0 else self._data_defaults
         return {
             "fill_rgba": data['fill_rgba'].copy(),
-            "fill_border_width": data['fill_border_width'].copy(),
+            "fill_border_width": self.uniforms["fill_border_width"],
             "stroke_rgba": data['stroke_rgba'].copy(),
             "stroke_width": data['stroke_width'].copy(),
             "stroke_behind": self.stroke_behind,
@@ -935,7 +938,7 @@ class VMobject(Mobject):
             return OUT
 
         if not self.needs_new_unit_normal and not refresh:
-            return self.data["base_normal"][1, :]
+            return self.uniforms["unit_normal"]
 
         area_vect = self.get_area_vector()
         area = get_norm(area_vect)
@@ -944,7 +947,7 @@ class VMobject(Mobject):
         else:
             p = self.get_points()
             normal = get_unit_normal(p[1] - p[0], p[2] - p[1])
-        self.data["base_normal"][1::2] = normal
+        self.uniforms["unit_normal"] = normal
         self.needs_new_unit_normal = False
         return normal
 
@@ -1263,7 +1266,7 @@ class VMobject(Mobject):
                 continue
             inner_ends = mob.get_subpath_end_indices()[:-1]
             mob.data["point"][inner_ends + 1] = mob.data["point"][inner_ends + 2]
-            mob.data["base_normal"][1::2] *= -1  # Invert normal vector
+            mob.uniforms["unit_normal"] = -mob.uniforms["unit_normal"]
             self.subpath_end_indices = None
         return super().reverse_points()
 
@@ -1338,7 +1341,6 @@ class VMobject(Mobject):
     def get_shader_data(self) -> np.ndarray:
         # Do we want this elsewhere? Say whenever points are refreshed or something?
         self.get_joint_angles()
-        self.data["base_normal"][0::2] = self.data["point"][0]
         return super().get_shader_data()
 
 

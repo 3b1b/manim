@@ -13,7 +13,7 @@ vec3 float_to_color(float value, float min_val, float max_val, vec3[9] colormap_
 }
 
 
-vec4 add_light(vec4 color, vec3 point, vec3 unit_normal){
+vec4 add_light(vec4 color, vec3 point, vec3 normal){
     if(shading == vec3(0.0)) return color;
 
     float reflectiveness = shading.x;
@@ -24,11 +24,11 @@ vec4 add_light(vec4 color, vec3 point, vec3 unit_normal){
     vec3 to_camera = normalize(camera_position - point);
     vec3 to_light = normalize(light_position - point);
 
-    float light_to_normal = dot(to_light, unit_normal);
+    float light_to_normal = dot(to_light, normal);
     // When unit normal points towards light, brighten
     float bright_factor = max(light_to_normal, 0) * reflectiveness;
     // For glossy surface, add extra shine if light beam goes towards camera
-    vec3 light_reflection = reflect(-to_light, unit_normal);
+    vec3 light_reflection = reflect(-to_light, normal);
     float light_to_cam = dot(light_reflection, to_camera);
     float shine = gloss * exp(-3 * pow(1 - light_to_cam, 2));
     bright_factor += shine;
@@ -45,9 +45,9 @@ vec4 add_light(vec4 color, vec3 point, vec3 unit_normal){
     return result;
 }
 
-vec4 finalize_color(vec4 color, vec3 point, vec3 unit_normal){
+vec4 finalize_color(vec4 color, vec3 point, vec3 normal){
     ///// INSERT COLOR FUNCTION HERE /////
     // The line above may be replaced by arbitrary code snippets, as per
     // the method Mobject.set_color_by_code
-    return add_light(color, point, unit_normal);
+    return add_light(color, point, normal);
 }

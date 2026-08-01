@@ -10,6 +10,8 @@ color and width from the fill's fields rather than the stroke's, and that a widt
 of zero still draws a band just wide enough to anti-alias the fill's edge.
 */
 uniform bool is_fill_border;
+uniform vec3 unit_normal;
+uniform float fill_border_width;
 
 out vec4 color;
 out float dist_to_aaw;
@@ -63,22 +65,21 @@ vec3 tangent_on_quadratic(float t, vec3 c1, vec3 c2){
 }
 
 
-vec3 project(vec3 vect, vec3 unit_normal){
+vec3 project(vec3 vect, vec3 normal){
     /* Project the vector onto the plane perpendicular to a given unit normal */
-    return vect - dot(vect, unit_normal) * unit_normal;
+    return vect - dot(vect, normal) * normal;
 }
 
 
-vec3 rotate_vector(vec3 vect, vec3 unit_normal, float angle){
-    vec3 perp = cross(unit_normal, vect);
+vec3 rotate_vector(vec3 vect, vec3 normal, float angle){
+    vec3 perp = cross(normal, vect);
     return cos(angle) * vect + sin(angle) * perp;
 }
 
 
 vec3 step_to_corner(
     vec3 tangent,
-    vec3 unit_normal,
-    vec3 curve_normal,
+    vec3 facing_normal,
     float joint_angle,
     bool inside_curve,
     bool draw_flat
@@ -88,21 +89,21 @@ vec3 step_to_corner(
     First a perpendicular direction is calculated, then it is adjusted
     so as to make a joint.
     */
-    vec3 unit_tan = normalize(draw_flat ? tangent : project(tangent, unit_normal));
+    vec3 unit_tan = normalize(draw_flat ? tangent : project(tangent, facing_normal));
 
     // Step to stroke width bound should be perpendicular
     // both to the tangent and the normal direction
-    vec3 step = normalize(cross(unit_normal, unit_tan));
+    vec3 step = normalize(cross(facing_normal, unit_tan));
 
     // For non-flat stroke, there can be glitches when the tangent direction
     // lines up very closely with the direction to the camera, treated here
     // as the unit normal. To avoid those, this smoothly transitions to a step
     // direction perpendicular to the true curve normal.
     if(joint_angle != 0){
-        float alignment = abs(dot(normalize(tangent), unit_normal));
+        float alignment = abs(dot(normalize(tangent), facing_normal));
         float alignment_threshold = 0.97;  // This could maybe be chosen in a more principled way based on stroke width
         if (alignment > alignment_threshold) {
-            vec3 perp = normalize(cross(curve_normal, tangent));
+            vec3 perp = normalize(cross(unit_normal, tangent));
             step = mix(step, project(step, perp), smoothstep(alignment_threshold, 1.0, alignment));
         }
     }
@@ -118,11 +119,11 @@ vec3 step_to_corner(
     if (!draw_flat){
         // Figure out what joint product would be for everything projected onto
         // the plane perpendicular to the normal direction (which here would be to_camera)
-        step = normalize(cross(unit_normal, unit_tan));  // Back to original step
-        vec3 adj_tan = rotate_vector(tangent, curve_normal, joint_angle);
-        adj_tan = project(adj_tan, unit_normal);
+        step = normalize(cross(facing_normal, unit_tan));  // Back to original step
+        vec3 adj_tan = rotate_vector(tangent, unit_normal, joint_angle);
+        adj_tan = project(adj_tan, facing_normal);
         cos_angle = dot(unit_tan, normalize(adj_tan));
-        sin_angle = sqrt(1 - cos_angle * cos_angle) * sign(joint_angle) * sign(dot(unit_normal, curve_normal));
+        sin_angle = sqrt(1 - cos_angle * cos_angle) * sign(joint_angle) * sign(dot(facing_normal, unit_normal));
     }
 
     // If joint type is auto, it will bevel for cos(angle) > MITER_COS_ANGLE_THRESHOLD,
@@ -150,7 +151,6 @@ void main(){
     vec2 corner = CORNERS[within % 6];
     int record = RECORD_STEP * curve;
 
-    int width_offset = is_fill_border ? DATA_OFFSET_fill_border_width : DATA_OFFSET_stroke_width;
     int color_offset = is_fill_border ? DATA_OFFSET_fill_rgba : DATA_OFFSET_stroke_rgba;
 
     vec3 controls[3] = vec3[3](
@@ -159,9 +159,9 @@ void main(){
         read_vec3(record + 2, DATA_OFFSET_point)
     );
     float widths[3] = float[3](
-        read_float(record + 0, width_offset),
-        read_float(record + 1, width_offset),
-        read_float(record + 2, width_offset)
+        read_float(record + 0, DATA_OFFSET_stroke_width),
+        read_float(record + 1, DATA_OFFSET_stroke_width),
+        read_float(record + 2, DATA_OFFSET_stroke_width)
     );
     vec4 colors[3] = vec4[3](
         read_vec4(record + 0, color_offset),
@@ -210,7 +210,7 @@ void main(){
     // needed, and zooming in makes the stroke look thicker.
     float width = STROKE_WIDTH_CONVERSION
         * mix(get_frame_unit_size(), 1.0, stroke_width_in_scene_units)
-        * mix(widths[0], widths[2], t);
+        * (is_fill_border ? fill_border_width : mix(widths[0], widths[2], t));
     vec4 joint_color = mix(colors[0], colors[2], t);
 
     // This prevents needless joint creation
@@ -228,17 +228,14 @@ void main(){
         joint_angle = read_float(record + 2, DATA_OFFSET_joint_angle);
     }
 
-    // Base points and unit normals are interleaved into one array, with the
-    // former on even records and the latter on odd ones
-    vec3 curve_normal = read_vec3(record + 1, DATA_OFFSET_base_normal);
     bool draw_flat = bool(flat_stroke) || bool(is_fixed_in_frame);
-    vec3 unit_normal = draw_flat ? curve_normal : normalize(camera_position - point);
+    vec3 facing_normal = draw_flat ? unit_normal : normalize(camera_position - point);
 
-    color = finalize_color(joint_color, point, unit_normal);
+    color = finalize_color(joint_color, point, facing_normal);
 
     // Step from the point to a corner of the strip around the polyline
     vec3 step = step_to_corner(
-        tangent, unit_normal, curve_normal, joint_angle, inside_curve, draw_flat
+        tangent, facing_normal, joint_angle, inside_curve, draw_flat
     );
 
     // anti_alias_width is measured in pixels. The frag shader receives a value

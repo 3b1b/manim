@@ -1,5 +1,7 @@
 #version 330
 
+uniform vec3 unit_normal;
+
 out vec4 color;
 out float fill_all;
 // uv space is where the curve coincides with y = x^2
@@ -51,10 +53,8 @@ void main(){
         return;
     }
 
-    // Base points and unit normals are interleaved into one array, with the
-    // former on even records and the latter on odd ones
-    vec3 base_point = read_vec3(record + 0, DATA_OFFSET_base_normal);
-    vec3 unit_normal = read_vec3(record + 1, DATA_OFFSET_base_normal);
+    // The fan reaching back to the mobject's first point covers its interior
+    vec3 base_point = read_vec3(0, DATA_OFFSET_point);
 
     // The first triangle fills in towards the base point, the second hugs the
     // curve. No orientation is computed for either, since the sign of their

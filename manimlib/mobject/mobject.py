@@ -2094,21 +2094,17 @@ class Mobject(object):
         return None
 
     def render(self, ctx: Context):
-        # Note this walks the cached family, rather than building a filtered copy
-        # of it every frame, leaving render_self to pass over the empty ones
         for mob in self.get_family():
-            mob.render_self(ctx)
-
-    def render_self(self, ctx: Context):
-        if len(self.data) == 0:
-            return
-        shader_wrapper = self.get_shader_wrapper(ctx)
-        if self._data_has_changed:
-            shader_wrapper.read_in(self.get_shader_data())
-            self._data_has_changed = False
-        shader_wrapper.update_program_uniforms()
-        shader_wrapper.pre_render()
-        shader_wrapper.render()
+            if len(mob.data) == 0:
+                # Groups hold no points of their own, but their members might
+                continue
+            shader_wrapper = mob.get_shader_wrapper(ctx)
+            if mob._data_has_changed:
+                shader_wrapper.read_in(mob.get_shader_data())
+                mob._data_has_changed = False
+            shader_wrapper.update_program_uniforms()
+            shader_wrapper.pre_render()
+            shader_wrapper.render()
 
     # Event Handlers
     """
