@@ -93,10 +93,9 @@ class ImplicitFunction(VMobject):
         min_depth: int = 5,
         max_quads: int = 1500,
         use_smoothing: bool = False,
-        joint_type: str = 'no_joint',
         **kwargs
     ):
-        super().__init__(joint_type=joint_type, **kwargs)
+        super().__init__(**kwargs)
 
         p_min, p_max = (
             np.array([x_range[0], y_range[0]]),

@@ -206,7 +206,6 @@ class VectorField(VMobject):
     def init_points(self):
         n_samples = len(self.sample_coords)
         self.set_points(np.zeros((8 * n_samples - 1, 3)))
-        self.set_joint_type('no_joint')
 
     def get_sample_points(
         self,

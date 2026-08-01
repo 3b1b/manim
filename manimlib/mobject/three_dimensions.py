@@ -37,7 +37,6 @@ class SurfaceMesh(VGroup):
         stroke_color: ManimColor = GREY_A,
         normal_nudge: float = 1e-2,
         depth_test: bool = True,
-        joint_type: str = 'no_joint',
         **kwargs
     ):
         self.uv_surface = uv_surface
@@ -48,7 +47,6 @@ class SurfaceMesh(VGroup):
             stroke_color=stroke_color,
             stroke_width=stroke_width,
             depth_test=depth_test,
-            joint_type=joint_type,
             **kwargs
         )
 
@@ -306,12 +304,10 @@ class VGroup3D(VGroup):
         *vmobjects: VMobject,
         depth_test: bool = True,
         shading: Tuple[float, float, float] = (0.2, 0.2, 0.2),
-        joint_type: str = "no_joint",
         **kwargs
     ):
         super().__init__(*vmobjects, **kwargs)
         self.set_shading(*shading)
-        self.set_joint_type(joint_type)
         if depth_test:
             self.apply_depth_test()
 

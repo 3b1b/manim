@@ -68,10 +68,6 @@ class VMobject(Mobject):
     make_smooth_after_applying_functions: bool = False
     # TODO, do we care about accounting for varying zoom levels?
     tolerance_for_point_equality: float = 1e-8
-    joint_type_map: dict = {
-        "no_joint": 0,
-        "auto": 1,
-    }
 
     def __init__(
         self,
@@ -84,8 +80,9 @@ class VMobject(Mobject):
         stroke_behind: bool = False,
         background_image_file: str | None = None,
         long_lines: bool = False,
-        # Could also be "no_joint"
-        joint_type: str = "auto",
+        # From 0, leaving corners as sharp as they can be without jutting out, up to
+        # 1, rounding off every one of them
+        joint_roundness: float = 0.0,
         flat_stroke: bool = False,
         # If false, stroke width is measured relative to the frame, so that a given
         # width looks the same at any zoom level. If true, it's measured relative to
@@ -105,7 +102,7 @@ class VMobject(Mobject):
         self.stroke_behind = stroke_behind
         self.background_image_file = background_image_file
         self.long_lines = long_lines
-        self.joint_type = joint_type
+        self.joint_roundness = joint_roundness
         self.flat_stroke = flat_stroke
         self.stroke_width_in_scene_units = stroke_width_in_scene_units
         self.use_simple_quadratic_approx = use_simple_quadratic_approx
@@ -127,7 +124,7 @@ class VMobject(Mobject):
         super().init_uniforms()
         self.uniforms.update(
             anti_alias_width=self.anti_alias_width,
-            joint_type=self.joint_type_map[self.joint_type],
+            joint_roundness=float(self.joint_roundness),
             flat_stroke=float(self.flat_stroke),
             stroke_width_in_scene_units=float(self.stroke_width_in_scene_units),
             # A filled VMobject is taken to be flat, which is what lets its normal
@@ -448,13 +445,13 @@ class VMobject(Mobject):
     def get_scale_stroke_with_zoom(self) -> bool:
         return self.get_stroke_width_in_scene_units()
 
-    def set_joint_type(self, joint_type: str, recurse: bool = True) -> Self:
+    def set_joint_roundness(self, roundness: float, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):
-            mob.uniforms["joint_type"] = self.joint_type_map[joint_type]
+            mob.uniforms["joint_roundness"] = float(roundness)
         return self
 
-    def get_joint_type(self) -> float:
-        return self.uniforms["joint_type"]
+    def get_joint_roundness(self) -> float:
+        return self.uniforms["joint_roundness"]
 
     def apply_depth_test(
         self,
