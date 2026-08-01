@@ -24,6 +24,9 @@ PROGRAM_ABSENT_UNIFORMS: dict[int, set[str]] = dict()
 # Every program which has been compiled, so that uniforms shared by all of them,
 # like those describing the camera, can be set once rather than once per mobject
 ALL_PROGRAMS: list[moderngl.Program] = []
+# The values last set for all of them, since programs are compiled on first use,
+# which may well be partway through a frame
+SHARED_UNIFORMS: dict[str, float | tuple] = dict()
 
 
 @lru_cache()
@@ -47,6 +50,8 @@ def get_shader_program(
         fragment_shader=fragment_shader,
     )
     ALL_PROGRAMS.append(program)
+    for name, value in SHARED_UNIFORMS.items():
+        set_program_uniform(program, name, value)
     return program
 
 
@@ -56,6 +61,8 @@ def set_shared_uniforms(uniforms: UniformDict) -> None:
     camera is. Doing this once a frame saves each mobject from pushing values it
     shares with all the others.
     """
+    SHARED_UNIFORMS.clear()
+    SHARED_UNIFORMS.update(uniforms)
     for program in ALL_PROGRAMS:
         for name, value in uniforms.items():
             set_program_uniform(program, name, value)

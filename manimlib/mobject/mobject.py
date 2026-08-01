@@ -31,7 +31,6 @@ from manimlib.utils.color import get_colormap_list
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.iterables import arrays_match
 from manimlib.utils.iterables import array_is_constant
-from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import resize_array
@@ -2080,18 +2079,6 @@ class Mobject(object):
             self.init_shader_wrapper(ctx)
         return self.shader_wrapper
 
-    def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
-        family = self.family_members_with_points()
-        batches = batch_by_property(family, lambda sm: sm.get_shader_wrapper(ctx).get_id())
-
-        result = []
-        for submobs, sid in batches:
-            shader_wrapper = submobs[0].shader_wrapper
-            data_list = [sm.get_shader_data() for sm in submobs]
-            shader_wrapper.read_in(data_list)
-            result.append(shader_wrapper)
-        return result
-
     def get_shader_data(self) -> np.ndarray:
         indices = self.get_shader_vert_indices()
         if indices is not None:
@@ -2106,13 +2093,21 @@ class Mobject(object):
         return None
 
     def render(self, ctx: Context):
+        # Note this walks the cached family, rather than building a filtered copy
+        # of it every frame, leaving render_self to pass over the empty ones
+        for mob in self.get_family():
+            mob.render_self(ctx)
+
+    def render_self(self, ctx: Context):
+        if len(self.data) == 0:
+            return
+        shader_wrapper = self.get_shader_wrapper(ctx)
         if self._data_has_changed:
-            self.shader_wrappers = self.get_shader_wrapper_list(ctx)
+            shader_wrapper.read_in(self.get_shader_data())
             self._data_has_changed = False
-        for shader_wrapper in self.shader_wrappers:
-            shader_wrapper.update_program_uniforms()
-            shader_wrapper.pre_render()
-            shader_wrapper.render()
+        shader_wrapper.update_program_uniforms()
+        shader_wrapper.pre_render()
+        shader_wrapper.render()
 
     # Event Handlers
     """

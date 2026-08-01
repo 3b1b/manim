@@ -1341,9 +1341,6 @@ class VMobject(Mobject):
         self.data["base_normal"][0::2] = self.data["point"][0]
         return super().get_shader_data()
 
-    def get_shader_vert_indices(self) -> Optional[np.ndarray]:
-        return self.get_outer_vert_indices()
-
 
 class VGroup(Group, VMobject, Generic[SubVmobjectType]):
     def __init__(self, *vmobjects: SubVmobjectType | Iterable[SubVmobjectType], **kwargs):

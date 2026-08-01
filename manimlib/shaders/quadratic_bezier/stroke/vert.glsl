@@ -34,11 +34,12 @@ const float MITER_COS_ANGLE_THRESHOLD = -0.8;
 const float STROKE_WIDTH_CONVERSION = 0.01;
 
 /*
-A bezier sits in three consecutive records of the buffer, and is drawn as one
-quad for each of the polyline segments it gets broken into. The vertex count per
-curve has to match what VShaderWrapper draws.
+A bezier is three consecutive records of the buffer, sharing its last with the
+next curve's first, so curve n begins at record 2n. It's drawn as one quad for
+each of the polyline segments it gets broken into, and that count per curve has
+to match what VShaderWrapper draws.
 */
-const int RECORDS_PER_CURVE = 3;
+const int RECORD_STEP = 2;
 const int VERTS_PER_CURVE = 6 * (MAX_STEPS - 1);
 
 // The two triangles of one segment's quad, as (which end of it, which side)
@@ -147,7 +148,7 @@ void main(){
     int within = gl_VertexID % VERTS_PER_CURVE;
     int segment = within / 6;
     vec2 corner = CORNERS[within % 6];
-    int record = RECORDS_PER_CURVE * curve;
+    int record = RECORD_STEP * curve;
 
     int width_offset = is_fill_border ? DATA_OFFSET_fill_border_width : DATA_OFFSET_stroke_width;
     int color_offset = is_fill_border ? DATA_OFFSET_fill_rgba : DATA_OFFSET_stroke_rgba;

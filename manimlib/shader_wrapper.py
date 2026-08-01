@@ -17,7 +17,7 @@ from manimlib.utils.shaders import set_program_uniform
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Optional, Iterable
+    from typing import Optional
     from manimlib.typing import UniformDict
 
 # Mobjects that should be rendered with
@@ -28,6 +28,10 @@ if TYPE_CHECKING:
 
 
 class ShaderWrapper(object):
+    # True for shaders handed no vertex attributes, which read each record out of
+    # the vertex buffer themselves and expand it into several vertices
+    pulls_vertices: bool = False
+
     def __init__(
         self,
         ctx: moderngl.context.Context,
@@ -46,7 +50,9 @@ class ShaderWrapper(object):
         self.shader_folder = shader_folder
         self.depth_test = depth_test
         self.verts_per_record = verts_per_record
-        self.render_primitive = moderngl.TRIANGLES if verts_per_record else render_primitive
+        if verts_per_record:
+            self.pulls_vertices = True
+        self.render_primitive = moderngl.TRIANGLES if self.pulls_vertices else render_primitive
         self.texture_paths = texture_paths or dict()
 
         self.program_uniform_mirror: UniformDict = dict()
@@ -76,7 +82,7 @@ class ShaderWrapper(object):
             "vertex_shader": get_code("vert"),
             "fragment_shader": get_code("frag"),
         }
-        if self.verts_per_record:
+        if self.pulls_vertices:
             layout = self.get_data_layout_code()
             for name, code in self.program_code.items():
                 if code is not None:
@@ -106,7 +112,7 @@ class ShaderWrapper(object):
             self.programs = []
             return
         self.program = get_shader_program(self.ctx, **self.program_code)
-        if self.verts_per_record:
+        if self.pulls_vertices:
             self.vert_format = None
         else:
             self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
@@ -117,14 +123,13 @@ class ShaderWrapper(object):
         self.textures = []
         for name, path in self.texture_paths.items():
             self.add_texture(name, image_path_to_texture(path, self.ctx))
-        if self.verts_per_record:
+        if self.pulls_vertices:
             # The vertex buffer, exposed to the shader as a texture it can index
             self.texture_names_to_ids["Data"] = len(self.textures)
 
     def init_vertex_objects(self):
         self.vbo = None
         self.vaos = []
-        self.vert_counts = []
         self.data_texture = None
 
     def add_texture(self, name: str, texture: moderngl.Texture):
@@ -195,39 +200,25 @@ class ShaderWrapper(object):
 
     # Adding data
 
-    def read_in(self, data_list: Iterable[np.ndarray]):
-        data_list = list(data_list)
-        # Keep track of which stretch of the buffer belongs to which mobject,
-        # since fills must be drawn one mobject at a time. See render_fill.
-        self.vert_counts = [len(data) for data in data_list]
-        total_len = sum(self.vert_counts)
-        if total_len == 0:
+    def read_in(self, data: np.ndarray):
+        self.vert_data = data
+        if len(data) == 0:
             if self.vbo is not None:
                 self.vbo.clear()
             return
 
-        # If possible, read concatenated data into existing list
-        if len(data_list) == 1:
-            # Nothing to concatenate, and get_shader_data already handed over a
-            # fresh array, so it can be used as is
-            self.vert_data = data_list[0]
-        elif len(self.vert_data) != total_len:
-            self.vert_data = np.concatenate(data_list)
-        else:
-            np.concatenate(data_list, out=self.vert_data)
-
-        # Either create new vbo, or read data into it
-        total_size = self.vert_data.itemsize * total_len
-        if self.vbo is not None and self.vbo.size != total_size:
+        # Either create a new buffer, or write over the existing one
+        size = data.itemsize * len(data)
+        if self.vbo is not None and self.vbo.size != size:
             self.release()  # This sets vbo to be None
         if self.vbo is None:
-            self.vbo = self.ctx.buffer(self.vert_data)
+            self.vbo = self.ctx.buffer(data)
             self.generate_vaos()
         else:
-            self.vbo.write(self.vert_data)
+            self.vbo.write(data)
 
     def generate_vaos(self):
-        if self.verts_per_record:
+        if self.pulls_vertices:
             # Nothing is fed in as a vertex attribute. The shader reads records
             # out of the buffer directly, expanding each into several vertices.
             self.init_data_texture()
@@ -305,8 +296,9 @@ class VShaderWrapper(ShaderWrapper):
     The fill shader turns each curve into two triangles, and the stroke shader
     into one quad per polyline segment, up to MAX_STEPS of them.
     """
-    fill_verts_per_record = 6 // 3
-    stroke_verts_per_record = 6 * (32 - 1) // 3  # MAX_STEPS in stroke/vert.glsl
+    pulls_vertices = True
+    fill_verts_per_curve = 6
+    stroke_verts_per_curve = 6 * (32 - 1)  # MAX_STEPS in stroke/vert.glsl
 
     def __init__(
         self,
@@ -330,7 +322,6 @@ class VShaderWrapper(ShaderWrapper):
             texture_paths=texture_paths,
             depth_test=depth_test,
             render_primitive=render_primitive,
-            verts_per_record=self.fill_verts_per_record,
         )
         for old, new in code_replacements.items():
             self.replace_code_program(old, new, program_type)
@@ -366,7 +357,6 @@ class VShaderWrapper(ShaderWrapper):
         self.stroke_vao = None
         self.fill_vao = None
         self.vaos = []
-        self.vert_counts = []
         self.data_texture = None
 
     def generate_vaos(self):
@@ -381,6 +371,10 @@ class VShaderWrapper(ShaderWrapper):
             program=self.fill_program, content=[], mode=self.render_primitive
         )
         self.vaos = [self.stroke_vao, self.fill_vao]
+
+    def get_num_curves(self) -> int:
+        # Consecutive beziers share an anchor, so n points make n // 2 curves
+        return len(self.vert_data) // 2
 
     def set_backstroke(self, value: bool = True):
         self.stroke_behind = value
@@ -414,7 +408,7 @@ class VShaderWrapper(ShaderWrapper):
         if self.stroke_vao is None:
             return
         set_program_uniform(self.stroke_program, "is_fill_border", False)
-        self.stroke_vao.render(vertices=self.stroke_verts_per_record * len(self.vert_data))
+        self.stroke_vao.render(vertices=self.stroke_verts_per_curve * self.get_num_curves())
 
     def render_fill(self):
         """
@@ -431,29 +425,16 @@ class VShaderWrapper(ShaderWrapper):
         means each pixel is colored exactly once, using ordinary alpha blending,
         and that the stencil buffer is left clean for whatever draws next.
 
-        This has to happen one mobject at a time. Sharing a single pair of passes
-        across the whole batch would merge their winding numbers into one region,
-        so that overlapping mobjects would color a shared pixel once between them
-        rather than each blending in turn.
+        Note this only works because a wrapper holds a single mobject. Sharing one
+        pair of passes between several would merge their winding numbers into one
+        region, so that overlapping mobjects would color a shared pixel once
+        between them rather than each blending in turn.
         """
         if self.fill_vao is None:
             return
 
         gl.glEnable(gl.GL_STENCIL_TEST)
         set_program_uniform(self.stroke_program, "is_fill_border", True)
-        first = 0
-        for count in self.vert_counts:
-            self.render_fill_range(first, count)
-            first += count
-        gl.glDisable(gl.GL_STENCIL_TEST)
-
-    def render_fill_range(self, first: int, count: int):
-        # The range is given in records, which each shader turns into a different
-        # number of vertices
-        fill_first = first * self.fill_verts_per_record
-        fill_count = count * self.fill_verts_per_record
-        border_first = first * self.stroke_verts_per_record
-        border_count = count * self.stroke_verts_per_record
 
         # Pass 1: Count the winding number around each pixel. Depth testing must
         # be off here, since an occluded triangle which failed to contribute
@@ -465,7 +446,7 @@ class VShaderWrapper(ShaderWrapper):
         gl.glStencilFunc(gl.GL_ALWAYS, 0, 0xFF)
         gl.glStencilOpSeparate(gl.GL_FRONT, gl.GL_KEEP, gl.GL_INCR_WRAP, gl.GL_INCR_WRAP)
         gl.glStencilOpSeparate(gl.GL_BACK, gl.GL_KEEP, gl.GL_DECR_WRAP, gl.GL_DECR_WRAP)
-        self.fill_vao.render(first=fill_first, vertices=fill_count)
+        self.fill_vao.render(vertices=self.fill_verts_per_curve * self.get_num_curves())
 
         gl.glColorMask(*4 * [gl.GL_TRUE])
         gl.glDepthMask(gl.GL_TRUE)
@@ -479,7 +460,7 @@ class VShaderWrapper(ShaderWrapper):
         # a seam along the boundary for partially transparent colors.
         gl.glStencilFunc(gl.GL_EQUAL, 0, 0xFF)
         gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, gl.GL_KEEP)
-        self.stroke_vao.render(first=border_first, vertices=border_count)
+        self.stroke_vao.render(vertices=self.stroke_verts_per_curve * self.get_num_curves())
 
         # Pass 2: Color in everywhere the winding number is nonzero. Zeroing the
         # stencil on the way through means the first triangle to cover a pixel
@@ -488,7 +469,9 @@ class VShaderWrapper(ShaderWrapper):
         # success, else occluded fills would leave the buffer dirty.
         gl.glStencilFunc(gl.GL_NOTEQUAL, 0, 0xFF)
         gl.glStencilOp(gl.GL_KEEP, gl.GL_ZERO, gl.GL_ZERO)
-        self.fill_vao.render(first=fill_first, vertices=fill_count)
+        self.fill_vao.render(vertices=self.fill_verts_per_curve * self.get_num_curves())
+
+        gl.glDisable(gl.GL_STENCIL_TEST)
 
     def render(self):
         if self.stroke_behind:

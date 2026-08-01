@@ -14,7 +14,8 @@ out vec2 uv_coords;
 // the path, and one hugging the curve itself, whose fragments outside the curve
 // get cut away.
 const int VERTS_PER_CURVE = 6;
-const int RECORDS_PER_CURVE = 3;
+// Consecutive beziers share an anchor, so curve n begins at record 2n
+const int RECORD_STEP = 2;
 
 // A quadratic bezier curve with these points coincides with y = x^2
 const vec2 SIMPLE_QUADRATIC[3] = vec2[3](
@@ -27,7 +28,7 @@ const vec2 SIMPLE_QUADRATIC[3] = vec2[3](
 void main(){
     int curve = gl_VertexID / VERTS_PER_CURVE;
     int corner = gl_VertexID % VERTS_PER_CURVE;
-    int record = RECORDS_PER_CURVE * curve;
+    int record = RECORD_STEP * curve;
 
     vec3 controls[3] = vec3[3](
         read_vec3(record + 0, DATA_OFFSET_point),
