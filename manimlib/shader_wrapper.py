@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 import os
 import re
 
@@ -8,7 +7,6 @@ import OpenGL.GL as gl
 import moderngl
 import numpy as np
 
-from manimlib.config import parse_cli
 from manimlib.utils.shaders import get_shader_code
 from manimlib.utils.shaders import SWIZZLES
 from manimlib.utils.shaders import UNIFORM_BLOCK_NAME
@@ -24,13 +22,6 @@ if TYPE_CHECKING:
     from manimlib.typing import UniformDict
 
 UNIFORM_BLOCK_BINDING = 0
-
-
-# Mobjects that should be rendered with
-# the same shader will be organized and
-# clumped together based on keeping track
-# of a dict holding all the relevant information
-# to that shader
 
 
 class ShaderWrapper(object):
@@ -61,8 +52,7 @@ class ShaderWrapper(object):
         self.render_primitive = moderngl.TRIANGLES if self.pulls_vertices else render_primitive
         self.texture_paths = texture_paths or dict()
 
-        self.program_uniform_mirror: UniformDict = dict()
-        self.bind_to_mobject_uniforms(mobject_uniforms if mobject_uniforms is not None else Uniforms())
+        self.mobject_uniforms = mobject_uniforms if mobject_uniforms is not None else Uniforms()
 
         self.init_program_code()
         for old, new in code_replacements.items():
@@ -70,7 +60,6 @@ class ShaderWrapper(object):
         self.init_program()
         self.init_textures()
         self.init_vertex_objects()
-        self.refresh_id()
 
     def __deepcopy__(self, memo):
         # Don't allow deepcopies, e.g. if the mobject with this ShaderWrapper as an
@@ -160,21 +149,6 @@ class ShaderWrapper(object):
         self.texture_names_to_ids[name] = len(self.textures)
         self.textures.append(texture)
 
-    def bind_to_mobject_uniforms(self, mobject_uniforms: UniformDict):
-        self.mobject_uniforms = mobject_uniforms
-
-    def get_id(self) -> int:
-        return self.id
-
-    def refresh_id(self) -> None:
-        self.id = hash("".join(map(str, [
-            "".join(map(str, self.program_code.values())),
-            self.mobject_uniforms,
-            self.depth_test,
-            self.render_primitive,
-            self.texture_paths,
-        ])))
-
     def replace_code(self, old: str, new: str) -> None:
         code_map = self.program_code
         for name in code_map:
@@ -182,7 +156,6 @@ class ShaderWrapper(object):
                 continue
             code_map[name] = re.sub(old, new, code_map[name])
         self.init_program()
-        self.refresh_id()
 
     # Changing context
     def set_ctx_depth_test(self, enable: bool = True) -> None:
@@ -294,13 +267,6 @@ class ShaderWrapper(object):
             self.uniform_buffer.release()
         self.init_vertex_objects()
 
-    def release_textures(self):
-        for texture in self.textures:
-            texture.release()
-            del texture
-        self.textures = []
-        self.texture_names_to_ids = dict()
-
 
 class VShaderWrapper(ShaderWrapper):
     """
@@ -390,13 +356,6 @@ class VShaderWrapper(ShaderWrapper):
         # Consecutive beziers share an anchor, so n points make n // 2 curves
         return len(self.vert_data) // 2
 
-    def set_backstroke(self, value: bool = True):
-        self.stroke_behind = value
-
-    def refresh_id(self):
-        super().refresh_id()
-        self.id = hash(str(self.id) + str(self.stroke_behind))
-        
     def replace_code_program(self, old: str, new: str, program_type: str | None = None):
         if program_type is None:
             # fallback to generic behaviour
@@ -415,7 +374,6 @@ class VShaderWrapper(ShaderWrapper):
             self.program_code[name] = re.sub(old, new, self.program_code[name])
 
         self.init_program()
-        self.refresh_id()
 
     # Rendering
     def render_stroke(self):

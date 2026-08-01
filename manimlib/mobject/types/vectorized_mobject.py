@@ -250,7 +250,7 @@ class VMobject(Mobject):
             for mob in self.get_family(recurse):
                 if mob.stroke_behind != behind:
                     mob.stroke_behind = behind
-                    mob.refresh_shader_wrapper_id()
+                    mob.refresh_shader_wrapper()
 
         if flat is not None:
             self.set_flat_stroke(flat)
@@ -1306,11 +1306,11 @@ class VMobject(Mobject):
             depth_test=self.depth_test
         )
 
-    def refresh_shader_wrapper_id(self):
+    def refresh_shader_wrapper(self):
         for submob in self.get_family():
             if submob.shader_wrapper is not None:
                 submob.shader_wrapper.stroke_behind = submob.stroke_behind
-        super().refresh_shader_wrapper_id()
+        super().refresh_shader_wrapper()
         return self
 
     def set_subpath_range(self) -> Self:

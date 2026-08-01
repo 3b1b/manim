@@ -1942,26 +1942,26 @@ class Mobject(object):
     # Operations touching shader uniforms
 
     @staticmethod
-    def affects_shader_info_id(func: Callable[..., T]) -> Callable[..., T]:
+    def affects_shader_wrapper(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             result = func(self, *args, **kwargs)
-            self.refresh_shader_wrapper_id()
+            self.refresh_shader_wrapper()
             return result
         return wrapper
 
-    @affects_shader_info_id
+    @affects_shader_wrapper
     def set_uniform(self, recurse: bool = True, **new_uniforms) -> Self:
         for mob in self.get_family(recurse):
             mob.uniforms.update(new_uniforms)
         return self
 
-    @affects_shader_info_id
+    @affects_shader_wrapper
     def fix_in_frame(self, recurse: bool = True) -> Self:
         self.set_uniform(recurse, is_fixed_in_frame=1.0)
         return self
 
-    @affects_shader_info_id
+    @affects_shader_wrapper
     def unfix_from_frame(self, recurse: bool = True) -> Self:
         self.set_uniform(recurse, is_fixed_in_frame=0.0)
         return self
@@ -1969,13 +1969,13 @@ class Mobject(object):
     def is_fixed_in_frame(self) -> bool:
         return bool(self.uniforms["is_fixed_in_frame"])
 
-    @affects_shader_info_id
+    @affects_shader_wrapper
     def apply_depth_test(self, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):
             mob.depth_test = True
         return self
 
-    @affects_shader_info_id
+    @affects_shader_wrapper
     def deactivate_depth_test(self, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):
             mob.depth_test = False
@@ -2076,11 +2076,13 @@ class Mobject(object):
             verts_per_record=self.verts_per_record,
         )
 
-    def refresh_shader_wrapper_id(self):
+    def refresh_shader_wrapper(self):
+        """
+        Passes on whatever a mobject holds that its shader wrapper needs a copy of.
+        """
         for submob in self.get_family():
             if submob.shader_wrapper is not None:
                 submob.shader_wrapper.depth_test = submob.depth_test
-                submob.shader_wrapper.refresh_id()
         for mob in (self, *self.get_ancestors()):
             mob._data_has_changed = True
         return self
