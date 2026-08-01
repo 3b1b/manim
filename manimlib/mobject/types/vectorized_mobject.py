@@ -55,6 +55,9 @@ if TYPE_CHECKING:
     from moderngl import Context
 
 
+GRADIENT_POINT_KEYS = ['gradient_start', 'gradient_end']
+
+
 class VMobject(Mobject):
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
@@ -63,7 +66,6 @@ class VMobject(Mobject):
         # First and last record index of the subpath a point belongs to
         ('subpath_range', np.float32, (2,)),
     ])
-    pointlike_uniform_keys = ['gradient_start', 'gradient_end']
     pre_function_handle_to_anchor_scale_factor: float = 0.01
     make_smooth_after_applying_functions: bool = False
     # TODO, do we care about accounting for varying zoom levels?
@@ -218,6 +220,9 @@ class VMobject(Mobject):
         for mob in self.get_family(recurse):
             mob.uniforms["gradient_start"] = bbox[1] - reach * direction
             mob.uniforms["gradient_end"] = bbox[1] + reach * direction
+            # Only now that these mean something do they need carrying along with the
+            # points. Left out otherwise, so that moving a plain fill touches nothing.
+            mob.pointlike_uniform_keys = GRADIENT_POINT_KEYS
         return self
 
     def set_stroke(

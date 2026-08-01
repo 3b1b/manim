@@ -23,14 +23,14 @@ out float half_width_to_aaw;
 
 // Beyond this much alignment between the tangent and the view direction, the step
 // to the side of the curve gets adjusted to avoid glitches
-const float ALIGNMENT_THRESHOLD = 0.97;
+const float ALIGNMENT_THRESHOLD = 0.99;
 // Used to determine how many lines to break the curve into
 const float POLYLINE_FACTOR = 100;
 const int MAX_STEPS = 32;
 // Stands in for a record index where there is no neighboring curve to read
 const int NONE = -1;
 // Over this range of turn cosines, a joint eases from a sharp miter to a round end
-const float ROUND_COS_START = -0.8;
+const float ROUND_COS_START = -0.5;
 const float ROUND_COS_END = -0.95;
 // Number of units spanned by a stroke_width of 1 in a default scale frame,
 // so for instance a stroke_width of 100 comes out one unit thick
