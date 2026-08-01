@@ -112,7 +112,6 @@ class VMobject(Mobject):
         self.fill_border_width = fill_border_width
 
         self.needs_new_unit_normal = True
-        self.gradient_direction = np.array(RIGHT, dtype=float)
         self.fill_is_gradient = False
         self.subpath_end_indices = None
         self.outer_vert_indices = np.zeros(0, dtype=int)
@@ -139,8 +138,10 @@ class VMobject(Mobject):
             # nothing for a per point value to mean
             fill_rgba=np.zeros(4),
             # A second color, equal to the first unless a gradient was asked for,
-            # along with where that gradient sits, see inserts/fill_color.glsl
+            # the direction such a gradient runs in, and where that leaves it
+            # sitting, which is what the shaders read, see inserts/fill_color.glsl
             fill_rgba_end=np.zeros(4),
+            gradient_direction=np.array(RIGHT, dtype=float),
             gradient_center=np.zeros(3),
             gradient_axis=np.zeros(3),
             fill_border_width=float(self.fill_border_width),
@@ -195,11 +196,15 @@ class VMobject(Mobject):
                 mob.uniforms["fill_rgba_end"] = ends[1]
                 mob.fill_is_gradient = bool((ends[0] != ends[1]).any())
             if gradient_direction is not None:
-                mob.gradient_direction = normalize(np.array(gradient_direction, dtype=float))
+                mob.uniforms["gradient_direction"] = normalize(np.array(gradient_direction, dtype=float))
             if border_width is not None:
                 mob.uniforms["fill_border_width"] = float(border_width)
         if set_colors and recurse and self.fill_is_gradient:
             self.spread_fill_gradient()
+        if set_colors or gradient_direction is not None:
+            # Neither counts as a change to the points, which is the only other thing
+            # that would have the gradient placed again
+            self.refresh_fill_gradient(recurse)
         return self
 
     def spread_fill_gradient(self) -> Self:
@@ -210,7 +215,7 @@ class VMobject(Mobject):
         what lets a gradient over a group of glyphs read as a single gradient.
         """
         bbox = self.get_bounding_box()
-        direction = self.gradient_direction
+        direction = self.uniforms["gradient_direction"]
         reach = np.dot(np.abs(direction), 0.5 * (bbox[2] - bbox[0]))
         if reach == 0:
             return self
@@ -226,15 +231,19 @@ class VMobject(Mobject):
             mob.fill_is_gradient = spread > 0
         return self
 
-    def refresh_fill_gradient(self) -> Self:
+    def refresh_fill_gradient(self, recurse: bool = True) -> Self:
         """
-        Centers the gradient on the mobject, and scales its axis so that the two colors
+        Centers each gradient on its mobject, and scales its axis so that the two colors
         land on the extremes of the bounding box along the direction it runs.
         """
-        bbox = self.get_bounding_box()
-        reach = np.dot(np.abs(self.gradient_direction), 0.5 * (bbox[2] - bbox[0]))
-        self.uniforms["gradient_center"] = bbox[1]
-        self.uniforms["gradient_axis"] = self.gradient_direction / (2 * reach) if reach > 0 else np.zeros(3)
+        for mob in self.get_family(recurse):
+            if not mob.fill_is_gradient:
+                continue
+            bbox = mob.get_bounding_box()
+            direction = mob.uniforms["gradient_direction"]
+            reach = np.dot(np.abs(direction), 0.5 * (bbox[2] - bbox[0]))
+            mob.uniforms["gradient_center"] = bbox[1]
+            mob.uniforms["gradient_axis"] = direction / (2 * reach) if reach > 0 else np.zeros(3)
         return self
 
     def set_stroke(
@@ -1018,8 +1027,6 @@ class VMobject(Mobject):
 
     def refresh_unit_normal(self) -> Self:
         self.needs_new_unit_normal = True
-        self.gradient_direction = np.array(RIGHT, dtype=float)
-        self.fill_is_gradient = False
         return self
 
     def rotate(
@@ -1339,7 +1346,7 @@ class VMobject(Mobject):
     def get_shader_data(self) -> np.ndarray:
         self.set_subpath_range()
         if self.fill_is_gradient:
-            self.refresh_fill_gradient()
+            self.refresh_fill_gradient(recurse=False)
         return super().get_shader_data()
 
 
