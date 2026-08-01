@@ -13,6 +13,7 @@ from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.color import color_to_rgba
+from manimlib.utils.shaders import set_shared_uniforms
 
 from typing import TYPE_CHECKING
 
@@ -261,13 +262,15 @@ class Camera(object):
     def capture(self, *mobjects: Mobject) -> None:
         self.clear()
         self.refresh_uniforms()
+        # These hold for every program, so they only need setting once a frame
+        set_shared_uniforms(self.uniforms)
         self.fbo.use()
         # Fill rendering leaves the stencil buffer zeroed as it goes, so this is
         # only here to guarantee a clean slate, e.g. if a previous frame's
         # rendering was interrupted partway through
         gl.glClear(gl.GL_STENCIL_BUFFER_BIT)
         for mobject in mobjects:
-            mobject.render(self.ctx, self.uniforms)
+            mobject.render(self.ctx)
 
         if self.window:
             self.window.swap_buffers()

@@ -14,10 +14,16 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Sequence, Optional
+    from manimlib.typing import UniformDict
 
 
 # Global maps to reflect uniform status
 PROGRAM_UNIFORM_MIRRORS: dict[int, dict[str, float | tuple]] = dict()
+# Names each program turned out not to have, so they aren't looked up again
+PROGRAM_ABSENT_UNIFORMS: dict[int, set[str]] = dict()
+# Every program which has been compiled, so that uniforms shared by all of them,
+# like those describing the camera, can be set once rather than once per mobject
+ALL_PROGRAMS: list[moderngl.Program] = []
 
 
 @lru_cache()
@@ -36,10 +42,23 @@ def get_shader_program(
         vertex_shader: str,
         fragment_shader: Optional[str] = None,
 ) -> moderngl.Program:
-    return ctx.program(
+    program = ctx.program(
         vertex_shader=vertex_shader,
         fragment_shader=fragment_shader,
     )
+    ALL_PROGRAMS.append(program)
+    return program
+
+
+def set_shared_uniforms(uniforms: UniformDict) -> None:
+    """
+    Sets uniforms which hold for every program, e.g. those describing where the
+    camera is. Doing this once a frame saves each mobject from pushing values it
+    shares with all the others.
+    """
+    for program in ALL_PROGRAMS:
+        for name, value in uniforms.items():
+            set_program_uniform(program, name, value)
 
 
 def set_program_uniform(
@@ -59,7 +78,13 @@ def set_program_uniform(
     pid = id(program)
     if pid not in PROGRAM_UNIFORM_MIRRORS:
         PROGRAM_UNIFORM_MIRRORS[pid] = dict()
+        PROGRAM_ABSENT_UNIFORMS[pid] = set()
     uniform_mirror = PROGRAM_UNIFORM_MIRRORS[pid]
+
+    # Shaders which don't mention a uniform get compiled without it, and asking
+    # for one that isn't there is expensive enough to be worth only doing once
+    if name in PROGRAM_ABSENT_UNIFORMS[pid]:
+        return False
 
     if type(value) is np.ndarray and value.ndim > 0:
         value = tuple(value.flatten())
@@ -69,6 +94,7 @@ def set_program_uniform(
     try:
         program[name].value = value
     except KeyError:
+        PROGRAM_ABSENT_UNIFORMS[pid].add(name)
         return False
     uniform_mirror[name] = value
     return True

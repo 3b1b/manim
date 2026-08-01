@@ -2105,12 +2105,12 @@ class Mobject(object):
     def get_shader_vert_indices(self) -> Optional[np.ndarray]:
         return None
 
-    def render(self, ctx: Context, camera_uniforms: dict):
+    def render(self, ctx: Context):
         if self._data_has_changed:
             self.shader_wrappers = self.get_shader_wrapper_list(ctx)
             self._data_has_changed = False
         for shader_wrapper in self.shader_wrappers:
-            shader_wrapper.update_program_uniforms(camera_uniforms)
+            shader_wrapper.update_program_uniforms()
             shader_wrapper.pre_render()
             shader_wrapper.render()
 

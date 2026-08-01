@@ -175,6 +175,11 @@ class ShaderWrapper(object):
             self.ctx.disable(moderngl.DEPTH_TEST)
 
     def set_ctx_clip_plane(self, num_planes: int = 0) -> None:
+        # Which planes are enabled is a property of the context, and hardly
+        # anything uses them, so there's no sense in turning the same ones off
+        # again for every mobject
+        if num_planes == getattr(self.ctx, "n_clip_planes", 0):
+            return
         clip_distances = [
             gl.GL_CLIP_DISTANCE0,
             gl.GL_CLIP_DISTANCE1,
@@ -186,6 +191,7 @@ class ShaderWrapper(object):
                 gl.glEnable(clip_dist)
             else:
                 gl.glDisable(clip_dist)
+        self.ctx.n_clip_planes = num_planes
 
     # Adding data
 
@@ -201,7 +207,11 @@ class ShaderWrapper(object):
             return
 
         # If possible, read concatenated data into existing list
-        if len(self.vert_data) != total_len:
+        if len(data_list) == 1:
+            # Nothing to concatenate, and get_shader_data already handed over a
+            # fresh array, so it can be used as is
+            self.vert_data = data_list[0]
+        elif len(self.vert_data) != total_len:
             self.vert_data = np.concatenate(data_list)
         else:
             np.concatenate(data_list, out=self.vert_data)
@@ -262,11 +272,13 @@ class ShaderWrapper(object):
         for vao in self.vaos:
             vao.render(vertices=n_verts)
 
-    def update_program_uniforms(self, camera_uniforms: UniformDict):
+    def update_program_uniforms(self):
+        # Uniforms shared by every program, e.g. those describing the camera, are
+        # set once a frame by set_shared_uniforms rather than here
         for program in self.programs:
             if program is None:
                 continue
-            for uniforms in [self.mobject_uniforms, camera_uniforms, self.texture_names_to_ids]:
+            for uniforms in [self.mobject_uniforms, self.texture_names_to_ids]:
                 for name, value in uniforms.items():
                     set_program_uniform(program, name, value)
 
