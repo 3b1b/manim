@@ -318,7 +318,6 @@ class Scene(object):
             for batch, key in batches
         ]
 
-    @staticmethod
     def affects_mobject_list(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
