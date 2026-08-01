@@ -66,6 +66,7 @@ class VMobject(Mobject):
         # First and last record index of the subpath a point belongs to
         ('subpath_range', np.float32, (2,)),
     ])
+    pointlike_uniform_keys = ['gradient_start', 'gradient_end']
     pre_function_handle_to_anchor_scale_factor: float = 0.01
     make_smooth_after_applying_functions: bool = False
     # TODO, do we care about accounting for varying zoom levels?
@@ -112,10 +113,9 @@ class VMobject(Mobject):
         self.fill_border_width = fill_border_width
 
         self.needs_new_unit_normal = True
-        self.fill_is_gradient = False
         self.subpath_end_indices = None
         self.outer_vert_indices = np.zeros(0, dtype=int)
-        
+
         self.shader_program_type = None
 
         super().__init__(**kwargs)
@@ -138,12 +138,10 @@ class VMobject(Mobject):
             # nothing for a per point value to mean
             fill_rgba=np.zeros(4),
             # A second color, equal to the first unless a gradient was asked for,
-            # the direction such a gradient runs in, and where that leaves it
-            # sitting, which is what the shaders read, see inserts/fill_color.glsl
+            # along with the two points it runs between, see inserts/fill_color.glsl
             fill_rgba_end=np.zeros(4),
-            gradient_direction=np.array(RIGHT, dtype=float),
-            gradient_center=np.zeros(3),
-            gradient_axis=np.zeros(3),
+            gradient_start=np.zeros(3),
+            gradient_end=np.zeros(3),
             fill_border_width=float(self.fill_border_width),
         )
 
@@ -194,56 +192,37 @@ class VMobject(Mobject):
                     ends[:, 3] = ops if len(ops) == 2 else ops[0]
                 mob.uniforms["fill_rgba"] = ends[0]
                 mob.uniforms["fill_rgba_end"] = ends[1]
-                mob.fill_is_gradient = bool((ends[0] != ends[1]).any())
-            if gradient_direction is not None:
-                mob.uniforms["gradient_direction"] = normalize(np.array(gradient_direction, dtype=float))
             if border_width is not None:
                 mob.uniforms["fill_border_width"] = float(border_width)
-        if set_colors and recurse and self.fill_is_gradient:
-            self.spread_fill_gradient()
-        if set_colors or gradient_direction is not None:
-            # Neither counts as a change to the points, which is the only other thing
-            # that would have the gradient placed again
-            self.refresh_fill_gradient(recurse)
+        if gradient_direction is not None or (set_colors and self.has_fill_gradient()):
+            self.set_fill_gradient_points(gradient_direction, recurse)
         return self
 
-    def spread_fill_gradient(self) -> Self:
+    def set_fill_gradient_points(
+        self,
+        direction: Vect3 | None = None,
+        recurse: bool = True
+    ) -> Self:
         """
-        Hands each member of the family the pair of colors this mobject's gradient
-        reaches at that member's own extremes. Each member going on to span its own
-        extent then carries on the one sweep rather than starting it over, which is
-        what lets a gradient over a group of glyphs read as a single gradient.
+        Puts the gradient's two ends on the extremes of this mobject along the given
+        direction, keeping to the one it already runs in when none is given.
+
+        Every member of the family is handed the same pair. Since the two are points
+        in space rather than anything measured against each member, that is what makes
+        a gradient set on a group run across the whole of it, rather than starting over
+        at each of its members.
         """
+        if direction is None:
+            direction = self.uniforms["gradient_end"] - self.uniforms["gradient_start"]
+        if not np.any(direction):
+            direction = RIGHT
+        direction = normalize(np.array(direction, dtype=float))
+
         bbox = self.get_bounding_box()
-        direction = self.uniforms["gradient_direction"]
         reach = np.dot(np.abs(direction), 0.5 * (bbox[2] - bbox[0]))
-        if reach == 0:
-            return self
-        start = self.uniforms["fill_rgba"]
-        end = self.uniforms["fill_rgba_end"]
-        for mob in self.family_members_with_points():
-            sub = mob.get_bounding_box()
-            offset = np.dot(sub[1] - bbox[1], direction)
-            spread = np.dot(np.abs(direction), 0.5 * (sub[2] - sub[0]))
-            low, high = 0.5 + (offset + np.array([-spread, spread])) / (2 * reach)
-            mob.uniforms["fill_rgba"] = interpolate(start, end, low)
-            mob.uniforms["fill_rgba_end"] = interpolate(start, end, high)
-            mob.fill_is_gradient = spread > 0
-        return self
-
-    def refresh_fill_gradient(self, recurse: bool = True) -> Self:
-        """
-        Centers each gradient on its mobject, and scales its axis so that the two colors
-        land on the extremes of the bounding box along the direction it runs.
-        """
         for mob in self.get_family(recurse):
-            if not mob.fill_is_gradient:
-                continue
-            bbox = mob.get_bounding_box()
-            direction = mob.uniforms["gradient_direction"]
-            reach = np.dot(np.abs(direction), 0.5 * (bbox[2] - bbox[0]))
-            mob.uniforms["gradient_center"] = bbox[1]
-            mob.uniforms["gradient_axis"] = direction / (2 * reach) if reach > 0 else np.zeros(3)
+            mob.uniforms["gradient_start"] = bbox[1] - reach * direction
+            mob.uniforms["gradient_end"] = bbox[1] + reach * direction
         return self
 
     def set_stroke(
@@ -308,7 +287,6 @@ class VMobject(Mobject):
                 mob.uniforms["fill_rgba"] = np.array(fill_rgba, dtype=float)
                 end = fill_rgba if fill_rgba_end is None else fill_rgba_end
                 mob.uniforms["fill_rgba_end"] = np.array(end, dtype=float)
-                mob.fill_is_gradient = bool((mob.uniforms["fill_rgba"] != mob.uniforms["fill_rgba_end"]).any())
             else:
                 mob.set_fill(
                     color=fill_color,
@@ -391,7 +369,7 @@ class VMobject(Mobject):
         colors = list(map(prop_to_color, np.linspace(0, 1, self.get_num_points())))
         self.set_stroke(color=colors)
         return self
-        
+
     def set_color_by_code(self, glsl_code: str, program_type: str | None = None) -> Self:
         self.replace_shader_code(
             "///// INSERT COLOR FUNCTION HERE /////",
@@ -399,7 +377,7 @@ class VMobject(Mobject):
             program_type
         )
         return self
-        
+
     @Mobject.affects_data
     def replace_shader_code(
         self,
@@ -479,6 +457,9 @@ class VMobject(Mobject):
     def has_stroke(self) -> bool:
         data = self.data if len(self.data) > 0 else self._data_defaults
         return any(data['stroke_width']) and any(data['stroke_rgba'][:, 3])
+
+    def has_fill_gradient(self) -> bool:
+        return bool((self.uniforms["fill_rgba"] != self.uniforms["fill_rgba_end"]).any())
 
     def has_fill(self) -> bool:
         return bool(max(self.uniforms["fill_rgba"][3], self.uniforms["fill_rgba_end"][3]))
@@ -731,6 +712,7 @@ class VMobject(Mobject):
 
     def subdivide_intersections(self, recurse: bool = True, n_subdivisions: int = 1) -> Self:
         path = self.get_anchors()
+
         def tuple_to_subdivisions(b0, b1, b2):
             if line_intersects_path(b0, b1, path):
                 return n_subdivisions
@@ -1345,8 +1327,6 @@ class VMobject(Mobject):
 
     def get_shader_data(self) -> np.ndarray:
         self.set_subpath_range()
-        if self.fill_is_gradient:
-            self.refresh_fill_gradient(recurse=False)
         return super().get_shader_data()
 
 

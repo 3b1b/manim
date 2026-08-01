@@ -80,6 +80,8 @@ class Mobject(object):
     ])
     aligned_data_keys = ['point']
     pointlike_data_keys = ['point']
+    # Uniforms holding a point, which transforms act on just as they do on the points
+    pointlike_uniform_keys: list[str] = []
 
     def __init__(
         self,
@@ -304,6 +306,14 @@ class Mobject(object):
                     arr[:] = func(arr)
                 else:
                     arr[:] = func(arr - about_point) + about_point
+
+            # Rebound rather than written through, so that the change is noticed
+            for key in mob.pointlike_uniform_keys:
+                point = mob.uniforms[key]
+                if about_point is not None:
+                    point = point - about_point
+                point = func(point[np.newaxis])[0]
+                mob.uniforms[key] = point if about_point is None else point + about_point
 
         if not works_on_bounding_box:
             self.refresh_bounding_box(recurse_down=True)

@@ -1,13 +1,15 @@
 uniform vec4 fill_rgba;
 uniform vec4 fill_rgba_end;
-uniform vec3 gradient_center;
-uniform vec3 gradient_axis;
+uniform vec3 gradient_start;
+uniform vec3 gradient_end;
 
 vec4 fill_color_at(vec3 point){
     /*
-    A fill runs between two colors along its gradient axis, which is centered on the
-    mobject and scaled so that the two ends land on the extremes of it. Where the two
-    colors are the same, which is the usual case, none of this makes any difference.
+    A fill runs between two colors, over the stretch from one of a pair of points to
+    the other. Where the two colors are the same, which is the usual case, none of this
+    makes any difference.
     */
-    return mix(fill_rgba, fill_rgba_end, 0.5 + dot(point - gradient_center, gradient_axis));
+    vec3 axis = gradient_end - gradient_start;
+    float t = dot(point - gradient_start, axis) / max(dot(axis, axis), 1e-8);
+    return mix(fill_rgba, fill_rgba_end, t);
 }
