@@ -35,8 +35,6 @@ from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.space_ops import angle_between_vectors
-from manimlib.utils.space_ops import cross2d
-from manimlib.utils.space_ops import earclip_triangulation
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import line_intersects_path
@@ -45,7 +43,6 @@ from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.space_ops import poly_line_length
-from manimlib.utils.space_ops import z_to_vector
 from manimlib.shader_wrapper import VShaderWrapper
 
 from typing import TYPE_CHECKING
@@ -114,7 +111,6 @@ class VMobject(Mobject):
 
         self.needs_new_unit_normal = True
         self.subpath_end_indices = None
-        self.outer_vert_indices = np.zeros(0, dtype=int)
 
         self.shader_program_type = None
 
@@ -1157,67 +1153,6 @@ class VMobject(Mobject):
         vmob = self.copy()
         vmob.pointwise_become_partial(self, a, b)
         return vmob
-
-    def get_outer_vert_indices(self) -> np.ndarray:
-        """
-        Returns the pattern (0, 1, 2, 2, 3, 4, 4, 5, 6, ...)
-        """
-        n_curves = self.get_num_curves()
-        if len(self.outer_vert_indices) != 3 * n_curves:
-            # Creates the pattern (0, 1, 2, 2, 3, 4, 4, 5, 6, ...)
-            self.outer_vert_indices = (np.arange(1, 3 * n_curves + 1) * 2) // 3
-        return self.outer_vert_indices
-
-    # Data for shaders that may need refreshing
-
-    def get_triangulation(self) -> np.ndarray:
-        # Figure out how to triangulate the interior to know
-        # how to send the points as to the vertex shader.
-        # First triangles come directly from the points
-        points = self.get_points()
-
-        if len(points) <= 1:
-            return np.zeros(0, dtype='i4')
-
-        normal_vector = self.get_unit_normal()
-
-        # Rotate points such that unit normal vector is OUT
-        if not np.isclose(normal_vector, OUT).all():
-            points = np.dot(points, z_to_vector(normal_vector))
-
-        v01s = points[1::2] - points[0:-1:2]
-        v12s = points[2::2] - points[1::2]
-        curve_orientations = np.sign(cross2d(v01s, v12s))
-
-        concave_parts = curve_orientations < 0
-
-        # These are the vertices to which we'll apply a polygon triangulation
-        indices = np.arange(len(points), dtype=int)
-        inner_vert_indices = np.hstack([
-            indices[0::2],
-            indices[1::2][concave_parts],
-        ])
-        inner_vert_indices.sort()
-        # Even indices correspond to anchors, and `end_indices // 2`
-        # shows which anchors are considered end points
-        end_indices = self.get_subpath_end_indices()
-        counts = np.arange(1, len(inner_vert_indices) + 1)
-        rings = counts[inner_vert_indices % 2 == 0][end_indices // 2]
-
-        # Triangulate
-        inner_verts = points[inner_vert_indices]
-        inner_tri_indices = inner_vert_indices[
-            earclip_triangulation(inner_verts, rings)
-        ]
-        # Remove null triangles, coming from adjascent points
-        iti = inner_tri_indices
-        null1 = (iti[0::3] + 1 == iti[1::3]) & (iti[0::3] + 2 == iti[2::3])
-        null2 = (iti[0::3] - 1 == iti[1::3]) & (iti[0::3] - 2 == iti[2::3])
-        inner_tri_indices = iti[~(null1 | null2).repeat(3)]
-
-        ovi = self.get_outer_vert_indices()
-        tri_indices = np.hstack([ovi, inner_tri_indices])
-        return tri_indices
 
     def triggers_refresh(func: Callable):
         @wraps(func)
