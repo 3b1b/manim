@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from functools import wraps
 
 import numpy as np
@@ -10,7 +11,6 @@ from manimlib.constants import BLACK
 from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import DEG
 from manimlib.constants import ORIGIN, OUT
-from manimlib.constants import PI
 from manimlib.constants import TAU
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
@@ -60,7 +60,8 @@ class VMobject(Mobject):
         ('point', np.float32, (3,)),
         ('stroke_rgba', np.float32, (4,)),
         ('stroke_width', np.float32, (1,)),
-        ('joint_angle', np.float32, (1,)),
+        # First and last record index of the subpath a point belongs to
+        ('subpath_range', np.float32, (2,)),
         ('fill_rgba', np.float32, (4,)),
     ])
     pre_function_handle_to_anchor_scale_factor: float = 0.01
@@ -113,7 +114,6 @@ class VMobject(Mobject):
         self.anti_alias_width = anti_alias_width
         self.fill_border_width = fill_border_width
 
-        self.needs_new_joint_angles = True
         self.needs_new_unit_normal = True
         self.subpath_end_indices = None
         self.outer_vert_indices = np.zeros(0, dtype=int)
@@ -701,8 +701,23 @@ class VMobject(Mobject):
         return self
 
     def is_smooth(self, angle_tol=1 * DEG) -> bool:
-        angles = np.abs(self.get_joint_angles()[0::2])
-        return (angles < angle_tol).all()
+        """
+        Whether the tangent direction carries through each anchor, rather than
+        turning a corner there. Anchors where a subpath ends have no tangent on one
+        side, which shows up as a zero length difference, and are passed over.
+        """
+        points = self.get_points()
+        a0, h, a1 = points[0:-1:2], points[1::2], points[2::2]
+        # Tangent leaving the first anchor of each curve, and arriving at its second
+        tan_out, tan_in = h - a0, a1 - h
+        # A null curve, whose handle sits on its first anchor, ends a subpath rather
+        # than being drawn, so it lends no tangent to either of its anchors
+        tan_in[(tan_out == 0).all(1)] = 0
+        # Comparing against the product of norms rather than normalizing leaves an
+        # anchor with a tangent on only one side passing, as it comes out as 0 >= 0
+        dots = (tan_in[:-1] * tan_out[1:]).sum(1)
+        norms = np.sqrt((tan_in[:-1]**2).sum(1) * (tan_out[1:]**2).sum(1))
+        return bool((dots >= norms * math.cos(angle_tol)).all())
 
     def change_anchor_mode(self, mode: str) -> Self:
         assert mode in ("jagged", "approx_smooth", "true_smooth")
@@ -976,8 +991,6 @@ class VMobject(Mobject):
     # Alignment
     def align_points(self, vmobject: VMobject) -> Self:
         if self.get_num_points() == len(vmobject.get_points()):
-            for mob in [self, vmobject]:
-                mob.get_joint_angles()
             return self
 
         for mob in self, vmobject:
@@ -1023,7 +1036,6 @@ class VMobject(Mobject):
             new_points = np.vstack(paths)
             mob.resize_points(len(new_points), resize_func=resize_preserving_order)
             mob.set_points(new_points)
-            mob.get_joint_angles()
         return self
 
     def insert_n_curves(self, n: int, recurse: bool = True) -> Self:
@@ -1063,7 +1075,6 @@ class VMobject(Mobject):
     def pointwise_become_partial(self, vmobject: VMobject, a: float, b: float) -> Self:
         assert isinstance(vmobject, VMobject)
         vm_points = vmobject.get_points()
-        self.data["joint_angle"] = vmobject.data["joint_angle"]
         if a <= 0 and b >= 1:
             self.set_points(vm_points, refresh=False)
             return self
@@ -1098,8 +1109,6 @@ class VMobject(Mobject):
             # Keep new_points i2:i3 as they are
             new_points[i3:i4] = high_tup
             new_points[i4:] = high_tup[2]
-        self.data["joint_angle"][:i1] = 0
-        self.data["joint_angle"][i4:] = 0
         self.set_points(new_points, refresh=False)
         return self
 
@@ -1169,81 +1178,12 @@ class VMobject(Mobject):
         tri_indices = np.hstack([ovi, inner_tri_indices])
         return tri_indices
 
-    def refresh_joint_angles(self) -> Self:
-        for mob in self.get_family():
-            mob.needs_new_joint_angles = True
-        return self
-
-    def get_joint_angles(self, refresh: bool = False) -> np.ndarray:
-        """
-        The 'joint product' is a 4-vector holding the cross and dot
-        product between tangent vectors at a joint
-        """
-        if not self.needs_new_joint_angles and not refresh:
-            return self.data["joint_angle"][:, 0]
-
-        if "joint_angle" in self.locked_data_keys:
-            return self.data["joint_angle"][:, 0]
-
-        self.needs_new_joint_angles = False
-        self._data_has_changed = True
-
-        # Rotate points such that positive z direction is the normal
-        points = self.get_points() @ rotation_between_vectors(OUT, self.get_unit_normal())
-
-        if len(points) < 3:
-            return self.data["joint_angle"][:, 0]
-
-        # Find all the unit tangent vectors at each joint
-        a0, h, a1 = points[0:-1:2], points[1::2], points[2::2]
-        a0_to_h = h - a0
-        h_to_a1 = a1 - h
-
-        # Tangent vectors into each vertex
-        v_in = np.zeros(points.shape)
-        # Tangent vectors out of each vertex
-        v_out = np.zeros(points.shape)
-
-        v_in[1::2] = a0_to_h
-        v_in[2::2] = h_to_a1
-        v_out[0:-1:2] = a0_to_h
-        v_out[1::2] = h_to_a1
-
-        # Joint up closed loops, or mark unclosed paths as such
-        ends = self.get_subpath_end_indices()
-        starts = [0, *(e + 2 for e in ends[:-1])]
-        for start, end in zip(starts, ends):
-            if start == end:
-                continue
-            if (points[start] == points[end]).all():
-                v_in[start] = v_out[end - 1]
-                v_out[end] = v_in[start + 1]
-            else:
-                v_in[start] = v_out[start]
-                v_out[end] = v_in[end]
-
-        # Find the angles between vectors into each vertex, and out of it
-        angles_in = np.arctan2(v_in[:, 1], v_in[:, 0])
-        angles_out = np.arctan2(v_out[:, 1], v_out[:, 0])
-        angle_diffs = angles_out - angles_in
-        angle_diffs[angle_diffs < -PI] += TAU
-        angle_diffs[angle_diffs > PI] -= TAU
-        self.data["joint_angle"][:, 0] = angle_diffs
-        return self.data["joint_angle"][:, 0]
-
-    def lock_matching_data(self, vmobject1: VMobject, vmobject2: VMobject) -> Self:
-        for mob in [self, vmobject1, vmobject2]:
-            mob.get_joint_angles()
-        super().lock_matching_data(vmobject1, vmobject2)
-        return self
-
     def triggers_refresh(func: Callable):
         @wraps(func)
         def wrapper(self, *args, refresh=True, **kwargs):
             func(self, *args, **kwargs)
             if refresh:
                 self.subpath_end_indices = None
-                self.refresh_joint_angles()
                 self.refresh_unit_normal()
             return self
         return wrapper
@@ -1312,12 +1252,6 @@ class VMobject(Mobject):
             mob.get_unit_normal(refresh=True)
         return self
 
-    def set_animating_status(self, is_animating: bool, recurse: bool = True):
-        super().set_animating_status(is_animating, recurse)
-        for submob in self.get_family(recurse):
-            submob.get_joint_angles(refresh=True)
-        return self
-
     # For shaders
 
     def init_shader_wrapper(self, ctx: Context):
@@ -1338,9 +1272,20 @@ class VMobject(Mobject):
         super().refresh_shader_wrapper_id()
         return self
 
+    def set_subpath_range(self) -> Self:
+        """
+        Tells each point where its subpath begins and ends, which is all the stroke
+        shader needs in order to find the neighboring tangents at a joint, and to
+        know whether a subpath closes back on itself.
+        """
+        ends = self.get_subpath_end_indices()
+        starts = [0, *(end + 2 for end in ends[:-1])]
+        for start, end in zip(starts, ends):
+            self.data["subpath_range"][start:end + 1] = (start, end)
+        return self
+
     def get_shader_data(self) -> np.ndarray:
-        # Do we want this elsewhere? Say whenever points are refreshed or something?
-        self.get_joint_angles()
+        self.set_subpath_range()
         return super().get_shader_data()
 
 

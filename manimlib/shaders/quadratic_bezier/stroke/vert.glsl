@@ -31,6 +31,10 @@ const float COS_THRESHOLD = 0.999;
 const float POLYLINE_FACTOR = 100;
 const int MAX_STEPS = 32;
 const float MITER_COS_ANGLE_THRESHOLD = -0.8;
+// A joint's turn is held as the (cos, sin) of its angle, so no turn looks like this
+const vec2 STRAIGHT = vec2(1.0, 0.0);
+// Stands in for a record index where there is no neighboring curve to read
+const int NONE = -1;
 // Number of units spanned by a stroke_width of 1 in a default scale frame,
 // so for instance a stroke_width of 100 comes out one unit thick
 const float STROKE_WIDTH_CONVERSION = 0.01;
@@ -71,16 +75,31 @@ vec3 project(vec3 vect, vec3 normal){
 }
 
 
-vec3 rotate_vector(vec3 vect, vec3 normal, float angle){
+vec3 rotate_vector(vec3 vect, vec3 normal, vec2 turn){
     vec3 perp = cross(normal, vect);
-    return cos(angle) * vect + sin(angle) * perp;
+    return turn.x * vect + turn.y * perp;
+}
+
+
+vec2 turn_from(vec3 tangent, vec3 neighbor_tangent){
+    /*
+    How the direction turns going from one tangent to the other, within the plane
+    the mobject is drawn in, as a (cos, sin) pair. A degenerate tangent, such as the
+    one at a repeated point, reads as no turn at all.
+    */
+    vec3 a = project(tangent, unit_normal);
+    vec3 b = project(neighbor_tangent, unit_normal);
+    if (a == vec3(0.0) || b == vec3(0.0)) return STRAIGHT;
+    a = normalize(a);
+    b = normalize(b);
+    return vec2(dot(a, b), dot(cross(a, b), unit_normal));
 }
 
 
 vec3 step_to_corner(
     vec3 tangent,
     vec3 facing_normal,
-    float joint_angle,
+    vec2 turn,
     bool inside_curve,
     bool draw_flat
 ){
@@ -99,7 +118,7 @@ vec3 step_to_corner(
     // lines up very closely with the direction to the camera, treated here
     // as the unit normal. To avoid those, this smoothly transitions to a step
     // direction perpendicular to the true curve normal.
-    if(joint_angle != 0){
+    if(turn != STRAIGHT){
         float alignment = abs(dot(normalize(tangent), facing_normal));
         float alignment_threshold = 0.97;  // This could maybe be chosen in a more principled way based on stroke width
         if (alignment > alignment_threshold) {
@@ -110,8 +129,8 @@ vec3 step_to_corner(
 
     if (inside_curve || int(joint_type) == NO_JOINT) return step;
 
-    float cos_angle = cos(joint_angle);
-    float sin_angle = sin(joint_angle);
+    float cos_angle = turn.x;
+    float sin_angle = turn.y;
 
     if (abs(cos_angle) > COS_THRESHOLD) return step;
 
@@ -120,10 +139,10 @@ vec3 step_to_corner(
         // Figure out what joint product would be for everything projected onto
         // the plane perpendicular to the normal direction (which here would be to_camera)
         step = normalize(cross(facing_normal, unit_tan));  // Back to original step
-        vec3 adj_tan = rotate_vector(tangent, unit_normal, joint_angle);
+        vec3 adj_tan = rotate_vector(tangent, unit_normal, turn);
         adj_tan = project(adj_tan, facing_normal);
         cos_angle = dot(unit_tan, normalize(adj_tan));
-        sin_angle = sqrt(1 - cos_angle * cos_angle) * sign(joint_angle) * sign(dot(facing_normal, unit_normal));
+        sin_angle = sqrt(1 - cos_angle * cos_angle) * sign(turn.y) * sign(dot(facing_normal, unit_normal));
     }
 
     // If joint type is auto, it will bevel for cos(angle) > MITER_COS_ANGLE_THRESHOLD,
@@ -216,16 +235,30 @@ void main(){
     // This prevents needless joint creation
     bool inside_curve = (index > 0 && index < n_steps - 1);
 
-    // Use middle joint product for inner points, flip sign for first one's cross product component
-    float joint_angle;
-    if (index == 0){
-        joint_angle = -read_float(record + 0, DATA_OFFSET_joint_angle);
-    }
-    else if (inside_curve){
-        joint_angle = 0;
-    }
-    else {
-        joint_angle = read_float(record + 2, DATA_OFFSET_joint_angle);
+    /*
+    A joint depends on the tangents to either side of the anchor it sits at, so at
+    the ends of this curve that means reaching into the neighboring one. Which record
+    holds its far handle, if there is a neighbor at all, follows from where the
+    subpath begins and ends. Either way the turn is measured from this curve outward,
+    which is the sense in which the strip's own end gets adjusted.
+    */
+    vec2 turn = STRAIGHT;
+    if (!inside_curve){
+        vec2 subpath_range = read_vec2(record, DATA_OFFSET_subpath_range);
+        int first = int(subpath_range.x);
+        int last = int(subpath_range.y);
+        bool closed = read_vec3(first, DATA_OFFSET_point) == read_vec3(last, DATA_OFFSET_point);
+        if (index == 0){
+            int prev = record > first ? record - 1 : (closed ? last - 1 : NONE);
+            if (prev != NONE){
+                turn = turn_from(tangent, controls[0] - read_vec3(prev, DATA_OFFSET_point));
+            }
+        } else {
+            int next = record + 2 < last ? record + 3 : (closed ? first + 1 : NONE);
+            if (next != NONE){
+                turn = turn_from(tangent, read_vec3(next, DATA_OFFSET_point) - controls[2]);
+            }
+        }
     }
 
     bool draw_flat = bool(flat_stroke) || bool(is_fixed_in_frame);
@@ -235,7 +268,7 @@ void main(){
 
     // Step from the point to a corner of the strip around the polyline
     vec3 step = step_to_corner(
-        tangent, facing_normal, joint_angle, inside_curve, draw_flat
+        tangent, facing_normal, turn, inside_curve, draw_flat
     );
 
     // anti_alias_width is measured in pixels. The frag shader receives a value
