@@ -1,5 +1,6 @@
 #version 330
 
+
 in vec4 color;
 in float fill_all;
 in vec2 uv_coords;

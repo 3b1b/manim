@@ -16,7 +16,6 @@ vec2 xs_on_clean_parabola(vec3 b0, vec3 b1, vec3 b2){
     return vec2(u0 / cp, u2 / cp);
 }
 
-
 mat4 map_triangles(vec3 src0, vec3 src1, vec3 src2, vec3 dst0, vec3 dst1, vec3 dst2){
     /*
     Return an affine transform which maps the triangle (src0, src1, src2)
@@ -37,7 +36,6 @@ mat4 map_triangles(vec3 src0, vec3 src1, vec3 src2, vec3 dst0, vec3 dst1, vec3 d
     return dst_mat * inverse(src_mat);
 }
 
-
 mat4 rotation(vec3 axis, float cos_angle){
     float c = cos_angle;
     float s = sqrt(1 - c * c);  // Sine of the angle
@@ -54,7 +52,6 @@ mat4 rotation(vec3 axis, float cos_angle){
     );
 }
 
-
 mat4 map_onto_x_axis(vec3 src0, vec3 src1){
     mat4 shift = mat4(1.0);
     shift[3].xyz = -src0;
@@ -69,7 +66,6 @@ mat4 map_onto_x_axis(vec3 src0, vec3 src1){
     mat4 rotate = rotation(axis, vect.x);
     return rotate * shift;
 }
-
 
 mat4 get_xyz_to_uv(
     vec3 b0, vec3 b1, vec3 b2,

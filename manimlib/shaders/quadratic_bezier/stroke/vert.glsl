@@ -1,21 +1,11 @@
 #version 330
 
-uniform float anti_alias_width;
-uniform float flat_stroke;
-/*
-How much to round off the corner at a joint, from 0, which leaves corners as sharp as
-they can be without jutting out, up to 1, which rounds every one of them off.
-*/
-uniform float joint_roundness;
-uniform float stroke_width_in_scene_units;
 /*
 The border around a fill is a stroke like any other, except that it takes its
 color and width from the fill's fields rather than the stroke's, and that a width
 of zero still draws a band just wide enough to anti-alias the fill's edge.
 */
 uniform bool is_fill_border;
-uniform vec3 unit_normal;
-uniform float fill_border_width;
 
 out vec4 color;
 out float dist_to_aaw;
@@ -58,33 +48,29 @@ const vec2 CORNERS[6] = vec2[6](
     vec2(1, -1), vec2(0, 1), vec2(1, 1)
 );
 
+#INSERT vmobject_uniforms.glsl
 #INSERT emit_gl_Position.glsl
 #INSERT fill_color.glsl
 #INSERT finalize_color.glsl
 #INSERT read_data.glsl
 
-
 vec3 point_on_quadratic(float t, vec3 c0, vec3 c1, vec3 c2){
     return c0 + c1 * t + c2 * t * t;
 }
 
-
 vec3 tangent_on_quadratic(float t, vec3 c1, vec3 c2){
     return c1 + 2 * c2 * t;
 }
-
 
 vec3 project(vec3 vect, vec3 normal){
     /* Project the vector onto the plane perpendicular to a given unit normal */
     return vect - dot(vect, normal) * normal;
 }
 
-
 vec3 rotate_vector(vec3 vect, vec3 normal, vec2 turn){
     vec3 perp = cross(normal, vect);
     return turn.x * vect + turn.y * perp;
 }
-
 
 vec3 neighbor_tangent(int record, bool at_start, vec3 anchor){
     /*
@@ -104,7 +90,6 @@ vec3 neighbor_tangent(int record, bool at_start, vec3 anchor){
     return next == NONE ? vec3(0.0) : read_vec3(next, DATA_OFFSET_point) - anchor;
 }
 
-
 bool flatten_tangent(vec3 tangent, vec3 facing_normal, out vec3 result){
     /*
     The tangent as it appears in the plane the stroke is drawn in. Comes back false
@@ -116,7 +101,6 @@ bool flatten_tangent(vec3 tangent, vec3 facing_normal, out vec3 result){
     result = normalize(flat_tan);
     return true;
 }
-
 
 float joint_shift(vec3 tan_in, vec3 tan_out, vec3 facing_normal){
     /*
@@ -139,7 +123,6 @@ float joint_shift(vec3 tan_in, vec3 tan_out, vec3 facing_normal){
     return keep * (cos_angle - 1.0) / sin_angle;
 }
 
-
 vec3 step_to_corner(vec3 tangent, vec3 facing_normal, float shift, bool draw_flat){
     /*
     Step perpendicular to the curve, out to the edge of the stroke, then along the
@@ -159,7 +142,6 @@ vec3 step_to_corner(vec3 tangent, vec3 facing_normal, float shift, bool draw_fla
     }
     return step + shift * unit_tan;
 }
-
 
 void main(){
     int curve = gl_VertexID / VERTS_PER_CURVE;

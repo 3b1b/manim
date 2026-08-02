@@ -6,6 +6,7 @@ in vec4 rgba;
 
 out vec4 v_color;
 
+#INSERT mobject_uniforms.glsl
 #INSERT emit_gl_Position.glsl
 #INSERT get_unit_normal.glsl
 #INSERT finalize_color.glsl

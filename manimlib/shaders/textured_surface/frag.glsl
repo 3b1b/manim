@@ -11,6 +11,7 @@ in float v_opacity;
 
 out vec4 frag_color;
 
+#INSERT mobject_uniforms.glsl
 #INSERT finalize_color.glsl
 
 const float dark_shift = 0.2;

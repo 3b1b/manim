@@ -7,9 +7,9 @@ import OpenGL.GL as gl
 import moderngl
 import numpy as np
 
+from manimlib.utils.shaders import MOBJECT_BLOCK_NAME
+from manimlib.utils.shaders import get_block_layout
 from manimlib.utils.shaders import get_shader_code
-from manimlib.utils.shaders import SWIZZLES
-from manimlib.utils.shaders import UNIFORM_BLOCK_NAME
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
 from manimlib.utils.shaders import set_program_uniform
@@ -77,26 +77,15 @@ class ShaderWrapper(object):
     def get_code(self, name: str) -> str | None:
         return get_shader_code(
             os.path.join(self.shader_folder, f"{name}.glsl"),
-            self.uniform_slots,
             self.data_layout,
         )
 
     def init_layouts(self) -> None:
         """
-        Describes the shapes of what gets sent to the gpu: which uniforms a mobject
-        of this kind has, and where the fields of one of its vertex records sit.
-        Everything generated into the shader source follows from these, so they also
-        serve as the key it gets cached under.
+        Describes where the fields of one of this mobject's vertex records sit, which
+        is all that the shader source generated for it depends on, and so is also the
+        key that source gets cached under.
         """
-        self.uniform_slots = tuple(
-            (name, 1 if isinstance(value, (int, float, bool)) else len(value))
-            for name, value in self.mobject_uniforms.items()
-        )
-        for name, size in self.uniform_slots:
-            if size not in SWIZZLES:
-                raise ValueError(f"Uniform {name} has too many components to be a vec4")
-        self.uniform_data = np.zeros((len(self.uniform_slots), 4), dtype='f4')
-
         dtype = self.vert_data.dtype
         self.data_layout = (
             (
@@ -111,20 +100,40 @@ class ShaderWrapper(object):
             self.program = None
             self.vert_format = None
             self.programs = []
-            return
-        self.program = get_shader_program(self.ctx, **self.program_code)
-        if self.pulls_vertices:
-            self.vert_format = None
         else:
-            self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
-        self.programs = [self.program]
-        self.bind_uniform_block()
+            self.program = get_shader_program(self.ctx, **self.program_code)
+            if self.pulls_vertices:
+                self.vert_format = None
+            else:
+                self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
+            self.programs = [self.program]
+        self.init_uniform_block()
 
-    def bind_uniform_block(self):
+    def init_uniform_block(self):
+        """
+        Asks the programs where the members of their uniform block sit, which is not
+        known until they have been compiled, and makes room to pack them. A member one
+        program leaves out for want of reading it may well be read by another.
+        """
+        self.uniform_offsets: dict[str, int] = dict()
+        size = 0
         for program in self.programs:
-            block = program.get(UNIFORM_BLOCK_NAME, None) if program else None
-            if block is not None:
-                block.binding = UNIFORM_BLOCK_BINDING
+            layout = get_block_layout(program, MOBJECT_BLOCK_NAME) if program else None
+            if layout is None:
+                continue
+            program[MOBJECT_BLOCK_NAME].binding = UNIFORM_BLOCK_BINDING
+            block_size, offsets = layout
+            size = max(size, block_size)
+            self.uniform_offsets.update(offsets)
+        # Every uniform of ours is made of floats, so one view serves for all of them
+        self.uniform_data = np.zeros(size // 4, dtype='f4')
+
+        missing = set(self.uniform_offsets) - set(self.mobject_uniforms)
+        if missing:
+            raise ValueError(
+                f"{MOBJECT_BLOCK_NAME} asks for {sorted(missing)}, "
+                "which this mobject has no value for"
+            )
 
     def init_textures(self):
         self.texture_names_to_ids = dict()
@@ -245,12 +254,16 @@ class ShaderWrapper(object):
 
     def write_uniform_buffer(self):
         uniforms = self.mobject_uniforms
-        if not self.uniform_slots:
+        # A shader reading none of them declares no block for them to travel in
+        if not self.uniform_offsets:
             return
         if self.uniform_buffer is not None and not uniforms.changed:
             return
-        for index, (name, size) in enumerate(self.uniform_slots):
-            self.uniform_data[index, :size] = uniforms[name]
+        for name, offset in self.uniform_offsets.items():
+            value = uniforms[name]
+            size = 1 if isinstance(value, (int, float, bool)) else len(value)
+            index = offset // 4
+            self.uniform_data[index:index + size] = value
         if self.uniform_buffer is None:
             self.uniform_buffer = self.ctx.buffer(self.uniform_data)
         else:
@@ -310,7 +323,6 @@ class VShaderWrapper(ShaderWrapper):
         self.program_code = {
             f"{vtype}_{name}": get_shader_code(
                 os.path.join("quadratic_bezier", f"{vtype}", f"{name}.glsl"),
-                self.uniform_slots,
                 self.data_layout,
             )
             for vtype in ["stroke", "fill"]
@@ -329,7 +341,7 @@ class VShaderWrapper(ShaderWrapper):
             fragment_shader=self.program_code["fill_frag"],
         )
         self.programs = [self.stroke_program, self.fill_program]
-        self.bind_uniform_block()
+        self.init_uniform_block()
 
     def init_vertex_objects(self):
         self.vbo = None

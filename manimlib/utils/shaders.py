@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import os
+import ctypes
 import re
 from functools import lru_cache
 import moderngl
+import OpenGL.GL as gl
 from PIL import Image
 import numpy as np
 
@@ -129,55 +131,69 @@ def set_program_uniform(
     return True
 
 
-# The mobject's uniforms are gathered into one std140 block, given a vec4 slot
-# each so that the layout is simply 16 bytes per slot
-UNIFORM_BLOCK_NAME = "MobjectUniforms"
-UNIFORM_SLOTS_NAME = "_mob_uniforms"
-SWIZZLES = {1: "x", 2: "xy", 3: "xyz", 4: "xyzw"}
+"""
+A mobject's uniforms travel in one std140 block, written once per mobject rather
+than one uniform at a time. Each kind of mobject declares its own block, starting
+with the members every kind has, see inserts/vmobject_uniforms.glsl for an example.
+
+Where each member of a block sits is asked of the driver once the program is
+compiled, rather than worked out here, so that nothing has to reproduce std140's
+rules about how members of different sizes pack together.
+"""
+MOBJECT_BLOCK_NAME = "MobjectUniforms"
+
+
+def get_block_layout(
+    program: moderngl.Program,
+    block_name: str
+) -> tuple[int, dict[str, int]] | None:
+    """
+    How many bytes a block takes up, and the byte each of its members starts at.
+    None if this program has no such block. Members a shader never reads get left
+    out by the compiler, and so are missing here, which is no loss: there is
+    nothing to be gained by sending a value nothing reads.
+    """
+    glo = program.glo
+    index = gl.glGetUniformBlockIndex(glo, block_name)
+    if index == gl.GL_INVALID_INDEX:
+        return None
+
+    def block_property(enum, length=1):
+        result = (ctypes.c_int * length)()
+        gl.glGetActiveUniformBlockiv(glo, index, enum, result)
+        return list(result)
+
+    size = block_property(gl.GL_UNIFORM_BLOCK_DATA_SIZE)[0]
+    count = block_property(gl.GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS)[0]
+    if count == 0:
+        return size, dict()
+    members = block_property(gl.GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, count)
+
+    indices = (ctypes.c_uint * count)(*members)
+    offsets = (ctypes.c_int * count)()
+    gl.glGetActiveUniformsiv(glo, count, indices, gl.GL_UNIFORM_OFFSET, offsets)
+
+    layout = dict()
+    for member, offset in zip(members, offsets):
+        name = gl.glGetActiveUniform(glo, member)[0]
+        layout[name.decode() if isinstance(name, bytes) else name] = offset
+    return size, layout
 
 
 @lru_cache()
 def get_shader_code(
     filename: str,
-    uniform_slots: tuple[tuple[str, int], ...],
     data_layout: tuple[int, tuple[tuple[str, int], ...]] | None,
 ) -> str | None:
     """
-    Reads a shader from file and fills in everything about it which depends on the
-    shape of a mobject's data, rather than on any of the values in it.
-
-    Namely, the mobject's uniforms are lifted out of their individual declarations
-    and into one block, with a define apiece so that the shader can go on naming
-    them, and shaders which read the vertex buffer themselves get constants
-    describing where each of its fields sits. Since none of that varies between
-    mobjects of a kind, the result is worth holding onto.
+    Reads a shader from file, filling in where the fields of a vertex record sit for
+    those shaders which read the buffer themselves. That is the only thing about a
+    shader's source which depends on the mobject it will be drawing.
     """
     code = get_shader_code_from_file(filename)
     if code is None:
         return None
-    code = code.replace("// DATA_LAYOUT", get_data_layout_code(data_layout))
-    for name, _ in uniform_slots:
-        code = re.sub(rf"^uniform\s+\w+\s+{name}\s*;$", "", code, flags=re.MULTILINE)
-    block = get_uniform_block_code(uniform_slots)
-    return code.replace("#version 330", "#version 330\n" + block, 1)
-
-
-def get_uniform_block_code(uniform_slots: tuple[tuple[str, int], ...]) -> str:
-    """
-    Declares a block holding a mobject's uniforms, along with defines so that
-    shaders can go on referring to each of them by name.
-    """
-    if not uniform_slots:
-        return ""
-    defines = [
-        f"#define {name} {UNIFORM_SLOTS_NAME}[{index}].{SWIZZLES[size]}"
-        for index, (name, size) in enumerate(uniform_slots)
-    ]
-    return "\n".join([
-        f"layout (std140) uniform {UNIFORM_BLOCK_NAME} "
-        f"{{ vec4 {UNIFORM_SLOTS_NAME}[{len(uniform_slots)}]; }};",
-        *defines,
-    ])
+    return code.replace("// DATA_LAYOUT", get_data_layout_code(data_layout))
 
 
 def get_data_layout_code(data_layout: tuple[int, tuple[tuple[str, int], ...]] | None) -> str:

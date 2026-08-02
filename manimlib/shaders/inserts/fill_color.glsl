@@ -1,7 +1,3 @@
-uniform vec4 fill_rgba;
-uniform vec4 fill_rgba_end;
-uniform vec3 gradient_start;
-uniform vec3 gradient_end;
 
 vec4 fill_color_at(vec3 point){
     /*

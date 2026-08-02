@@ -1,12 +1,11 @@
 #version 330
 
-uniform vec3 unit_normal;
-
 out vec4 color;
 out float fill_all;
 // uv space is where the curve coincides with y = x^2
 out vec2 uv_coords;
 
+#INSERT vmobject_uniforms.glsl
 #INSERT emit_gl_Position.glsl
 #INSERT fill_color.glsl
 #INSERT finalize_color.glsl
@@ -26,7 +25,6 @@ const vec2 SIMPLE_QUADRATIC[3] = vec2[3](
     vec2(0.5, 0.0),
     vec2(1.0, 1.0)
 );
-
 
 void main(){
     int curve = gl_VertexID / VERTS_PER_CURVE;

@@ -1,6 +1,5 @@
 uniform vec3 light_position;
 uniform vec3 camera_position;
-uniform vec3 shading;
 
 vec3 float_to_color(float value, float min_val, float max_val, vec3[9] colormap_data){
     float alpha = clamp((value - min_val) / (max_val - min_val), 0.0, 1.0);
@@ -11,7 +10,6 @@ vec3 float_to_color(float value, float min_val, float max_val, vec3[9] colormap_
         8.0 * alpha - disc_alpha
     );
 }
-
 
 vec4 add_light(vec4 color, vec3 point, vec3 normal){
     if(shading == vec3(0.0)) return color;

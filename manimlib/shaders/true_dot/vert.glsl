@@ -1,6 +1,5 @@
 #version 330
 
-uniform float anti_alias_width;
 uniform vec3 camera_position;
 
 out vec4 color;
@@ -11,6 +10,7 @@ out vec3 center;
 out float radius;
 out vec2 uv_coords;
 
+#INSERT dot_cloud_uniforms.glsl
 #INSERT emit_gl_Position.glsl
 #INSERT read_data.glsl
 
@@ -19,7 +19,6 @@ const vec2 CORNERS[6] = vec2[6](
     vec2(-1, -1), vec2(-1, 1), vec2(1, -1),
     vec2(1, -1), vec2(-1, 1), vec2(1, 1)
 );
-
 
 void main(){
     int dot_index = gl_VertexID / 6;

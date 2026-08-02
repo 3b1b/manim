@@ -30,12 +30,12 @@ in vec3 xyz_coords;
 
 out vec4 frag_color;
 
+#INSERT mobject_uniforms.glsl
 #INSERT finalize_color.glsl
 #INSERT complex_functions.glsl
 
 const int MAX_DEGREE = 5;
 const float CLOSE_ENOUGH = 1e-3;
-
 
 vec2 poly(vec2 z, vec2[MAX_DEGREE + 1] coefs){
     vec2 result = vec2(0.0);
@@ -72,7 +72,6 @@ vec2 seek_root(vec2 z, vec2[MAX_DEGREE + 1] coefs, int max_steps, out float n_it
 
     return z;
 }
-
 
 void main() {
     vec2[MAX_DEGREE + 1] coefs = vec2[MAX_DEGREE + 1](coef0, coef1, coef2, coef3, coef4, coef5);

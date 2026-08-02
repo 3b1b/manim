@@ -6,6 +6,7 @@ out vec3 xyz_coords;
 uniform float scale_factor;
 uniform vec3 offset;
 
+#INSERT mobject_uniforms.glsl
 #INSERT emit_gl_Position.glsl
 
 void main(){

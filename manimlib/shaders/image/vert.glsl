@@ -10,6 +10,7 @@ out vec2 v_im_coords;
 out float v_opacity;
 
 // Analog of import for manim only
+#INSERT mobject_uniforms.glsl
 #INSERT emit_gl_Position.glsl
 
 void main(){

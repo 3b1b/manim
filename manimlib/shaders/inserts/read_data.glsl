@@ -12,11 +12,9 @@ each field, both measured in floats.
 
 uniform samplerBuffer Data;
 
-
 float read_float(int record, int offset){
     return texelFetch(Data, DATA_STRIDE * record + offset).r;
 }
-
 
 vec2 read_vec2(int record, int offset){
     return vec2(
@@ -25,7 +23,6 @@ vec2 read_vec2(int record, int offset){
     );
 }
 
-
 vec3 read_vec3(int record, int offset){
     return vec3(
         read_float(record, offset + 0),
@@ -33,7 +30,6 @@ vec3 read_vec3(int record, int offset){
         read_float(record, offset + 2)
     );
 }
-
 
 vec4 read_vec4(int record, int offset){
     return vec4(read_vec3(record, offset), read_float(record, offset + 3));
