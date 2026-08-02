@@ -148,18 +148,27 @@ compiled, rather than worked out here, so that nothing has to reproduce std140's
 rules about how members of different sizes pack together.
 """
 MOBJECT_BLOCK_NAME = "MobjectUniforms"
+# How many floats each kind of block member is made of. The matrix types are left
+# out, since a block pads their columns in ways that packing would have to know of.
+BLOCK_MEMBER_SIZES = {
+    gl.GL_FLOAT: 1,
+    gl.GL_FLOAT_VEC2: 2,
+    gl.GL_FLOAT_VEC3: 3,
+    gl.GL_FLOAT_VEC4: 4,
+}
 
 
 @lru_cache()
 def get_block_layout(
     program: moderngl.Program,
     block_name: str
-) -> tuple[int, dict[str, int]] | None:
+) -> tuple[int, dict[str, tuple[int, int]]] | None:
     """
-    How many bytes a block takes up, and the byte each of its members starts at.
-    None if this program has no such block. Members a shader never reads get left
-    out by the compiler, and so are missing here, which is no loss: there is
-    nothing to be gained by sending a value nothing reads.
+    How many bytes a block takes up, and where each of its members goes: which float
+    of the block it starts at, and how many of them it is made of. None if this
+    program has no such block. Members a shader never reads get left out by the
+    compiler, and so are missing here, which is no loss: there is nothing to be
+    gained by sending a value nothing reads.
 
     A property of the program rather than of any mobject drawn with it, and asking
     costs a call into the driver per member, so it is asked once per program. Every
@@ -183,12 +192,17 @@ def get_block_layout(
 
     indices = (ctypes.c_uint * count)(*members)
     offsets = (ctypes.c_int * count)()
+    types = (ctypes.c_int * count)()
     gl.glGetActiveUniformsiv(glo, count, indices, gl.GL_UNIFORM_OFFSET, offsets)
+    gl.glGetActiveUniformsiv(glo, count, indices, gl.GL_UNIFORM_TYPE, types)
 
     layout = dict()
-    for member, offset in zip(members, offsets):
+    for member, offset, member_type in zip(members, offsets, types):
         name = gl.glGetActiveUniform(glo, member)[0]
-        layout[name.decode() if isinstance(name, bytes) else name] = offset
+        name = name.decode() if isinstance(name, bytes) else name
+        if member_type not in BLOCK_MEMBER_SIZES:
+            raise ValueError(f"No packing this block\'s {name} into floats")
+        layout[name] = (offset // 4, BLOCK_MEMBER_SIZES[member_type])
     return size, layout
 
 

@@ -115,31 +115,26 @@ class ShaderWrapper(object):
         known until they have been compiled, and makes room to pack them. A member one
         program leaves out for want of reading it may well be read by another.
         """
-        self.uniform_offsets: dict[str, int] = dict()
+        # Which float of the buffer each value starts at, and how many it takes up
+        self.uniform_plan: dict[str, tuple[int, int]] = dict()
         size = 0
         for program in self.programs:
             layout = get_block_layout(program, MOBJECT_BLOCK_NAME) if program else None
             if layout is None:
                 continue
             program[MOBJECT_BLOCK_NAME].binding = UNIFORM_BLOCK_BINDING
-            block_size, offsets = layout
+            block_size, plan = layout
             size = max(size, block_size)
-            self.uniform_offsets.update(offsets)
-        # Every uniform of ours is made of floats, so one view serves for all of them
+            self.uniform_plan.update(plan)
+        # Every member is made of floats, so one view serves for all of them
         self.uniform_data = np.zeros(size // 4, dtype='f4')
 
-        missing = set(self.uniform_offsets) - set(self.mobject_uniforms)
+        missing = set(self.uniform_plan) - set(self.mobject_uniforms)
         if missing:
             raise ValueError(
                 f"{MOBJECT_BLOCK_NAME} asks for {sorted(missing)}, "
                 "which this mobject has no value for"
             )
-        # Where each value goes and how much of it there is, worked out once rather
-        # than every time one of them is written
-        self.uniform_plan = {
-            name: (offset // 4, np.size(self.mobject_uniforms[name]))
-            for name, offset in self.uniform_offsets.items()
-        }
 
     def init_textures(self):
         self.texture_names_to_ids = dict()
