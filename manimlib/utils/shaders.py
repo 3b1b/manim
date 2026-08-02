@@ -150,6 +150,7 @@ rules about how members of different sizes pack together.
 MOBJECT_BLOCK_NAME = "MobjectUniforms"
 
 
+@lru_cache()
 def get_block_layout(
     program: moderngl.Program,
     block_name: str
@@ -159,6 +160,10 @@ def get_block_layout(
     None if this program has no such block. Members a shader never reads get left
     out by the compiler, and so are missing here, which is no loss: there is
     nothing to be gained by sending a value nothing reads.
+
+    A property of the program rather than of any mobject drawn with it, and asking
+    costs a call into the driver per member, so it is asked once per program. Every
+    mobject of a kind shares its programs, so that is once rather than thousands.
     """
     glo = program.glo
     index = gl.glGetUniformBlockIndex(glo, block_name)
