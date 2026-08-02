@@ -134,6 +134,12 @@ class ShaderWrapper(object):
                 f"{MOBJECT_BLOCK_NAME} asks for {sorted(missing)}, "
                 "which this mobject has no value for"
             )
+        # Where each value goes and how much of it there is, worked out once rather
+        # than every time one of them is written
+        self.uniform_plan = {
+            name: (offset // 4, np.size(self.mobject_uniforms[name]))
+            for name, offset in self.uniform_offsets.items()
+        }
 
     def init_textures(self):
         self.texture_names_to_ids = dict()
@@ -254,21 +260,31 @@ class ShaderWrapper(object):
 
     def write_uniform_buffer(self):
         uniforms = self.mobject_uniforms
+        plan = self.uniform_plan
         # A shader reading none of them declares no block for them to travel in
-        if not self.uniform_offsets:
+        if not plan:
             return
-        if self.uniform_buffer is not None and not uniforms.changed:
-            return
-        for name, offset in self.uniform_offsets.items():
-            value = uniforms[name]
-            size = 1 if isinstance(value, (int, float, bool)) else len(value)
-            index = offset // 4
-            self.uniform_data[index:index + size] = value
         if self.uniform_buffer is None:
-            self.uniform_buffer = self.ctx.buffer(self.uniform_data)
+            # Nothing has been sent yet, so everything has to be
+            names = plan.keys()
+        elif uniforms.changed:
+            names = uniforms.changed
         else:
-            self.uniform_buffer.write(self.uniform_data)
-        uniforms.changed = False
+            return
+
+        data = self.uniform_data
+        for name in names:
+            packed = plan.get(name)
+            if packed is None:
+                continue
+            index, size = packed
+            data[index:index + size] = uniforms[name]
+
+        if self.uniform_buffer is None:
+            self.uniform_buffer = self.ctx.buffer(data)
+        else:
+            self.uniform_buffer.write(data)
+        uniforms.changed.clear()
 
     def release(self):
         for obj in (self.vbo, *self.vaos):

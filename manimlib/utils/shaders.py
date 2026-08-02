@@ -21,24 +21,31 @@ if TYPE_CHECKING:
 
 class Uniforms(dict):
     """
-    A mobject's uniforms, which notes whenever one of them is set.
+    A mobject's uniforms, which notes which of them have been set.
 
-    Uniforms are sent to the gpu in a buffer belonging to the mobject, and that
-    buffer only needs rewriting when a value has actually changed. Since dict.update
-    doesn't route through __setitem__, both are overridden here.
+    Uniforms are sent to the gpu in a buffer belonging to the mobject, and only the
+    ones which have changed need packing into it again. Animating one of them, say
+    the opacity of a fill, otherwise has the other fifteen repacked for nothing.
+    Since dict.update doesn't route through __setitem__, both are overridden here.
 
     Values are expected to be replaced rather than written into, since mutating one
-    in place would go unnoticed. Anything that does so has to say so itself.
+    in place would go unnoticed. Anything that does so has to say which it was.
     """
-    changed: bool = True
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Nothing has been sent yet, so everything counts as having changed
+        self.changed: set[str] = set(self)
 
     def __setitem__(self, key, value):
-        self.changed = True
+        self.changed.add(key)
         super().__setitem__(key, value)
 
     def update(self, *args, **kwargs):
-        self.changed = True
         super().update(*args, **kwargs)
+        # Which ones an update touched takes some untangling, and it is never done
+        # per frame, so take all of them as having changed
+        self.changed.update(self)
 
 
 # Global maps to reflect uniform status
