@@ -79,6 +79,13 @@ class Camera(object):
 
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
         self.ctx.enable(moderngl.BLEND)
+        # Color channels blend in the usual way, but the alpha channel takes the
+        # source's alpha whole, so that drawing something half transparent onto an
+        # opaque background leaves it opaque, rather than eating into its alpha.
+        self.ctx.blend_func = (
+            moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
+            moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA,
+        )
         gl.glClearStencil(0)
         # Every vertex shader writes a distance for all four clip planes, using a
         # plane of all zeros to mean nothing gets clipped, so these stay on
