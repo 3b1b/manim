@@ -186,6 +186,11 @@ colors:
   pure_red: "#FF0000"
   pure_green: "#00FF00"
   pure_blue: "#0000FF"
+# PyOpenGL can ask the driver whether anything went wrong after each call it makes,
+# which costs about a third of the time a call takes. Worth turning on while working
+# on the shaders themselves, since otherwise a mistake there shows up only as
+# something looking wrong.
+gl_error_checking: False
 # Can be DEBUG / INFO / WARNING / ERROR / CRITICAL
 log_level: "INFO"
 universal_import_line: "from manimlib import *"
