@@ -355,6 +355,7 @@ class VShaderWrapper(ShaderWrapper):
         self.init_uniform_block()
 
     def init_vertex_objects(self):
+        self.has_fill = False
         self.vbo = None
         self.stroke_vao = None
         self.fill_vao = None
@@ -374,6 +375,15 @@ class VShaderWrapper(ShaderWrapper):
             program=self.fill_program, content=[], mode=self.render_primitive
         )
         self.vaos = [self.stroke_vao, self.fill_vao]
+
+    def write_uniform_buffer(self):
+        # Whether there is any fill to draw, noted whenever the uniforms change rather
+        # than looked at per frame. Many a mobject is stroke alone, and would otherwise
+        # pay for all three of the fill passes, and the state they set, for nothing.
+        uniforms = self.mobject_uniforms
+        if uniforms.changed:
+            self.has_fill = bool(uniforms["fill_rgba"][3] or uniforms["fill_rgba_end"][3])
+        super().write_uniform_buffer()
 
     def get_num_curves(self) -> int:
         # Consecutive beziers share an anchor, so n points make n // 2 curves
@@ -425,7 +435,7 @@ class VShaderWrapper(ShaderWrapper):
         region, so that overlapping mobjects would color a shared pixel once
         between them rather than each blending in turn.
         """
-        if self.fill_vao is None:
+        if self.fill_vao is None or not self.has_fill:
             return
 
         gl.glEnable(gl.GL_STENCIL_TEST)
