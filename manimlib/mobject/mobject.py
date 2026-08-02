@@ -25,7 +25,9 @@ from manimlib.event_handler.event_listner import EventListener
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
 from manimlib.shader_wrapper import ShaderWrapper
+from manimlib.utils.shaders import COMMON_UNIFORMS
 from manimlib.utils.shaders import Uniforms
+from manimlib.utils.shaders import uniform_block_dtype
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
@@ -78,6 +80,10 @@ class Mobject(object):
         ('point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ])
+    # One value each for the whole mobject, as opposed to one per point, given as a
+    # name and how many floats it holds. Must match the block its shaders declare,
+    # see inserts/mobject_uniforms.glsl, which check_uniform_block makes sure of.
+    uniform_dtype: np.dtype = uniform_block_dtype(*COMMON_UNIFORMS)
     aligned_data_keys = ['point']
     pointlike_data_keys = ['point']
     # Uniforms holding a point, which transforms act on just as they do on the points
@@ -108,7 +114,6 @@ class Mobject(object):
         self.family: list[Mobject] | None = [self]
         self.locked_data_keys: set[str] = set()
         self.const_data_keys: set[str] = set()
-        self.locked_uniform_keys: set[str] = set()
         self.saved_state = None
         self.target = None
         self.bounding_box: Vect3Array = np.zeros((3, 3))
@@ -146,14 +151,9 @@ class Mobject(object):
         self._data_defaults = np.ones(1, dtype=self.data.dtype)
 
     def init_uniforms(self):
-        self.uniforms: Uniforms = Uniforms({
-            "is_fixed_in_frame": 0.0,
-            "shading": np.array(self.shading, dtype=float),
-            "clip_plane0": np.zeros(4),
-            "clip_plane1": np.zeros(4),
-            "clip_plane2": np.zeros(4),
-            "clip_plane3": np.zeros(4),
-        })
+        # Anything left unmentioned starts at zero, as with data
+        self.uniforms: Uniforms = Uniforms(self.uniform_dtype)
+        self.uniforms["shading"] = self.shading
 
     def init_colors(self):
         self.set_color(self.color, self.opacity)
@@ -162,11 +162,8 @@ class Mobject(object):
         # Typically implemented in subclass, unlpess purposefully left blank
         pass
 
-    def set_uniforms(self, uniforms: dict) -> Self:
-        for key, value in uniforms.items():
-            if isinstance(value, np.ndarray):
-                value = value.copy()
-            self.uniforms[key] = value
+    def set_uniforms(self, uniforms: Uniforms) -> Self:
+        self.uniforms.match(uniforms)
         return self
 
     @property
@@ -689,10 +686,7 @@ class Mobject(object):
         # copy.copy is only a shallow copy, so the internal
         # data which are numpy arrays or other mobjects still
         # need to be further copied.
-        result.uniforms = Uniforms({
-            key: value.copy() if isinstance(value, np.ndarray) else value
-            for key, value in self.uniforms.items()
-        })
+        result.uniforms = self.uniforms.copy()
 
         # Instead of adding using result.add, which does some checks for updating
         # updater statues and bounding box, just directly modify the family-related
@@ -772,15 +766,10 @@ class Mobject(object):
             for key in m1.data.dtype.names:
                 if not np.isclose(m1.data[key], m2.data[key]).all():
                     return False
-            if set(m1.uniforms).difference(m2.uniforms):
+            if not m1.uniforms.array.dtype == m2.uniforms.array.dtype:
                 return False
-            for key in m1.uniforms:
-                value1 = m1.uniforms[key]
-                value2 = m2.uniforms[key]
-                if isinstance(value1, np.ndarray) and isinstance(value2, np.ndarray) and not value1.size == value2.size:
-                    return False
-                if not np.isclose(value1, value2).all():
-                    return False
+            if not np.isclose(m1.uniforms.floats, m2.uniforms.floats).all():
+                return False
         return True
 
     def has_same_shape_as(self, mobject: Mobject) -> bool:
@@ -1865,12 +1854,7 @@ class Mobject(object):
             else:
                 self.data[key] = (1 - alpha) * md1 + alpha * md2
 
-        for key in self.uniforms:
-            if key in self.locked_uniform_keys:
-                continue
-            if key not in mobject1.uniforms or key not in mobject2.uniforms:
-                continue
-            self.uniforms[key] = (1 - alpha) * mobject1.uniforms[key] + alpha * mobject2.uniforms[key]
+        self.uniforms.interpolate(mobject1.uniforms, mobject2.uniforms, alpha)
         self.bounding_box[:] = path_func(mobject1.bounding_box, mobject2.bounding_box, alpha)
         return self
 
@@ -1899,12 +1883,6 @@ class Mobject(object):
         self.locked_data_keys = set(keys)
         return self
 
-    def lock_uniforms(self, keys: Iterable[str]) -> Self:
-        if self.has_updaters():
-            return self
-        self.locked_uniform_keys = set(keys)
-        return self
-
     def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject) -> Self:
         tuples = zip(
             self.get_family(),
@@ -1917,10 +1895,6 @@ class Mobject(object):
             sm.lock_data(
                 key for key in sm.data.dtype.names
                 if arrays_match(sm1.data[key], sm2.data[key])
-            )
-            sm.lock_uniforms(
-                key for key in self.uniforms
-                if all(listify(mobject1.uniforms.get(key, 0) == mobject2.uniforms.get(key, 0)))
             )
             sm.const_data_keys = set(
                 key for key in sm.data.dtype.names
@@ -1937,7 +1911,6 @@ class Mobject(object):
         for mob in self.get_family():
             mob.locked_data_keys = set()
             mob.const_data_keys = set()
-            mob.locked_uniform_keys = set()
         return self
 
     # Operations touching shader uniforms

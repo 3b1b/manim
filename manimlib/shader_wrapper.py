@@ -8,7 +8,7 @@ import moderngl
 import numpy as np
 
 from manimlib.utils.shaders import MOBJECT_BLOCK_NAME
-from manimlib.utils.shaders import get_block_layout
+from manimlib.utils.shaders import check_uniform_block
 from manimlib.utils.shaders import get_shader_code
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Optional
-    from manimlib.typing import UniformDict
 
 UNIFORM_BLOCK_BINDING = 0
 
@@ -33,8 +32,8 @@ class ShaderWrapper(object):
         self,
         ctx: moderngl.context.Context,
         vert_data: np.ndarray,
+        mobject_uniforms: Uniforms,
         shader_folder: Optional[str] = None,
-        mobject_uniforms: Optional[UniformDict] = None,  # A dictionary mapping names of uniform variables
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
         render_primitive: int = moderngl.TRIANGLE_STRIP,
@@ -52,7 +51,7 @@ class ShaderWrapper(object):
         self.render_primitive = moderngl.TRIANGLES if self.pulls_vertices else render_primitive
         self.texture_paths = texture_paths or dict()
 
-        self.mobject_uniforms = mobject_uniforms if mobject_uniforms is not None else Uniforms()
+        self.mobject_uniforms = mobject_uniforms
 
         self.init_program_code()
         for old, new in code_replacements.items():
@@ -111,30 +110,17 @@ class ShaderWrapper(object):
 
     def init_uniform_block(self):
         """
-        Asks the programs where the members of their uniform block sit, which is not
-        known until they have been compiled, and makes room to pack them. A member one
-        program leaves out for want of reading it may well be read by another.
+        Points whichever programs read the mobject's uniforms at the buffer they will
+        travel in. Its layout is settled by the mobject's uniform_dtype, so nothing is
+        needed here beyond making sure the shaders agree about it.
         """
-        # Which float of the buffer each value starts at, and how many it takes up
-        self.uniform_plan: dict[str, tuple[int, int]] = dict()
-        size = 0
+        dtype = self.mobject_uniforms.array.dtype
+        self.has_uniform_block = False
         for program in self.programs:
-            layout = get_block_layout(program, MOBJECT_BLOCK_NAME) if program else None
-            if layout is None:
+            if program is None or not check_uniform_block(program, dtype):
                 continue
             program[MOBJECT_BLOCK_NAME].binding = UNIFORM_BLOCK_BINDING
-            block_size, plan = layout
-            size = max(size, block_size)
-            self.uniform_plan.update(plan)
-        # Every member is made of floats, so one view serves for all of them
-        self.uniform_data = np.zeros(size // 4, dtype='f4')
-
-        missing = set(self.uniform_plan) - set(self.mobject_uniforms)
-        if missing:
-            raise ValueError(
-                f"{MOBJECT_BLOCK_NAME} asks for {sorted(missing)}, "
-                "which this mobject has no value for"
-            )
+            self.has_uniform_block = True
 
     def init_textures(self):
         self.texture_names_to_ids = dict()
@@ -255,31 +241,16 @@ class ShaderWrapper(object):
 
     def write_uniform_buffer(self):
         uniforms = self.mobject_uniforms
-        plan = self.uniform_plan
         # A shader reading none of them declares no block for them to travel in
-        if not plan:
+        if not self.has_uniform_block:
             return
         if self.uniform_buffer is None:
-            # Nothing has been sent yet, so everything has to be
-            names = plan.keys()
+            self.uniform_buffer = self.ctx.buffer(uniforms.array)
         elif uniforms.changed:
-            names = uniforms.changed
+            self.uniform_buffer.write(uniforms.array)
         else:
             return
-
-        data = self.uniform_data
-        for name in names:
-            packed = plan.get(name)
-            if packed is None:
-                continue
-            index, size = packed
-            data[index:index + size] = uniforms[name]
-
-        if self.uniform_buffer is None:
-            self.uniform_buffer = self.ctx.buffer(data)
-        else:
-            self.uniform_buffer.write(data)
-        uniforms.changed.clear()
+        uniforms.changed = False
 
     def release(self):
         for obj in (self.vbo, *self.vaos):
@@ -307,8 +278,8 @@ class VShaderWrapper(ShaderWrapper):
         self,
         ctx: moderngl.context.Context,
         vert_data: np.ndarray,
+        mobject_uniforms: Uniforms,
         shader_folder: Optional[str] = None,
-        mobject_uniforms: Optional[UniformDict] = None,  # A dictionary mapping names of uniform variables
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
         render_primitive: int = moderngl.TRIANGLES,

@@ -7,6 +7,8 @@ from manimlib.constants import ORIGIN, NULL_POINTS
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.utils.iterables import resize_with_interpolation
+from manimlib.utils.shaders import COMMON_UNIFORMS
+from manimlib.utils.shaders import uniform_block_dtype
 
 from typing import TYPE_CHECKING
 
@@ -31,6 +33,12 @@ class DotCloud(PMobject):
         ('radius', np.float32, (1,)),
         ('rgba', np.float32, (4,)),
     ]
+    # Mirrors inserts/dot_cloud_uniforms.glsl
+    uniform_dtype: np.dtype = uniform_block_dtype(
+        *COMMON_UNIFORMS,
+        ("anti_alias_width", 1),
+        ("glow_factor", 1),
+    )
 
     def __init__(
         self,

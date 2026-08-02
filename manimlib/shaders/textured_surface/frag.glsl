@@ -2,7 +2,6 @@
 
 uniform sampler2D LightTexture;
 uniform sampler2D DarkTexture;
-uniform float num_textures;
 
 in vec3 v_point;
 in vec3 v_unit_normal;
@@ -11,7 +10,7 @@ in float v_opacity;
 
 out vec4 frag_color;
 
-#INSERT mobject_uniforms.glsl
+#INSERT textured_surface_uniforms.glsl
 #INSERT finalize_color.glsl
 
 const float dark_shift = 0.2;

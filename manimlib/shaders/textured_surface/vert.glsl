@@ -13,7 +13,7 @@ out float v_opacity;
 uniform float is_sphere;
 uniform vec3 center;
 
-#INSERT mobject_uniforms.glsl
+#INSERT textured_surface_uniforms.glsl
 #INSERT emit_gl_Position.glsl
 #INSERT get_unit_normal.glsl
 

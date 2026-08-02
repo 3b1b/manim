@@ -13,6 +13,8 @@ from manimlib.constants import PI
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.space_ops import normalize
 from manimlib.utils.simple_functions import clip
+from manimlib.utils.shaders import COMMON_UNIFORMS
+from manimlib.utils.shaders import uniform_block_dtype
 
 from typing import TYPE_CHECKING
 
@@ -21,6 +23,15 @@ if TYPE_CHECKING:
 
 
 class CameraFrame(Mobject):
+    # Held here, rather than as plain attributes, so that they carry over on a copy
+    # and interpolate when the frame is animated. No shader reads them: the view
+    # matrix they imply is worked out in python and sent to every program at once.
+    uniform_dtype: np.dtype = uniform_block_dtype(
+        *COMMON_UNIFORMS,
+        ("orientation", 4),
+        ("fovy", 1),
+    )
+
     def __init__(
         self,
         frame_shape: tuple[float, float] = FRAME_SHAPE,

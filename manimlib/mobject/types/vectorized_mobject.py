@@ -44,6 +44,8 @@ from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.space_ops import poly_line_length
 from manimlib.shader_wrapper import VShaderWrapper
+from manimlib.utils.shaders import COMMON_UNIFORMS
+from manimlib.utils.shaders import uniform_block_dtype
 
 from typing import TYPE_CHECKING
 from typing import Generic, TypeVar, Iterable
@@ -66,6 +68,20 @@ class VMobject(Mobject):
         # First and last record index of the subpath a point belongs to
         ('subpath_range', np.float32, (2,)),
     ])
+    # Mirrors inserts/vmobject_uniforms.glsl
+    uniform_dtype: np.dtype = uniform_block_dtype(
+        *COMMON_UNIFORMS,
+        ("anti_alias_width", 1),
+        ("joint_roundness", 1),
+        ("flat_stroke", 1),
+        ("stroke_width_in_scene_units", 1),
+        ("unit_normal", 3),
+        ("fill_rgba", 4),
+        ("fill_rgba_end", 4),
+        ("gradient_start", 3),
+        ("gradient_end", 3),
+        ("fill_border_width", 1),
+    )
     pre_function_handle_to_anchor_scale_factor: float = 0.01
     make_smooth_after_applying_functions: bool = False
     # TODO, do we care about accounting for varying zoom levels?

@@ -21,6 +21,8 @@ from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.simple_functions import clip
 from manimlib.utils.space_ops import normalize_along_axis
 from manimlib.utils.space_ops import cross
+from manimlib.utils.shaders import COMMON_UNIFORMS
+from manimlib.utils.shaders import uniform_block_dtype
 
 from typing import TYPE_CHECKING
 
@@ -301,6 +303,11 @@ class TexturedSurface(Surface):
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ]
+    # Mirrors inserts/textured_surface_uniforms.glsl
+    uniform_dtype: np.dtype = uniform_block_dtype(
+        *COMMON_UNIFORMS,
+        ("num_textures", 1),
+    )
 
     def __init__(
         self,

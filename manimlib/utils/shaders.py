@@ -10,42 +10,14 @@ from PIL import Image
 import numpy as np
 
 from manimlib.utils.directories import get_shader_dir
+from manimlib.utils.tracked_array import TrackedArray
 from manimlib.utils.file_ops import find_file
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Sequence, Optional
+    from typing import Any, Sequence, Optional
     from manimlib.typing import UniformDict
-
-
-class Uniforms(dict):
-    """
-    A mobject's uniforms, which notes which of them have been set.
-
-    Uniforms are sent to the gpu in a buffer belonging to the mobject, and only the
-    ones which have changed need packing into it again. Animating one of them, say
-    the opacity of a fill, otherwise has the other fifteen repacked for nothing.
-    Since dict.update doesn't route through __setitem__, both are overridden here.
-
-    Values are expected to be replaced rather than written into, since mutating one
-    in place would go unnoticed. Anything that does so has to say which it was.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Nothing has been sent yet, so everything counts as having changed
-        self.changed: set[str] = set(self)
-
-    def __setitem__(self, key, value):
-        self.changed.add(key)
-        super().__setitem__(key, value)
-
-    def update(self, *args, **kwargs):
-        super().update(*args, **kwargs)
-        # Which ones an update touched takes some untangling, and it is never done
-        # per frame, so take all of them as having changed
-        self.changed.update(self)
 
 
 # Global maps to reflect uniform status
@@ -139,18 +111,28 @@ def set_program_uniform(
 
 
 """
-A mobject's uniforms travel in one std140 block, written once per mobject rather
-than one uniform at a time. Each kind of mobject declares its own block, starting
-with the members every kind has, see inserts/vmobject_uniforms.glsl for an example.
-
-Where each member of a block sits is asked of the driver once the program is
-compiled, rather than worked out here, so that nothing has to reproduce std140's
-rules about how members of different sizes pack together.
+A mobject's uniforms travel in one std140 block, written once per mobject rather than
+one uniform at a time. Each kind of mobject declares its own block, starting with the
+members every kind has, see inserts/vmobject_uniforms.glsl for an example, and lays
+out a matching dtype with uniform_block_dtype, see Mobject.uniform_dtype.
 """
 MOBJECT_BLOCK_NAME = "MobjectUniforms"
-# How many floats each kind of block member is made of. The matrix types are left
-# out, since a block pads their columns in ways that packing would have to know of.
-BLOCK_MEMBER_SIZES = {
+# What every mobject holds, whatever kind it is, as a name and a number of floats.
+# Mirrors inserts/common_uniform_members.glsl, and comes first in every block for the
+# same reason it does there: so the inserts reading them work wherever they are used.
+COMMON_UNIFORMS = (
+    ("is_fixed_in_frame", 1),
+    ("shading", 3),
+    ("clip_plane0", 4),
+    ("clip_plane1", 4),
+    ("clip_plane2", 4),
+    ("clip_plane3", 4),
+)
+# What a block member of each size is called in a shader. Anything wider than a vec4,
+# a matrix say, is left out, since a block pads their columns in ways this would have
+# to know about.
+BLOCK_MEMBER_TYPES = {1: "float", 2: "vec2", 3: "vec3", 4: "vec4"}
+GL_MEMBER_SIZES = {
     gl.GL_FLOAT: 1,
     gl.GL_FLOAT_VEC2: 2,
     gl.GL_FLOAT_VEC3: 3,
@@ -158,52 +140,137 @@ BLOCK_MEMBER_SIZES = {
 }
 
 
-@lru_cache()
-def get_block_layout(
-    program: moderngl.Program,
-    block_name: str
-) -> tuple[int, dict[str, tuple[int, int]]] | None:
+def uniform_block_dtype(*members: tuple[str, int]) -> np.dtype:
     """
-    How many bytes a block takes up, and where each of its members goes: which float
-    of the block it starts at, and how many of them it is made of. None if this
-    program has no such block. Members a shader never reads get left out by the
-    compiler, and so are missing here, which is no loss: there is nothing to be
-    gained by sending a value nothing reads.
+    Lays out members, each given as a name and how many floats it holds, exactly as
+    std140 does, so that a mobject's uniforms can be handed to the gpu as they sit
+    rather than packed one member at a time.
 
-    A property of the program rather than of any mobject drawn with it, and asking
-    costs a call into the driver per member, so it is asked once per program. Every
-    mobject of a kind shares its programs, so that is once rather than thousands.
+    The rules being reproduced are that a member is aligned to its own size, rounded
+    up to four floats for anything wider than two, and that the block as a whole is
+    rounded up to four floats as well. What that alignment skips over is declared as a
+    field of its own rather than left as a gap in the dtype, since numpy does not carry
+    the contents of a gap over when copying an array, which would leave whatever the
+    memory happened to hold to be compared against and sent to the gpu.
+    """
+    names: list[str] = []
+    formats: list[Any] = []
+
+    def add(name: str, size: int) -> None:
+        names.append(name)
+        formats.append(np.float32 if size == 1 else (np.float32, (size,)))
+
+    size_so_far = 0
+    for name, size in members:
+        if size not in BLOCK_MEMBER_TYPES:
+            raise ValueError(f"No room in a block for {name}, of {size} floats")
+        skipped = -size_so_far % (size if size <= 2 else 4)
+        if skipped:
+            add(f"_pad{len(names)}", skipped)
+        add(name, size)
+        size_so_far += skipped + size
+    if -size_so_far % 4:
+        add(f"_pad{len(names)}", -size_so_far % 4)
+    # Left to pack the fields itself, numpy places them back to back, which is where
+    # the padding above has been chosen to put them
+    return np.dtype({"names": names, "formats": formats})
+
+
+def uniform_block_code(dtype: np.dtype) -> str:
+    """
+    How a dtype would be written as a block, for saying what a shader ought to
+    declare when it turns out not to match.
+    """
+    lines = []
+    for name in dtype.names:
+        if name.startswith("_"):
+            # Alignment is the shader compiler's own business, and writing the padding
+            # it implies would only push everything after it further along
+            continue
+        shape = dtype.fields[name][0].shape
+        size = shape[0] if shape else 1
+        lines.append(f"    {BLOCK_MEMBER_TYPES[size]} {name};")
+    return "\n".join(lines)
+
+
+class Uniforms(TrackedArray):
+    """
+    A mobject's uniforms: one value each for the whole of it, laid out to match the
+    block its shaders declare. Reading one gives the value itself, rather than the
+    single row of the array holding it.
+    """
+
+    def __init__(self, dtype: np.dtype):
+        super().__init__(dtype, length=1)
+
+    def __getitem__(self, key: str) -> Any:
+        return self.array[key][0]
+
+    def interpolate(self, uniforms1: Uniforms, uniforms2: Uniforms, alpha: float) -> None:
+        if not self.array.dtype == uniforms1.array.dtype == uniforms2.array.dtype:
+            # Different kinds of mobject, so only what they have in common carries over
+            for key in self:
+                if key in uniforms1 and key in uniforms2:
+                    self[key] = (1 - alpha) * uniforms1[key] + alpha * uniforms2[key]
+            return
+        floats1 = uniforms1.floats
+        floats2 = uniforms2.floats
+        # Most transformations leave every uniform alone, e.g. moving a mobject
+        # without restyling it, and writing values equal to those already here would
+        # have the buffer sent again each frame for nothing
+        if np.array_equal(floats1, floats2) and np.array_equal(self.floats, floats1):
+            return
+        self.floats[:] = (1 - alpha) * floats1 + alpha * floats2
+        self.changed = True
+
+
+@lru_cache()
+def check_uniform_block(program: moderngl.Program, dtype: np.dtype) -> bool:
+    """
+    Whether a program declares the mobject block at all, and if it does, that its
+    members sit exactly where the dtype says they do.
+
+    Nothing needs this to render, since std140's layout is what uniform_block_dtype
+    reproduces, but a shader's block and a mobject's uniform_dtype drifting apart
+    would otherwise show up as a wrongly drawn mobject rather than as an error. It
+    costs a handful of calls into the driver, once per program.
     """
     glo = program.glo
-    index = gl.glGetUniformBlockIndex(glo, block_name)
+    index = gl.glGetUniformBlockIndex(glo, MOBJECT_BLOCK_NAME)
     if index == gl.GL_INVALID_INDEX:
-        return None
+        return False
 
     def block_property(enum, length=1):
         result = (ctypes.c_int * length)()
         gl.glGetActiveUniformBlockiv(glo, index, enum, result)
         return list(result)
 
-    size = block_property(gl.GL_UNIFORM_BLOCK_DATA_SIZE)[0]
     count = block_property(gl.GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS)[0]
-    if count == 0:
-        return size, dict()
     members = block_property(gl.GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, count)
-
     indices = (ctypes.c_uint * count)(*members)
     offsets = (ctypes.c_int * count)()
     types = (ctypes.c_int * count)()
     gl.glGetActiveUniformsiv(glo, count, indices, gl.GL_UNIFORM_OFFSET, offsets)
     gl.glGetActiveUniformsiv(glo, count, indices, gl.GL_UNIFORM_TYPE, types)
 
-    layout = dict()
     for member, offset, member_type in zip(members, offsets, types):
         name = gl.glGetActiveUniform(glo, member)[0]
         name = name.decode() if isinstance(name, bytes) else name
-        if member_type not in BLOCK_MEMBER_SIZES:
-            raise ValueError(f"No packing this block\'s {name} into floats")
-        layout[name] = (offset // 4, BLOCK_MEMBER_SIZES[member_type])
-    return size, layout
+        # Members a shader never reads get left out by the compiler, which is no
+        # loss: there is nothing to be gained by reading a value nothing uses
+        field = dtype.fields.get(name)
+        size = GL_MEMBER_SIZES.get(member_type)
+        shape = field[0].shape if field else None
+        if field is None or size is None or size != (shape[0] if shape else 1) \
+                or field[1] != offset:
+            raise ValueError(
+                f"The {MOBJECT_BLOCK_NAME} block this shader declares does not match "
+                f"the uniforms of the mobject drawn with it, starting at {name}. "
+                f"What the mobject holds would be declared as:\n"
+                f"layout (std140) uniform {MOBJECT_BLOCK_NAME} {{\n"
+                f"{uniform_block_code(dtype)}\n}};"
+            )
+    return True
 
 
 @lru_cache()
