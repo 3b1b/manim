@@ -519,7 +519,6 @@ class TexAndNumbersExample(Scene):
         tex.next_to(axes, UP, buff=0.5)
         value = tex.make_number_changeable("4.00")
 
-
         # This will tie the right hand side of our equation to
         # the square of the radius of the circle
         value.add_updater(lambda v: v.set_value(circle.get_radius()**2))
@@ -544,9 +543,9 @@ class TexAndNumbersExample(Scene):
         # returns a group of the results
         exponents = tex.make_number_changeable("2", replace_all=True)
         self.play(
-            LaggedStartMap(
-                FlashAround, exponents,
-                lag_ratio=0.2, buff=0.1, color=RED
+            LaggedStart(
+                *(FlashAround(exp, buff=0.1, color=RED) for exp in exponents),
+                lag_ratio=0.2,
             ),
             exponents.animate.set_color(RED)
         )
