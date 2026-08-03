@@ -12,6 +12,7 @@ from manimlib.utils.shaders import check_uniform_block
 from manimlib.utils.shaders import get_shader_code
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
+from manimlib.utils.shaders import set_program_sampler
 from manimlib.utils.shaders import set_program_uniform
 from manimlib.utils.shaders import Uniforms
 
@@ -236,8 +237,8 @@ class ShaderWrapper(object):
         for program in self.programs:
             if program is None:
                 continue
-            for name, value in self.texture_names_to_ids.items():
-                set_program_uniform(program, name, value)
+            for name, unit in self.texture_names_to_ids.items():
+                set_program_sampler(program, name, unit)
 
     def write_uniform_buffer(self):
         uniforms = self.mobject_uniforms

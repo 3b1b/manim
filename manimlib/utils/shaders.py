@@ -110,6 +110,36 @@ def set_program_uniform(
     return True
 
 
+def set_program_sampler(program: moderngl.Program, name: str, unit: int) -> bool:
+    """
+    Points one of a program's samplers at a texture unit.
+
+    This goes through raw GL rather than moderngl, which takes the assignment and
+    reports it back, but leaves the driver's own value at zero, for programs which use
+    gl_VertexID. This driver counts that among a program's active uniforms, and it is
+    the ones reading their vertices out of a buffer which use it. Every sampler
+    happened to want unit zero, which is where they all start, until surfaces began
+    reading a buffer alongside their textures.
+    """
+    pid = id(program)
+    if pid not in PROGRAM_UNIFORM_MIRRORS:
+        PROGRAM_UNIFORM_MIRRORS[pid] = dict()
+        PROGRAM_ABSENT_UNIFORMS[pid] = set()
+    if name in PROGRAM_ABSENT_UNIFORMS[pid]:
+        return False
+    if PROGRAM_UNIFORM_MIRRORS[pid].get(name, None) == unit:
+        return False
+
+    try:
+        location = program[name].location
+    except KeyError:
+        PROGRAM_ABSENT_UNIFORMS[pid].add(name)
+        return False
+    gl.glProgramUniform1i(program.glo, location, unit)
+    PROGRAM_UNIFORM_MIRRORS[pid][name] = unit
+    return True
+
+
 """
 A mobject's uniforms travel in one std140 block, written once per mobject rather than
 one uniform at a time. Each kind of mobject declares its own block, starting with the
