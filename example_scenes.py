@@ -585,10 +585,8 @@ class SurfaceExample(ThreeDScene):
         # in whatever you've set as the image directory in
         # the custom_config.yml file
 
-        # day_texture = "EarthTextureMap"
-        # night_texture = "NightEarthTextureMap"
-        day_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Whole_world_-_land_and_oceans.jpg/1280px-Whole_world_-_land_and_oceans.jpg"
-        night_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/The_earth_at_night.jpg/1280px-The_earth_at_night.jpg"
+        day_texture = "https://www.solarsystemscope.com/textures/download/2k_earth_daymap.jpg"
+        night_texture = "https://www.solarsystemscope.com/textures/download/2k_earth_nightmap.jpg"
 
         surfaces = [
             TexturedSurface(surface, day_texture, night_texture)
@@ -598,7 +596,7 @@ class SurfaceExample(ThreeDScene):
         for mob in surfaces:
             mob.shift(IN)
             mob.mesh = SurfaceMesh(mob)
-            mob.mesh.set_stroke(BLUE, 1, opacity=0.5)
+            mob.mesh.set_stroke(WHITE, 1, opacity=0.5)
 
         surface = surfaces[0]
 
