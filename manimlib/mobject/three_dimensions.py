@@ -7,8 +7,8 @@ import numpy as np
 from manimlib.constants import BLUE, BLUE_D, BLUE_E, GREY_A, BLACK
 from manimlib.constants import IN, ORIGIN, OUT, RIGHT
 from manimlib.constants import PI, TAU
+from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
-from manimlib.mobject.types.surface import SGroup
 from manimlib.mobject.types.surface import Surface
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -37,7 +37,6 @@ class SurfaceMesh(VGroup):
         stroke_color: ManimColor = GREY_A,
         normal_nudge: float = 1e-2,
         depth_test: bool = True,
-        joint_type: str = 'no_joint',
         **kwargs
     ):
         self.uv_surface = uv_surface
@@ -48,14 +47,13 @@ class SurfaceMesh(VGroup):
             stroke_color=stroke_color,
             stroke_width=stroke_width,
             depth_test=depth_test,
-            joint_type=joint_type,
             **kwargs
         )
 
     def init_points(self) -> None:
         uv_surface = self.uv_surface
 
-        full_nu, full_nv = uv_surface.resolution
+        full_nu, full_nv = uv_surface.get_resolution()
         part_nu, part_nv = self.resolution
         # 'indices' are treated as floats. Later, there will be
         # an interpolation between the floor and ceiling of these
@@ -97,7 +95,6 @@ class Sphere(Surface):
         v_range: Tuple[float, float] = (0, PI),
         resolution: Tuple[int, int] = (101, 51),
         radius: float = 1.0,
-        true_normals: bool = True,
         clockwise=False,
         **kwargs,
     ):
@@ -109,9 +106,6 @@ class Sphere(Surface):
             resolution=resolution,
             **kwargs
         )
-        # Add bespoke normal specification to avoid issue at poles
-        if true_normals:
-            self.data['d_normal_point'] = self.data['point'] * ((radius + self.normal_nudge) / radius)
 
     def uv_func(self, u: float, v: float) -> np.ndarray:
         sign = -1 if self.clockwise else +1
@@ -267,7 +261,7 @@ def square_to_cube_faces(square: T) -> list[T]:
     return result
 
 
-class Cube(SGroup):
+class Cube(Group):
     def __init__(
         self,
         color: ManimColor = BLUE,
@@ -306,12 +300,10 @@ class VGroup3D(VGroup):
         *vmobjects: VMobject,
         depth_test: bool = True,
         shading: Tuple[float, float, float] = (0.2, 0.2, 0.2),
-        joint_type: str = "no_joint",
         **kwargs
     ):
         super().__init__(*vmobjects, **kwargs)
         self.set_shading(*shading)
-        self.set_joint_type(joint_type)
         if depth_test:
             self.apply_depth_test()
 

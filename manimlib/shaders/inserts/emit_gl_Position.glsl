@@ -1,12 +1,18 @@
 uniform mat4 view;
 uniform float focal_distance;
 uniform vec3 frame_rescale_factors;
-uniform vec4 clip_plane0;
-uniform vec4 clip_plane1;
-uniform vec4 clip_plane2;
-uniform vec4 clip_plane3;
 
 #INSERT frame_units.glsl
+
+float clip_distance(vec3 point, vec4 plane){
+    /*
+    Clipping stays switched on, so a distance has to be written for every plane,
+    whether or not it's in use. An unset plane is all zeros, which stands for
+    keeping everything.
+    */
+    if (plane.xyz == vec3(0.0)) return 1.0;
+    return dot(vec4(point, 1.0), plane);
+}
 
 void emit_gl_Position(vec3 point){
     vec4 result = vec4(point, 1.0);
@@ -19,17 +25,8 @@ void emit_gl_Position(vec3 point){
     result.z *= -0.1;
     gl_Position = result;
     
-    // Set clip planes
-    if(clip_plane0.xyz != vec3(0.0, 0.0, 0.0)){
-        gl_ClipDistance[0] = dot(vec4(point, 1.0), clip_plane0);
-    }
-    if(clip_plane1.xyz != vec3(0.0, 0.0, 0.0)){
-        gl_ClipDistance[1] = dot(vec4(point, 1.0), clip_plane1);
-    }
-    if(clip_plane2.xyz != vec3(0.0, 0.0, 0.0)){
-        gl_ClipDistance[2] = dot(vec4(point, 1.0), clip_plane2);
-    }
-    if(clip_plane3.xyz != vec3(0.0, 0.0, 0.0)){
-        gl_ClipDistance[3] = dot(vec4(point, 1.0), clip_plane3);
-    }
+    gl_ClipDistance[0] = clip_distance(point, clip_plane0);
+    gl_ClipDistance[1] = clip_distance(point, clip_plane1);
+    gl_ClipDistance[2] = clip_distance(point, clip_plane2);
+    gl_ClipDistance[3] = clip_distance(point, clip_plane3);
 }

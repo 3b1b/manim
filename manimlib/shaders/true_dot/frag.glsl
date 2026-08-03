@@ -1,6 +1,5 @@
 #version 330
 
-uniform float glow_factor;
 uniform mat4 perspective;
 
 in vec4 color;
@@ -14,6 +13,7 @@ in vec2 uv_coords;
 out vec4 frag_color;
 
 // This includes a declaration of uniform vec3 shading
+#INSERT dot_cloud_uniforms.glsl
 #INSERT finalize_color.glsl
 
 void main() {

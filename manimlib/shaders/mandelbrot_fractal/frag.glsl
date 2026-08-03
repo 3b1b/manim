@@ -19,6 +19,7 @@ in vec3 xyz_coords;
 
 out vec4 frag_color;
 
+#INSERT mobject_uniforms.glsl
 #INSERT finalize_color.glsl
 #INSERT complex_functions.glsl
 

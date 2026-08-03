@@ -9,6 +9,12 @@ except PackageNotFoundError:
     __version__ = "unknown"
 
 
+# Whether PyOpenGL checks for errors is fixed when it is first imported, so this has
+# to be settled before anything below reaches for it
+from manimlib.config import manim_config
+import OpenGL
+OpenGL.ERROR_CHECKING = manim_config.gl_error_checking
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

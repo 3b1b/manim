@@ -7,7 +7,6 @@ ipython>=8.18.0
 isosurfaces
 fontTools
 manimpango>=0.6.0
-mapbox-earcut
 matplotlib
 moderngl
 moderngl_window

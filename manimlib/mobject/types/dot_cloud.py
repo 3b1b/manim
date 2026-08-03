@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import moderngl
 import numpy as np
 
 from manimlib.constants import GREY_C, YELLOW
@@ -8,6 +7,8 @@ from manimlib.constants import ORIGIN, NULL_POINTS
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.utils.iterables import resize_with_interpolation
+from manimlib.utils.shaders import COMMON_UNIFORMS
+from manimlib.utils.shaders import uniform_block_dtype
 
 from typing import TYPE_CHECKING
 
@@ -25,12 +26,19 @@ DEFAULT_BUFF_RATIO = 0.5
 
 class DotCloud(PMobject):
     shader_folder: str = "true_dot"
-    render_primitive: int = moderngl.POINTS
+    # Each dot is expanded into a camera facing quad by the vertex shader
+    verts_per_record: int = 6
     data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
         ('radius', np.float32, (1,)),
         ('rgba', np.float32, (4,)),
     ]
+    # Mirrors inserts/dot_cloud_uniforms.glsl
+    uniform_dtype: np.dtype = uniform_block_dtype(
+        *COMMON_UNIFORMS,
+        ("anti_alias_width", 1),
+        ("glow_factor", 1),
+    )
 
     def __init__(
         self,
@@ -96,21 +104,19 @@ class DotCloud(PMobject):
         self.center()
         return self
 
-    @Mobject.affects_data
     def set_radii(self, radii: npt.ArrayLike) -> Self:
         n_points = self.get_num_points()
         radii = np.array(radii).reshape((len(radii), 1))
-        self.data["radius"][:] = resize_with_interpolation(radii, n_points)
+        self.data["radius"] = resize_with_interpolation(radii, n_points)
         self.refresh_bounding_box()
         return self
 
     def get_radii(self) -> np.ndarray:
         return self.data["radius"]
 
-    @Mobject.affects_data
     def set_radius(self, radius: float) -> Self:
-        data = self.data if self.get_num_points() > 0 else self._data_defaults
-        data["radius"][:] = radius
+        self.data.rows_or_defaults["radius"] = radius
+        self.data.changed = True
         self.refresh_bounding_box()
         return self
 

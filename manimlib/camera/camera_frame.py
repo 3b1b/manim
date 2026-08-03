@@ -13,6 +13,8 @@ from manimlib.constants import PI
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.space_ops import normalize
 from manimlib.utils.simple_functions import clip
+from manimlib.utils.shaders import COMMON_UNIFORMS
+from manimlib.utils.shaders import uniform_block_dtype
 
 from typing import TYPE_CHECKING
 
@@ -21,6 +23,15 @@ if TYPE_CHECKING:
 
 
 class CameraFrame(Mobject):
+    # Held here, rather than as plain attributes, so that they carry over on a copy
+    # and interpolate when the frame is animated. No shader reads them: the view
+    # matrix they imply is worked out in python and sent to every program at once.
+    uniform_dtype: np.dtype = uniform_block_dtype(
+        *COMMON_UNIFORMS,
+        ("orientation", 4),
+        ("fovy", 1),
+    )
+
     def __init__(
         self,
         frame_shape: tuple[float, float] = FRAME_SHAPE,
@@ -40,7 +51,6 @@ class CameraFrame(Mobject):
         self.default_orientation = Rotation.identity()
         self.view_matrix = np.identity(4)
         self.id4x4 = np.identity(4)
-        self.camera_location = OUT  # This will be updated by set_points
         self.euler_axes = euler_axes
 
         self.set_points(np.array([ORIGIN, LEFT, RIGHT, DOWN, UP]))
@@ -49,7 +59,7 @@ class CameraFrame(Mobject):
         self.move_to(center_point)
 
     def set_orientation(self, rotation: Rotation):
-        self.uniforms["orientation"][:] = rotation.as_quat()
+        self.uniforms["orientation"] = rotation.as_quat()
         return self
 
     def get_orientation(self):
@@ -100,29 +110,25 @@ class CameraFrame(Mobject):
     def get_view_matrix(self, refresh=False):
         """
         Returns a 4x4 for the affine transformation mapping a point
-        into the camera's internal coordinate system
+        into the camera's internal coordinate system. Worked out afresh each time,
+        which happens about once a frame, rather than cached against a note of the
+        frame having moved.
         """
-        if self._data_has_changed:
-            shift = self.id4x4.copy()
-            rotation = self.id4x4.copy()
+        shift = self.id4x4.copy()
+        rotation = self.id4x4.copy()
 
-            scale = self.get_scale()
-            shift[:3, 3] = -self.get_center()
-            rotation[:3, :3] = self.get_inverse_camera_rotation_matrix()
-            np.dot(rotation, shift, out=self.view_matrix)
-            if scale > 0:
-                self.view_matrix[:3, :4] /= scale
+        scale = self.get_scale()
+        shift[:3, 3] = -self.get_center()
+        rotation[:3, :3] = self.get_inverse_camera_rotation_matrix()
+        np.dot(rotation, shift, out=self.view_matrix)
+        if scale > 0:
+            self.view_matrix[:3, :4] /= scale
 
         return self.view_matrix
 
     def get_inv_view_matrix(self):
         return np.linalg.inv(self.get_view_matrix())
 
-    @Mobject.affects_data
-    def interpolate(self, *args, **kwargs):
-        super().interpolate(*args, **kwargs)
-
-    @Mobject.affects_data
     def rotate(self, angle: float, axis: np.ndarray = OUT, **kwargs):
         rot = Rotation.from_rotvec(angle * normalize(axis))
         self.set_orientation(rot * self.get_orientation())
@@ -213,12 +219,10 @@ class CameraFrame(Mobject):
         self.add_updater(lambda m, dt: m.increment_theta(angular_speed * dt))
         return self
 
-    @Mobject.affects_data
     def set_focal_distance(self, focal_distance: float):
         self.uniforms["fovy"] = 2 * math.atan(0.5 * self.get_height() / focal_distance)
         return self
 
-    @Mobject.affects_data
     def set_field_of_view(self, field_of_view: float):
         self.uniforms["fovy"] = field_of_view
         return self
@@ -249,11 +253,9 @@ class CameraFrame(Mobject):
         return self.uniforms["fovy"]
 
     def get_implied_camera_location(self) -> np.ndarray:
-        if self._data_has_changed:
-            to_camera = self.get_inverse_camera_rotation_matrix()[2]
-            dist = self.get_focal_distance()
-            self.camera_location = self.get_center() + dist * to_camera
-        return self.camera_location
+        to_camera = self.get_inverse_camera_rotation_matrix()[2]
+        dist = self.get_focal_distance()
+        return self.get_center() + dist * to_camera
 
     def to_fixed_frame_point(self, point: Vect3, relative: bool = False):
         view = self.get_view_matrix()

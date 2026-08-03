@@ -31,7 +31,6 @@ from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import recursive_mobject_remove
-from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.sounds import play_sound
 from manimlib.utils.color import color_to_rgba
 from manimlib.window import Window
@@ -115,7 +114,6 @@ class Scene(object):
 
         self.file_writer = SceneFileWriter(self, **self.file_writer_config)
         self.mobjects: list[Mobject] = [self.camera.frame]
-        self.render_groups: list[Mobject] = []
         self.id_to_mobject_map: dict[int, Mobject] = dict()
         self.num_plays: int = 0
         self.time: float = 0
@@ -223,7 +221,7 @@ class Scene(object):
     def get_image(self) -> Image:
         if self.window is not None:
             self.camera.use_window_fbo(False)
-            self.camera.capture(*self.render_groups)
+            self.camera.capture(*self.mobjects)
         image = self.camera.get_image()
         if self.window is not None:
             self.camera.use_window_fbo(True)
@@ -248,7 +246,7 @@ class Scene(object):
             self.window._window.dispatch_events()
             return
 
-        self.camera.capture(*self.render_groups)
+        self.camera.capture(*self.mobjects)
 
         if self.window and not self.skip_animations:
             vt = self.time - self.virtual_animation_start_time
@@ -300,30 +298,11 @@ class Scene(object):
     def get_mobject_family_members(self) -> list[Mobject]:
         return extract_mobject_family_members(self.mobjects)
 
-    def assemble_render_groups(self):
-        """
-        Rendering can be more efficient when mobjects of the
-        same type are grouped together, so this function creates
-        Groups of all clusters of adjacent Mobjects in the scene
-        """
-        batches = batch_by_property(
-            self.mobjects,
-            lambda m: str(type(m)) + str(m.get_shader_wrapper(self.camera.ctx).get_id()) + str(m.z_index)
-        )
-
-        for group in self.render_groups:
-            group.clear()
-        self.render_groups = [
-            batch[0].get_group_class()(*batch)
-            for batch, key in batches
-        ]
-
     @staticmethod
     def affects_mobject_list(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             func(self, *args, **kwargs)
-            self.assemble_render_groups()
             return self
         return wrapper
 
@@ -936,8 +915,15 @@ class ThreeDScene(Scene):
 
     def add(self, *mobjects: Mobject, set_depth_test: bool = True, perp_stroke: bool = True):
         for mob in mobjects:
-            if set_depth_test and not mob.is_fixed_in_frame() and self.always_depth_test:
-                mob.apply_depth_test()
+            # Asked of each member of the family in turn, rather than of what holds them.
+            # A group has a say of its own on being fixed in frame, which is nothing to do
+            # with what it holds, and animations wrap what they are given in a fresh one,
+            # so text fixed in frame would otherwise find itself depth tested for the
+            # length of a FadeTransform, and vanish behind whatever it was written over.
+            if set_depth_test and self.always_depth_test:
+                for sm in mob.get_family():
+                    if not sm.is_fixed_in_frame():
+                        sm.apply_depth_test(recurse=False)
             if isinstance(mob, VMobject) and mob.has_stroke() and perp_stroke:
                 mob.set_flat_stroke(False)
         super().add(*mobjects)

@@ -1,5 +1,6 @@
 #version 330
 
+
 // Distance to the curve, and half the curve width, both as
 // a ratio of the antialias width
 in float dist_to_aaw;

@@ -103,10 +103,6 @@ class DrawBorderThenFill(Animation):
         super().begin()
         self.mobject.match_style(self.outline)
 
-    def finish(self) -> None:
-        super().finish()
-        self.mobject.refresh_joint_angles()
-
     def get_outline(self) -> VMobject:
         outline = self.mobject.copy()
         outline.set_fill(opacity=0)

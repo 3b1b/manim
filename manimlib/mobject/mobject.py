@@ -9,7 +9,6 @@ import pickle
 import random
 import sys
 
-import moderngl
 import numbers
 import numpy as np
 
@@ -25,13 +24,16 @@ from manimlib.event_handler.event_listner import EventListener
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
 from manimlib.shader_wrapper import ShaderWrapper
+from manimlib.utils.shaders import COMMON_UNIFORMS
+from manimlib.utils.shaders import Uniforms
+from manimlib.utils.shaders import uniform_block_dtype
+from manimlib.utils.structured_array import StructuredArray
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.iterables import arrays_match
 from manimlib.utils.iterables import array_is_constant
-from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import resize_array
@@ -53,7 +55,7 @@ SubmobjectType = TypeVar('SubmobjectType', bound='Mobject')
 if TYPE_CHECKING:
     from typing import Callable, Iterator, Union, Tuple, Optional, Any
     import numpy.typing as npt
-    from manimlib.typing import ManimColor, Vect3, Vect4Array, Vect3Array, UniformDict, Self
+    from manimlib.typing import ManimColor, Vect3, Vect4Array, Vect3Array, Self
     from moderngl.context import Context
 
     T = TypeVar('T')
@@ -68,14 +70,23 @@ class Mobject(object):
     """
     dim: int = 3
     shader_folder: str = ""
-    render_primitive: int = moderngl.TRIANGLE_STRIP
+    # If positive, the shader is handed no vertex attributes, and instead reads
+    # each record out of the vertex buffer itself, turning it into this many
+    # vertices. This is how shapes are expanded without a geometry shader.
+    verts_per_record: int = 0
     # Must match in attributes of vert shader
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ])
+    # One value each for the whole mobject, as opposed to one per point, given as a
+    # name and how many floats it holds. Must match the block its shaders declare,
+    # see inserts/mobject_uniforms.glsl, which check_uniform_block makes sure of.
+    uniform_dtype: np.dtype = uniform_block_dtype(*COMMON_UNIFORMS)
     aligned_data_keys = ['point']
     pointlike_data_keys = ['point']
+    # Uniforms holding a point, which transforms act on just as they do on the points
+    pointlike_uniform_keys: list[str] = []
 
     def __init__(
         self,
@@ -102,14 +113,12 @@ class Mobject(object):
         self.family: list[Mobject] | None = [self]
         self.locked_data_keys: set[str] = set()
         self.const_data_keys: set[str] = set()
-        self.locked_uniform_keys: set[str] = set()
         self.saved_state = None
         self.target = None
         self.bounding_box: Vect3Array = np.zeros((3, 3))
         self.shader_wrapper: Optional[ShaderWrapper] = None
         self._is_animating: bool = False
         self._needs_new_bounding_box: bool = True
-        self._data_has_changed: bool = True
         self.shader_code_replacements: dict[str, str] = dict()
 
         self.init_data()
@@ -136,18 +145,12 @@ class Mobject(object):
         return self.replicate(other)
 
     def init_data(self, length: int = 0):
-        self.data = np.zeros(length, dtype=self.data_dtype)
-        self._data_defaults = np.ones(1, dtype=self.data.dtype)
+        self.data: StructuredArray = StructuredArray(self.data_dtype, length)
 
     def init_uniforms(self):
-        self.uniforms: UniformDict = {
-            "is_fixed_in_frame": 0.0,
-            "shading": np.array(self.shading, dtype=float),
-            "clip_plane0": np.zeros(4),
-            "clip_plane1": np.zeros(4),
-            "clip_plane2": np.zeros(4),
-            "clip_plane3": np.zeros(4),
-        }
+        # Anything left unmentioned starts at zero, as with data
+        self.uniforms: Uniforms = Uniforms(self.uniform_dtype)
+        self.uniforms["shading"] = self.shading
 
     def init_colors(self):
         self.set_color(self.color, self.opacity)
@@ -156,11 +159,8 @@ class Mobject(object):
         # Typically implemented in subclass, unlpess purposefully left blank
         pass
 
-    def set_uniforms(self, uniforms: dict) -> Self:
-        for key, value in uniforms.items():
-            if isinstance(value, np.ndarray):
-                value = value.copy()
-            self.uniforms[key] = value
+    def set_uniforms(self, uniforms: Uniforms) -> Self:
+        self.uniforms.match(uniforms)
         return self
 
     @property
@@ -206,80 +206,44 @@ class Mobject(object):
         """
         return _FunctionalUpdaterBuilder(self)
 
-    def note_changed_data(self, recurse_up: bool = True) -> Self:
-        self._data_has_changed = True
-        if recurse_up:
-            for mob in self.parents:
-                mob.note_changed_data()
-        return self
-
-    @staticmethod
-    def affects_data(func: Callable[..., T]) -> Callable[..., T]:
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            result = func(self, *args, **kwargs)
-            self.note_changed_data()
-            return result
-        return wrapper
-
-    @staticmethod
-    def affects_family_data(func: Callable[..., T]) -> Callable[..., T]:
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            result = func(self, *args, **kwargs)
-            for mob in self.family_members_with_points():
-                mob.note_changed_data()
-            return result
-        return wrapper
-
     # Only these methods should directly affect points
-    @affects_data
-    def set_data(self, data: np.ndarray) -> Self:
-        assert data.dtype == self.data.dtype
-        self.resize_points(len(data))
-        self.data[:] = data
+    def set_data(self, data: np.ndarray | StructuredArray) -> Self:
+        array = data.array if isinstance(data, StructuredArray) else data
+        assert array.dtype == self.data.dtype
+        self.resize_points(len(array))
+        self.data[:] = array
         return self
 
-    @affects_data
     def resize_points(
         self,
         new_length: int,
         resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
     ) -> Self:
-        if new_length == 0:
-            if len(self.data) > 0:
-                self._data_defaults[:1] = self.data[:1]
-        elif self.get_num_points() == 0:
-            self.data = self._data_defaults.copy()
-
-        self.data = resize_func(self.data, new_length)
+        self.data.resize(new_length, resize_func)
         self.refresh_bounding_box()
         return self
 
-    @affects_data
     def set_points(self, points: Vect3Array | list[Vect3]) -> Self:
         self.resize_points(len(points), resize_func=resize_preserving_order)
-        self.data["point"][:] = points
+        self.data["point"] = points
         return self
 
-    @affects_data
     def append_points(self, new_points: Vect3Array) -> Self:
         n = self.get_num_points()
         self.resize_points(n + len(new_points))
         # Have most data default to the last value
         self.data[n:] = self.data[n - 1]
-        # Then read in new points
+        # Then read in new points, written into rather than replaced, so say so
         self.data["point"][n:] = new_points
+        self.data.changed = True
         self.refresh_bounding_box()
         return self
 
-    @affects_family_data
     def reverse_points(self) -> Self:
         for mob in self.get_family():
             mob.data[:] = mob.data[::-1]
         return self
 
-    @affects_family_data
     def apply_points_function(
         self,
         func: Callable[[np.ndarray], np.ndarray],
@@ -290,16 +254,22 @@ class Mobject(object):
         if about_point is None and about_edge is not None:
             about_point = self.get_bounding_box_point(about_edge)
 
-        for mob in self.get_family():
-            arrs = [mob.data[key] for key in mob.pointlike_data_keys if mob.has_points()]
-            if works_on_bounding_box:
-                arrs.append(mob.get_bounding_box())
+        def moved(points: Vect3Array) -> Vect3Array:
+            if about_point is None:
+                return func(points)
+            return func(points - about_point) + about_point
 
-            for arr in arrs:
-                if about_point is None:
-                    arr[:] = func(arr)
-                else:
-                    arr[:] = func(arr - about_point) + about_point
+        for mob in self.get_family():
+            # Asked for before the points move, since a stale one is worked out from
+            # them, and moving it is only right for the box the points had
+            box = mob.get_bounding_box() if works_on_bounding_box else None
+            if mob.has_points():
+                for key in mob.pointlike_data_keys:
+                    mob.data[key] = moved(mob.data[key])
+            for key in mob.pointlike_uniform_keys:
+                mob.uniforms[key] = moved(mob.uniforms[key][np.newaxis])[0]
+            if box is not None:
+                box[:] = moved(box)
 
         if not works_on_bounding_box:
             self.refresh_bounding_box(recurse_down=True)
@@ -308,11 +278,10 @@ class Mobject(object):
                 parent.refresh_bounding_box()
         return self
 
-    @affects_data
     def match_points(self, mobject: Mobject) -> Self:
         self.resize_points(len(mobject.data), resize_func=resize_preserving_order)
         for key in self.pointlike_data_keys:
-            self.data[key][:] = mobject.data[key]
+            self.data[key] = mobject.data[key]
         return self
 
     # Others related to points
@@ -414,7 +383,6 @@ class Mobject(object):
     def split(self) -> list[Self]:
         return self.submobjects
 
-    @affects_data
     def note_changed_family(self, only_changed_order=False) -> Self:
         self.family = None
         if not only_changed_order:
@@ -675,10 +643,8 @@ class Mobject(object):
         # copy.copy is only a shallow copy, so the internal
         # data which are numpy arrays or other mobjects still
         # need to be further copied.
-        result.uniforms = {
-            key: value.copy() if isinstance(value, np.ndarray) else value
-            for key, value in self.uniforms.items()
-        }
+        result.data = self.data.copy()
+        result.uniforms = self.uniforms.copy()
 
         # Instead of adding using result.add, which does some checks for updating
         # updater statues and bounding box, just directly modify the family-related
@@ -691,7 +657,6 @@ class Mobject(object):
         # Similarly, instead of calling match_updaters, since we know the status
         # won't have changed, just directly match.
         result.updaters = list(self.updaters)
-        result._data_has_changed = True
         result.shader_wrapper = None
 
         family = self.get_family()
@@ -731,10 +696,10 @@ class Mobject(object):
             sm1.set_data(sm2.data)
             sm1.set_uniforms(sm2.uniforms)
             sm1.bounding_box[:] = sm2.bounding_box
+            sm1.pointlike_uniform_keys = sm2.pointlike_uniform_keys
             sm1.shader_folder = sm2.shader_folder
             sm1.texture_paths = sm2.texture_paths
             sm1.depth_test = sm2.depth_test
-            sm1.render_primitive = sm2.render_primitive
             sm1._needs_new_bounding_box = sm2._needs_new_bounding_box
         # Make sure named family members carry over
         for attr, value in list(mobject.__dict__.items()):
@@ -757,15 +722,10 @@ class Mobject(object):
             for key in m1.data.dtype.names:
                 if not np.isclose(m1.data[key], m2.data[key]).all():
                     return False
-            if set(m1.uniforms).difference(m2.uniforms):
+            if not m1.uniforms.array.dtype == m2.uniforms.array.dtype:
                 return False
-            for key in m1.uniforms:
-                value1 = m1.uniforms[key]
-                value2 = m2.uniforms[key]
-                if isinstance(value1, np.ndarray) and isinstance(value2, np.ndarray) and not value1.size == value2.size:
-                    return False
-                if not np.isclose(value1, value2).all():
-                    return False
+            if not np.isclose(m1.uniforms.floats, m2.uniforms.floats).all():
+                return False
         return True
 
     def has_same_shape_as(self, mobject: Mobject) -> bool:
@@ -1340,7 +1300,6 @@ class Mobject(object):
 
     # Color functions
 
-    @affects_family_data
     def set_rgba_array(
         self,
         rgba_array: npt.ArrayLike,
@@ -1348,8 +1307,8 @@ class Mobject(object):
         recurse: bool = False
     ) -> Self:
         for mob in self.get_family(recurse):
-            data = mob.data if mob.get_num_points() > 0 else mob._data_defaults
-            data[name][:] = rgba_array
+            mob.data.rows_or_defaults[name] = rgba_array
+            mob.data.changed = True
         return self
 
     def set_color_by_rgba_func(
@@ -1379,7 +1338,6 @@ class Mobject(object):
             mob.set_rgba_array(np.hstack((func(points), opacity)))
         return self
 
-    @affects_family_data
     def set_rgba_array_by_color(
         self,
         color: ManimColor | Iterable[ManimColor] | None = None,
@@ -1388,7 +1346,7 @@ class Mobject(object):
         recurse: bool = True
     ) -> Self:
         for mob in self.get_family(recurse):
-            data = mob.data if mob.has_points() > 0 else mob._data_defaults
+            data = mob.data.rows_or_defaults
             if color is not None:
                 rgbs = np.array(list(map(color_to_rgb, listify(color))))
                 if 1 < len(rgbs):
@@ -1398,6 +1356,8 @@ class Mobject(object):
                 if not isinstance(opacity, (float, int, np.floating)):
                     opacity = resize_with_interpolation(np.array(opacity), len(data))
                 data[name][:, 3] = opacity
+            # Those columns are written into rather than replaced
+            mob.data.changed = True
         return self
 
     def set_color(
@@ -1837,8 +1797,6 @@ class Mobject(object):
         path_func: Callable[[np.ndarray, np.ndarray, float], np.ndarray] = straight_path
     ) -> Self:
         keys = [k for k in self.data.dtype.names if k not in self.locked_data_keys]
-        if keys:
-            self.note_changed_data()
         for key in keys:
             md1 = mobject1.data[key]
             md2 = mobject2.data[key]
@@ -1850,12 +1808,7 @@ class Mobject(object):
             else:
                 self.data[key] = (1 - alpha) * md1 + alpha * md2
 
-        for key in self.uniforms:
-            if key in self.locked_uniform_keys:
-                continue
-            if key not in mobject1.uniforms or key not in mobject2.uniforms:
-                continue
-            self.uniforms[key] = (1 - alpha) * mobject1.uniforms[key] + alpha * mobject2.uniforms[key]
+        self.uniforms.interpolate(mobject1.uniforms, mobject2.uniforms, alpha)
         self.bounding_box[:] = path_func(mobject1.bounding_box, mobject2.bounding_box, alpha)
         return self
 
@@ -1884,12 +1837,6 @@ class Mobject(object):
         self.locked_data_keys = set(keys)
         return self
 
-    def lock_uniforms(self, keys: Iterable[str]) -> Self:
-        if self.has_updaters():
-            return self
-        self.locked_uniform_keys = set(keys)
-        return self
-
     def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject) -> Self:
         tuples = zip(
             self.get_family(),
@@ -1902,10 +1849,6 @@ class Mobject(object):
             sm.lock_data(
                 key for key in sm.data.dtype.names
                 if arrays_match(sm1.data[key], sm2.data[key])
-            )
-            sm.lock_uniforms(
-                key for key in self.uniforms
-                if all(listify(mobject1.uniforms.get(key, 0) == mobject2.uniforms.get(key, 0)))
             )
             sm.const_data_keys = set(
                 key for key in sm.data.dtype.names
@@ -1922,32 +1865,19 @@ class Mobject(object):
         for mob in self.get_family():
             mob.locked_data_keys = set()
             mob.const_data_keys = set()
-            mob.locked_uniform_keys = set()
         return self
 
     # Operations touching shader uniforms
 
-    @staticmethod
-    def affects_shader_info_id(func: Callable[..., T]) -> Callable[..., T]:
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            result = func(self, *args, **kwargs)
-            self.refresh_shader_wrapper_id()
-            return result
-        return wrapper
-
-    @affects_shader_info_id
     def set_uniform(self, recurse: bool = True, **new_uniforms) -> Self:
         for mob in self.get_family(recurse):
             mob.uniforms.update(new_uniforms)
         return self
 
-    @affects_shader_info_id
     def fix_in_frame(self, recurse: bool = True) -> Self:
         self.set_uniform(recurse, is_fixed_in_frame=1.0)
         return self
 
-    @affects_shader_info_id
     def unfix_from_frame(self, recurse: bool = True) -> Self:
         self.set_uniform(recurse, is_fixed_in_frame=0.0)
         return self
@@ -1955,13 +1885,11 @@ class Mobject(object):
     def is_fixed_in_frame(self) -> bool:
         return bool(self.uniforms["is_fixed_in_frame"])
 
-    @affects_shader_info_id
     def apply_depth_test(self, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):
             mob.depth_test = True
         return self
 
-    @affects_shader_info_id
     def deactivate_depth_test(self, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):
             mob.depth_test = False
@@ -1969,7 +1897,7 @@ class Mobject(object):
 
     def set_clip_plane(self, vect: Vect3, threshold: float, recurse=True) -> Self:
         for submob in self.get_family(recurse):
-            submob.uniforms["clip_plane0"][:] = [*vect, threshold]
+            submob.uniforms["clip_plane0"] = np.array([*vect, threshold])
         return self
 
     def set_clip_planes(
@@ -1979,15 +1907,15 @@ class Mobject(object):
     ) -> Self:
         for submob in self.get_family(recurse):
             for n in range(4):
-                submob.uniforms[f"clip_plane{n}"][:] = 0
+                submob.uniforms[f"clip_plane{n}"] = np.zeros(4)
             for n, (vect, threshold) in enumerate(vect_threshold_pairs):
-                submob.uniforms[f"clip_plane{n}"][:] = [*vect, threshold]
+                submob.uniforms[f"clip_plane{n}"] = np.array([*vect, threshold])
         return self
 
     def deactivate_clip_plane(self, recurse=True) -> Self:
         for submob in self.get_family(recurse):
             for n in range(4):
-                submob.uniforms[f"clip_plane{n}"][:] = 0
+                submob.uniforms[f"clip_plane{n}"] = np.zeros(4)
         return self
 
     def clip_to_box(self, box: Mobject, recurse=True) -> Self:
@@ -2001,7 +1929,6 @@ class Mobject(object):
 
     # Shader code manipulation
 
-    @affects_data
     def replace_shader_code(self, old: str, new: str) -> Self:
         for mob in self.get_family():
             mob.shader_code_replacements[old] = new
@@ -2052,60 +1979,33 @@ class Mobject(object):
     def init_shader_wrapper(self, ctx: Context):
         self.shader_wrapper = ShaderWrapper(
             ctx=ctx,
-            vert_data=self.data,
+            mobject_data=self.data,
             shader_folder=self.shader_folder,
             mobject_uniforms=self.uniforms,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
-            render_primitive=self.render_primitive,
             code_replacements=self.shader_code_replacements,
+            verts_per_record=self.verts_per_record,
         )
-
-    def refresh_shader_wrapper_id(self):
-        for submob in self.get_family():
-            if submob.shader_wrapper is not None:
-                submob.shader_wrapper.depth_test = submob.depth_test
-                submob.shader_wrapper.refresh_id()
-        for mob in (self, *self.get_ancestors()):
-            mob._data_has_changed = True
-        return self
 
     def get_shader_wrapper(self, ctx: Context) -> ShaderWrapper:
         if self.shader_wrapper is None:
             self.init_shader_wrapper(ctx)
+        # Whatever the wrapper needs a copy of is told to it here, where it is asked for
+        # once a frame, rather than by everything which might change one of them having
+        # to remember to pass it along
+        self.shader_wrapper.depth_test = self.depth_test
         return self.shader_wrapper
-
-    def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
-        family = self.family_members_with_points()
-        batches = batch_by_property(family, lambda sm: sm.get_shader_wrapper(ctx).get_id())
-
-        result = []
-        for submobs, sid in batches:
-            shader_wrapper = submobs[0].shader_wrapper
-            data_list = [sm.get_shader_data() for sm in submobs]
-            shader_wrapper.read_in(data_list)
-            result.append(shader_wrapper)
-        return result
-
-    def get_shader_data(self) -> np.ndarray:
-        indices = self.get_shader_vert_indices()
-        if indices is not None:
-            return self.data[indices]
-        else:
-            return self.data
 
     def get_uniforms(self):
         return self.uniforms
 
-    def get_shader_vert_indices(self) -> Optional[np.ndarray]:
-        return None
-
-    def render(self, ctx: Context, camera_uniforms: dict):
-        if self._data_has_changed:
-            self.shader_wrappers = self.get_shader_wrapper_list(ctx)
-            self._data_has_changed = False
-        for shader_wrapper in self.shader_wrappers:
-            shader_wrapper.update_program_uniforms(camera_uniforms)
+    def render(self, ctx: Context):
+        for mob in self.get_family():
+            if len(mob.data) == 0:
+                # Groups hold no points of their own, but their members might
+                continue
+            shader_wrapper = mob.get_shader_wrapper(ctx)
             shader_wrapper.pre_render()
             shader_wrapper.render()
 

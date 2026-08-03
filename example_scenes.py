@@ -519,7 +519,6 @@ class TexAndNumbersExample(Scene):
         tex.next_to(axes, UP, buff=0.5)
         value = tex.make_number_changeable("4.00")
 
-
         # This will tie the right hand side of our equation to
         # the square of the radius of the circle
         value.add_updater(lambda v: v.set_value(circle.get_radius()**2))
@@ -544,9 +543,9 @@ class TexAndNumbersExample(Scene):
         # returns a group of the results
         exponents = tex.make_number_changeable("2", replace_all=True)
         self.play(
-            LaggedStartMap(
-                FlashAround, exponents,
-                lag_ratio=0.2, buff=0.1, color=RED
+            LaggedStart(
+                *(FlashAround(exp, buff=0.1, color=RED) for exp in exponents),
+                lag_ratio=0.2,
             ),
             exponents.animate.set_color(RED)
         )
@@ -578,17 +577,15 @@ class SurfaceExample(ThreeDScene):
 
         torus1 = Torus(r1=1, r2=1)
         torus2 = Torus(r1=3, r2=1)
-        sphere = Sphere(radius=3, resolution=torus1.resolution)
+        sphere = Sphere(radius=3, resolution=torus1.get_resolution())
         # You can texture a surface with up to two images, which will
         # be interpreted as the side towards the light, and away from
         # the light.  These can be either urls, or paths to a local file
         # in whatever you've set as the image directory in
         # the custom_config.yml file
 
-        # day_texture = "EarthTextureMap"
-        # night_texture = "NightEarthTextureMap"
-        day_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Whole_world_-_land_and_oceans.jpg/1280px-Whole_world_-_land_and_oceans.jpg"
-        night_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/The_earth_at_night.jpg/1280px-The_earth_at_night.jpg"
+        day_texture = "https://www.solarsystemscope.com/textures/download/2k_earth_daymap.jpg"
+        night_texture = "https://www.solarsystemscope.com/textures/download/2k_earth_nightmap.jpg"
 
         surfaces = [
             TexturedSurface(surface, day_texture, night_texture)
@@ -598,7 +595,7 @@ class SurfaceExample(ThreeDScene):
         for mob in surfaces:
             mob.shift(IN)
             mob.mesh = SurfaceMesh(mob)
-            mob.mesh.set_stroke(BLUE, 1, opacity=0.5)
+            mob.mesh.set_stroke(WHITE, 1, opacity=0.5)
 
         surface = surfaces[0]
 

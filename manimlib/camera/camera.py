@@ -13,6 +13,7 @@ from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.color import color_to_rgba
+from manimlib.utils.shaders import set_shared_uniforms
 
 from typing import TYPE_CHECKING
 
@@ -61,6 +62,7 @@ class Camera(object):
             background_color, background_opacity
         ))
         self.uniforms = dict()
+        self.depth_stencil_rbos: list[int] = []
         self.init_frame(**frame_config)
         self.init_context()
         self.init_fbo()
@@ -77,6 +79,19 @@ class Camera(object):
 
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
         self.ctx.enable(moderngl.BLEND)
+        # Color channels blend in the usual way, but the alpha channel takes the
+        # source's alpha whole, so that drawing something half transparent onto an
+        # opaque background leaves it opaque, rather than eating into its alpha.
+        self.ctx.blend_func = (
+            moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
+            moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA,
+        )
+        gl.glClearStencil(0)
+        # Every vertex shader writes a distance for all four clip planes, using a
+        # plane of all zeros to mean nothing gets clipped, so these stay on
+        for clip_distance in [gl.GL_CLIP_DISTANCE0, gl.GL_CLIP_DISTANCE1,
+                              gl.GL_CLIP_DISTANCE2, gl.GL_CLIP_DISTANCE3]:
+            gl.glEnable(clip_distance)
 
     def init_fbo(self) -> None:
         # This is the buffer used when writing to a video/image file
@@ -89,7 +104,11 @@ class Camera(object):
             self.window_fbo = None
             self.fbo = self.fbo_for_files
         else:
-            self.window_fbo = self.ctx.detect_framebuffer()
+            # Pass in 0 explicitly, rather than letting it detect whatever
+            # framebuffer happens to be bound, so that constructing a camera
+            # after another has been drawing, say on a scene reload, still
+            # finds the window's own framebuffer
+            self.window_fbo = self.ctx.detect_framebuffer(0)
             self.fbo = self.window_fbo
 
         self.fbo.use()
@@ -109,17 +128,47 @@ class Camera(object):
         self,
         samples: int = 0
     ) -> moderngl.Framebuffer:
-        return self.ctx.framebuffer(
+        fbo = self.ctx.framebuffer(
             color_attachments=self.ctx.texture(
                 self.default_pixel_shape,
                 components=self.n_channels,
                 samples=samples,
-            ),
-            depth_attachment=self.ctx.depth_renderbuffer(
-                self.default_pixel_shape,
-                samples=samples
             )
         )
+        self.attach_depth_stencil(fbo, samples)
+        return fbo
+
+    def attach_depth_stencil(self, fbo: moderngl.Framebuffer, samples: int = 0) -> None:
+        """
+        VMobject fills are drawn by counting winding numbers in a stencil
+        buffer, so render targets need stencil bits alongside their depth bits.
+        ModernGL only knows how to create depth-only attachments, hence the raw
+        calls here to attach a combined depth-stencil renderbuffer instead.
+        """
+        rbo = gl.glGenRenderbuffers(1)
+        gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, rbo)
+        if samples > 0:
+            gl.glRenderbufferStorageMultisample(
+                gl.GL_RENDERBUFFER, samples, gl.GL_DEPTH24_STENCIL8, *fbo.size
+            )
+        else:
+            gl.glRenderbufferStorage(
+                gl.GL_RENDERBUFFER, gl.GL_DEPTH24_STENCIL8, *fbo.size
+            )
+        # Take care to leave the previously bound framebuffer bound, since
+        # callers such as detect_framebuffer depend on what's currently bound
+        previous_fbo = gl.glGetIntegerv(gl.GL_FRAMEBUFFER_BINDING)
+        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, fbo.glo)
+        gl.glFramebufferRenderbuffer(
+            gl.GL_FRAMEBUFFER, gl.GL_DEPTH_STENCIL_ATTACHMENT,
+            gl.GL_RENDERBUFFER, rbo
+        )
+        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, previous_fbo)
+        # ModernGL is unaware of the attachment above, so it must be told
+        # explicitly that writing to depth is okay
+        fbo.depth_mask = True
+        # Hold a reference so the renderbuffer is not collected
+        self.depth_stencil_rbos.append(rbo)
 
     def clear(self) -> None:
         self.fbo.clear(*self.background_rgba)
@@ -225,14 +274,24 @@ class Camera(object):
     def capture(self, *mobjects: Mobject) -> None:
         self.clear()
         self.refresh_uniforms()
+        # These hold for every program, so they only need setting once a frame
+        set_shared_uniforms(self.uniforms)
         self.fbo.use()
+        # Fill rendering leaves the stencil buffer zeroed as it goes, so this is
+        # only here to guarantee a clean slate, e.g. if a previous frame's
+        # rendering was interrupted partway through
+        gl.glClear(gl.GL_STENCIL_BUFFER_BIT)
         for mobject in mobjects:
-            mobject.render(self.ctx, self.uniforms)
+            mobject.render(self.ctx)
 
         if self.window:
             self.window.swap_buffers()
             if self.fbo is not self.window_fbo:
-                self.blit(self.fbo, self.window_fbo)
+                # Multisampled buffers cannot be blit with any rescaling, so go
+                # by way of draw_fbo, which matches fbo in size, to resolve down
+                # to a single sample before scaling into the window
+                self.blit(self.fbo, self.draw_fbo)
+                self.blit(self.draw_fbo, self.window_fbo)
                 self.window.swap_buffers()
 
     def refresh_uniforms(self) -> None:
