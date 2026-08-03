@@ -1,20 +1,21 @@
 #version 330
 
-in vec3 point;
-in vec3 d_normal_point;
-in vec4 rgba;
-
 out vec4 v_color;
 
-#INSERT mobject_uniforms.glsl
+#INSERT surface_uniforms.glsl
 #INSERT emit_gl_Position.glsl
-#INSERT get_unit_normal.glsl
+#INSERT read_data.glsl
+#INSERT surface_mesh.glsl
 #INSERT finalize_color.glsl
 
-const float EPSILON = 1e-10;
-
 void main(){
+    vec3 point;
+    vec3 unit_normal;
+    int index;
+    if (!read_surface_vertex(point, unit_normal, index)){
+        gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+        return;
+    }
     emit_gl_Position(point);
-    vec3 unit_normal = normalize(d_normal_point - point);
-    v_color = finalize_color(rgba, point, unit_normal);
+    v_color = finalize_color(read_vec4(index, DATA_OFFSET_rgba), point, unit_normal);
 }

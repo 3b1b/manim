@@ -2020,18 +2020,8 @@ class Mobject(object):
             self.init_shader_wrapper(ctx)
         return self.shader_wrapper
 
-    def get_shader_data(self) -> np.ndarray:
-        indices = self.get_shader_vert_indices()
-        if indices is not None:
-            return self.data[indices]
-        else:
-            return self.data.array
-
     def get_uniforms(self):
         return self.uniforms
-
-    def get_shader_vert_indices(self) -> Optional[np.ndarray]:
-        return None
 
     def render(self, ctx: Context):
         for mob in self.get_family():
@@ -2042,7 +2032,7 @@ class Mobject(object):
             # A wrapper holding no buffer has just been built, e.g. after its shader
             # code was replaced, and needs reading into whether or not data changed
             if mob.data.changed or shader_wrapper.vbo is None:
-                shader_wrapper.read_in(mob.get_shader_data())
+                shader_wrapper.read_in(mob.data.array)
                 mob.data.changed = False
             shader_wrapper.update_program_uniforms()
             shader_wrapper.pre_render()

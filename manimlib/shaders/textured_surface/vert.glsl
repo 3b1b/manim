@@ -1,28 +1,26 @@
 #version 330
 
-in vec3 point;
-in vec3 d_normal_point;
-in vec2 im_coords;
-in float opacity;
-
 out vec3 v_point;
 out vec3 v_unit_normal;
 out vec2 v_im_coords;
 out float v_opacity;
 
-uniform float is_sphere;
-uniform vec3 center;
-
 #INSERT textured_surface_uniforms.glsl
 #INSERT emit_gl_Position.glsl
-#INSERT get_unit_normal.glsl
-
-const float EPSILON = 1e-10;
+#INSERT read_data.glsl
+#INSERT surface_mesh.glsl
 
 void main(){
+    vec3 point;
+    vec3 unit_normal;
+    int index;
+    if (!read_surface_vertex(point, unit_normal, index)){
+        gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+        return;
+    }
     v_point = point;
-    v_unit_normal = normalize(d_normal_point - point);;
-    v_im_coords = im_coords;
-    v_opacity = opacity;
+    v_unit_normal = unit_normal;
+    v_im_coords = read_vec2(index, DATA_OFFSET_im_coords);
+    v_opacity = read_float(index, DATA_OFFSET_opacity);
     emit_gl_Position(point);
 }
