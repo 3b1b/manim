@@ -163,6 +163,49 @@ class Surface(Mobject):
             u_res
         )
 
+    def has_grid(self) -> bool:
+        """
+        Whether the points held really are a grid of the resolution recorded. An imported
+        mesh is not, nor is a surface whose points have been resized by something which
+        knows nothing of the grid.
+        """
+        nu, nv = self.resolution
+        return nu > 1 and nv > 1 and len(self.data) == nu * nv
+
+    def resample(self, resolution: Tuple[int, int]) -> Self:
+        """
+        Samples the surface over a grid of a different shape, interpolating along each
+        direction between the points it holds, so that its shape survives the change.
+        """
+        nu, nv = self.resolution
+        new_nu, new_nv = resolution
+        data = np.zeros(new_nu * new_nv, dtype=self.data.dtype)
+        for key in self.data.keys():
+            grid = self.data[key].reshape((nu, nv, -1))
+            grid = resize_with_interpolation(grid, new_nu)
+            grid = resize_with_interpolation(grid.transpose(1, 0, 2), new_nv)
+            data[key] = grid.transpose(1, 0, 2).reshape((new_nu * new_nv, -1))
+        self.set_resolution(resolution)
+        self.set_data(data)
+        return self
+
+    def align_points(self, mobject: Mobject) -> Self:
+        """
+        Two surfaces are brought to a common number of points by sampling each over the
+        finer of their two grids. Padding out whichever holds fewer, as mobjects are
+        aligned in general, would leave its grid stretched out of shape, with rows of
+        points repeated and a mesh of slivers between them.
+        """
+        both = (self, mobject)
+        if not all(isinstance(mob, Surface) and mob.has_grid() for mob in both):
+            return super().align_points(mobject)
+        if self.resolution == mobject.resolution:
+            return super().align_points(mobject)
+        resolution = tuple(map(max, zip(*(mob.resolution for mob in both))))
+        for mob in both:
+            mob.resample(resolution)
+        return self
+
     def get_unit_normals(self) -> Vect3Array:
         """
         Which way the surface faces at each of its points, from the directions it runs
