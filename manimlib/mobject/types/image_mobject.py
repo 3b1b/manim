@@ -40,21 +40,21 @@ class ImageMobject(Mobject):
 
     def init_data(self) -> None:
         super().init_data(length=6)
-        self.data["point"][:] = [UL, DL, UR, DR, UR, DL]
-        self.data["im_coords"][:] = [(0, 0), (0, 1), (1, 0), (1, 1), (1, 0), (0, 1)]
-        self.data["opacity"][:] = self.opacity
+        self.data["point"] = [UL, DL, UR, DR, UR, DL]
+        self.data["im_coords"] = [(0, 0), (0, 1), (1, 0), (1, 1), (1, 0), (0, 1)]
+        self.data["opacity"] = self.opacity
 
     def init_points(self) -> None:
         size = self.image.size
         self.set_width(2 * size[0] / size[1], stretch=True)
         self.set_height(self.height)
 
-    @Mobject.affects_data
     def set_opacity(self, opacity: float, recurse: bool = True):
         self.data["opacity"][:, 0] = resize_with_interpolation(
             np.array(listify(opacity)),
             self.get_num_points()
         )
+        self.data.changed = True
         return self
 
     def set_color(self, color, opacity=None, recurse=None):

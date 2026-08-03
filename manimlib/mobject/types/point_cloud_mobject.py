@@ -44,6 +44,7 @@ class PMobject(Mobject):
             )
         if rgbas is not None:
             self.data["rgba"][-len(rgbas):] = rgbas
+            self.data.changed = True
         return self
 
     def add_point(self, point: Vect3, rgba=None, color=None, opacity=None) -> Self:
@@ -51,28 +52,24 @@ class PMobject(Mobject):
         self.add_points([point], rgbas, color, opacity)
         return self
 
-    @Mobject.affects_data
     def set_color_by_gradient(self, *colors: ManimColor) -> Self:
-        self.data["rgba"][:] = np.array(list(map(
+        self.data["rgba"] = np.array(list(map(
             color_to_rgba,
             color_gradient(colors, self.get_num_points())
         )))
         return self
 
-    @Mobject.affects_data
     def match_colors(self, pmobject: PMobject) -> Self:
-        self.data["rgba"][:] = resize_with_interpolation(
+        self.data["rgba"] = resize_with_interpolation(
             pmobject.data["rgba"], self.get_num_points()
         )
         return self
 
-    @Mobject.affects_data
     def filter_out(self, condition: Callable[[np.ndarray], bool]) -> Self:
         for mob in self.family_members_with_points():
-            mob.data = mob.data[~np.apply_along_axis(condition, 1, mob.get_points())]
+            mob.set_data(mob.data[~np.apply_along_axis(condition, 1, mob.get_points())])
         return self
 
-    @Mobject.affects_data
     def sort_points(self, function: Callable[[Vect3], None] = lambda p: p[0]) -> Self:
         """
         function is any map from R^3 to R
@@ -84,22 +81,20 @@ class PMobject(Mobject):
             mob.data[:] = mob.data[indices]
         return self
 
-    @Mobject.affects_data
     def ingest_submobjects(self) -> Self:
-        self.data = np.vstack([
-            sm.data for sm in self.get_family()
-        ])
+        self.set_data(np.hstack([
+            sm.data.array for sm in self.get_family()
+        ]))
         return self
 
     def point_from_proportion(self, alpha: float) -> np.ndarray:
         index = alpha * (self.get_num_points() - 1)
         return self.get_points()[int(index)]
 
-    @Mobject.affects_data
     def pointwise_become_partial(self, pmobject: PMobject, a: float, b: float) -> Self:
         lower_index = int(a * pmobject.get_num_points())
         upper_index = int(b * pmobject.get_num_points())
-        self.data = pmobject.data[lower_index:upper_index].copy()
+        self.set_data(pmobject.data[lower_index:upper_index])
         return self
 
 

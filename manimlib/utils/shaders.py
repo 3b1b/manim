@@ -10,7 +10,7 @@ from PIL import Image
 import numpy as np
 
 from manimlib.utils.directories import get_shader_dir
-from manimlib.utils.tracked_array import TrackedArray
+from manimlib.utils.structured_array import StructuredArray
 from manimlib.utils.file_ops import find_file
 
 from typing import TYPE_CHECKING
@@ -193,7 +193,7 @@ def uniform_block_code(dtype: np.dtype) -> str:
     return "\n".join(lines)
 
 
-class Uniforms(TrackedArray):
+class Uniforms(StructuredArray):
     """
     A mobject's uniforms: one value each for the whole of it, laid out to match the
     block its shaders declare. Reading one gives the value itself, rather than the

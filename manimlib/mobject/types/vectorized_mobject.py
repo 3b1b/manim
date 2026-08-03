@@ -254,13 +254,15 @@ class VMobject(Mobject):
 
         if width is not None:
             for mob in self.get_family(recurse):
-                data = mob.data if mob.get_num_points() > 0 else mob._data_defaults
+                data = mob.data.rows_or_defaults
                 if isinstance(width, (float, int, np.floating)):
                     data['stroke_width'][:, 0] = width
                 else:
                     data['stroke_width'][:, 0] = resize_with_interpolation(
                         np.array(width), len(data)
                     ).flatten()
+                # That column is written into rather than replaced
+                mob.data.changed = True
 
         if behind is not None:
             for mob in self.get_family(recurse):
@@ -281,7 +283,6 @@ class VMobject(Mobject):
         self.set_stroke(color, width, behind=True)
         return self
 
-    @Mobject.affects_family_data
     def set_style(
         self,
         fill_color: ManimColor | Iterable[ManimColor] | None = None,
@@ -314,7 +315,7 @@ class VMobject(Mobject):
                 mob.set_fill(border_width=fill_border_width, recurse=False)
 
             if stroke_rgba is not None:
-                mob.data['stroke_rgba'][:] = resize_with_interpolation(stroke_rgba, len(mob.data['stroke_rgba']))
+                mob.data['stroke_rgba'] = resize_with_interpolation(stroke_rgba, len(mob.data))
                 mob.set_stroke(
                     width=stroke_width,
                     behind=stroke_behind,
@@ -336,7 +337,7 @@ class VMobject(Mobject):
         return self
 
     def get_style(self) -> dict[str, Any]:
-        data = self.data if self.get_num_points() > 0 else self._data_defaults
+        data = self.data.rows_or_defaults
         return {
             "fill_rgba": self.uniforms["fill_rgba"].copy(),
             "fill_rgba_end": self.uniforms["fill_rgba_end"].copy(),
@@ -394,7 +395,6 @@ class VMobject(Mobject):
         )
         return self
 
-    @Mobject.affects_data
     def replace_shader_code(
         self,
         old: str,
@@ -451,15 +451,15 @@ class VMobject(Mobject):
         return float(self.uniforms["fill_rgba"][3])
 
     def get_stroke_color(self) -> str:
-        data = self.data if self.has_points() else self._data_defaults
+        data = self.data.rows_or_defaults
         return rgb_to_hex(data["stroke_rgba"][0, :3])
 
     def get_stroke_width(self) -> float:
-        data = self.data if self.has_points() else self._data_defaults
+        data = self.data.rows_or_defaults
         return data["stroke_width"][0, 0]
 
     def get_stroke_opacity(self) -> float:
-        data = self.data if self.has_points() else self._data_defaults
+        data = self.data.rows_or_defaults
         return data["stroke_rgba"][0, 3]
 
     def get_color(self) -> str:
@@ -471,7 +471,7 @@ class VMobject(Mobject):
         return self.uniforms["anti_alias_width"]
 
     def has_stroke(self) -> bool:
-        data = self.data if len(self.data) > 0 else self._data_defaults
+        data = self.data.rows_or_defaults
         return any(data['stroke_width']) and any(data['stroke_rgba'][:, 3])
 
     def has_fill_gradient(self) -> bool:
@@ -839,7 +839,7 @@ class VMobject(Mobject):
     def append_vectorized_mobject(self, vmobject: VMobject) -> Self:
         self.add_subpath(vmobject.get_points())
         n = vmobject.get_num_points()
-        self.data[-n:] = vmobject.data
+        self.data[-n:] = vmobject.data.array
         return self
 
     #
@@ -882,6 +882,7 @@ class VMobject(Mobject):
             # Reaching one past the end takes in the null curve's handle sitting
             # there, which belongs to no subpath, so that every point gets written
             self.data["subpath_range"][start:end + 2] = (start, end)
+        self.data.changed = True
         return self
 
     def get_subpath_range(self, index: int = -1) -> Tuple[int, int]:
@@ -1223,6 +1224,7 @@ class VMobject(Mobject):
             # marks an end once the order of the points is flipped
             inner_ends = mob.get_subpath_end_indices()[:-1]
             mob.data["point"][inner_ends + 1] = mob.data["point"][inner_ends + 2]
+            mob.data.changed = True
             mob.uniforms["unit_normal"] = -mob.uniforms["unit_normal"]
         super().reverse_points()
         for mob in self.get_family(recurse):
@@ -1276,7 +1278,7 @@ class VMobject(Mobject):
     def init_shader_wrapper(self, ctx: Context):
         self.shader_wrapper = VShaderWrapper(
             ctx=ctx,
-            vert_data=self.data,
+            vert_data=self.data.array,
             mobject_uniforms=self.uniforms,
             code_replacements=self.shader_code_replacements,
             program_type=self.shader_program_type,

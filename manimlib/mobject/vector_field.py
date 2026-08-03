@@ -247,7 +247,7 @@ class VectorField(VMobject):
 
     def set_stroke_width(self, width: float):
         if self.get_num_points() > 0:
-            self.get_stroke_widths()[:] = width * self.base_stroke_width_array
+            self.data['stroke_width'] = width * self.base_stroke_width_array[:, np.newaxis]
             self.stroke_width = width
         return self
 
@@ -308,7 +308,8 @@ class VectorField(VMobject):
                 np.repeat(output_norms, 8)[:-1]
             )
 
-        self.note_changed_data()
+        # The arrays above are written into rather than replaced
+        self.data.changed = True
         return self
 
 

@@ -104,21 +104,19 @@ class DotCloud(PMobject):
         self.center()
         return self
 
-    @Mobject.affects_data
     def set_radii(self, radii: npt.ArrayLike) -> Self:
         n_points = self.get_num_points()
         radii = np.array(radii).reshape((len(radii), 1))
-        self.data["radius"][:] = resize_with_interpolation(radii, n_points)
+        self.data["radius"] = resize_with_interpolation(radii, n_points)
         self.refresh_bounding_box()
         return self
 
     def get_radii(self) -> np.ndarray:
         return self.data["radius"]
 
-    @Mobject.affects_data
     def set_radius(self, radius: float) -> Self:
-        data = self.data if self.get_num_points() > 0 else self._data_defaults
-        data["radius"][:] = radius
+        self.data.rows_or_defaults["radius"] = radius
+        self.data.changed = True
         self.refresh_bounding_box()
         return self
 
