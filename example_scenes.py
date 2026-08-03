@@ -578,7 +578,7 @@ class SurfaceExample(ThreeDScene):
 
         torus1 = Torus(r1=1, r2=1)
         torus2 = Torus(r1=3, r2=1)
-        sphere = Sphere(radius=3, resolution=torus1.resolution)
+        sphere = Sphere(radius=3, resolution=torus1.get_resolution())
         # You can texture a surface with up to two images, which will
         # be interpreted as the side towards the light, and away from
         # the light.  These can be either urls, or paths to a local file
