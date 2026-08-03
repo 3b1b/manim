@@ -266,9 +266,7 @@ class VMobject(Mobject):
 
         if behind is not None:
             for mob in self.get_family(recurse):
-                if mob.stroke_behind != behind:
-                    mob.stroke_behind = behind
-                    mob.refresh_shader_wrapper()
+                mob.stroke_behind = behind
 
         if flat is not None:
             self.set_flat_stroke(flat)
@@ -1286,12 +1284,10 @@ class VMobject(Mobject):
             depth_test=self.depth_test
         )
 
-    def refresh_shader_wrapper(self):
-        for submob in self.get_family():
-            if submob.shader_wrapper is not None:
-                submob.shader_wrapper.stroke_behind = submob.stroke_behind
-        super().refresh_shader_wrapper()
-        return self
+    def get_shader_wrapper(self, ctx: Context) -> VShaderWrapper:
+        wrapper = super().get_shader_wrapper(ctx)
+        wrapper.stroke_behind = self.stroke_behind
+        return wrapper
 
 
 class VGroup(Group, VMobject, Generic[SubVmobjectType]):

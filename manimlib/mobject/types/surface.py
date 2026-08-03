@@ -221,7 +221,6 @@ class Surface(Mobject):
         for mob in self.get_family():
             if isinstance(mob, Surface):
                 mob.sort_to_camera = sort
-        self.refresh_shader_wrapper()
         return self
 
     def always_sort_to_camera(self, camera=None) -> Self:
@@ -229,12 +228,10 @@ class Surface(Mobject):
         # updater to do the sorting, see set_sort_to_camera
         return self.set_sort_to_camera()
 
-    def refresh_shader_wrapper(self):
-        for submob in self.get_family():
-            if isinstance(submob, Surface) and submob.shader_wrapper is not None:
-                submob.shader_wrapper.sort_to_camera = submob.sort_to_camera
-        super().refresh_shader_wrapper()
-        return self
+    def get_shader_wrapper(self, ctx: Context) -> SurfaceShaderWrapper:
+        wrapper = super().get_shader_wrapper(ctx)
+        wrapper.sort_to_camera = self.sort_to_camera
+        return wrapper
 
     def init_shader_wrapper(self, ctx: Context):
         self.shader_wrapper = SurfaceShaderWrapper(

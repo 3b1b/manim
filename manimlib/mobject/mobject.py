@@ -1872,27 +1872,15 @@ class Mobject(object):
 
     # Operations touching shader uniforms
 
-    @staticmethod
-    def affects_shader_wrapper(func: Callable[..., T]) -> Callable[..., T]:
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            result = func(self, *args, **kwargs)
-            self.refresh_shader_wrapper()
-            return result
-        return wrapper
-
-    @affects_shader_wrapper
     def set_uniform(self, recurse: bool = True, **new_uniforms) -> Self:
         for mob in self.get_family(recurse):
             mob.uniforms.update(new_uniforms)
         return self
 
-    @affects_shader_wrapper
     def fix_in_frame(self, recurse: bool = True) -> Self:
         self.set_uniform(recurse, is_fixed_in_frame=1.0)
         return self
 
-    @affects_shader_wrapper
     def unfix_from_frame(self, recurse: bool = True) -> Self:
         self.set_uniform(recurse, is_fixed_in_frame=0.0)
         return self
@@ -1900,13 +1888,11 @@ class Mobject(object):
     def is_fixed_in_frame(self) -> bool:
         return bool(self.uniforms["is_fixed_in_frame"])
 
-    @affects_shader_wrapper
     def apply_depth_test(self, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):
             mob.depth_test = True
         return self
 
-    @affects_shader_wrapper
     def deactivate_depth_test(self, recurse: bool = True) -> Self:
         for mob in self.get_family(recurse):
             mob.depth_test = False
@@ -2006,18 +1992,13 @@ class Mobject(object):
             verts_per_record=self.verts_per_record,
         )
 
-    def refresh_shader_wrapper(self):
-        """
-        Passes on whatever a mobject holds that its shader wrapper needs a copy of.
-        """
-        for submob in self.get_family():
-            if submob.shader_wrapper is not None:
-                submob.shader_wrapper.depth_test = submob.depth_test
-        return self
-
     def get_shader_wrapper(self, ctx: Context) -> ShaderWrapper:
         if self.shader_wrapper is None:
             self.init_shader_wrapper(ctx)
+        # Whatever the wrapper needs a copy of is told to it here, where it is asked for
+        # once a frame, rather than by everything which might change one of them having
+        # to remember to pass it along
+        self.shader_wrapper.depth_test = self.depth_test
         return self.shader_wrapper
 
     def get_uniforms(self):
