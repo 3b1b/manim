@@ -55,7 +55,7 @@ class ImageMobject(Mobject):
             np.array(listify(opacity)),
             self.get_num_points()
         )
-        self.data.changed = True
+        self.data.note_change()
         return self
 
     def set_color(self, color, opacity=None, recurse=None):

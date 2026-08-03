@@ -427,7 +427,7 @@ class TexturedSurface(Surface):
     def set_opacity(self, opacity: float | Iterable[float], recurse=True) -> Self:
         op_arr = np.array(listify(opacity))
         self.data["opacity"][:, 0] = resize_with_interpolation(op_arr, len(self.data))
-        self.data.changed = True
+        self.data.note_change()
         return self
 
     def set_color(
@@ -453,7 +453,7 @@ class TexturedSurface(Surface):
         im_coords = self.data["im_coords"]
         im_coords[:] = tsmobject.data["im_coords"]
         # Written into rather than replaced, so say so
-        self.data.changed = True
+        self.data.note_change()
         if a <= 0 and b >= 1:
             return self
         nu, nv = tsmobject.get_resolution()

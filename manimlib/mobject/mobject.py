@@ -235,7 +235,7 @@ class Mobject(object):
         self.data[n:] = self.data[n - 1]
         # Then read in new points, written into rather than replaced, so say so
         self.data["point"][n:] = new_points
-        self.data.changed = True
+        self.data.note_change()
         self.refresh_bounding_box()
         return self
 
@@ -1308,7 +1308,7 @@ class Mobject(object):
     ) -> Self:
         for mob in self.get_family(recurse):
             mob.data.rows_or_defaults[name] = rgba_array
-            mob.data.changed = True
+            mob.data.note_change()
         return self
 
     def set_color_by_rgba_func(
@@ -1357,7 +1357,7 @@ class Mobject(object):
                     opacity = resize_with_interpolation(np.array(opacity), len(data))
                 data[name][:, 3] = opacity
             # Those columns are written into rather than replaced
-            mob.data.changed = True
+            mob.data.note_change()
         return self
 
     def set_color(

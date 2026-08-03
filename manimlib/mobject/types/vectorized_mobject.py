@@ -262,7 +262,7 @@ class VMobject(Mobject):
                         np.array(width), len(data)
                     ).flatten()
                 # That column is written into rather than replaced
-                mob.data.changed = True
+                mob.data.note_change()
 
         if behind is not None:
             for mob in self.get_family(recurse):
@@ -880,7 +880,7 @@ class VMobject(Mobject):
             # Reaching one past the end takes in the null curve's handle sitting
             # there, which belongs to no subpath, so that every point gets written
             self.data["subpath_range"][start:end + 2] = (start, end)
-        self.data.changed = True
+        self.data.note_change()
         return self
 
     def get_subpath_range(self, index: int = -1) -> Tuple[int, int]:
@@ -1039,7 +1039,10 @@ class VMobject(Mobject):
         else:
             p = self.get_points()
             normal = get_unit_normal(p[1] - p[0], p[2] - p[1])
-        self.uniforms["unit_normal"] = normal
+        # Rounded, adding zero to leave no negative one of it, so that mobjects facing
+        # the same way say so exactly rather than to within whatever noise their own
+        # points worked out to. Six digits is finer than any shading can show.
+        self.uniforms["unit_normal"] = np.round(normal, 6) + 0.0
         self.needs_new_unit_normal = False
         return normal
 
@@ -1222,7 +1225,7 @@ class VMobject(Mobject):
             # marks an end once the order of the points is flipped
             inner_ends = mob.get_subpath_end_indices()[:-1]
             mob.data["point"][inner_ends + 1] = mob.data["point"][inner_ends + 2]
-            mob.data.changed = True
+            mob.data.note_change()
             mob.uniforms["unit_normal"] = -mob.uniforms["unit_normal"]
         super().reverse_points()
         for mob in self.get_family(recurse):

@@ -23,21 +23,21 @@ class StructuredArray(object):
     Either way, what gets sent is a copy of the whole array, which is why the layout has
     to mirror what the shader declares, see Mobject.data_dtype and uniform_dtype.
 
-    Three things come with holding it here rather than as a bare array. Whether anything
-    has changed since it was last sent is noted, so that nothing needs sending twice, and
-    nothing needs to say that it changed. Emptying the array remembers what was in it, so
-    that a mobject stripped of its points and given new ones keeps the style it had, see
-    resize. And fields are read and written by name, as with a dict, while rows are read
-    and written by index, as with the array itself.
+    Three things come with holding it here rather than as a bare array. Every write to
+    it is counted, so that whatever has sent it somewhere can tell whether what it sent
+    is still what the array holds, and nothing needs to say that it changed. Emptying the
+    array remembers what was in it, so that a mobject stripped of its points and given
+    new ones keeps the style it had, see resize. And fields are read and written by name,
+    as with a dict, while rows are read and written by index, as with the array itself.
 
-    Either kind of write is noted. Reading, though, hands back a view onto the array, so
-    writing through one of those, as in
+    Either kind of write is counted. Reading, though, hands back a view onto the array,
+    so writing through one of those, as in
 
         mob.data["point"][::2] = new_points
 
-    goes unnoticed, and whoever does it has to say so with
+    goes uncounted, and whoever does it has to say so with
 
-        mob.data.changed = True
+        mob.data.note_change()
 
     Assigning the whole field instead, mob.data["point"] = new_points, needs no such
     thing, and is the same operation as far as the array is concerned: a field cannot
@@ -48,15 +48,20 @@ class StructuredArray(object):
         self.array: np.ndarray = np.zeros(length, dtype=dtype)
         # What to fill in with when growing from nothing, see resize
         self.defaults: np.ndarray = np.ones(1, dtype=dtype)
-        # Nothing has been sent yet, so it all counts as having changed
-        self.changed: bool = True
+        # Counted up by every write, and started above zero so that anything watching
+        # the array, which starts from zero, has something to send in the first place.
+        # A count rather than a yes or no, since more than one thing may be watching,
+        # e.g. a mobject drawn both on its own and as part of a merged family, and each
+        # needs to know what it has missed rather than whether anyone has missed
+        # anything, see ShaderWrapper.write_vertex_buffer and MergedRun.gather.
+        self.version: int = 1
 
     def __getitem__(self, key: str | int | slice | np.ndarray) -> np.ndarray:
         return self.array[key]
 
     def __setitem__(self, key: str | int | slice | np.ndarray, value: Any) -> None:
         self.array[key] = value
-        self.changed = True
+        self.version += 1
 
     def __len__(self) -> int:
         return len(self.array)
@@ -70,6 +75,13 @@ class StructuredArray(object):
     def __repr__(self) -> str:
         values = ", ".join(f"{key}={self[key]}" for key in self)
         return f"{type(self).__name__}({values})"
+
+    def note_change(self) -> None:
+        """
+        Says that the array was written to in a way it had no chance to count, as any
+        write through a view onto it is.
+        """
+        self.version += 1
 
     @property
     def dtype(self) -> np.dtype:
@@ -108,8 +120,8 @@ class StructuredArray(object):
         """
         The rows held, or the row of defaults standing in for them while there are
         none, which is where a style read or written in the meantime belongs. Being the
-        array itself, writing into what this hands back goes unnoticed, so say so with
-        changed = True.
+        array itself, writing into what this hands back goes uncounted, so say so with
+        note_change.
         """
         return self.array if len(self.array) else self.defaults
 
@@ -129,7 +141,7 @@ class StructuredArray(object):
         elif len(self.array) == 0:
             self.array = self.defaults.copy()
         self.array = resize_func(self.array, length)
-        self.changed = True
+        self.version += 1
 
     def match(self, other: StructuredArray) -> None:
         """
@@ -138,7 +150,7 @@ class StructuredArray(object):
         """
         if self.dtype == other.dtype and len(self) == len(other):
             self.array[:] = other.array
-            self.changed = True
+            self.version += 1
         else:
             self.update(other)
 
@@ -146,5 +158,5 @@ class StructuredArray(object):
         result = copy.copy(self)
         result.array = self.array.copy()
         result.defaults = self.defaults.copy()
-        result.changed = True
+        result.version += 1
         return result

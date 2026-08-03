@@ -145,6 +145,10 @@ class ShaderWrapper(object):
         self.vaos = []
         self.data_texture = None
         self.uniform_buffer = None
+        # Which write to each of the mobject's arrays was the last to be sent, see
+        # write_vertex_buffer
+        self.data_version = 0
+        self.uniform_version = 0
 
     def add_texture(self, name: str, texture: moderngl.Texture):
         max_units = self.ctx.info['GL_MAX_TEXTURE_IMAGE_UNITS']
@@ -173,10 +177,11 @@ class ShaderWrapper(object):
 
     def write_vertex_buffer(self):
         """
-        The mobject's data, sent as it sits, when it has changed since it last was. A
-        buffer of the wrong size counts as much as changed values do, an array being
-        replaced rather than written into when it is resized, and no buffer at all means
-        either that nothing has been sent yet or that the shaders were built afresh.
+        The mobject's data, sent as it sits, when the array has been written to since it
+        last was sent. A buffer of the wrong size counts as much as written values do, an
+        array being replaced rather than written into when it is resized, and no buffer at
+        all means either that nothing has been sent yet or that the shaders were built
+        afresh.
         """
         array = self.mobject_data.array
         if len(array) == 0:
@@ -189,11 +194,11 @@ class ShaderWrapper(object):
         if self.vbo is None:
             self.vbo = self.ctx.buffer(array)
             self.generate_vaos()
-        elif self.mobject_data.changed:
+        elif self.mobject_data.version != self.data_version:
             self.vbo.write(array)
         else:
             return
-        self.mobject_data.changed = False
+        self.data_version = self.mobject_data.version
 
     def write_uniform_buffer(self):
         uniforms = self.mobject_uniforms
@@ -202,11 +207,11 @@ class ShaderWrapper(object):
             return
         if self.uniform_buffer is None:
             self.uniform_buffer = self.ctx.buffer(uniforms.array)
-        elif uniforms.changed:
+        elif uniforms.version != self.uniform_version:
             self.uniform_buffer.write(uniforms.array)
         else:
             return
-        uniforms.changed = False
+        self.uniform_version = uniforms.version
 
     def generate_vaos(self):
         if not self.programs:
@@ -421,13 +426,10 @@ class VShaderWrapper(ShaderWrapper):
         self.init_uniform_block()
 
     def init_vertex_objects(self):
+        super().init_vertex_objects()
         self.has_fill = False
-        self.vbo = None
         self.stroke_vao = None
         self.fill_vao = None
-        self.vaos = []
-        self.data_texture = None
-        self.uniform_buffer = None
 
     def generate_vaos(self):
         self.init_data_texture()
@@ -447,7 +449,7 @@ class VShaderWrapper(ShaderWrapper):
         # than looked at per frame. Many a mobject is stroke alone, and would otherwise
         # pay for all three of the fill passes, and the state they set, for nothing.
         uniforms = self.mobject_uniforms
-        if uniforms.changed:
+        if uniforms.version != self.uniform_version:
             self.has_fill = bool(uniforms["fill_rgba"][3] or uniforms["fill_rgba_end"][3])
         super().write_uniform_buffer()
 
@@ -551,5 +553,3 @@ class VShaderWrapper(ShaderWrapper):
         else:
             self.render_fill()
             self.render_stroke()
-
-

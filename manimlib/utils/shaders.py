@@ -260,7 +260,7 @@ class Uniforms(StructuredArray):
         if np.array_equal(floats1, floats2) and np.array_equal(self.floats, floats1):
             return
         self.floats[:] = (1 - alpha) * floats1 + alpha * floats2
-        self.changed = True
+        self.note_change()
 
 
 @lru_cache()
