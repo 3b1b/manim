@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-import moderngl
 from PIL import Image
 
 from manimlib.constants import DL, DR, UL, UR
@@ -20,12 +19,14 @@ if TYPE_CHECKING:
 
 class ImageMobject(Mobject):
     shader_folder: str = "image"
-    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+    data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
-    ]
-    render_primitive: int = moderngl.TRIANGLES
+    ])
+    # The four corners are expanded into the two triangles covering them by the vertex
+    # shader, six of the vertices drawn doing that and the rest collapsing
+    verts_per_record: int = 6
 
     def __init__(
         self,
@@ -39,9 +40,9 @@ class ImageMobject(Mobject):
         super().__init__(texture_paths={"Texture": self.image_path}, **kwargs)
 
     def init_data(self) -> None:
-        super().init_data(length=6)
-        self.data["point"] = [UL, DL, UR, DR, UR, DL]
-        self.data["im_coords"] = [(0, 0), (0, 1), (1, 0), (1, 1), (1, 0), (0, 1)]
+        super().init_data(length=4)
+        self.data["point"] = [UL, DL, UR, DR]
+        self.data["im_coords"] = [(0, 0), (0, 1), (1, 0), (1, 1)]
         self.data["opacity"] = self.opacity
 
     def init_points(self) -> None:

@@ -315,7 +315,7 @@ def check_uniform_block(program: moderngl.Program, dtype: np.dtype) -> bool:
 @lru_cache()
 def get_shader_code(
     filename: str,
-    data_layout: tuple[int, tuple[tuple[str, int], ...]] | None,
+    data_layout: tuple[int, tuple[tuple[str, int], ...]],
 ) -> str | None:
     """
     Reads a shader from file, filling in where the fields of a vertex record sit for
@@ -328,13 +328,11 @@ def get_shader_code(
     return code.replace("// DATA_LAYOUT", get_data_layout_code(data_layout))
 
 
-def get_data_layout_code(data_layout: tuple[int, tuple[tuple[str, int], ...]] | None) -> str:
+def get_data_layout_code(data_layout: tuple[int, tuple[tuple[str, int], ...]]) -> str:
     """
-    Constants describing where each field of a vertex record sits within the
-    buffer, in units of floats, for shaders which index into it themselves.
+    Constants describing where each field of a vertex record sits within the buffer, in
+    units of floats, every shader indexing into it itself.
     """
-    if data_layout is None:
-        return ""
     stride, fields = data_layout
     return "\n".join([
         f"const int DATA_STRIDE = {stride};",

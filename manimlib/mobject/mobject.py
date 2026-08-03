@@ -9,7 +9,6 @@ import pickle
 import random
 import sys
 
-import moderngl
 import numbers
 import numpy as np
 
@@ -71,7 +70,6 @@ class Mobject(object):
     """
     dim: int = 3
     shader_folder: str = ""
-    render_primitive: int = moderngl.TRIANGLE_STRIP
     # If positive, the shader is handed no vertex attributes, and instead reads
     # each record out of the vertex buffer itself, turning it into this many
     # vertices. This is how shapes are expanded without a geometry shader.
@@ -702,7 +700,6 @@ class Mobject(object):
             sm1.shader_folder = sm2.shader_folder
             sm1.texture_paths = sm2.texture_paths
             sm1.depth_test = sm2.depth_test
-            sm1.render_primitive = sm2.render_primitive
             sm1._needs_new_bounding_box = sm2._needs_new_bounding_box
         # Make sure named family members carry over
         for attr, value in list(mobject.__dict__.items()):
@@ -1987,7 +1984,6 @@ class Mobject(object):
             mobject_uniforms=self.uniforms,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
-            render_primitive=self.render_primitive,
             code_replacements=self.shader_code_replacements,
             verts_per_record=self.verts_per_record,
         )

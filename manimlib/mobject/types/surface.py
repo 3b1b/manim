@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import moderngl
 import numpy as np
 import trimesh
 import pywavefront
@@ -41,7 +40,6 @@ def norms_along_axis(vectors: Vect3Array) -> np.ndarray:
 
 
 class Surface(Mobject):
-    render_primitive: int = moderngl.TRIANGLES
     shader_folder: str = "surface"
     # Points are sent as the grid they sample, and the vertex shader works out the mesh
     # over it, expanding each of them into one square's worth of vertices. See
@@ -242,7 +240,6 @@ class Surface(Mobject):
             shader_folder=self.shader_folder,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
-            render_primitive=self.render_primitive,
             code_replacements=self.shader_code_replacements,
             verts_per_record=self.verts_per_record,
         )

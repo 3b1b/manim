@@ -26,9 +26,11 @@ UNIFORM_BLOCK_BINDING = 0
 
 
 class ShaderWrapper(object):
-    # True for shaders handed no vertex attributes, which read each record out of
-    # the vertex buffer themselves and expand it into several vertices
-    pulls_vertices: bool = False
+    """
+    Every shader is handed no vertex attributes at all. Each reads the records of the
+    vertex buffer itself, by way of a texture pointed at it, and expands each of them
+    into verts_per_record vertices, all of them triangles. See inserts/read_data.glsl.
+    """
 
     def __init__(
         self,
@@ -38,19 +40,14 @@ class ShaderWrapper(object):
         shader_folder: Optional[str] = None,
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
-        render_primitive: int = moderngl.TRIANGLE_STRIP,
         code_replacements: dict[str, str] = dict(),
         verts_per_record: int = 0,
     ):
         self.ctx = ctx
         self.vert_data = vert_data
-        self.vert_attributes = vert_data.dtype.names
         self.shader_folder = shader_folder
         self.depth_test = depth_test
         self.verts_per_record = verts_per_record
-        if verts_per_record:
-            self.pulls_vertices = True
-        self.render_primitive = moderngl.TRIANGLES if self.pulls_vertices else render_primitive
         self.texture_paths = texture_paths or dict()
 
         self.mobject_uniforms = mobject_uniforms
@@ -89,24 +86,16 @@ class ShaderWrapper(object):
         """
         dtype = self.vert_data.dtype
         self.data_layout = (
-            (
-                dtype.itemsize // 4,
-                tuple((name, dtype.fields[name][1] // 4) for name in dtype.names),
-            )
-            if self.pulls_vertices else None
+            dtype.itemsize // 4,
+            tuple((name, dtype.fields[name][1] // 4) for name in dtype.names),
         )
 
     def init_program(self):
         if not self.shader_folder:
             self.program = None
-            self.vert_format = None
             self.programs = []
         else:
             self.program = get_shader_program(self.ctx, **self.program_code)
-            if self.pulls_vertices:
-                self.vert_format = None
-            else:
-                self.vert_format = moderngl.detect_format(self.program, self.vert_attributes)
             self.programs = [self.program]
         self.init_uniform_block()
 
@@ -129,9 +118,8 @@ class ShaderWrapper(object):
         self.textures = []
         for name, path in self.texture_paths.items():
             self.add_texture(name, image_path_to_texture(path, self.ctx))
-        if self.pulls_vertices:
-            # The vertex buffer, exposed to the shader as a texture it can index
-            self.texture_names_to_ids["Data"] = len(self.textures)
+        # The vertex buffer, exposed to the shader as a texture it can index
+        self.texture_names_to_ids["Data"] = len(self.textures)
 
     def init_vertex_objects(self):
         self.vbo = None
@@ -182,22 +170,12 @@ class ShaderWrapper(object):
             self.vbo.write(data)
 
     def generate_vaos(self):
-        if self.pulls_vertices:
-            # Nothing is fed in as a vertex attribute. The shader reads records
-            # out of the buffer directly, expanding each into several vertices.
-            self.init_data_texture()
-            self.vaos = [
-                self.ctx.vertex_array(program=program, content=[], mode=self.render_primitive)
-                for program in self.programs
-            ]
+        if not self.programs:
+            # Nothing to draw with, e.g. a mobject holding points but naming no shader
             return
-        # Vertex array object
+        self.init_data_texture()
         self.vaos = [
-            self.ctx.vertex_array(
-                program=program,
-                content=[(self.vbo, self.vert_format, *self.vert_attributes)],
-                mode=self.render_primitive,
-            )
+            self.ctx.vertex_array(program=program, content=[], mode=moderngl.TRIANGLES)
             for program in self.programs
         ]
 
@@ -224,7 +202,7 @@ class ShaderWrapper(object):
             self.uniform_buffer.bind_to_uniform_block(UNIFORM_BLOCK_BINDING)
 
     def render(self):
-        n_verts = self.verts_per_record * len(self.vert_data) if self.verts_per_record else -1
+        n_verts = self.verts_per_record * len(self.vert_data)
         for vao in self.vaos:
             vao.render(vertices=n_verts)
 
@@ -348,7 +326,7 @@ class SurfaceShaderWrapper(ShaderWrapper):
                 content=[],
                 index_buffer=self.order_ibo,
                 index_element_size=4,
-                mode=self.render_primitive,
+                mode=moderngl.TRIANGLES,
             )
         else:
             self.order_ibo.write(data)
@@ -367,7 +345,6 @@ class VShaderWrapper(ShaderWrapper):
     The fill shader turns each curve into two triangles, and the stroke shader
     into one quad per polyline segment, up to MAX_STEPS of them.
     """
-    pulls_vertices = True
     fill_verts_per_curve = 6
     stroke_verts_per_curve = 6 * (32 - 1)  # MAX_STEPS in stroke/vert.glsl
 
@@ -379,7 +356,6 @@ class VShaderWrapper(ShaderWrapper):
         shader_folder: Optional[str] = None,
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
-        render_primitive: int = moderngl.TRIANGLES,
         code_replacements: dict[str, str] = dict(),
         program_type: str | None = None,
         stroke_behind: bool = False,
@@ -392,7 +368,6 @@ class VShaderWrapper(ShaderWrapper):
             mobject_uniforms=mobject_uniforms,
             texture_paths=texture_paths,
             depth_test=depth_test,
-            render_primitive=render_primitive,
         )
         for old, new in code_replacements.items():
             self.replace_code_program(old, new, program_type)
@@ -437,10 +412,10 @@ class VShaderWrapper(ShaderWrapper):
         # buffer themselves. The border around a fill comes from the stroke
         # program too, differing only by the is_fill_border uniform.
         self.stroke_vao = self.ctx.vertex_array(
-            program=self.stroke_program, content=[], mode=self.render_primitive
+            program=self.stroke_program, content=[], mode=moderngl.TRIANGLES
         )
         self.fill_vao = self.ctx.vertex_array(
-            program=self.fill_program, content=[], mode=self.render_primitive
+            program=self.fill_program, content=[], mode=moderngl.TRIANGLES
         )
         self.vaos = [self.stroke_vao, self.fill_vao]
 
