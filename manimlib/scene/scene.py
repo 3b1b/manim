@@ -915,8 +915,15 @@ class ThreeDScene(Scene):
 
     def add(self, *mobjects: Mobject, set_depth_test: bool = True, perp_stroke: bool = True):
         for mob in mobjects:
-            if set_depth_test and not mob.is_fixed_in_frame() and self.always_depth_test:
-                mob.apply_depth_test()
+            # Asked of each member of the family in turn, rather than of what holds them.
+            # A group has a say of its own on being fixed in frame, which is nothing to do
+            # with what it holds, and animations wrap what they are given in a fresh one,
+            # so text fixed in frame would otherwise find itself depth tested for the
+            # length of a FadeTransform, and vanish behind whatever it was written over.
+            if set_depth_test and self.always_depth_test:
+                for sm in mob.get_family():
+                    if not sm.is_fixed_in_frame():
+                        sm.apply_depth_test(recurse=False)
             if isinstance(mob, VMobject) and mob.has_stroke() and perp_stroke:
                 mob.set_flat_stroke(False)
         super().add(*mobjects)
