@@ -16,6 +16,7 @@ from manimlib.utils.shaders import image_path_to_texture
 from manimlib.utils.shaders import set_program_sampler
 from manimlib.utils.shaders import set_program_uniform
 from manimlib.utils.shaders import Uniforms
+from manimlib.utils.structured_array import StructuredArray
 
 from typing import TYPE_CHECKING
 
@@ -34,9 +35,9 @@ class ShaderWrapper(object):
     it, and hands over the two arrays it keeps: its data, a record per point, and its
     uniforms, one value for the whole of it. Those sit here as a vertex buffer and a
     uniform buffer, written afresh from the arrays whenever either says it has changed,
-    see read_in and write_uniform_buffer. Values which hold for every mobject at once,
-    where the camera is and the like, are no business of a wrapper's, being set on every
-    program once a frame instead, see set_shared_uniforms.
+    see write_vertex_buffer and write_uniform_buffer. Values which hold for every mobject
+    at once, where the camera is and the like, are no business of a wrapper's, being set
+    on every program once a frame instead, see set_shared_uniforms.
 
     No shader is handed vertex attributes. Each reads the records of the vertex buffer
     itself, through a texture pointed at it, and expands every one into verts_per_record
@@ -53,7 +54,7 @@ class ShaderWrapper(object):
     def __init__(
         self,
         ctx: moderngl.context.Context,
-        vert_data: np.ndarray,
+        mobject_data: StructuredArray,
         mobject_uniforms: Uniforms,
         shader_folder: Optional[str] = None,
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
@@ -62,7 +63,7 @@ class ShaderWrapper(object):
         verts_per_record: int = 0,
     ):
         self.ctx = ctx
-        self.vert_data = vert_data
+        self.mobject_data = mobject_data
         self.shader_folder = shader_folder
         self.depth_test = depth_test
         self.verts_per_record = verts_per_record
@@ -102,7 +103,7 @@ class ShaderWrapper(object):
         is all that the shader source generated for it depends on, and so is also the
         key that source gets cached under.
         """
-        dtype = self.vert_data.dtype
+        dtype = self.mobject_data.dtype
         self.data_layout = (
             dtype.itemsize // 4,
             tuple((name, dtype.fields[name][1] // 4) for name in dtype.names),
@@ -170,22 +171,29 @@ class ShaderWrapper(object):
 
     # Adding data
 
-    def read_in(self, data: np.ndarray):
-        self.vert_data = data
-        if len(data) == 0:
+    def write_vertex_buffer(self):
+        """
+        The mobject's data, sent as it sits, when it has changed since it last was. A
+        buffer of the wrong size counts as much as changed values do, an array being
+        replaced rather than written into when it is resized, and no buffer at all means
+        either that nothing has been sent yet or that the shaders were built afresh.
+        """
+        array = self.mobject_data.array
+        if len(array) == 0:
             if self.vbo is not None:
                 self.vbo.clear()
             return
-
-        # Either create a new buffer, or write over the existing one
-        size = data.itemsize * len(data)
+        size = array.itemsize * len(array)
         if self.vbo is not None and self.vbo.size != size:
             self.release()  # This sets vbo to be None
         if self.vbo is None:
-            self.vbo = self.ctx.buffer(data)
+            self.vbo = self.ctx.buffer(array)
             self.generate_vaos()
+        elif self.mobject_data.changed:
+            self.vbo.write(array)
         else:
-            self.vbo.write(data)
+            return
+        self.mobject_data.changed = False
 
     def generate_vaos(self):
         if not self.programs:
@@ -210,32 +218,29 @@ class ShaderWrapper(object):
 
     # Related to data and rendering
     def pre_render(self):
+        """
+        All that the draw needs in place: the mobject's two arrays written into their
+        buffers, its textures bound with the samplers pointed at them, and the context
+        asked for what this mobject wants of it.
+        """
+        self.write_vertex_buffer()
+        self.write_uniform_buffer()
         self.set_ctx_depth_test(self.depth_test)
         for tid, texture in enumerate(self.textures):
             texture.use(tid)
         if self.data_texture is not None:
             gl.glActiveTexture(gl.GL_TEXTURE0 + self.texture_names_to_ids["Data"])
             gl.glBindTexture(gl.GL_TEXTURE_BUFFER, self.data_texture)
+        for program in self.programs:
+            for name, unit in self.texture_names_to_ids.items():
+                set_program_sampler(program, name, unit)
         if self.uniform_buffer is not None:
             self.uniform_buffer.bind_to_uniform_block(UNIFORM_BLOCK_BINDING)
 
     def render(self):
-        n_verts = self.verts_per_record * len(self.vert_data)
+        n_verts = self.verts_per_record * len(self.mobject_data)
         for vao in self.vaos:
             vao.render(vertices=n_verts)
-
-    def update_program_uniforms(self):
-        """
-        The mobject's own uniforms live in a buffer of its own, rewritten only when
-        one of them has changed. Those shared by every program, e.g. describing the
-        camera, are set once a frame by set_shared_uniforms instead.
-        """
-        self.write_uniform_buffer()
-        for program in self.programs:
-            if program is None:
-                continue
-            for name, unit in self.texture_names_to_ids.items():
-                set_program_sampler(program, name, unit)
 
     def write_uniform_buffer(self):
         uniforms = self.mobject_uniforms
@@ -316,7 +321,7 @@ class SurfaceShaderWrapper(ShaderWrapper):
 
         # Where the middle of each triangle of each square sits, the two of them taking
         # the corners the vertex shader gives them, see inserts/surface_mesh.glsl
-        points = self.vert_data["point"].reshape((nu, nv, 3))
+        points = self.mobject_data["point"].reshape((nu, nv, 3))
         middles = np.array([
             points[:-1, :-1] + points[1:, :-1] + points[:-1, 1:],
             points[:-1, 1:] + points[1:, :-1] + points[1:, 1:],
@@ -369,7 +374,7 @@ class VShaderWrapper(ShaderWrapper):
     def __init__(
         self,
         ctx: moderngl.context.Context,
-        vert_data: np.ndarray,
+        mobject_data: StructuredArray,
         mobject_uniforms: Uniforms,
         shader_folder: Optional[str] = None,
         texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
@@ -381,7 +386,7 @@ class VShaderWrapper(ShaderWrapper):
         self.stroke_behind = stroke_behind
         super().__init__(
             ctx=ctx,
-            vert_data=vert_data,
+            mobject_data=mobject_data,
             shader_folder=shader_folder,
             mobject_uniforms=mobject_uniforms,
             texture_paths=texture_paths,
@@ -448,7 +453,7 @@ class VShaderWrapper(ShaderWrapper):
 
     def get_num_curves(self) -> int:
         # Consecutive beziers share an anchor, so n points make n // 2 curves
-        return len(self.vert_data) // 2
+        return len(self.mobject_data) // 2
 
     def replace_code_program(self, old: str, new: str, program_type: str | None = None):
         if program_type is None:

@@ -1979,7 +1979,7 @@ class Mobject(object):
     def init_shader_wrapper(self, ctx: Context):
         self.shader_wrapper = ShaderWrapper(
             ctx=ctx,
-            vert_data=self.data.array,
+            mobject_data=self.data,
             shader_folder=self.shader_folder,
             mobject_uniforms=self.uniforms,
             texture_paths=self.texture_paths,
@@ -2006,12 +2006,6 @@ class Mobject(object):
                 # Groups hold no points of their own, but their members might
                 continue
             shader_wrapper = mob.get_shader_wrapper(ctx)
-            # A wrapper holding no buffer has just been built, e.g. after its shader
-            # code was replaced, and needs reading into whether or not data changed
-            if mob.data.changed or shader_wrapper.vbo is None:
-                shader_wrapper.read_in(mob.data.array)
-                mob.data.changed = False
-            shader_wrapper.update_program_uniforms()
             shader_wrapper.pre_render()
             shader_wrapper.render()
 

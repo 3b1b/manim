@@ -1276,7 +1276,7 @@ class VMobject(Mobject):
     def init_shader_wrapper(self, ctx: Context):
         self.shader_wrapper = VShaderWrapper(
             ctx=ctx,
-            vert_data=self.data.array,
+            mobject_data=self.data,
             mobject_uniforms=self.uniforms,
             code_replacements=self.shader_code_replacements,
             program_type=self.shader_program_type,

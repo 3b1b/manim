@@ -235,7 +235,7 @@ class Surface(Mobject):
         self.shader_wrapper = SurfaceShaderWrapper(
             ctx=ctx,
             sort_to_camera=self.sort_to_camera,
-            vert_data=self.data.array,
+            mobject_data=self.data,
             mobject_uniforms=self.uniforms,
             shader_folder=self.shader_folder,
             texture_paths=self.texture_paths,
