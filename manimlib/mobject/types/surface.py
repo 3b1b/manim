@@ -467,6 +467,8 @@ class TexturedGeometry(TexturedSurface):
         self.num_textures = 1
         self.geometry = geometry
         self.texture_file = texture_file
+        # Not a grid, which is what the vertex shader goes by, see surface_mesh.glsl
+        self.resolution = (0, 0)
         Mobject.__init__(
             self,
             texture_paths={"LightTexture": get_full_raster_image_path(texture_file)}
@@ -479,7 +481,6 @@ class TexturedGeometry(TexturedSurface):
         uv = np.array(self.geometry.visual.uv)
         uv[:, 1] = 1.0 - uv[:, 1]
 
-        self.set_resolution((0, 0))
         self.set_points(np.array(self.geometry.vertices)[self.vertex_indices])
         self.data["im_coords"] = uv[self.vertex_indices]
         self.data["opacity"] = self.opacity
