@@ -70,12 +70,15 @@ class Surface(Mobject):
         # rows/columns of approximating squares
         resolution: Tuple[int, int] = (101, 101),
         preferred_creation_axis: int = 1,
+        # Only wanted by a surface which folds over itself, see set_sort_to_camera
+        sort_to_camera: bool = False,
         **kwargs
     ):
         self.u_range = u_range
         self.v_range = v_range
         self.resolution = resolution
         self.preferred_creation_axis = preferred_creation_axis
+        self.sort_to_camera = sort_to_camera
 
         super().__init__(
             **kwargs,
@@ -209,9 +212,35 @@ class Surface(Mobject):
             mob.resample(resolution)
         return self
 
+    def set_sort_to_camera(self, sort: bool = True) -> Self:
+        """
+        Whether to draw the surface's squares in order of their distance from the camera,
+        furthest first, rather than leaving it to which way they face. Worth it for a
+        see through surface which folds over itself, where one of its own folds may lie
+        in front of another, and worth nothing otherwise.
+        """
+        for mob in self.get_family():
+            if isinstance(mob, Surface):
+                mob.sort_to_camera = sort
+        self.refresh_shader_wrapper()
+        return self
+
+    def always_sort_to_camera(self, camera=None) -> Self:
+        # Kept for the scenes which call it. Nothing needs the camera any more, nor an
+        # updater to do the sorting, see set_sort_to_camera
+        return self.set_sort_to_camera()
+
+    def refresh_shader_wrapper(self):
+        for submob in self.get_family():
+            if isinstance(submob, Surface) and submob.shader_wrapper is not None:
+                submob.shader_wrapper.sort_to_camera = submob.sort_to_camera
+        super().refresh_shader_wrapper()
+        return self
+
     def init_shader_wrapper(self, ctx: Context):
         self.shader_wrapper = SurfaceShaderWrapper(
             ctx=ctx,
+            sort_to_camera=self.sort_to_camera,
             vert_data=self.data.array,
             mobject_uniforms=self.uniforms,
             shader_folder=self.shader_folder,
@@ -301,22 +330,6 @@ class Surface(Mobject):
                 upper_residue
             ).reshape(shape)
         return points.reshape((nu * nv, *resolution[2:]))
-
-    def sort_faces_back_to_front(self, vect: Vect3 = OUT) -> Self:
-        """
-        Left as it is, for now, and doing nothing.
-
-        This used to reorder the list of triangle indices, so that a see through surface
-        drew its far side before its near one and the two blended in the right order.
-        The mesh is worked out in the vertex shader now, so there are no indices to
-        reorder, and how a surface should handle its own transparency is an open
-        question, see the note in inserts/surface_mesh.glsl.
-        """
-        return self
-
-    def always_sort_to_camera(self, camera: Camera) -> Self:
-        # No updater is added, since sorting no longer does anything, see above
-        return self
 
     def color_by_uv_function(self, uv_to_color: Callable[[Vect2], Color]):
         uv_grid = self.get_uv_grid()

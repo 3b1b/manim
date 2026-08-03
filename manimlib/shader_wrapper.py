@@ -10,6 +10,7 @@ import numpy as np
 from manimlib.utils.shaders import MOBJECT_BLOCK_NAME
 from manimlib.utils.shaders import check_uniform_block
 from manimlib.utils.shaders import get_shader_code
+from manimlib.utils.shaders import get_shared_uniform
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
 from manimlib.utils.shaders import set_program_sampler
@@ -278,14 +279,85 @@ class SurfaceShaderWrapper(ShaderWrapper):
     the surface is parametrized, the same thing its normals follow. A surface whose
     normals point inwards, and which is therefore already lit as though seen from inside,
     has its two passes the other way around as well.
+
+    A surface which folds over itself needs more than which way it faces, since which of
+    its own folds lies in front has nothing to do with that. Such a one can ask for
+    sort_to_camera, and then its squares are drawn in order of their distance from the
+    camera, furthest first, which is worked out here from the camera position every
+    program is given anyway.
     """
 
+    def __init__(self, *args, sort_to_camera: bool = False, **kwargs):
+        self.sort_to_camera = sort_to_camera
+        super().__init__(*args, **kwargs)
+
+    def init_vertex_objects(self):
+        super().init_vertex_objects()
+        self.order_ibo = None
+        self.order_vao = None
+
     def render(self):
+        if self.sort_to_camera and self.order_triangles_by_depth():
+            self.order_vao.render(vertices=self.order_ibo.size // 4)
+            return
         gl.glEnable(gl.GL_CULL_FACE)
         for culled in (gl.GL_FRONT, gl.GL_BACK):
             gl.glCullFace(culled)
             super().render()
         gl.glDisable(gl.GL_CULL_FACE)
+
+    def order_triangles_by_depth(self) -> bool:
+        """
+        Lists the vertices of every triangle of the mesh, three to each, those furthest
+        from the camera first, in a buffer to be drawn through. False if there is nothing
+        to order that way: no camera yet, or records which are no grid, as an imported
+        mesh's are.
+        """
+        camera_position = get_shared_uniform("camera_position")
+        nu, nv = self.mobject_uniforms["resolution"].astype(int)
+        if camera_position is None or nu < 2 or nv < 2:
+            return False
+
+        # Where the middle of each triangle of each square sits, the two of them taking
+        # the corners the vertex shader gives them, see inserts/surface_mesh.glsl
+        points = self.vert_data["point"].reshape((nu, nv, 3))
+        middles = np.array([
+            points[:-1, :-1] + points[1:, :-1] + points[:-1, 1:],
+            points[:-1, 1:] + points[1:, :-1] + points[1:, 1:],
+        ])
+        offsets = middles.reshape((-1, 3)) / 3 - np.array(camera_position)
+        order = np.argsort(-np.einsum("ij,ij->i", offsets, offsets))
+
+        # Which vertices each of those triangles is drawn from, six per square, the first
+        # three making one triangle and the last three the other
+        squares = np.arange(nu - 1)[:, np.newaxis] * nv + np.arange(nv - 1)
+        firsts = 6 * squares + np.array([[[0]], [[3]]])
+        vertices = firsts.reshape(-1)[order, np.newaxis] + np.arange(3)
+        self.write_order_buffer(vertices.astype(np.uint32).tobytes())
+        return True
+
+    def write_order_buffer(self, data: bytes):
+        if self.order_ibo is not None and self.order_ibo.size != len(data):
+            self.order_ibo.release()
+            self.order_vao.release()
+            self.order_ibo = None
+        if self.order_ibo is None:
+            self.order_ibo = self.ctx.buffer(data)
+            self.order_vao = self.ctx.vertex_array(
+                program=self.program,
+                content=[],
+                index_buffer=self.order_ibo,
+                index_element_size=4,
+                mode=self.render_primitive,
+            )
+        else:
+            self.order_ibo.write(data)
+
+    def release(self):
+        for obj in (self.order_ibo, self.order_vao):
+            if obj is not None:
+                obj.release()
+        super().release()
 
 
 class VShaderWrapper(ShaderWrapper):

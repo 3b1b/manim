@@ -71,6 +71,15 @@ def set_shared_uniforms(uniforms: UniformDict) -> None:
             set_program_uniform(program, name, value)
 
 
+def get_shared_uniform(name: str) -> float | tuple | None:
+    """
+    One of the values which hold for every program, e.g. where the camera is, as it was
+    last set for the frame being drawn. None before anything has set them. See
+    set_shared_uniforms.
+    """
+    return SHARED_UNIFORMS.get(name, None)
+
+
 def set_program_uniform(
     program: moderngl.Program,
     name: str,
