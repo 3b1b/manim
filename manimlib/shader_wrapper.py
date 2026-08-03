@@ -195,6 +195,19 @@ class ShaderWrapper(object):
             return
         self.mobject_data.changed = False
 
+    def write_uniform_buffer(self):
+        uniforms = self.mobject_uniforms
+        # A shader reading none of them declares no block for them to travel in
+        if not self.has_uniform_block:
+            return
+        if self.uniform_buffer is None:
+            self.uniform_buffer = self.ctx.buffer(uniforms.array)
+        elif uniforms.changed:
+            self.uniform_buffer.write(uniforms.array)
+        else:
+            return
+        uniforms.changed = False
+
     def generate_vaos(self):
         if not self.programs:
             # Nothing to draw with, e.g. a mobject holding points but naming no shader
@@ -241,19 +254,6 @@ class ShaderWrapper(object):
         n_verts = self.verts_per_record * len(self.mobject_data)
         for vao in self.vaos:
             vao.render(vertices=n_verts)
-
-    def write_uniform_buffer(self):
-        uniforms = self.mobject_uniforms
-        # A shader reading none of them declares no block for them to travel in
-        if not self.has_uniform_block:
-            return
-        if self.uniform_buffer is None:
-            self.uniform_buffer = self.ctx.buffer(uniforms.array)
-        elif uniforms.changed:
-            self.uniform_buffer.write(uniforms.array)
-        else:
-            return
-        uniforms.changed = False
 
     def release(self):
         for obj in (self.vbo, *self.vaos):
