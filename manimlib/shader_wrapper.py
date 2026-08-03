@@ -27,9 +27,27 @@ UNIFORM_BLOCK_BINDING = 0
 
 class ShaderWrapper(object):
     """
-    Every shader is handed no vertex attributes at all. Each reads the records of the
-    vertex buffer itself, by way of a texture pointed at it, and expands each of them
-    into verts_per_record vertices, all of them triangles. See inserts/read_data.glsl.
+    One mobject's side of the gpu: the programs it is drawn by, the buffers holding what
+    it sends them, and the drawing itself.
+
+    A mobject names a folder of shaders, compiled once between all the mobjects naming
+    it, and hands over the two arrays it keeps: its data, a record per point, and its
+    uniforms, one value for the whole of it. Those sit here as a vertex buffer and a
+    uniform buffer, written afresh from the arrays whenever either says it has changed,
+    see read_in and write_uniform_buffer. Values which hold for every mobject at once,
+    where the camera is and the like, are no business of a wrapper's, being set on every
+    program once a frame instead, see set_shared_uniforms.
+
+    No shader is handed vertex attributes. Each reads the records of the vertex buffer
+    itself, through a texture pointed at it, and expands every one into verts_per_record
+    vertices, always triangles, see inserts/read_data.glsl.
+
+    Drawing means pre_render, which asks the context for what this mobject needs, its
+    textures among it, and then render. There is one wrapper to a mobject rather than to
+    a kind of mobject, which is what lets a fill count its own winding in the stencil
+    buffer without the mobject beside it joining in, and what any drawing taking more
+    than a single pass is built on: see VShaderWrapper, for a fill and the stroke around
+    it, and SurfaceShaderWrapper, for the two sides of a surface.
     """
 
     def __init__(
