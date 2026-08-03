@@ -23,7 +23,6 @@ from manimlib.utils.simple_functions import clip
 from manimlib.utils.space_ops import normalize_along_axis
 from manimlib.utils.paths import straight_path
 from manimlib.utils.shaders import COMMON_UNIFORMS
-from manimlib.utils.shaders import Uniforms
 from manimlib.utils.shaders import uniform_block_dtype
 
 from typing import TYPE_CHECKING
@@ -76,7 +75,9 @@ class Surface(Mobject):
     ):
         self.u_range = u_range
         self.v_range = v_range
-        self.resolution = resolution
+        # Handed to the uniforms below, which is where it lives from then on, see
+        # get_resolution
+        self.initial_resolution = resolution
         self.preferred_creation_axis = preferred_creation_axis
         self.sort_to_camera = sort_to_camera
 
@@ -89,22 +90,20 @@ class Surface(Mobject):
 
     def init_uniforms(self):
         super().init_uniforms()
-        self.uniforms["resolution"] = self.resolution
+        self.uniforms["resolution"] = self.initial_resolution
+
+    def get_resolution(self) -> Tuple[int, int]:
+        """
+        How many rows and columns of points the surface samples. Kept among the uniforms,
+        the vertex shader needing it to work the mesh over them out, so this is the one
+        place it is written down.
+        """
+        nu, nv = self.uniforms["resolution"].astype(int)
+        return (int(nu), int(nv))
 
     def set_resolution(self, resolution: Tuple[int, int]) -> Self:
-        """
-        How many rows and columns of points the surface samples, which is what the
-        vertex shader works the mesh over them out from, so it has to match how many
-        points there are.
-        """
-        self.resolution = resolution
+        # It has to match how many points there are, see has_grid
         self.uniforms["resolution"] = resolution
-        return self
-
-    def set_uniforms(self, uniforms: Uniforms) -> Self:
-        super().set_uniforms(uniforms)
-        # Whatever resolution came over is now the one to go by
-        self.resolution = tuple(self.uniforms["resolution"].astype(int))
         return self
 
     def interpolate(
@@ -116,7 +115,7 @@ class Surface(Mobject):
     ) -> Self:
         # A grid of one shape cannot become a grid of another partway, so this one keeps
         # its own, as it keeps its own number of points, which the two have been aligned to
-        resolution = self.resolution
+        resolution = self.get_resolution()
         super().interpolate(mobject1, mobject2, alpha, path_func)
         self.set_resolution(resolution)
         return self
@@ -126,7 +125,7 @@ class Surface(Mobject):
         return (u, v, 0.0)
 
     def init_points(self):
-        nu, nv = self.resolution
+        nu, nv = self.get_resolution()
         points = np.apply_along_axis(
             lambda p: self.uv_func(*p), 2, self.get_uv_grid()
         ).reshape((nu * nv, self.dim))
@@ -137,14 +136,14 @@ class Surface(Mobject):
         Returns an (nu, nv, 2) array of all pairs of u, v values, where
         (nu, nv) is the resolution
         """
-        nu, nv = self.resolution
+        nu, nv = self.get_resolution()
         u_range = np.linspace(*self.u_range, nu)
         v_range = np.linspace(*self.v_range, nv)
         U, V = np.meshgrid(u_range, v_range, indexing='ij')
         return np.stack([U, V], axis=-1)
 
     def uv_to_point(self, u, v):
-        nu, nv = self.resolution
+        nu, nv = self.get_resolution()
         verts_by_uv = np.reshape(self.get_points(), (nu, nv, self.dim))
 
         alpha1 = clip(inverse_interpolate(*self.u_range[:2], u), 0, 1)
@@ -175,7 +174,7 @@ class Surface(Mobject):
         mesh is not, nor is a surface whose points have been resized by something which
         knows nothing of the grid.
         """
-        nu, nv = self.resolution
+        nu, nv = self.get_resolution()
         return nu > 1 and nv > 1 and len(self.data) == nu * nv
 
     def resample(self, resolution: Tuple[int, int]) -> Self:
@@ -183,7 +182,7 @@ class Surface(Mobject):
         Samples the surface over a grid of a different shape, interpolating along each
         direction between the points it holds, so that its shape survives the change.
         """
-        nu, nv = self.resolution
+        nu, nv = self.get_resolution()
         new_nu, new_nv = resolution
         data = np.zeros(new_nu * new_nv, dtype=self.data.dtype)
         for key in self.data.keys():
@@ -205,9 +204,9 @@ class Surface(Mobject):
         both = (self, mobject)
         if not all(isinstance(mob, Surface) and mob.has_grid() for mob in both):
             return super().align_points(mobject)
-        if self.resolution == mobject.resolution:
+        if self.get_resolution() == mobject.get_resolution():
             return super().align_points(mobject)
-        resolution = tuple(map(max, zip(*(mob.resolution for mob in both))))
+        resolution = tuple(map(max, zip(*(mob.get_resolution() for mob in both))))
         for mob in both:
             mob.resample(resolution)
         return self
@@ -257,7 +256,7 @@ class Surface(Mobject):
         in either way from there. The same thing the vertex shader works out, see
         inserts/surface_mesh.glsl, for the sake of anything in python which wants it.
         """
-        nu, nv = self.resolution
+        nu, nv = self.get_resolution()
         grid = self.get_points().reshape((nu, nv, 3))
         du = np.gradient(grid, axis=0)
         dv = np.gradient(grid, axis=1)
@@ -283,7 +282,7 @@ class Surface(Mobject):
             self.match_points(smobject)
             return self
 
-        nu, nv = smobject.resolution
+        nu, nv = smobject.get_resolution()
         self.data['point'] = self.get_partial_points_array(
             smobject.data['point'], a, b,
             (nu, nv, 3),
@@ -355,19 +354,6 @@ class ParametricSurface(Surface):
         return self.passed_uv_func(u, v)
 
 
-class SGroup(Surface):
-    def __init__(
-        self,
-        *parametric_surfaces: Surface,
-        **kwargs
-    ):
-        super().__init__(resolution=(0, 0), **kwargs)
-        self.add(*parametric_surfaces)
-
-    def init_points(self):
-        pass  # Needed?
-
-
 class TexturedSurface(Surface):
     shader_folder: str = "textured_surface"
     data_dtype: np.dtype = np.dtype([
@@ -407,7 +393,7 @@ class TexturedSurface(Surface):
         self.uv_func = uv_surface.uv_func
         self.u_range: Tuple[float, float] = uv_surface.u_range
         self.v_range: Tuple[float, float] = uv_surface.v_range
-        self.resolution: Tuple[int, int] = uv_surface.resolution
+        self.initial_resolution: Tuple[int, int] = uv_surface.get_resolution()
         super().__init__(
             texture_paths=texture_paths,
             shading=tuple(uv_surface.shading),
@@ -416,9 +402,9 @@ class TexturedSurface(Surface):
 
     def init_points(self):
         surf = self.uv_surface
-        nu, nv = surf.resolution
+        nu, nv = surf.get_resolution()
         self.resize_points(surf.get_num_points())
-        self.set_resolution(surf.resolution)
+        self.set_resolution(surf.get_resolution())
         self.data['point'] = surf.data['point']
         self.data['opacity'][:, 0] = surf.data["rgba"][:, 3]
         self.data["im_coords"] = np.array([
@@ -432,7 +418,7 @@ class TexturedSurface(Surface):
         uv_func takes in a pair (u, v), and returns a new pair (u', v') used
         for coordinates when reading from the texture
         """
-        nu, nv = self.uv_surface.resolution
+        nu, nv = self.uv_surface.get_resolution()
         self.data["im_coords"] = np.array([
             uv_func(u, v)
             for u in np.linspace(0, 1, nu)
@@ -476,7 +462,7 @@ class TexturedSurface(Surface):
         self.data.changed = True
         if a <= 0 and b >= 1:
             return self
-        nu, nv = tsmobject.resolution
+        nu, nv = tsmobject.get_resolution()
         im_coords[:] = self.get_partial_points_array(
             im_coords, a, b, (nu, nv, 2), axis
         )
@@ -497,7 +483,7 @@ class TexturedGeometry(TexturedSurface):
         self.geometry = geometry
         self.texture_file = texture_file
         # Not a grid, which is what the vertex shader goes by, see surface_mesh.glsl
-        self.resolution = (0, 0)
+        self.initial_resolution = (0, 0)
         Mobject.__init__(
             self,
             texture_paths={"LightTexture": get_full_raster_image_path(texture_file)}

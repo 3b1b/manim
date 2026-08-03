@@ -7,8 +7,8 @@ import numpy as np
 from manimlib.constants import BLUE, BLUE_D, BLUE_E, GREY_A, BLACK
 from manimlib.constants import IN, ORIGIN, OUT, RIGHT
 from manimlib.constants import PI, TAU
+from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
-from manimlib.mobject.types.surface import SGroup
 from manimlib.mobject.types.surface import Surface
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -53,7 +53,7 @@ class SurfaceMesh(VGroup):
     def init_points(self) -> None:
         uv_surface = self.uv_surface
 
-        full_nu, full_nv = uv_surface.resolution
+        full_nu, full_nv = uv_surface.get_resolution()
         part_nu, part_nv = self.resolution
         # 'indices' are treated as floats. Later, there will be
         # an interpolation between the floor and ceiling of these
@@ -261,7 +261,7 @@ def square_to_cube_faces(square: T) -> list[T]:
     return result
 
 
-class Cube(SGroup):
+class Cube(Group):
     def __init__(
         self,
         color: ManimColor = BLUE,
