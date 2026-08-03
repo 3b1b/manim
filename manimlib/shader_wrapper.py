@@ -264,6 +264,30 @@ class ShaderWrapper(object):
         self.init_vertex_objects()
 
 
+class SurfaceShaderWrapper(ShaderWrapper):
+    """
+    A surface is drawn in two passes, the side of it facing away from the camera before
+    the side facing towards it, so that a see through one blends in the order it should:
+    what lies behind first, what lies in front over the top of it.
+
+    Nothing here asks whether a surface is see through. For an opaque one the depth test
+    settles which side wins whatever order they arrive in, so the two passes come out
+    exactly as one would.
+
+    Which side faces which way is taken from the winding of the mesh, which follows how
+    the surface is parametrized, the same thing its normals follow. A surface whose
+    normals point inwards, and which is therefore already lit as though seen from inside,
+    has its two passes the other way around as well.
+    """
+
+    def render(self):
+        gl.glEnable(gl.GL_CULL_FACE)
+        for culled in (gl.GL_FRONT, gl.GL_BACK):
+            gl.glCullFace(culled)
+            super().render()
+        gl.glDisable(gl.GL_CULL_FACE)
+
+
 class VShaderWrapper(ShaderWrapper):
     """
     A bezier sits in three consecutive records of the buffer, and both shaders

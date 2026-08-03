@@ -10,6 +10,7 @@ from pathlib import Path
 from manimlib.constants import GREY
 from manimlib.constants import OUT
 from manimlib.mobject.mobject import Mobject
+from manimlib.shader_wrapper import SurfaceShaderWrapper
 from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
@@ -29,6 +30,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Tuple
+
+    from moderngl.context import Context
 
     from manimlib.camera.camera import Camera
     from manimlib.typing import ManimColor, Vect3, Vect3Array, Self
@@ -205,6 +208,19 @@ class Surface(Mobject):
         for mob in both:
             mob.resample(resolution)
         return self
+
+    def init_shader_wrapper(self, ctx: Context):
+        self.shader_wrapper = SurfaceShaderWrapper(
+            ctx=ctx,
+            vert_data=self.data.array,
+            mobject_uniforms=self.uniforms,
+            shader_folder=self.shader_folder,
+            texture_paths=self.texture_paths,
+            depth_test=self.depth_test,
+            render_primitive=self.render_primitive,
+            code_replacements=self.shader_code_replacements,
+            verts_per_record=self.verts_per_record,
+        )
 
     def get_unit_normals(self) -> Vect3Array:
         """
