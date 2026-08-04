@@ -156,3 +156,6 @@ CLAUDE.md
 
 # LaTeX scratch files, regenerated whenever Tex is rendered
 latex_cache/
+
+# Textures the render comparison harness makes for itself
+tests/assets/
