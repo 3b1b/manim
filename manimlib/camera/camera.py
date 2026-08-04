@@ -14,7 +14,6 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.renderer import Renderer
 from manimlib.utils.color import color_to_rgba
-from manimlib.utils.shaders import set_shared_uniforms
 
 from typing import TYPE_CHECKING
 
@@ -62,7 +61,6 @@ class Camera(object):
         self.background_rgba: list[float] = list(color_to_rgba(
             background_color, background_opacity
         ))
-        self.uniforms = dict()
         self.depth_stencil_rbos: list[int] = []
         self.init_frame(**frame_config)
         self.init_context()
@@ -277,8 +275,7 @@ class Camera(object):
     def capture(self, *mobjects: Mobject) -> None:
         self.clear()
         self.refresh_uniforms()
-        # These hold for every program, so they only need setting once a frame
-        set_shared_uniforms(self.uniforms)
+        self.renderer.send_frame_uniforms()
         self.fbo.use()
         # Fill rendering leaves the stencil buffer zeroed as it goes, so this is
         # only here to guarantee a clean slate, e.g. if a previous frame's
@@ -298,13 +295,13 @@ class Camera(object):
                 self.window.swap_buffers()
 
     def refresh_uniforms(self) -> None:
+        """
+        What every program reads about where the frame, the camera and the light are,
+        written into the block they all share, see Renderer.
+        """
         frame = self.frame
-        view_matrix = frame.get_view_matrix()
-        light_pos = self.light_source.get_location()
-        cam_pos = self.frame.get_implied_camera_location()
-
-        self.uniforms.update(
-            view=tuple(view_matrix.T.flatten()),
+        self.renderer.frame_uniforms.update(
+            view=frame.get_view_matrix().T.flatten(),
             frame_scale=frame.get_scale(),
             frame_rescale_factors=(
                 2.0 / FRAME_WIDTH,
@@ -312,8 +309,8 @@ class Camera(object):
                 frame.get_scale() / frame.get_focal_distance(),
             ),
             pixel_size=self.get_pixel_size(),
-            camera_position=tuple(cam_pos),
-            light_position=tuple(light_pos),
+            camera_position=frame.get_implied_camera_location(),
+            light_position=self.light_source.get_location(),
         )
 
 

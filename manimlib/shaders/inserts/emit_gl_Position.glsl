@@ -1,7 +1,4 @@
-uniform mat4 view;
-uniform float focal_distance;
-uniform vec3 frame_rescale_factors;
-
+#INSERT frame_uniforms.glsl
 #INSERT frame_units.glsl
 
 float clip_distance(vec3 point, vec4 plane){

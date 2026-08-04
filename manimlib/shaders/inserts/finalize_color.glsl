@@ -1,5 +1,4 @@
-uniform vec3 light_position;
-uniform vec3 camera_position;
+#INSERT frame_uniforms.glsl
 
 vec3 float_to_color(float value, float min_val, float max_val, vec3[9] colormap_data){
     float alpha = clamp((value - min_val) / (max_val - min_val), 0.0, 1.0);

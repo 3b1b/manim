@@ -1,6 +1,5 @@
 #version 330
 
-uniform mat4 perspective;
 
 in vec4 color;
 in float scaled_aaw;

@@ -7,10 +7,10 @@ import OpenGL.GL as gl
 import moderngl
 import numpy as np
 
+from manimlib.utils.shaders import MOBJECT_BLOCK_BINDING
 from manimlib.utils.shaders import MOBJECT_BLOCK_NAME
 from manimlib.utils.shaders import check_uniform_block
 from manimlib.utils.shaders import get_shader_code
-from manimlib.utils.shaders import get_shared_uniform
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
 from manimlib.utils.shaders import set_program_sampler
@@ -23,9 +23,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Optional
     from manimlib.renderer import Renderer
-
-UNIFORM_BLOCK_BINDING = 0
-
 
 class ShaderWrapper(object):
     """
@@ -132,7 +129,7 @@ class ShaderWrapper(object):
         for program in self.programs:
             if program is None or not check_uniform_block(program, dtype):
                 continue
-            program[MOBJECT_BLOCK_NAME].binding = UNIFORM_BLOCK_BINDING
+            program[MOBJECT_BLOCK_NAME].binding = MOBJECT_BLOCK_BINDING
             self.has_uniform_block = True
 
     def init_textures(self):
@@ -256,7 +253,7 @@ class ShaderWrapper(object):
             for name, unit in self.texture_names_to_ids.items():
                 set_program_sampler(program, name, unit)
         if self.uniform_buffer is not None:
-            self.uniform_buffer.bind_to_uniform_block(UNIFORM_BLOCK_BINDING)
+            self.uniform_buffer.bind_to_uniform_block(MOBJECT_BLOCK_BINDING)
 
     def render(self):
         n_verts = self.verts_per_record * len(self.mobject_data)
@@ -322,7 +319,7 @@ class SurfaceShaderWrapper(ShaderWrapper):
         to order that way: no camera yet, or records which are no grid, as an imported
         mesh's are.
         """
-        camera_position = get_shared_uniform("camera_position")
+        camera_position = self.renderer.frame_uniforms["camera_position"]
         nu, nv = self.mobject_uniforms["resolution"].astype(int)
         if camera_position is None or nu < 2 or nv < 2:
             return False

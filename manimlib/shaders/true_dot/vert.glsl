@@ -1,7 +1,5 @@
 #version 330
 
-uniform vec3 camera_position;
-
 out vec4 color;
 out float scaled_aaw;
 out vec3 point;
