@@ -71,6 +71,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4f {
         let point_3d = in.point + in.radius * sqrt(1.0 - r * r) * in.to_cam;
         color = finalize_color(color, point_3d, normalize(point_3d - in.center));
     }
-    color.a *= smoothstep(1.0, 1.0 - in.scaled_aaw, r);
+    // Said with its edges the right way round, since a reversed smoothstep is
+    // undefined in WGSL, and smoothstep(a, b, x) is exactly 1 - smoothstep(b, a, x)
+    color.a *= 1.0 - smoothstep(1.0 - in.scaled_aaw, 1.0, r);
     return color;
 }

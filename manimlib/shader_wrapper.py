@@ -12,6 +12,7 @@ from manimlib.renderer import COLOR_FORMAT
 from manimlib.renderer import CULL_BACK
 from manimlib.renderer import CULL_FRONT
 from manimlib.renderer import DEFAULT
+from manimlib.renderer import FILL_BORDER
 from manimlib.renderer import WINDING_COUNT
 from manimlib.renderer import WINDING_COVER
 from manimlib.utils.shaders import DATA_BINDING
@@ -164,6 +165,7 @@ class ShaderWrapper(object):
         # A mobject naming no folder, a group say, has nothing to be drawn by
         self.code = self.get_code(self.shader_folder) if self.shader_folder else None
         self.module = None if self.code is None else get_shader_module(self.device, self.code)
+        self.modules = [] if self.module is None else [self.module]
 
     def get_code(self, folder: str) -> str | None:
         return get_shader_code(
@@ -176,6 +178,7 @@ class ShaderWrapper(object):
     def replace_code(self, old: str, new: str) -> None:
         self.code = re.sub(old, new, self.code)
         self.module = get_shader_module(self.device, self.code)
+        self.modules = [self.module]
 
     def init_resources(self) -> None:
         self.data_buffer = None
@@ -204,7 +207,7 @@ class ShaderWrapper(object):
         a write reaching the gpu partway through a render pass has no say over whether the
         draws before it see the old values or the new, see Camera.capture.
         """
-        if self.module is None:
+        if not self.modules:
             return
         self.write_data_buffer()
         self.write_uniform_buffer()
@@ -306,7 +309,7 @@ class ShaderWrapper(object):
 
         return self.renderer.get_pipeline(key, build)
 
-    def begin_draw(self, state: DrawState, module=None):
+    def begin_draw(self, state: DrawState, module):
         """
         Points the pass at what a draw of this mobject reads and how it is to behave, and
         hands back the pass for the draw itself.
@@ -315,17 +318,17 @@ class ShaderWrapper(object):
         mobject_group, resource_group = self.get_bind_groups()
         render_pass.set_bind_group(MOBJECT_GROUP, mobject_group)
         render_pass.set_bind_group(RESOURCE_GROUP, resource_group)
-        render_pass.set_pipeline(self.get_pipeline(state, module or self.module))
+        render_pass.set_pipeline(self.get_pipeline(state, module))
         return render_pass
 
     def draw(self, state: DrawState = DEFAULT, vertices: int | None = None) -> None:
         """One pass over this mobject's records, in the state given"""
         if vertices is None:
             vertices = self.verts_per_record * len(self.mobject_data)
-        self.begin_draw(state).draw(vertices)
+        self.begin_draw(state, self.module).draw(vertices)
 
     def render(self) -> None:
-        if self.module is None or len(self.mobject_data) == 0:
+        if not self.modules or len(self.mobject_data) == 0:
             return
         self.draw()
 
@@ -414,12 +417,12 @@ class SurfaceShaderWrapper(ShaderWrapper):
         self.order_count = len(indices)
 
     def render(self) -> None:
-        if self.module is None or len(self.mobject_data) == 0:
+        if not self.modules or len(self.mobject_data) == 0:
             return
         if self.ordered:
             # Drawing through the indices makes each the index of the vertex the shader is
             # to work out, which is what puts the triangles in the order settled above
-            render_pass = self.begin_draw(DEFAULT)
+            render_pass = self.begin_draw(DEFAULT, self.module)
             render_pass.set_index_buffer(self.order_buffer, wgpu.IndexFormat.uint32)
             render_pass.draw_indexed(self.order_count)
             return
@@ -438,6 +441,12 @@ class VShaderWrapper(ShaderWrapper):
     # Each bezier's fill is two triangles, one covering the interior and one hugging the
     # curve, see quadratic_bezier/fill/shader.wgsl
     fill_verts_per_curve = 6
+    # And its stroke is a quad for each polyline segment the curve is broken into, the last
+    # few of them going to the fan which rounds off a joint, see
+    # quadratic_bezier/stroke/shader.wgsl, whose MAX_STEPS this follows
+    stroke_verts_per_curve = 6 * (32 - 1)
+    # The one line of the stroke's source which the border compiles differently
+    border_declaration = "const IS_FILL_BORDER: bool = false;"
 
     def __init__(
         self,
@@ -451,17 +460,41 @@ class VShaderWrapper(ShaderWrapper):
 
     def init_program(self) -> None:
         self.fill_code = self.get_code(self.fill_folder)
+        self.stroke_code = self.get_code(self.stroke_folder)
+        self.build_modules()
+
+    def build_modules(self) -> None:
+        """
+        Three modules from two sources. The border around a fill is the stroke shader with
+        one constant compiled the other way, which is what wgpu asks for in place of a
+        uniform read per draw, and costs nothing: a module is compiled once per source.
+        """
+        border_code = self.stroke_code.replace(
+            self.border_declaration, self.border_declaration.replace("false", "true"),
+        )
         self.fill_module = get_shader_module(self.device, self.fill_code)
-        # Nothing is drawn by a module of its own here, so the base class's one is unused
-        self.module = self.fill_module
+        self.stroke_module = get_shader_module(self.device, self.stroke_code)
+        self.border_module = get_shader_module(self.device, border_code)
+        self.modules = [self.fill_module, self.stroke_module, self.border_module]
 
     def replace_code(self, old: str, new: str) -> None:
         self.fill_code = re.sub(old, new, self.fill_code)
-        self.fill_module = get_shader_module(self.device, self.fill_code)
-        self.module = self.fill_module
+        self.stroke_code = re.sub(old, new, self.stroke_code)
+        self.build_modules()
 
     def replace_code_program(self, old: str, new: str, program_type: str | None = None):
-        self.replace_code(old, new)
+        """
+        The same, or only in one of the two sources where one is named: a snippet meant for
+        the stroke would not compile against the fill, which has no stroke_rgba to read.
+        """
+        if program_type == "fill":
+            self.fill_code = re.sub(old, new, self.fill_code)
+        elif program_type == "stroke":
+            self.stroke_code = re.sub(old, new, self.stroke_code)
+        else:
+            self.fill_code = re.sub(old, new, self.fill_code)
+            self.stroke_code = re.sub(old, new, self.stroke_code)
+        self.build_modules()
 
     def get_num_curves(self) -> int:
         # Consecutive beziers share an anchor, so n points make n // 2 curves
@@ -487,15 +520,38 @@ class VShaderWrapper(ShaderWrapper):
         overlapping mobjects would color a shared pixel once between them rather than each
         blending in turn.
         """
-        vertices = self.fill_verts_per_curve * self.get_num_curves()
+        curves = self.get_num_curves()
         # Counting the windings needs no color, and must see every triangle of the path
         # whatever stands in front of it, which is what WINDING_COUNT says
-        self.begin_draw(WINDING_COUNT, self.fill_module).draw(vertices)
+        self.begin_draw(WINDING_COUNT, self.fill_module).draw(self.fill_verts_per_curve * curves)
+        self.render_fill_border()
         # Coloring in everywhere the count came out nonzero, zeroing it on the way through,
         # so that each pixel is colored once and the buffer is left clean
-        self.begin_draw(WINDING_COVER, self.fill_module).draw(vertices)
+        self.begin_draw(WINDING_COVER, self.fill_module).draw(self.fill_verts_per_curve * curves)
+
+    def render_fill_border(self) -> None:
+        """
+        Traces the boundary of the shape with a stroke in the fill color, which is what
+        anti-aliases the fill, a stencil test being all or nothing. It is drawn only where
+        the winding number is zero, meaning outside the shape, both because the inside is
+        about to be filled in anyway, and so that its faded edge never blends on top of the
+        fill, which would leave a seam along the boundary for partially transparent colors.
+        """
+        self.begin_draw(FILL_BORDER, self.border_module).draw(
+            self.stroke_verts_per_curve * self.get_num_curves()
+        )
+
+    def render_stroke(self) -> None:
+        self.begin_draw(DEFAULT, self.stroke_module).draw(
+            self.stroke_verts_per_curve * self.get_num_curves()
+        )
 
     def render(self) -> None:
         if len(self.mobject_data) == 0:
             return
-        self.render_fill()
+        if self.stroke_behind:
+            self.render_stroke()
+            self.render_fill()
+        else:
+            self.render_fill()
+            self.render_stroke()
