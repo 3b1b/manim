@@ -276,8 +276,6 @@ def get_shader_code_from_file(filename: str) -> str | None:
 
 
 def get_colormap_code(rgb_list: Sequence[float]) -> str:
-    data = ",".join(
-        "vec3({}, {}, {})".format(*rgb)
-        for rgb in rgb_list
-    )
-    return f"vec3[{len(rgb_list)}]({data})"
+    """A list of colors as a shader array literal, for a snippet coloring by a value"""
+    colors = ", ".join("vec3f({}, {}, {})".format(*rgb) for rgb in rgb_list)
+    return f"array<vec3f, {len(rgb_list)}>({colors})"

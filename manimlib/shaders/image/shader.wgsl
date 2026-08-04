@@ -6,14 +6,10 @@ the shader does no shaping at all: it reads the corners, and reads the image at 
 #INSERT frame_uniforms.wgsl
 #INSERT read_data.wgsl
 #INSERT project_point.wgsl
+#INSERT quad_corners.wgsl
 #INSERT clip_test.wgsl
 
 // TEXTURES
-
-// The corners come in the order upper left, lower left, upper right, lower right, and these
-// are the two triangles covering them
-const QUAD = array<u32, 6>(0u, 1u, 2u, 2u, 1u, 3u);
-const VERTS_PER_IMAGE: u32 = 6u;
 
 struct VertexOutput {
     @builtin(position) position: vec4f,
@@ -25,13 +21,11 @@ struct VertexOutput {
 @vertex
 fn vs_main(@builtin(vertex_index) index: u32) -> VertexOutput {
     var out: VertexOutput;
-    if (index >= VERTS_PER_IMAGE) {
-        // Six vertices cover the image, and whatever else is drawn collapses to a point
+    if (index >= VERTS_PER_QUAD) {
         out.position = vec4f(0.0, 0.0, 0.0, 1.0);
         return out;
     }
-    var quad = QUAD;
-    let corner = quad[index];
+    let corner = quad_corner(index);
 
     let projection = project_point(read_vec3(corner, DATA_OFFSET_point));
     out.position = projection.position;

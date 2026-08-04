@@ -1935,38 +1935,38 @@ class Mobject(object):
             mob.shader_wrapper = None
         return self
 
-    def set_color_by_code(self, glsl_code: str) -> Self:
+    def set_color_by_code(self, wgsl_code: str) -> Self:
         """
-        Takes a snippet of code and inserts it into a
-        context which has the following variables:
-        vec4 color, vec3 point, vec3 unit_normal.
-        The code should change the color variable
+        Takes a snippet of code and inserts it into a context which has the following
+        variables: color: vec4f, point: vec3f, normal: vec3f. The code should assign to
+        color, which being a vec4f has to be assigned to whole, WGSL having no way to
+        write to part of one.
         """
         self.replace_shader_code(
             "///// INSERT COLOR FUNCTION HERE /////",
-            glsl_code
+            wgsl_code
         )
         return self
 
     def set_color_by_xyz_func(
         self,
-        glsl_snippet: str,
+        wgsl_snippet: str,
         min_value: float = -5.0,
         max_value: float = 5.0,
         colormap: str = "viridis"
     ) -> Self:
         """
-        Pass in a glsl expression in terms of x, y and z which returns
+        Pass in a wgsl expression in terms of x, y and z which returns
         a float.
         """
         # TODO, add a version of this which changes the point data instead
         # of the shader code
         for char in "xyz":
-            glsl_snippet = glsl_snippet.replace(char, "point." + char)
+            wgsl_snippet = wgsl_snippet.replace(char, "point." + char)
         rgb_list = get_colormap_list(colormap)
         self.set_color_by_code(
-            "color.rgb = float_to_color({}, {}, {}, {});".format(
-                glsl_snippet,
+            "color = vec4f(float_to_color({}, {}, {}, {}), color.a);".format(
+                wgsl_snippet,
                 float(min_value),
                 float(max_value),
                 get_colormap_code(rgb_list)
