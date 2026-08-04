@@ -6,7 +6,11 @@ from functools import lru_cache
 
 import wgpu
 
+import numpy as np
+
 from manimlib.renderer import COLOR_FORMAT
+from manimlib.renderer import CULL_BACK
+from manimlib.renderer import CULL_FRONT
 from manimlib.renderer import DEFAULT
 from manimlib.utils.shaders import DATA_BINDING
 from manimlib.utils.shaders import FIRST_TEXTURE_BINDING
@@ -155,7 +159,8 @@ class ShaderWrapper(object):
         )
 
     def init_program(self) -> None:
-        self.code = self.get_code()
+        # A mobject naming no folder, a group say, has nothing to be drawn by
+        self.code = self.get_code() if self.shader_folder else None
         self.module = None if self.code is None else get_shader_module(self.device, self.code)
 
     def get_code(self) -> str | None:
@@ -299,16 +304,23 @@ class ShaderWrapper(object):
 
         return self.renderer.get_pipeline(key, build)
 
-    def draw(self, state: DrawState = DEFAULT, vertices: int | None = None) -> None:
-        """One pass over this mobject's records, in the state given"""
+    def begin_draw(self, state: DrawState):
+        """
+        Points the pass at what a draw of this mobject reads and how it is to behave, and
+        hands back the pass for the draw itself.
+        """
         render_pass = self.renderer.pass_
         mobject_group, resource_group = self.get_bind_groups()
         render_pass.set_bind_group(MOBJECT_GROUP, mobject_group)
         render_pass.set_bind_group(RESOURCE_GROUP, resource_group)
         render_pass.set_pipeline(self.get_pipeline(state))
+        return render_pass
+
+    def draw(self, state: DrawState = DEFAULT, vertices: int | None = None) -> None:
+        """One pass over this mobject's records, in the state given"""
         if vertices is None:
             vertices = self.verts_per_record * len(self.mobject_data)
-        render_pass.draw(vertices)
+        self.begin_draw(state).draw(vertices)
 
     def render(self) -> None:
         if self.module is None or len(self.mobject_data) == 0:
@@ -323,16 +335,94 @@ class ShaderWrapper(object):
 
 
 class SurfaceShaderWrapper(ShaderWrapper):
-    """Not drawn yet on this branch, see phase 2c of WGPU_PORT_PLAN.md"""
+    """
+    A surface is drawn in two passes, the side of it facing away from the camera before the
+    side facing towards it, so that a see through one blends in the order it should: what
+    lies behind first, what lies in front over the top of it.
+
+    Nothing here asks whether a surface is see through. For an opaque one the depth test
+    settles which side wins whatever order they arrive in, so the two passes come out exactly
+    as one would.
+
+    Which side faces which way is taken from the winding of the mesh, which follows how the
+    surface is parametrized, the same thing its normals follow. A surface whose normals point
+    inwards, and which is therefore already lit as though seen from inside, has its two
+    passes the other way around as well.
+
+    A surface which folds over itself needs more than which way it faces, since which of its
+    own folds lies in front has nothing to do with that. Such a one can ask for
+    sort_to_camera, and then its triangles are drawn in order of their distance from the
+    camera, furthest first, through a buffer of indices written before the frame's pass opens.
+    """
 
     def __init__(self, *args, sort_to_camera: bool = False, **kwargs):
         self.sort_to_camera = sort_to_camera
         super().__init__(*args, **kwargs)
 
+    def init_resources(self) -> None:
+        super().init_resources()
+        self.order_buffer = None
+        self.order_count = 0
+        self.ordered = False
+
+    def write_buffers(self) -> None:
+        super().write_buffers()
+        # Ordering the triangles writes a buffer of its own, so it belongs among the writes
+        self.ordered = self.sort_to_camera and self.order_triangles_by_depth()
+
+    def order_triangles_by_depth(self) -> bool:
+        """
+        Lists the vertices of every triangle of the mesh, three to each, those furthest from
+        the camera first, in a buffer to be drawn through. False if there is nothing to order
+        that way: records which are no grid, as an imported mesh's are.
+        """
+        camera_position = self.renderer.frame_uniforms["camera_position"]
+        nu, nv = self.mobject_uniforms["resolution"].astype(int)
+        if nu < 2 or nv < 2:
+            return False
+
+        # Where the middle of each triangle of each square sits, the two of them taking the
+        # corners the vertex shader gives them, see inserts/surface_mesh.wgsl
+        points = self.mobject_data["point"].reshape((nu, nv, 3))
+        middles = np.array([
+            points[:-1, :-1] + points[1:, :-1] + points[:-1, 1:],
+            points[:-1, 1:] + points[1:, :-1] + points[1:, 1:],
+        ])
+        offsets = middles.reshape((-1, 3)) / 3 - np.array(camera_position)
+        order = np.argsort(-np.einsum("ij,ij->i", offsets, offsets))
+
+        # Which vertices each of those triangles is drawn from, six per square, the first
+        # three making one triangle and the last three the other
+        squares = np.arange(nu - 1)[:, np.newaxis] * nv + np.arange(nv - 1)
+        firsts = 6 * squares + np.array([[[0]], [[3]]])
+        vertices = firsts.reshape(-1)[order, np.newaxis] + np.arange(3)
+        self.write_order_buffer(vertices.astype(np.uint32).reshape(-1))
+        return True
+
+    def write_order_buffer(self, indices: np.ndarray) -> None:
+        if self.order_buffer is not None and self.order_buffer.size != indices.nbytes:
+            self.order_buffer.destroy()
+            self.order_buffer = None
+        if self.order_buffer is None:
+            self.order_buffer = self.device.create_buffer(
+                size=indices.nbytes,
+                usage=wgpu.BufferUsage.INDEX | wgpu.BufferUsage.COPY_DST,
+            )
+        self.renderer.queue.write_buffer(self.order_buffer, 0, indices)
+        self.order_count = len(indices)
+
     def render(self) -> None:
-        raise NotImplementedError(
-            "Surfaces are not drawn yet on this branch, see phase 2c of WGPU_PORT_PLAN.md"
-        )
+        if self.module is None or len(self.mobject_data) == 0:
+            return
+        if self.ordered:
+            # Drawing through the indices makes each the index of the vertex the shader is
+            # to work out, which is what puts the triangles in the order settled above
+            render_pass = self.begin_draw(DEFAULT)
+            render_pass.set_index_buffer(self.order_buffer, wgpu.IndexFormat.uint32)
+            render_pass.draw_indexed(self.order_count)
+            return
+        for state in (CULL_FRONT, CULL_BACK):
+            self.draw(state)
 
 
 class VShaderWrapper(ShaderWrapper):
