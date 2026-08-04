@@ -54,12 +54,17 @@ out a matching dtype with uniform_block_dtype, see Mobject.uniform_dtype.
 """
 MOBJECT_BLOCK_NAME = "MobjectUniforms"
 MOBJECT_BLOCK_BINDING = 0
-# Which bind group each kind of thing a shader reads is found in, grouped by how often it
-# changes: once a frame, once a mobject, and once the buffers behind it are replaced. A
-# shader says these numbers itself, so they are here to be agreed with rather than set.
+# Where a shader finds each thing it reads, grouped by how often it changes: once a frame,
+# once a mobject, and once the buffers behind it are replaced. A shader says these numbers
+# itself, in the inserts declaring each, so what is here is what those agree with.
 FRAME_GROUP = 0
 MOBJECT_GROUP = 1
 RESOURCE_GROUP = 2
+# Within the mobject's own group: its records first, then a sampler and a texture for each
+# image its kind names, see texture_binding_code
+DATA_BINDING = 0
+SAMPLER_BINDING = 1
+FIRST_TEXTURE_BINDING = 2
 # What every mobject holds, whatever kind it is, as a name and a number of floats.
 # Mirrors inserts/common_uniform_members.glsl, and comes first in every block for the
 # same reason it does there: so the inserts reading them work wherever they are used.
@@ -189,12 +194,15 @@ def get_shader_code(
     filename: str,
     data_layout: tuple[int, tuple[tuple[str, int], ...]],
     uniform_dtype: np.dtype,
+    texture_names: tuple[str, ...] = (),
 ) -> str | None:
     """
-    Reads a shader from file, filling in the two things about its source which depend on
-    the mobject it will be drawing: where the fields of a vertex record sit, for the
-    shaders which read the buffer themselves, and what that mobject holds for the whole of
-    itself.
+    Reads a shader from file, filling in what its source depends on about the mobject it
+    will be drawing: where the fields of a vertex record sit, what that mobject holds for
+    the whole of itself, and which of its bindings each image it named is at.
+
+    Generating all three rather than asking a shader to repeat them leaves nothing for the
+    two sides to disagree about.
     """
     code = get_shader_code_from_file(filename)
     if code is None:
@@ -203,7 +211,26 @@ def get_shader_code(
         code
         .replace("// DATA_LAYOUT", get_data_layout_code(data_layout))
         .replace("// MOBJECT_UNIFORMS", uniform_block_code(uniform_dtype))
+        .replace("// TEXTURES", texture_binding_code(texture_names))
     )
+
+
+def texture_binding_code(texture_names: tuple[str, ...]) -> str:
+    """
+    How a shader declares the images its kind of mobject named, and the sampler they share.
+    Generated, so that a shader reads each image from the binding that image was put in
+    rather than from wherever the order of two lists happens to agree.
+    """
+    if not texture_names:
+        return ""
+    lines = [f"@group({RESOURCE_GROUP}) @binding({SAMPLER_BINDING}) "
+             f"var image_sampler: sampler;"]
+    lines += [
+        f"@group({RESOURCE_GROUP}) @binding({FIRST_TEXTURE_BINDING + index}) "
+        f"var {name}: texture_2d<f32>;"
+        for index, name in enumerate(texture_names)
+    ]
+    return "\n".join(lines)
 
 
 def get_data_layout_code(data_layout: tuple[int, tuple[tuple[str, int], ...]]) -> str:

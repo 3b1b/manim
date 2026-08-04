@@ -8,6 +8,8 @@ DATA_STRIDE along with a DATA_OFFSET_<name> for each field, both counted in floa
 */
 // DATA_LAYOUT
 
+// This binding, and those in frame_uniforms.wgsl and mobject_uniforms.wgsl, are what
+// shaders.RESOURCE_GROUP and its bindings say they are
 @group(2) @binding(0) var<storage, read> data: array<f32>;
 
 fn read_float(record: u32, offset: u32) -> f32 {

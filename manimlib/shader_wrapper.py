@@ -2,32 +2,68 @@ from __future__ import annotations
 
 import os
 import re
+from functools import lru_cache
 
 import wgpu
 
 from manimlib.renderer import COLOR_FORMAT
 from manimlib.renderer import DEFAULT
+from manimlib.utils.shaders import DATA_BINDING
+from manimlib.utils.shaders import FIRST_TEXTURE_BINDING
 from manimlib.utils.shaders import get_shader_code
 from manimlib.utils.shaders import get_shader_module
 from manimlib.utils.shaders import image_path_to_texture
 from manimlib.utils.shaders import MOBJECT_GROUP
 from manimlib.utils.shaders import RESOURCE_GROUP
-from manimlib.utils.shaders import Uniforms
-from manimlib.utils.structured_array import StructuredArray
+from manimlib.utils.shaders import SAMPLER_BINDING
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Optional
     from manimlib.renderer import DrawState, Renderer
+    from manimlib.utils.shaders import Uniforms
+    from manimlib.utils.structured_array import StructuredArray
 
 
-# What a shader reads from the group of things belonging to the mobject being drawn. Every
-# shader reads its records from binding zero; those with textures take a sampler and then
-# one binding for each, in the order the mobject names them.
-DATA_BINDING = 0
-SAMPLER_BINDING = 1
-FIRST_TEXTURE_BINDING = 2
+@lru_cache()
+def get_bind_layouts(device, frame_layout, texture_count: int):
+    """
+    What a shader may bind: the values for the whole frame, the values for the mobject being
+    drawn, and its records along with a texture for each image its kind names.
+
+    None of that varies between two mobjects of a kind, so it is made once for each number
+    of textures a kind might have. Which matters: a pipeline is built against these, so
+    making them per mobject would have every mobject compiling pipelines of its own.
+    """
+    resource_entries = [{
+        "binding": DATA_BINDING,
+        "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
+        "buffer": {"type": wgpu.BufferBindingType.read_only_storage},
+    }]
+    if texture_count:
+        resource_entries.append({
+            "binding": SAMPLER_BINDING,
+            "visibility": wgpu.ShaderStage.FRAGMENT,
+            "sampler": {"type": wgpu.SamplerBindingType.filtering},
+        })
+        resource_entries += [{
+            "binding": FIRST_TEXTURE_BINDING + index,
+            "visibility": wgpu.ShaderStage.FRAGMENT,
+            "texture": {"sample_type": wgpu.TextureSampleType.float},
+        } for index in range(texture_count)]
+
+    mobject_layout = device.create_bind_group_layout(entries=[{
+        "binding": 0,
+        "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
+        "buffer": {"type": wgpu.BufferBindingType.uniform},
+    }])
+    resource_layout = device.create_bind_group_layout(entries=resource_entries)
+    pipeline_layout = device.create_pipeline_layout(bind_group_layouts=[
+        frame_layout, mobject_layout, resource_layout,
+    ])
+    return mobject_layout, resource_layout, pipeline_layout
+
 
 # Color channels blend in the usual way, but the alpha channel takes the source's alpha
 # whole, so that drawing something half transparent onto an opaque background leaves it
@@ -90,10 +126,9 @@ class ShaderWrapper(object):
         self.verts_per_record = verts_per_record
 
         self.init_layouts()
-        self.init_program_code()
+        self.init_program()
         for old, new in code_replacements.items():
             self.replace_code(old, new)
-        self.init_program()
         self.init_resources()
 
     def __deepcopy__(self, memo):
@@ -109,63 +144,31 @@ class ShaderWrapper(object):
         Where the fields of one of this mobject's vertex records sit, which along with what
         it holds for the whole of itself is all that the shader source generated for it
         depends on, and so is also the key that source gets cached under.
-
-        And what the shader may bind: its records, and a sampler with a texture for each
-        image the mobject named. Those are settled once, a shader's bindings being part of
-        what a pipeline is built from.
         """
         dtype = self.mobject_data.dtype
         self.data_layout = (
             dtype.itemsize // 4,
             tuple((name, dtype.fields[name][1] // 4) for name in dtype.names),
         )
-
-        entries = [{
-            "binding": DATA_BINDING,
-            "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
-            "buffer": {"type": wgpu.BufferBindingType.read_only_storage},
-        }]
-        if self.texture_paths:
-            entries.append({
-                "binding": SAMPLER_BINDING,
-                "visibility": wgpu.ShaderStage.FRAGMENT,
-                "sampler": {"type": wgpu.SamplerBindingType.filtering},
-            })
-            for index in range(len(self.texture_paths)):
-                entries.append({
-                    "binding": FIRST_TEXTURE_BINDING + index,
-                    "visibility": wgpu.ShaderStage.FRAGMENT,
-                    "texture": {"sample_type": wgpu.TextureSampleType.float},
-                })
-        self.resource_layout = self.device.create_bind_group_layout(entries=entries)
-        self.mobject_layout = self.device.create_bind_group_layout(entries=[{
-            "binding": 0,
-            "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
-            "buffer": {"type": wgpu.BufferBindingType.uniform},
-        }])
-        self.pipeline_layout = self.device.create_pipeline_layout(bind_group_layouts=[
-            self.renderer.frame_layout, self.mobject_layout, self.resource_layout,
-        ])
-
-    def init_program_code(self) -> None:
-        self.program_code: dict[str, str | None] = {"shader": self.get_code("shader")}
-
-    def get_code(self, name: str) -> str | None:
-        return get_shader_code(
-            os.path.join(self.shader_folder, f"{name}.wgsl"),
-            self.data_layout,
-            self.mobject_uniforms.dtype,
+        self.mobject_layout, self.resource_layout, self.pipeline_layout = get_bind_layouts(
+            self.device, self.renderer.frame_layout, len(self.texture_paths),
         )
 
     def init_program(self) -> None:
-        code = self.program_code["shader"]
-        self.module = None if code is None else get_shader_module(self.device, code)
+        self.code = self.get_code()
+        self.module = None if self.code is None else get_shader_module(self.device, self.code)
+
+    def get_code(self) -> str | None:
+        return get_shader_code(
+            os.path.join(self.shader_folder, "shader.wgsl"),
+            self.data_layout,
+            self.mobject_uniforms.dtype,
+            tuple(self.texture_paths),
+        )
 
     def replace_code(self, old: str, new: str) -> None:
-        for name, code in self.program_code.items():
-            if code is not None:
-                self.program_code[name] = re.sub(old, new, code)
-        self.init_program()
+        self.code = re.sub(old, new, self.code)
+        self.module = get_shader_module(self.device, self.code)
 
     def init_resources(self) -> None:
         self.data_buffer = None
@@ -271,7 +274,7 @@ class ShaderWrapper(object):
         is what gets cached and there is nothing left to say around the draw itself.
         """
         samples = self.renderer.samples
-        key = (id(self.module), id(self.pipeline_layout), state, self.depth_test, samples)
+        key = (self.module, len(self.texture_paths), state, self.depth_test, samples)
 
         def build():
             return self.device.create_render_pipeline(
