@@ -43,13 +43,12 @@ class Surface(Mobject):
     shader_folder: str = "surface"
     # Points are sent as the grid they sample, and the vertex shader works out the mesh
     # over it, expanding each of them into one square's worth of vertices. See
-    # inserts/surface_mesh.glsl
+    # inserts/surface_mesh.wgsl
     verts_per_record: int = 6
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ])
-    # Mirrors inserts/surface_uniforms.glsl
     uniform_dtype: np.dtype = uniform_block_dtype(
         *COMMON_UNIFORMS,
         ("resolution", 2),
@@ -248,7 +247,7 @@ class Surface(Mobject):
         """
         Which way the surface faces at each of its points, from the directions it runs
         in either way from there. The same thing the vertex shader works out, see
-        inserts/surface_mesh.glsl, for the sake of anything in python which wants it.
+        inserts/surface_mesh.wgsl, for the sake of anything in python which wants it.
         """
         nu, nv = self.get_resolution()
         grid = self.get_points().reshape((nu, nv, 3))
@@ -355,7 +354,6 @@ class TexturedSurface(Surface):
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ])
-    # Mirrors inserts/textured_surface_uniforms.glsl
     uniform_dtype: np.dtype = uniform_block_dtype(
         *COMMON_UNIFORMS,
         ("resolution", 2),
@@ -467,7 +465,7 @@ class TexturedGeometry(TexturedSurface):
     """
     An imported mesh, which is a list of triangles rather than a grid of points, so
     each of its faces is written out as three points of its own. A resolution of zero
-    is what tells the vertex shader to read them that way, see surface_mesh.glsl.
+    is what tells the vertex shader to read them that way, see surface_mesh.wgsl.
     """
     # One vertex per record, the records being the corners of each triangle in turn
     verts_per_record: int = 1
@@ -476,7 +474,7 @@ class TexturedGeometry(TexturedSurface):
         self.num_textures = 1
         self.geometry = geometry
         self.texture_file = texture_file
-        # Not a grid, which is what the vertex shader goes by, see surface_mesh.glsl
+        # Not a grid, which is what the vertex shader goes by, see surface_mesh.wgsl
         self.initial_resolution = (0, 0)
         Mobject.__init__(
             self,

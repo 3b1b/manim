@@ -80,8 +80,8 @@ class Mobject(object):
         ('rgba', np.float32, (4,)),
     ])
     # One value each for the whole mobject, as opposed to one per point, given as a
-    # name and how many floats it holds. Must match the block its shaders declare,
-    # see inserts/mobject_uniforms.glsl, which check_uniform_block makes sure of.
+    # name and how many floats it holds. The struct its shaders read is generated from
+    # this, see inserts/mobject_uniforms.wgsl, so the two cannot disagree.
     uniform_dtype: np.dtype = uniform_block_dtype(*COMMON_UNIFORMS)
     aligned_data_keys = ['point']
     pointlike_data_keys = ['point']

@@ -68,7 +68,6 @@ class VMobject(Mobject):
         # First and last record index of the subpath a point belongs to
         ('subpath_range', np.float32, (2,)),
     ])
-    # Mirrors inserts/vmobject_uniforms.glsl
     uniform_dtype: np.dtype = uniform_block_dtype(
         *COMMON_UNIFORMS,
         ("anti_alias_width", 1),
@@ -151,7 +150,7 @@ class VMobject(Mobject):
             # nothing for a per point value to mean
             fill_rgba=np.zeros(4),
             # A second color, equal to the first unless a gradient was asked for,
-            # along with the two points it runs between, see inserts/fill_color.glsl
+            # along with the two points it runs between, see inserts/fill_color.wgsl
             fill_rgba_end=np.zeros(4),
             gradient_start=np.zeros(3),
             gradient_end=np.zeros(3),

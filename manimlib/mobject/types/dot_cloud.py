@@ -33,7 +33,6 @@ class DotCloud(PMobject):
         ('radius', np.float32, (1,)),
         ('rgba', np.float32, (4,)),
     ]
-    # Mirrors inserts/dot_cloud_uniforms.glsl
     uniform_dtype: np.dtype = uniform_block_dtype(
         *COMMON_UNIFORMS,
         ("anti_alias_width", 1),

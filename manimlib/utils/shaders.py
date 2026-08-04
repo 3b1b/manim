@@ -14,8 +14,7 @@ from manimlib.utils.file_ops import find_file
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Any, Sequence, Optional
-    from manimlib.typing import UniformDict
+    from typing import Any, Sequence
 
 
 @lru_cache()
@@ -47,13 +46,11 @@ def get_shader_module(device, code: str):
 
 
 """
-A mobject's uniforms travel in one std140 block, written once per mobject rather than
-one uniform at a time. Each kind of mobject declares its own block, starting with the
-members every kind has, see inserts/vmobject_uniforms.glsl for an example, and lays
-out a matching dtype with uniform_block_dtype, see Mobject.uniform_dtype.
+A mobject's uniforms travel in one block, written once per mobject rather than one
+uniform at a time. Each kind of mobject lays out the block it wants with
+uniform_block_dtype, starting with the members every kind has, see Mobject.uniform_dtype,
+and the struct its shaders read is generated from that dtype, see uniform_block_code.
 """
-MOBJECT_BLOCK_NAME = "MobjectUniforms"
-MOBJECT_BLOCK_BINDING = 0
 # Where a shader finds each thing it reads, grouped by how often it changes: once a frame,
 # once a mobject, and once the buffers behind it are replaced. A shader says these numbers
 # itself, in the inserts declaring each, so what is here is what those agree with.
@@ -66,8 +63,7 @@ DATA_BINDING = 0
 SAMPLER_BINDING = 1
 FIRST_TEXTURE_BINDING = 2
 # What every mobject holds, whatever kind it is, as a name and a number of floats.
-# Mirrors inserts/common_uniform_members.glsl, and comes first in every block for the
-# same reason it does there: so the inserts reading them work wherever they are used.
+# First in every block, so that the inserts reading them work wherever they are used.
 COMMON_UNIFORMS = (
     ("is_fixed_in_frame", 1),
     ("shading", 3),
@@ -84,11 +80,9 @@ BLOCK_MEMBER_TYPES = {1: "f32", 2: "vec2f", 3: "vec3f", 4: "vec4f", 16: "mat4x4f
 """
 The camera's uniforms travel the same way a mobject's do, in one block, except that there
 is one of them for the whole frame rather than one per mobject. Every program reads it from
-the same buffer, bound once when the program is compiled, see get_shader_program.
+the same buffer, bound once a frame rather than once a mobject, see Renderer.
 """
-FRAME_BLOCK_NAME = "FrameUniforms"
-FRAME_BLOCK_BINDING = 1
-# Mirrors inserts/frame_uniforms.glsl. Ordered so that each vec3 is followed by the float
+# Mirrors inserts/frame_uniforms.wgsl. Ordered so that each vec3 is followed by the float
 # which fits beside it, leaving nothing padded but the last three floats.
 FRAME_UNIFORMS = (
     ("view", 16),
