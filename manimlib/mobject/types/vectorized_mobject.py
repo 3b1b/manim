@@ -54,7 +54,7 @@ SubVmobjectType = TypeVar('SubVmobjectType', bound='VMobject')
 if TYPE_CHECKING:
     from typing import Callable, Tuple, Any, Optional
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Self
-    from moderngl import Context
+    from manimlib.renderer import Renderer
 
 
 GRADIENT_POINT_KEYS = ['gradient_start', 'gradient_end']
@@ -1276,9 +1276,9 @@ class VMobject(Mobject):
 
     # For shaders
 
-    def init_shader_wrapper(self, ctx: Context):
+    def init_shader_wrapper(self, renderer: Renderer):
         self.shader_wrapper = VShaderWrapper(
-            ctx=ctx,
+            renderer=renderer,
             mobject_data=self.data,
             mobject_uniforms=self.uniforms,
             code_replacements=self.shader_code_replacements,
@@ -1287,8 +1287,8 @@ class VMobject(Mobject):
             depth_test=self.depth_test
         )
 
-    def get_shader_wrapper(self, ctx: Context) -> VShaderWrapper:
-        wrapper = super().get_shader_wrapper(ctx)
+    def get_shader_wrapper(self, renderer: Renderer) -> VShaderWrapper:
+        wrapper = super().get_shader_wrapper(renderer)
         wrapper.stroke_behind = self.stroke_behind
         return wrapper
 

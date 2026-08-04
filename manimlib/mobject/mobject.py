@@ -56,7 +56,7 @@ if TYPE_CHECKING:
     from typing import Callable, Iterator, Union, Tuple, Optional, Any
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4Array, Vect3Array, Self
-    from moderngl.context import Context
+    from manimlib.renderer import Renderer
 
     T = TypeVar('T')
     TimeBasedUpdater = Callable[["Mobject", float], "Mobject" | None]
@@ -1976,9 +1976,9 @@ class Mobject(object):
 
     # For shader data
 
-    def init_shader_wrapper(self, ctx: Context):
+    def init_shader_wrapper(self, renderer: Renderer):
         self.shader_wrapper = ShaderWrapper(
-            ctx=ctx,
+            renderer=renderer,
             mobject_data=self.data,
             shader_folder=self.shader_folder,
             mobject_uniforms=self.uniforms,
@@ -1988,9 +1988,9 @@ class Mobject(object):
             verts_per_record=self.verts_per_record,
         )
 
-    def get_shader_wrapper(self, ctx: Context) -> ShaderWrapper:
+    def get_shader_wrapper(self, renderer: Renderer) -> ShaderWrapper:
         if self.shader_wrapper is None:
-            self.init_shader_wrapper(ctx)
+            self.init_shader_wrapper(renderer)
         # Whatever the wrapper needs a copy of is told to it here, where it is asked for
         # once a frame, rather than by everything which might change one of them having
         # to remember to pass it along
@@ -2000,12 +2000,12 @@ class Mobject(object):
     def get_uniforms(self):
         return self.uniforms
 
-    def render(self, ctx: Context):
+    def render(self, renderer: Renderer):
         for mob in self.get_family():
             if len(mob.data) == 0:
                 # Groups hold no points of their own, but their members might
                 continue
-            shader_wrapper = mob.get_shader_wrapper(ctx)
+            shader_wrapper = mob.get_shader_wrapper(renderer)
             shader_wrapper.pre_render()
             shader_wrapper.render()
 

@@ -12,6 +12,7 @@ from manimlib.constants import FRAME_HEIGHT
 from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
+from manimlib.renderer import Renderer
 from manimlib.utils.color import color_to_rgba
 from manimlib.utils.shaders import set_shared_uniforms
 
@@ -87,6 +88,8 @@ class Camera(object):
             moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA,
         )
         gl.glClearStencil(0)
+        # What every mobject drawn by this camera is handed in order to draw itself
+        self.renderer = Renderer(self.ctx)
         # Every vertex shader writes a distance for all four clip planes, using a
         # plane of all zeros to mean nothing gets clipped, so these stay on
         for clip_distance in [gl.GL_CLIP_DISTANCE0, gl.GL_CLIP_DISTANCE1,
@@ -282,7 +285,7 @@ class Camera(object):
         # rendering was interrupted partway through
         gl.glClear(gl.GL_STENCIL_BUFFER_BIT)
         for mobject in mobjects:
-            mobject.render(self.ctx)
+            mobject.render(self.renderer)
 
         if self.window:
             self.window.swap_buffers()

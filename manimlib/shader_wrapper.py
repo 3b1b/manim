@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Optional
+    from manimlib.renderer import Renderer
 
 UNIFORM_BLOCK_BINDING = 0
 
@@ -53,7 +54,7 @@ class ShaderWrapper(object):
 
     def __init__(
         self,
-        ctx: moderngl.context.Context,
+        renderer: Renderer,
         mobject_data: StructuredArray,
         mobject_uniforms: Uniforms,
         shader_folder: Optional[str] = None,
@@ -62,7 +63,9 @@ class ShaderWrapper(object):
         code_replacements: dict[str, str] = dict(),
         verts_per_record: int = 0,
     ):
-        self.ctx = ctx
+        self.renderer = renderer
+        # The context is the renderer's, kept here as well for how often it is wanted
+        self.ctx = renderer.ctx
         self.mobject_data = mobject_data
         self.shader_folder = shader_folder
         self.depth_test = depth_test
@@ -378,7 +381,7 @@ class VShaderWrapper(ShaderWrapper):
 
     def __init__(
         self,
-        ctx: moderngl.context.Context,
+        renderer: Renderer,
         mobject_data: StructuredArray,
         mobject_uniforms: Uniforms,
         shader_folder: Optional[str] = None,
@@ -390,7 +393,7 @@ class VShaderWrapper(ShaderWrapper):
     ):
         self.stroke_behind = stroke_behind
         super().__init__(
-            ctx=ctx,
+            renderer=renderer,
             mobject_data=mobject_data,
             shader_folder=shader_folder,
             mobject_uniforms=mobject_uniforms,

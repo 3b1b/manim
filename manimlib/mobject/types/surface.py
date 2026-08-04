@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Tuple
 
-    from moderngl.context import Context
+    from manimlib.renderer import Renderer
 
     from manimlib.camera.camera import Camera
     from manimlib.typing import ManimColor, Vect3, Vect3Array, Self
@@ -226,14 +226,14 @@ class Surface(Mobject):
         # updater to do the sorting, see set_sort_to_camera
         return self.set_sort_to_camera()
 
-    def get_shader_wrapper(self, ctx: Context) -> SurfaceShaderWrapper:
-        wrapper = super().get_shader_wrapper(ctx)
+    def get_shader_wrapper(self, renderer: Renderer) -> SurfaceShaderWrapper:
+        wrapper = super().get_shader_wrapper(renderer)
         wrapper.sort_to_camera = self.sort_to_camera
         return wrapper
 
-    def init_shader_wrapper(self, ctx: Context):
+    def init_shader_wrapper(self, renderer: Renderer):
         self.shader_wrapper = SurfaceShaderWrapper(
-            ctx=ctx,
+            renderer=renderer,
             sort_to_camera=self.sort_to_camera,
             mobject_data=self.data,
             mobject_uniforms=self.uniforms,
