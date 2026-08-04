@@ -22,10 +22,12 @@ out vec4 frag_color;
 #INSERT mobject_uniforms.glsl
 #INSERT finalize_color.glsl
 #INSERT complex_functions.glsl
+#INSERT clip_test.glsl
 
 const int MAX_DEGREE = 5;
 
 void main() {
+    clip_test();
     vec3 color_map[9] = vec3[9](
         color0, color1, color2, color3,
         color4, color5, color6, color7, color8

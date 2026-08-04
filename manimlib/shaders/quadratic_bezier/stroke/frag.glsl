@@ -9,7 +9,10 @@ in vec4 color;
 
 out vec4 frag_color;
 
+#INSERT clip_test.glsl
+
 void main() {
+    clip_test();
     frag_color = color;
     // sdf for the region around the curve we wish to color.
     float signed_dist_to_region = abs(dist_to_aaw) - half_width_to_aaw;

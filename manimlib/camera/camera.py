@@ -88,11 +88,6 @@ class Camera(object):
         gl.glClearStencil(0)
         # What every mobject drawn by this camera is handed in order to draw itself
         self.renderer = Renderer(self.ctx)
-        # Every vertex shader writes a distance for all four clip planes, using a
-        # plane of all zeros to mean nothing gets clipped, so these stay on
-        for clip_distance in [gl.GL_CLIP_DISTANCE0, gl.GL_CLIP_DISTANCE1,
-                              gl.GL_CLIP_DISTANCE2, gl.GL_CLIP_DISTANCE3]:
-            gl.glEnable(clip_distance)
 
     def init_fbo(self) -> None:
         # This is the buffer used when writing to a video/image file

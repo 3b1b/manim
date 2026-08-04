@@ -7,7 +7,10 @@ in vec2 uv_coords;
 
 out vec4 frag_color;
 
+#INSERT clip_test.glsl
+
 void main() {
+    clip_test();
     if (color.a == 0) discard;
 
     // For the triangles hugging a bezier curve, cut away the part of the
