@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
+
 import numpy as np
 import wgpu
 from PIL import Image
@@ -49,6 +51,11 @@ class Camera(object):
         self.background_rgba: list[float] = list(color_to_rgba(
             background_color, background_opacity
         ))
+        # Where a window is showing the scene, frames are drawn at its size rather than at
+        # the resolution they are written at, since drawing 4k to shrink into a small window
+        # costs more than it shows. See at_output_resolution for the exception.
+        self.draw_at_window_size = window is not None
+        self.pixel_shape = (0, 0)
         self.init_frame(**frame_config)
         self.init_renderer()
         self.init_target()
@@ -59,6 +66,34 @@ class Camera(object):
 
     def init_renderer(self) -> None:
         self.renderer = Renderer()
+        if self.window is not None:
+            self.window.configure(self.renderer)
+
+    def get_target_shape(self) -> tuple[int, int]:
+        if self.draw_at_window_size and self.window is not None:
+            return self.window.get_size()
+        return self.default_pixel_shape
+
+    def resize_target(self) -> None:
+        """
+        Makes what a frame is drawn into the size it ought to be, which changes when the
+        window is resized or when a frame is wanted at the resolution it will be written at.
+        """
+        if self.get_target_shape() != self.pixel_shape:
+            self.init_target()
+
+    @contextmanager
+    def at_output_resolution(self):
+        """
+        Draws at the resolution frames are written at rather than at the window's size, for
+        as long as the block lasts. Without a window the two are already the same.
+        """
+        was_at_window_size = self.draw_at_window_size
+        self.draw_at_window_size = False
+        try:
+            yield
+        finally:
+            self.draw_at_window_size = was_at_window_size
 
     def init_target(self) -> None:
         """
@@ -72,7 +107,7 @@ class Camera(object):
         rather than somewhere to draw.
         """
         device = self.renderer.device
-        self.pixel_shape = self.default_pixel_shape
+        self.pixel_shape = self.get_target_shape()
         width, height = self.pixel_shape
         samples = self.renderer.samples = max(1, self.samples)
 
@@ -105,14 +140,12 @@ class Camera(object):
         self.color_view = drawn_into.create_view()
         self.resolve_view = self.color_texture.create_view() if samples > 1 else None
         self.depth_stencil_view = self.depth_stencil_texture.create_view()
+        # What a finished frame is read from, which is where samples end up rather than
+        # where they are taken
+        self.frame_view = self.color_texture.create_view()
 
     def init_light_source(self) -> None:
         self.light_source = Point(self.light_source_position)
-
-    def use_window_fbo(self, use: bool = True):
-        # Which size to draw at when there is a window, see the port plan's decision 6.
-        # Nothing to do until the window is ported.
-        pass
 
     def get_attachments(self) -> dict:
         """
@@ -205,6 +238,7 @@ class Camera(object):
 
     # Rendering
     def capture(self, *mobjects: Mobject) -> None:
+        self.resize_target()
         wrappers = [
             wrapper
             for mobject in mobjects
@@ -221,6 +255,9 @@ class Camera(object):
         for wrapper in wrappers:
             wrapper.render()
         self.renderer.end_frame()
+
+        if self.window is not None:
+            self.window.show(self.frame_view)
 
     def refresh_uniforms(self) -> None:
         """

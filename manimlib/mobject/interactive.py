@@ -451,7 +451,7 @@ class Textbox(ControlMobject):
             old_value = mob.get_value()
             new_value = old_value
             if char.isalnum():
-                if modifiers & (Mods.SHIFT | Mods.CAPS_LOCK):
+                if modifiers & Mods.SHIFT:
                     new_value = old_value + char.upper()
                 else:
                     new_value = old_value + char.lower()

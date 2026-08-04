@@ -184,9 +184,8 @@ class Scene(object):
 
     def interact(self) -> None:
         """
-        If there is a window, enter a loop
-        which updates the frame while under
-        the hood calling the pyglet event loop
+        If there is a window, enter a loop which updates the frame,
+        each of which pumps whatever the window has to say
         """
         if self.window is None:
             return
@@ -220,13 +219,13 @@ class Scene(object):
     # Only these methods should touch the camera
 
     def get_image(self) -> Image:
-        if self.window is not None:
-            self.camera.use_window_fbo(False)
+        if self.window is None:
+            return self.camera.get_image()
+        # A window has the camera drawing at its size, so the frame has to be drawn again
+        # at the resolution an image of it is meant to come out at
+        with self.camera.at_output_resolution():
             self.camera.capture(*self.mobjects)
-        image = self.camera.get_image()
-        if self.window is not None:
-            self.camera.use_window_fbo(True)
-        return image
+            return self.camera.get_image()
 
     def show(self) -> None:
         self.update_frame(force_draw=True)
@@ -244,7 +243,7 @@ class Scene(object):
         if self.window and dt == 0 and not self.window.has_undrawn_event() and not force_draw:
             # In this case, there's no need for new rendering, but we
             # shoudl still listen for new events
-            self.window._window.dispatch_events()
+            self.window.poll_events()
             return
 
         self.camera.capture(*self.mobjects)
@@ -685,13 +684,12 @@ class Scene(object):
 
     @contextmanager
     def temp_record(self):
-        self.camera.use_window_fbo(False)
-        self.file_writer.begin_insert()
-        try:
-            yield
-        finally:
-            self.file_writer.end_insert()
-            self.camera.use_window_fbo(True)
+        with self.camera.at_output_resolution():
+            self.file_writer.begin_insert()
+            try:
+                yield
+            finally:
+                self.file_writer.end_insert()
 
     def temp_config_change(self, skip=False, record=False, progress_bar=False):
         stack = ExitStack()

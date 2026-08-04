@@ -186,11 +186,6 @@ colors:
   pure_red: "#FF0000"
   pure_green: "#00FF00"
   pure_blue: "#0000FF"
-# PyOpenGL can ask the driver whether anything went wrong after each call it makes.
-# On by default, a mistake in the rendering otherwise showing up only as something
-# looking wrong, or as nothing being drawn at all. Turn it off for the frames it
-# costs: about a tenth of the drawing time for a screen full of text.
-gl_error_checking: True
 # Can be DEBUG / INFO / WARNING / ERROR / CRITICAL
 log_level: "INFO"
 universal_import_line: "from manimlib import *"

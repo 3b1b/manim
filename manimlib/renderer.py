@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 
 import wgpu
@@ -7,6 +8,8 @@ import wgpu
 from manimlib.utils.shaders import FRAME_DTYPE
 from manimlib.utils.shaders import FRAME_GROUP
 from manimlib.utils.shaders import Uniforms
+from manimlib.utils.shaders import get_shader_code_from_file
+from manimlib.utils.shaders import get_shader_module
 
 from typing import TYPE_CHECKING
 
@@ -19,6 +22,8 @@ if TYPE_CHECKING:
 DEPTH_STENCIL_FORMAT = wgpu.TextureFormat.depth24plus_stencil8
 # What a frame is drawn into and read back from
 COLOR_FORMAT = wgpu.TextureFormat.rgba8unorm
+# The shader which puts a finished frame on screen, see Renderer.present
+PRESENT_SHADER = os.path.join("present", "shader.wgsl")
 
 KEEP = ("keep", "keep", "keep")
 
@@ -146,6 +151,7 @@ class Renderer(object):
         self.pipelines: dict[Any, Any] = dict()
         self.encoder = None
         self.pass_ = None
+        self.init_present_resources()
 
     def send_frame_uniforms(self) -> None:
         """The frame's uniforms, if they have been written to since they were last sent"""
@@ -175,3 +181,61 @@ class Renderer(object):
         self.queue.submit([self.encoder.finish()])
         self.pass_ = None
         self.encoder = None
+
+    def present(self, frame_view, target_view, format: str) -> None:
+        """
+        Draws a finished frame onto what a window will show, stretched to fill it, see
+        shaders/present/shader.wgsl. This is a pass of its own rather than part of the
+        frame's, the two drawing into textures of different sizes and formats.
+        """
+        module = get_shader_module(self.device, get_shader_code_from_file(PRESENT_SHADER))
+        layout = self.present_layout
+        pipeline = self.get_pipeline(
+            (module, format),
+            lambda: self.device.create_render_pipeline(
+                layout=self.device.create_pipeline_layout(bind_group_layouts=[layout]),
+                vertex={"module": module, "entry_point": "vs_main"},
+                fragment={
+                    "module": module,
+                    "entry_point": "fs_main",
+                    "targets": [{"format": format}],
+                },
+                primitive={"topology": wgpu.PrimitiveTopology.triangle_list},
+            ),
+        )
+        bind_group = self.device.create_bind_group(layout=layout, entries=[
+            {"binding": 0, "resource": frame_view},
+            {"binding": 1, "resource": self.present_sampler},
+        ])
+
+        encoder = self.device.create_command_encoder()
+        render_pass = encoder.begin_render_pass(color_attachments=[{
+            "view": target_view,
+            "load_op": wgpu.LoadOp.clear,
+            "store_op": wgpu.StoreOp.store,
+            "clear_value": (0.0, 0.0, 0.0, 1.0),
+        }])
+        render_pass.set_pipeline(pipeline)
+        render_pass.set_bind_group(0, bind_group)
+        render_pass.draw(3)
+        render_pass.end()
+        self.queue.submit([encoder.finish()])
+
+    def init_present_resources(self) -> None:
+        """What Renderer.present reads a finished frame through, made once"""
+        self.present_layout = self.device.create_bind_group_layout(entries=[
+            {
+                "binding": 0,
+                "visibility": wgpu.ShaderStage.FRAGMENT,
+                "texture": {"sample_type": wgpu.TextureSampleType.float},
+            },
+            {
+                "binding": 1,
+                "visibility": wgpu.ShaderStage.FRAGMENT,
+                "sampler": {"type": wgpu.SamplerBindingType.filtering},
+            },
+        ])
+        # Smoothly, since a window is rarely exactly the size of the frame drawn for it
+        self.present_sampler = self.device.create_sampler(
+            mag_filter=wgpu.FilterMode.linear, min_filter=wgpu.FilterMode.linear,
+        )

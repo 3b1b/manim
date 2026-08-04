@@ -1,13 +1,8 @@
 from __future__ import annotations
 
+import glfw
 import numpy as np
-
-import moderngl_window as mglw
-from moderngl_window.context.pyglet.window import Window as PygletWindow
-from moderngl_window.timers.clock import Timer
-from functools import wraps
-from pyglet.window import key as PygletWindowKeys
-import screeninfo
+from rendercanvas.glfw import RenderCanvas
 
 from manimlib.constants import ASPECT_RATIO
 from manimlib.constants import FRAME_SHAPE
@@ -17,57 +12,69 @@ from manimlib.event_keys import Mods
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, TypeVar, Optional
+    from typing import Optional, Sequence
+    from manimlib.renderer import Renderer
     from manimlib.scene.scene import Scene
 
-    T = TypeVar("T")
 
-
-# What the window is built on calls a key one thing and manim calls it another, so this
-# is the one place either vocabulary meets the other, see event_keys.py. A key which types
-# something needs no entry, being named by what it types in both.
-KEY_NAMES: dict[int, int] = {
-    PygletWindowKeys.BACKSPACE: Keys.BACKSPACE,
-    PygletWindowKeys.TAB: Keys.TAB,
-    PygletWindowKeys.ENTER: Keys.ENTER,
-    PygletWindowKeys.ESCAPE: Keys.ESCAPE,
-    PygletWindowKeys.DELETE: Keys.DELETE,
-    PygletWindowKeys.LEFT: Keys.LEFT,
-    PygletWindowKeys.RIGHT: Keys.RIGHT,
-    PygletWindowKeys.UP: Keys.UP,
-    PygletWindowKeys.DOWN: Keys.DOWN,
-    PygletWindowKeys.LSHIFT: Keys.SHIFT,
-    PygletWindowKeys.RSHIFT: Keys.SHIFT,
-    PygletWindowKeys.LCTRL: Keys.CTRL,
-    PygletWindowKeys.RCTRL: Keys.CTRL,
-    PygletWindowKeys.LALT: Keys.ALT,
-    PygletWindowKeys.RALT: Keys.ALT,
-    PygletWindowKeys.LCOMMAND: Keys.CMD,
-    PygletWindowKeys.RCOMMAND: Keys.CMD,
+# What the window is built on names a key the way a browser does, and manim names it after
+# event_keys.py, so this is the one place either vocabulary meets the other. A key which
+# types something needs no entry, being named by what it types in both.
+KEY_NAMES: dict[str, int] = {
+    "Backspace": Keys.BACKSPACE,
+    "Tab": Keys.TAB,
+    "Enter": Keys.ENTER,
+    "Escape": Keys.ESCAPE,
+    "Delete": Keys.DELETE,
+    "ArrowLeft": Keys.LEFT,
+    "ArrowRight": Keys.RIGHT,
+    "ArrowUp": Keys.UP,
+    "ArrowDown": Keys.DOWN,
+    "Shift": Keys.SHIFT,
+    "Control": Keys.CTRL,
+    "Alt": Keys.ALT,
+    "Meta": Keys.CMD,
 }
-MOD_NAMES: list[tuple[int, int]] = [
-    (PygletWindowKeys.MOD_SHIFT, Mods.SHIFT),
-    (PygletWindowKeys.MOD_CTRL, Mods.CTRL),
-    (PygletWindowKeys.MOD_ALT, Mods.ALT),
-    (PygletWindowKeys.MOD_COMMAND, Mods.CMD),
-    (PygletWindowKeys.MOD_CAPSLOCK, Mods.CAPS_LOCK),
-]
+MOD_NAMES: dict[str, int] = {
+    "Shift": Mods.SHIFT,
+    "Control": Mods.CTRL,
+    "Alt": Mods.ALT,
+    "Meta": Mods.CMD,
+}
+# A wheel is reported in hundredths of a notch, the way a browser reports one, and manim's
+# scroll_sensitivity was chosen against the whole notches a window used to report
+WHEEL_NOTCH = 100.0
+# Where the corner named by a position string sits along each edge of the monitor
+POSITION_STEPS = {"L": 0.0, "U": 0.0, "O": 0.5, "R": 1.0, "D": 1.0}
 
 
-def to_key(symbol: int) -> int:
-    return KEY_NAMES.get(symbol, symbol)
+def to_key(name: str) -> Optional[int]:
+    """
+    manim's name for a key, or None for one it has no name for, which is every key nothing
+    can be bound to. A letter comes back the same whether or not shift was held, so that a
+    binding tested while shift is down still matches.
+    """
+    if name in KEY_NAMES:
+        return KEY_NAMES[name]
+    return ord(name.lower()) if len(name) == 1 else None
 
 
-def to_mods(modifiers: int) -> int:
-    return sum(mine for theirs, mine in MOD_NAMES if modifiers & theirs)
+def to_mods(names: Sequence[str]) -> int:
+    return sum(MOD_NAMES.get(name, 0) for name in names)
 
 
-class Window(PygletWindow):
-    fullscreen: bool = False
-    resizable: bool = True
-    gl_version: tuple[int, int] = (3, 3)
-    vsync: bool = True
-    cursor: bool = True
+class Window(object):
+    """
+    Where a scene is previewed: somewhere to show a finished frame, and where mouse and key
+    events come from.
+
+    manim's own code drives the loop, self.wait and self.embed being that loop, so a frame is
+    asked for whenever the scene says rather than being drawn from a callback a framework
+    decides when to call. What the canvas is asked for is the part worth not owning: a
+    surface, kept configured through resizes and whatever the display's scale factor is, and
+    the presenting of a texture onto it. Nothing is drawn into the window directly, unlike
+    GL, where the window owned a framebuffer and the whole frame went into it.
+    """
 
     def __init__(
         self,
@@ -77,21 +84,54 @@ class Window(PygletWindow):
         full_screen: bool = False,
         size: Optional[tuple[int, int]] = None,
         position: Optional[tuple[int, int]] = None,
-        samples: int = 0
     ):
-        self.scene = scene
-        self.monitor = self.get_monitor(monitor_index)
-        self.default_size = size or self.get_default_size(full_screen)
-        self.default_position = position or self.position_from_string(position_string)
-        self.pressed_keys = set()
+        self.scene: Optional[Scene] = None
+        self.renderer: Optional[Renderer] = None
+        self.frame_view = None
+        self.pressed_keys: set[int] = set()
+        self.pointer_position = np.zeros(2)
+        self.undrawn_event = True
 
-        super().__init__(samples=samples)
-        self.to_default_position()
+        # Asking about monitors needs glfw started, which creating the canvas would
+        # otherwise be what did
+        glfw.init()
+        monitor = self.get_monitor(monitor_index)
+        self.canvas = RenderCanvas(
+            size=size or self.get_default_size(monitor, full_screen),
+            update_mode="manual",
+        )
+        self.canvas.request_draw(self.draw)
+        self.context = self.canvas.get_context("wgpu")
+        glfw.set_window_pos(self.glfw_window, *(
+            position or self.get_position(monitor, position_string)
+        ))
 
-        if self.scene:
+        for event_type, handler in [
+            ("pointer_move", self.on_pointer_move),
+            ("pointer_down", self.on_pointer_down),
+            ("pointer_up", self.on_pointer_up),
+            ("wheel", self.on_wheel),
+            ("key_down", self.on_key_down),
+            ("key_up", self.on_key_up),
+            ("resize", self.on_resize),
+            ("close", self.on_close),
+        ]:
+            self.canvas.add_event_handler(handler, event_type)
+
+        if scene:
             self.init_for_scene(scene)
 
-    def init_for_scene(self, scene: Scene):
+    @property
+    def glfw_window(self):
+        """
+        The window itself, for the two things a canvas offers no way to say: where on which
+        monitor it opens, and that it should take focus. It hands out no handle of its own,
+        so this is the only place reaching past its API, which is a better bargain than
+        owning surface creation, scale factors and presentation for the sake of them.
+        """
+        return self.canvas._window
+
+    def init_for_scene(self, scene: Scene) -> None:
         """
         Resets the state and updates the scene associated to this window.
 
@@ -99,76 +139,113 @@ class Window(PygletWindow):
         `scene.reload()` was requested, which will create new scene instances.
         """
         self.pressed_keys.clear()
-        self._has_undrawn_event = True
-
+        self.undrawn_event = True
         self.scene = scene
-        self.title = str(scene)
+        self.canvas.set_title(str(scene))
 
-        self.init_mgl_context()
-
-        self.timer = Timer()
-        self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
-        mglw.activate_context(window=self, ctx=self.ctx)
-        self.timer.start()
-
-        # This line seems to resync the viewport
-        self.on_resize(*self.size)
-
-    def get_monitor(self, index):
-        try:
-            monitors = screeninfo.get_monitors()
-            return monitors[min(index, len(monitors) - 1)]
-        except screeninfo.ScreenInfoError:
-            # Default fallback
-            return screeninfo.Monitor(width=1920, height=1080)
-
-    def get_default_size(self, full_screen=False):
-        width = self.monitor.width // (1 if full_screen else 2)
-        height = int(width // ASPECT_RATIO)
-        return (width, height)
-
-    def position_from_string(self, position_string):
-        # Alternatively, it might be specified with a string like
-        # UR, OO, DL, etc. specifying what corner it should go to
-        char_to_n = {"L": 0, "U": 0, "O": 1, "R": 2, "D": 2}
-        size = self.default_size
-        width_diff = self.monitor.width - size[0]
-        height_diff = self.monitor.height - size[1]
-        x_step = char_to_n[position_string[1]] * width_diff // 2
-        y_step = char_to_n[position_string[0]] * height_diff // 2
-        return (self.monitor.x + x_step, -self.monitor.y + y_step)
-
-    def focus(self):
+    def configure(self, renderer: Renderer) -> None:
         """
-        Puts focus on this window by hiding and showing it again.
-
-        Note that the pyglet `activate()` method didn't work as expected here,
-        so that's why we have to use this workaround. This will produce a small
-        flicker on the window but at least reliably focuses it. It may also
-        offset the window position slightly.
+        Points the surface at the device whose frames it will be showing, which is the first
+        moment either knows of the other: a window outlives the scenes shown in it, and a
+        scene's camera is what brings a device, see Camera.init_target.
         """
-        self._window.set_visible(False)
-        self._window.set_visible(True)
+        self.renderer = renderer
+        self.format = self.context.get_preferred_format(renderer.device.adapter)
+        self.context.configure(device=renderer.device, format=self.format)
 
-    def to_default_position(self):
-        self.position = self.default_position
-        # Hack. Sometimes, namely when configured to open in a separate window,
-        # the window needs to be resized to display correctly.
-        w, h = self.default_size
-        self.size = (w - 1, h - 1)
-        self.size = (w, h)
+    def get_size(self) -> tuple[int, int]:
+        """How many pixels there are to draw, which is not the size in screen coordinates"""
+        return self.canvas.get_physical_size()
 
-    # Delegate event handling to scene
+    def show(self, frame_view) -> None:
+        """
+        Puts a finished frame on screen. The canvas is what presents, and it presents
+        whatever its draw function drew, so the frame is handed over and then asked for.
+        """
+        self.frame_view = frame_view
+        self.canvas.force_draw()
+        self.undrawn_event = False
+        # Whatever happened while that frame was being drawn, in the same place a window
+        # built on GL pulled events: right after putting a frame on screen
+        self.poll_events()
+
+    def draw(self) -> None:
+        target = self.context.get_current_texture()
+        self.renderer.present(self.frame_view, target.create_view(), self.format)
+
+    def poll_events(self) -> None:
+        """
+        Hands whatever the window has to say to the handlers below, and notices if it has
+        been closed. A canvas does this from its own loop, which manim does not run, and
+        offers no other way of asking for it.
+        """
+        self.canvas._process_events()
+
+    @property
+    def is_closing(self) -> bool:
+        return self.canvas.get_closed()
+
+    def has_undrawn_event(self) -> bool:
+        return self.undrawn_event
+
+    def is_key_pressed(self, key: int) -> bool:
+        return key in self.pressed_keys
+
+    def focus(self) -> None:
+        glfw.focus_window(self.glfw_window)
+
+    def destroy(self) -> None:
+        self.canvas.close()
+
+    # Where it opens
+
+    def get_monitor(self, index: int):
+        monitors = glfw.get_monitors()
+        return monitors[min(index, len(monitors) - 1)] if monitors else None
+
+    def get_monitor_area(self, monitor) -> tuple[int, int, int, int]:
+        """Where the monitor's usable area is and how big it is, in screen coordinates"""
+        if monitor is None:
+            return (0, 0, 1920, 1080)
+        return glfw.get_monitor_workarea(monitor)
+
+    def get_default_size(self, monitor, full_screen: bool) -> tuple[int, int]:
+        _, _, width, _ = self.get_monitor_area(monitor)
+        if not full_screen:
+            width //= 2
+        return (width, int(width / ASPECT_RATIO))
+
+    def get_position(self, monitor, position_string: str) -> tuple[int, int]:
+        """
+        Which corner of the monitor to open in, named by a pair of characters as in UR for
+        upper right or OO for the middle, see the window section of default_config.yml.
+        """
+        left, top, width, height = self.get_monitor_area(monitor)
+        size = self.canvas.get_logical_size()
+        return (
+            int(left + POSITION_STEPS[position_string[1]] * (width - size[0])),
+            int(top + POSITION_STEPS[position_string[0]] * (height - size[1])),
+        )
+
+    # Events, translated and handed to the scene
+
+    def note_event(self) -> None:
+        self.undrawn_event = True
+
     def pixel_coords_to_space_coords(
         self,
-        px: int,
-        py: int,
+        px: float,
+        py: float,
         relative: bool = False
     ) -> np.ndarray:
+        """
+        Where in the scene a place in the window is, both measuring y upwards from the
+        bottom, see event_position for where an event's own way round is undone.
+        """
         if self.scene is None or not hasattr(self.scene, "frame"):
             return np.zeros(3)
 
-        pixel_shape = np.array(self.size)
+        pixel_shape = np.array(self.canvas.get_logical_size())
         fixed_frame_shape = np.array(FRAME_SHAPE)
         frame = self.scene.frame
 
@@ -178,107 +255,87 @@ class Window(PygletWindow):
             coords[:2] -= 0.5 * fixed_frame_shape
         return frame.from_fixed_frame_point(coords, relative)
 
-    def has_undrawn_event(self) -> bool:
-        return self._has_undrawn_event
+    def event_position(self, event: dict) -> np.ndarray:
+        """
+        Where in the window something happened, measuring y upwards from the bottom the way
+        the scene does, where an event measures it downwards from the top.
+        """
+        _, height = self.canvas.get_logical_size()
+        return np.array([event["x"], height - event["y"]])
 
-    def swap_buffers(self):
-        super().swap_buffers()
-        self._has_undrawn_event = False
+    def event_point(self, event: dict) -> np.ndarray:
+        return self.pixel_coords_to_space_coords(*self.event_position(event))
 
-    @staticmethod
-    def note_undrawn_event(func: Callable[..., T]) -> Callable[..., T]:
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            func(self, *args, **kwargs)
-            self._has_undrawn_event = True
-        return wrapper
-
-    @note_undrawn_event
-    def on_mouse_motion(self, x: int, y: int, dx: int, dy: int) -> None:
-        super().on_mouse_motion(x, y, dx, dy)
-        if not self.scene:
+    def on_pointer_move(self, event: dict) -> None:
+        self.note_event()
+        if self.scene is None:
             return
-        point = self.pixel_coords_to_space_coords(x, y)
-        d_point = self.pixel_coords_to_space_coords(dx, dy, relative=True)
-        self.scene.on_mouse_motion(point, d_point)
+        position = self.event_position(event)
+        movement = position - self.pointer_position
+        self.pointer_position = position
+        point = self.pixel_coords_to_space_coords(*position)
+        d_point = self.pixel_coords_to_space_coords(*movement, relative=True)
+        if event["buttons"]:
+            # A move with a button held is what manim means by a drag; nothing but the
+            # buttons distinguishes the two
+            self.scene.on_mouse_drag(
+                point, d_point, event["buttons"], to_mods(event["modifiers"]),
+            )
+        else:
+            self.scene.on_mouse_motion(point, d_point)
 
-    @note_undrawn_event
-    def on_mouse_drag(self, x: int, y: int, dx: int, dy: int, buttons: int, modifiers: int) -> None:
-        super().on_mouse_drag(x, y, dx, dy, buttons, modifiers)
-        if not self.scene:
+    def on_pointer_down(self, event: dict) -> None:
+        self.note_event()
+        if self.scene is None:
             return
-        point = self.pixel_coords_to_space_coords(x, y)
-        d_point = self.pixel_coords_to_space_coords(dx, dy, relative=True)
-        self.scene.on_mouse_drag(point, d_point, buttons, to_mods(modifiers))
+        self.pointer_position = self.event_position(event)
+        self.scene.on_mouse_press(
+            self.event_point(event), event["button"], to_mods(event["modifiers"]),
+        )
 
-    @note_undrawn_event
-    def on_mouse_press(self, x: int, y: int, button: int, mods: int) -> None:
-        super().on_mouse_press(x, y, button, mods)
-        if not self.scene:
+    def on_pointer_up(self, event: dict) -> None:
+        self.note_event()
+        if self.scene is None:
             return
-        point = self.pixel_coords_to_space_coords(x, y)
-        self.scene.on_mouse_press(point, button, to_mods(mods))
+        self.scene.on_mouse_release(
+            self.event_point(event), event["button"], to_mods(event["modifiers"]),
+        )
 
-    @note_undrawn_event
-    def on_mouse_release(self, x: int, y: int, button: int, mods: int) -> None:
-        super().on_mouse_release(x, y, button, mods)
-        if not self.scene:
+    def on_wheel(self, event: dict) -> None:
+        self.note_event()
+        if self.scene is None:
             return
-        point = self.pixel_coords_to_space_coords(x, y)
-        self.scene.on_mouse_release(point, button, to_mods(mods))
+        notches = np.array([event["dx"], event["dy"]]) / WHEEL_NOTCH
+        self.scene.on_mouse_scroll(
+            self.event_point(event),
+            self.pixel_coords_to_space_coords(*notches, relative=True),
+            *notches,
+        )
 
-    @note_undrawn_event
-    def on_mouse_scroll(self, x: int, y: int, x_offset: float, y_offset: float) -> None:
-        super().on_mouse_scroll(x, y, x_offset, y_offset)
-        if not self.scene:
+    def on_key_down(self, event: dict) -> None:
+        self.note_event()
+        key = to_key(event["key"])
+        if key is None:
             return
-        point = self.pixel_coords_to_space_coords(x, y)
-        offset = self.pixel_coords_to_space_coords(x_offset, y_offset, relative=True)
-        self.scene.on_mouse_scroll(point, offset, x_offset, y_offset)
+        self.pressed_keys.add(key)
+        if self.scene:
+            self.scene.on_key_press(key, to_mods(event["modifiers"]))
 
-    @note_undrawn_event
-    def on_key_press(self, symbol: int, modifiers: int) -> None:
-        self.pressed_keys.add(to_key(symbol))
-        super().on_key_press(symbol, modifiers)
-        if not self.scene:
+    def on_key_up(self, event: dict) -> None:
+        self.note_event()
+        key = to_key(event["key"])
+        if key is None:
             return
-        self.scene.on_key_press(to_key(symbol), to_mods(modifiers))
+        self.pressed_keys.discard(key)
+        if self.scene:
+            self.scene.on_key_release(key, to_mods(event["modifiers"]))
 
-    @note_undrawn_event
-    def on_key_release(self, symbol: int, modifiers: int) -> None:
-        self.pressed_keys.difference_update({to_key(symbol)})
-        super().on_key_release(symbol, modifiers)
-        if not self.scene:
-            return
-        self.scene.on_key_release(to_key(symbol), to_mods(modifiers))
+    def on_resize(self, event: dict) -> None:
+        self.note_event()
+        if self.scene:
+            self.scene.on_resize(event["width"], event["height"])
 
-    @note_undrawn_event
-    def on_resize(self, width: int, height: int) -> None:
-        super().on_resize(width, height)
-        if not self.scene:
-            return
-        self.scene.on_resize(width, height)
-
-    @note_undrawn_event
-    def on_show(self) -> None:
-        super().on_show()
-        if not self.scene:
-            return
-        self.scene.on_show()
-
-    @note_undrawn_event
-    def on_hide(self) -> None:
-        super().on_hide()
-        if not self.scene:
-            return
-        self.scene.on_hide()
-
-    @note_undrawn_event
-    def on_close(self) -> None:
-        super().on_close()
-        if not self.scene:
-            return
-        self.scene.on_close()
-
-    def is_key_pressed(self, symbol: int) -> bool:
-        return (symbol in self.pressed_keys)
+    def on_close(self, event: dict) -> None:
+        self.note_event()
+        if self.scene:
+            self.scene.on_close()

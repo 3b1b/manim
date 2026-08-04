@@ -6,21 +6,18 @@ diskcache
 ipython>=8.18.0
 isosurfaces
 fontTools
+glfw
 manimpango>=0.6.0
 matplotlib
-moderngl
-moderngl_window
 numpy
 Pillow
 pydub
 pygments
-PyOpenGL
 pyperclip
 pywavefront
 pyyaml
 rich
 scipy
-screeninfo
 setuptools
 skia-pathops
 svgelements>=1.8.1
@@ -29,3 +26,4 @@ trimesh
 tqdm
 typing-extensions; python_version < "3.11"
 validators
+wgpu

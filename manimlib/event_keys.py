@@ -42,11 +42,10 @@ class Mods:
     CTRL = 1 << 1
     ALT = 1 << 2
     CMD = 1 << 3
-    CAPS_LOCK = 1 << 4
 
     # A mac says command where everything else says control, and every shortcut manim
     # binds means either of them
     CTRL_OR_CMD = CTRL | CMD
     # The modifiers anything is bound to, for a shortcut which asks that none be held.
-    # Alt and caps lock are left out because nothing is bound to them.
+    # Alt is left out because nothing is bound to it.
     ANY = SHIFT | CTRL | CMD
