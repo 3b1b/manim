@@ -76,6 +76,10 @@ COMMON_UNIFORMS = (
 # block lays one out as four vec4 columns, which is four vec4s and nothing else; a mat3
 # is not, because its columns get padded out to vec4 and this would have to know it.
 BLOCK_MEMBER_TYPES = {1: "f32", 2: "vec2f", 3: "vec3f", 4: "vec4f", 16: "mat4x4f"}
+# How many floats one element of an array member takes. A block puts its array elements
+# four floats apart whatever they hold, so anything narrower is declared as a vec4f and
+# read from its first components, there being nothing to gain by pretending otherwise.
+ARRAY_ELEMENT_SIZE = 4
 
 """
 The camera's uniforms travel the same way a mobject's do, in one block, except that there
@@ -94,11 +98,14 @@ FRAME_UNIFORMS = (
 )
 
 
-def uniform_block_dtype(*members: tuple[str, int]) -> np.dtype:
+def uniform_block_dtype(*members: tuple[str, int] | tuple[str, int, int]) -> np.dtype:
     """
     Lays out members, each given as a name and how many floats it holds, exactly as
     std140 does, so that a mobject's uniforms can be handed to the gpu as they sit
     rather than packed one member at a time.
+
+    A member given a third number holds that many of itself, e.g. ("colors", 4, 9) for
+    nine colors, and is read from python as an array of that many rows.
 
     The rules being reproduced are that a member is aligned to its own size, rounded
     up to four floats for anything wider than two, and that the block as a whole is
@@ -110,21 +117,27 @@ def uniform_block_dtype(*members: tuple[str, int]) -> np.dtype:
     names: list[str] = []
     formats: list[Any] = []
 
-    def add(name: str, size: int) -> None:
+    def add(name: str, shape: tuple[int, ...]) -> None:
         names.append(name)
-        formats.append(np.float32 if size == 1 else (np.float32, (size,)))
+        formats.append(np.float32 if shape == (1,) else (np.float32, shape))
 
     size_so_far = 0
-    for name, size in members:
+    for name, size, *rest in members:
+        count = rest[0] if rest else 1
+        if count > 1 and size != ARRAY_ELEMENT_SIZE:
+            raise ValueError(
+                f"An array in a block holds {ARRAY_ELEMENT_SIZE} floats to an element, so "
+                f"{name} cannot hold {count} of {size}"
+            )
         if size not in BLOCK_MEMBER_TYPES:
             raise ValueError(f"No room in a block for {name}, of {size} floats")
         skipped = -size_so_far % (size if size <= 2 else 4)
         if skipped:
-            add(f"_pad{len(names)}", skipped)
-        add(name, size)
-        size_so_far += skipped + size
+            add(f"_pad{len(names)}", (skipped,))
+        add(name, (size,) if count == 1 else (count, size))
+        size_so_far += skipped + count * size
     if -size_so_far % 4:
-        add(f"_pad{len(names)}", -size_so_far % 4)
+        add(f"_pad{len(names)}", (-size_so_far % 4,))
     # Left to pack the fields itself, numpy places them back to back, which is where
     # the padding above has been chosen to put them
     return np.dtype({"names": names, "formats": formats})
@@ -145,8 +158,12 @@ def uniform_block_code(dtype: np.dtype) -> str:
             # it implies would only push everything after it further along
             continue
         shape = dtype.fields[name][0].shape
-        size = shape[0] if shape else 1
-        lines.append(f"    {name}: {BLOCK_MEMBER_TYPES[size]},")
+        if len(shape) == 2:
+            count, size = shape
+            lines.append(f"    {name}: array<{BLOCK_MEMBER_TYPES[size]}, {count}>,")
+        else:
+            size = shape[0] if shape else 1
+            lines.append(f"    {name}: {BLOCK_MEMBER_TYPES[size]},")
     return "\n".join(lines)
 
 

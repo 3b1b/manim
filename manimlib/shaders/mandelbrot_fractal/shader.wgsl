@@ -8,10 +8,7 @@ Which of the two pictures is drawn depends on which of z and c the pixel stands 
 mandelbrot is set, the pixel is c and the orbit starts at zero; otherwise c is held fixed at
 parameter and the pixel is the orbit's own starting point.
 
-The mobject drawing this declares, after the members every kind has:
-
-    ("scale_factor", 1), ("offset", 3), ("parameter", 2), ("opacity", 1),
-    ("n_steps", 1), ("mandelbrot", 1), ("color0", 3), ... ("color8", 3)
+Drawn by MandelbrotFractal and JuliaFractal, whose uniform_dtype says what mob holds here.
 */
 #INSERT mobject_uniforms.wgsl
 #INSERT frame_uniforms.wgsl
@@ -24,6 +21,8 @@ The mobject drawing this declares, after the members every kind has:
 
 // How far an orbit has to get before it is taken to be on its way to infinity
 const OUTER_BOUND: f32 = 2.0;
+// How many colors an escape time is spread across, which is how many mob.colors holds
+const N_COLORS: u32 = 9u;
 
 struct VertexOutput {
     @builtin(position) position: vec4f,
@@ -48,14 +47,24 @@ fn vs_main(@builtin(vertex_index) index: u32) -> VertexOutput {
     return out;
 }
 
+/*
+The colormap, which is held as a row of four floats per color because that is what a block
+puts an array element in, and read here as the three the color takes up.
+*/
+fn read_colors() -> array<vec3f, N_COLORS> {
+    var held = mob.colors;
+    var result: array<vec3f, N_COLORS>;
+    for (var n = 0u; n < N_COLORS; n++) {
+        result[n] = held[n].rgb;
+    }
+    return result;
+}
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4f {
     clip_test(in.clip_distances);
 
-    let colors = array<vec3f, 9>(
-        mob.color0, mob.color1, mob.color2, mob.color3, mob.color4,
-        mob.color5, mob.color6, mob.color7, mob.color8,
-    );
+    let colors = read_colors();
 
     var z: vec2f;
     var c: vec2f;

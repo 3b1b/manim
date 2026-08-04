@@ -8,12 +8,7 @@ pixel is instead a root of a cubic whose other two roots are held fixed, and the
 always starts from the center of the three, so what is drawn is a map of which polynomials
 behave which way rather than of which seeds do.
 
-The mobject drawing this declares, after the members every kind has:
-
-    ("scale_factor", 1), ("offset", 3), ("n_roots", 1), ("n_steps", 1),
-    ("julia_highlight", 1), ("saturation_factor", 1), ("black_for_cycles", 1),
-    ("is_parameter_space", 1), ("coef0", 2), ... ("coef5", 2),
-    ("root0", 2), ... ("root4", 2), ("color0", 4), ... ("color4", 4)
+Drawn by NewtonFractal and MetaNewtonFractal, whose uniform_dtype says what mob holds here.
 */
 #INSERT mobject_uniforms.wgsl
 #INSERT frame_uniforms.wgsl
@@ -26,11 +21,33 @@ The mobject drawing this declares, after the members every kind has:
 
 /*
 Room for a polynomial of degree five, which is one more coefficient than that, and for as
-many roots as it has. Both are copied into a variable wherever they are indexed by anything
-worked out at run time, WGSL only indexing an array which is held in one.
+many roots as it has. A complex number is held in a uniform block as the first two of the
+four floats a block gives an array element, and is worked with here as the two it needs.
+Both arrays are copied into a variable wherever they are indexed by anything worked out at
+run time, WGSL only indexing an array which is held in one.
 */
-alias Coefs = array<vec2f, 6>;
-alias Roots = array<vec2f, 5>;
+const N_COEFS: u32 = 6u;
+const N_ROOTS: u32 = 5u;
+alias Coefs = array<vec2f, N_COEFS>;
+alias Roots = array<vec2f, N_ROOTS>;
+
+fn read_coefs() -> Coefs {
+    var held = mob.coefs;
+    var result: Coefs;
+    for (var n = 0u; n < N_COEFS; n++) {
+        result[n] = held[n].xy;
+    }
+    return result;
+}
+
+fn read_roots() -> Roots {
+    var held = mob.roots;
+    var result: Roots;
+    for (var n = 0u; n < N_ROOTS; n++) {
+        result[n] = held[n].xy;
+    }
+    return result;
+}
 
 // How near a root the method has to land before it counts as having found it
 const CLOSE_ENOUGH: f32 = 1e-3;
@@ -142,11 +159,9 @@ fn basin_spread(z: vec2f, coefs: Coefs, radius: f32) -> f32 {
 fn fs_main(in: VertexOutput) -> @location(0) vec4f {
     clip_test(in.clip_distances);
 
-    var coefs = Coefs(mob.coef0, mob.coef1, mob.coef2, mob.coef3, mob.coef4, mob.coef5);
-    var roots = Roots(mob.root0, mob.root1, mob.root2, mob.root3, mob.root4);
-    var colors = array<vec4f, 5>(
-        mob.color0, mob.color1, mob.color2, mob.color3, mob.color4,
-    );
+    var coefs = read_coefs();
+    var roots = read_roots();
+    var colors = mob.colors;
 
     var start = in.plane_point.xy;
     if (mob.is_parameter_space > 0.0) {
