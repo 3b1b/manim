@@ -28,19 +28,12 @@ class Camera(object):
     def __init__(
         self,
         window: Optional[Window] = None,
-        background_image: Optional[str] = None,
         frame_config: dict = dict(),
         # Note: frame height and width will be resized to match this resolution aspect ratio
         resolution=DEFAULT_RESOLUTION,
         fps: int = 30,
         background_color: ManimColor = BLACK,
         background_opacity: float = 1.0,
-        # Points in vectorized mobjects with norm greater
-        # than this value will be rescaled.
-        max_allowable_norm: float = FRAME_WIDTH,
-        image_mode: str = "RGBA",
-        n_channels: int = 4,
-        pixel_array_dtype: type = np.uint8,
         light_source_position: Vect3 = np.array([-10, 10, 10]),
         # Although vector graphics handle antialiasing fine
         # without multisampling, for 3d scenes one might want
@@ -48,17 +41,11 @@ class Camera(object):
         samples: int = 0,
     ):
         self.window = window
-        self.background_image = background_image
         self.default_pixel_shape = resolution  # Rename?
         self.fps = fps
-        self.max_allowable_norm = max_allowable_norm
-        self.image_mode = image_mode
-        self.n_channels = n_channels
-        self.pixel_array_dtype = pixel_array_dtype
         self.light_source_position = light_source_position
         self.samples = samples
 
-        self.rgb_max_val: float = np.iinfo(self.pixel_array_dtype).max
         self.background_rgba: list[float] = list(color_to_rgba(
             background_color, background_opacity
         ))
@@ -85,7 +72,8 @@ class Camera(object):
         rather than somewhere to draw.
         """
         device = self.renderer.device
-        width, height = self.pixel_shape = self.default_pixel_shape
+        self.pixel_shape = self.default_pixel_shape
+        width, height = self.pixel_shape
         samples = self.renderer.samples = max(1, self.samples)
 
         self.color_texture = device.create_texture(
@@ -112,6 +100,12 @@ class Camera(object):
             sample_count=samples,
         )
 
+        # A view onto a texture is the same every frame, so they are made along with it
+        drawn_into = self.multisample_texture or self.color_texture
+        self.color_view = drawn_into.create_view()
+        self.resolve_view = self.color_texture.create_view() if samples > 1 else None
+        self.depth_stencil_view = self.depth_stencil_texture.create_view()
+
     def init_light_source(self) -> None:
         self.light_source = Point(self.light_source_position)
 
@@ -126,21 +120,16 @@ class Camera(object):
         Clearing them is what beginning the pass does, so nothing needs clearing by hand:
         under GL this was a clear of the color buffer and another of the stencil.
         """
-        drawn_into = self.color_texture
-        resolve_target = None
-        if self.multisample_texture is not None:
-            drawn_into = self.multisample_texture
-            resolve_target = self.color_texture.create_view()
         return {
             "color_attachments": [{
-                "view": drawn_into.create_view(),
-                "resolve_target": resolve_target,
+                "view": self.color_view,
+                "resolve_target": self.resolve_view,
                 "clear_value": tuple(self.background_rgba),
                 "load_op": wgpu.LoadOp.clear,
                 "store_op": wgpu.StoreOp.store,
             }],
             "depth_stencil_attachment": {
-                "view": self.depth_stencil_texture.create_view(),
+                "view": self.depth_stencil_view,
                 "depth_clear_value": 1.0,
                 "depth_load_op": wgpu.LoadOp.clear,
                 "depth_store_op": wgpu.StoreOp.store,
@@ -150,31 +139,20 @@ class Camera(object):
             },
         }
 
-    def clear(self) -> None:
-        # Beginning a frame's render pass clears its attachments, see get_attachments
-        pass
-
-    def get_raw_fbo_data(self) -> bytes:
+    def get_frame_bytes(self) -> bytes:
         """
-        The frame as it stands, a row at a time from the top. GL handed these back from the
-        bottom up, which everything reading them had to undo.
+        The frame as it stands, four bytes to a pixel, a row at a time from the top. GL
+        handed these back from the bottom up, which everything reading them had to undo.
         """
         width, height = self.pixel_shape
         return bytes(self.renderer.queue.read_texture(
             {"texture": self.color_texture, "mip_level": 0, "origin": (0, 0, 0)},
-            {"offset": 0, "bytes_per_row": width * self.n_channels, "rows_per_image": height},
+            {"offset": 0, "bytes_per_row": 4 * width, "rows_per_image": height},
             (width, height, 1),
         ))
 
     def get_image(self) -> Image.Image:
-        return Image.frombytes("RGBA", self.pixel_shape, self.get_raw_fbo_data())
-
-    def get_pixel_array(self) -> np.ndarray:
-        flat = np.frombuffer(self.get_raw_fbo_data(), dtype=np.uint8)
-        array = flat.reshape((*reversed(self.pixel_shape), self.n_channels))
-        if self.pixel_array_dtype is np.uint8:
-            return array
-        return (array * (self.rgb_max_val / 255)).astype(self.pixel_array_dtype)
+        return Image.frombytes("RGBA", self.pixel_shape, self.get_frame_bytes())
 
     # Getting camera attributes
     def get_pixel_size(self) -> float:

@@ -284,7 +284,7 @@ class SceneFileWriter(object):
 
     def write_frame(self, camera: Camera) -> None:
         if self.write_to_movie:
-            raw_bytes = camera.get_raw_fbo_data()
+            raw_bytes = camera.get_frame_bytes()
             self.writing_process.stdin.write(raw_bytes)
             if self.progress_display is not None:
                 self.progress_display.update()
