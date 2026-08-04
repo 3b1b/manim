@@ -2000,14 +2000,13 @@ class Mobject(object):
     def get_uniforms(self):
         return self.uniforms
 
-    def render(self, renderer: Renderer):
-        for mob in self.get_family():
-            if len(mob.data) == 0:
-                # Groups hold no points of their own, but their members might
-                continue
-            shader_wrapper = mob.get_shader_wrapper(renderer)
-            shader_wrapper.pre_render()
-            shader_wrapper.render()
+    def get_shader_wrappers(self, renderer: Renderer) -> list[ShaderWrapper]:
+        return [
+            mob.get_shader_wrapper(renderer)
+            for mob in self.get_family()
+            # Groups hold no points of their own, but their members might
+            if len(mob.data) > 0
+        ]
 
     # Event Handlers
     """

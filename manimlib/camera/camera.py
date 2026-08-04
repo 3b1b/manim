@@ -276,8 +276,19 @@ class Camera(object):
         # only here to guarantee a clean slate, e.g. if a previous frame's
         # rendering was interrupted partway through
         gl.glClear(gl.GL_STENCIL_BUFFER_BIT)
-        for mobject in mobjects:
-            mobject.render(self.renderer)
+
+        wrappers = [
+            wrapper
+            for mobject in mobjects
+            for wrapper in mobject.get_shader_wrappers(self.renderer)
+        ]
+        # Everything the frame sends to the gpu, before anything it draws, see
+        # ShaderWrapper.write_buffers
+        for wrapper in wrappers:
+            wrapper.write_buffers()
+        self.renderer.reset_state()
+        for wrapper in wrappers:
+            wrapper.render()
 
         if self.window:
             self.window.swap_buffers()
