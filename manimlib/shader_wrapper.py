@@ -309,10 +309,10 @@ class ShaderWrapper(object):
 
         return self.renderer.get_pipeline(key, build)
 
-    def begin_draw(self, state: DrawState, module):
+    def bind_for_draw(self, state: DrawState, module):
         """
-        Points the pass at what a draw of this mobject reads and how it is to behave, and
-        hands back the pass for the draw itself.
+        Points the frame's pass at what this draw reads and how it is to behave, handing
+        back the pass for whichever kind of draw follows.
         """
         render_pass = self.renderer.pass_
         mobject_group, resource_group = self.get_bind_groups()
@@ -321,16 +321,27 @@ class ShaderWrapper(object):
         render_pass.set_pipeline(self.get_pipeline(state, module))
         return render_pass
 
-    def draw(self, state: DrawState = DEFAULT, vertices: int | None = None) -> None:
-        """One pass over this mobject's records, in the state given"""
-        if vertices is None:
-            vertices = self.verts_per_record * len(self.mobject_data)
-        self.begin_draw(state, self.module).draw(vertices)
+    def draw(self, state: DrawState, module, vertices: int) -> None:
+        """One pass over this mobject's records"""
+        self.bind_for_draw(state, module).draw(vertices)
+
+    def draw_through(self, state: DrawState, module, indices, count: int) -> None:
+        """
+        One pass over this mobject's records in the order a buffer of indices gives, each
+        index being the vertex the shader is to work out.
+        """
+        render_pass = self.bind_for_draw(state, module)
+        render_pass.set_index_buffer(indices, wgpu.IndexFormat.uint32)
+        render_pass.draw_indexed(count)
 
     def render(self) -> None:
         if not self.modules or len(self.mobject_data) == 0:
             return
-        self.draw()
+        self.draw_passes()
+
+    def draw_passes(self) -> None:
+        """Every pass this kind of mobject takes, which for most kinds is the one"""
+        self.draw(DEFAULT, self.module, self.verts_per_record * len(self.mobject_data))
 
     def release(self) -> None:
         for buffer in (self.data_buffer, self.uniform_buffer):
@@ -416,18 +427,13 @@ class SurfaceShaderWrapper(ShaderWrapper):
         self.renderer.queue.write_buffer(self.order_buffer, 0, indices)
         self.order_count = len(indices)
 
-    def render(self) -> None:
-        if not self.modules or len(self.mobject_data) == 0:
-            return
+    def draw_passes(self) -> None:
         if self.ordered:
-            # Drawing through the indices makes each the index of the vertex the shader is
-            # to work out, which is what puts the triangles in the order settled above
-            render_pass = self.begin_draw(DEFAULT, self.module)
-            render_pass.set_index_buffer(self.order_buffer, wgpu.IndexFormat.uint32)
-            render_pass.draw_indexed(self.order_count)
+            self.draw_through(DEFAULT, self.module, self.order_buffer, self.order_count)
             return
+        vertices = self.verts_per_record * len(self.mobject_data)
         for state in (CULL_FRONT, CULL_BACK):
-            self.draw(state)
+            self.draw(state, self.module, vertices)
 
 
 class VShaderWrapper(ShaderWrapper):
@@ -456,6 +462,9 @@ class VShaderWrapper(ShaderWrapper):
         **kwargs,
     ):
         self.stroke_behind = stroke_behind
+        # Which of the two sources a code replacement is meant for, where it is meant for
+        # one of them: a snippet reading stroke_rgba would not compile against the fill
+        self.program_type = program_type
         super().__init__(*args, **kwargs)
 
     def init_program(self) -> None:
@@ -469,30 +478,24 @@ class VShaderWrapper(ShaderWrapper):
         one constant compiled the other way, which is what wgpu asks for in place of a
         uniform read per draw, and costs nothing: a module is compiled once per source.
         """
+        border_declaration = self.border_declaration
         border_code = self.stroke_code.replace(
-            self.border_declaration, self.border_declaration.replace("false", "true"),
+            border_declaration, border_declaration.replace("false", "true"),
         )
+        if border_code == self.stroke_code:
+            raise ValueError(
+                f"The stroke shader no longer declares {border_declaration!r}, so a fill's "
+                f"border would be compiled as an ordinary stroke and vanish"
+            )
         self.fill_module = get_shader_module(self.device, self.fill_code)
         self.stroke_module = get_shader_module(self.device, self.stroke_code)
         self.border_module = get_shader_module(self.device, border_code)
         self.modules = [self.fill_module, self.stroke_module, self.border_module]
 
     def replace_code(self, old: str, new: str) -> None:
-        self.fill_code = re.sub(old, new, self.fill_code)
-        self.stroke_code = re.sub(old, new, self.stroke_code)
-        self.build_modules()
-
-    def replace_code_program(self, old: str, new: str, program_type: str | None = None):
-        """
-        The same, or only in one of the two sources where one is named: a snippet meant for
-        the stroke would not compile against the fill, which has no stroke_rgba to read.
-        """
-        if program_type == "fill":
+        if self.program_type in (None, "fill"):
             self.fill_code = re.sub(old, new, self.fill_code)
-        elif program_type == "stroke":
-            self.stroke_code = re.sub(old, new, self.stroke_code)
-        else:
-            self.fill_code = re.sub(old, new, self.fill_code)
+        if self.program_type in (None, "stroke"):
             self.stroke_code = re.sub(old, new, self.stroke_code)
         self.build_modules()
 
@@ -500,7 +503,7 @@ class VShaderWrapper(ShaderWrapper):
         # Consecutive beziers share an anchor, so n points make n // 2 curves
         return len(self.mobject_data) // 2
 
-    def render_fill(self) -> None:
+    def draw_fill(self) -> None:
         """
         Fill is drawn with a "stencil then cover" approach.
 
@@ -520,16 +523,16 @@ class VShaderWrapper(ShaderWrapper):
         overlapping mobjects would color a shared pixel once between them rather than each
         blending in turn.
         """
-        curves = self.get_num_curves()
+        vertices = self.fill_verts_per_curve * self.get_num_curves()
         # Counting the windings needs no color, and must see every triangle of the path
         # whatever stands in front of it, which is what WINDING_COUNT says
-        self.begin_draw(WINDING_COUNT, self.fill_module).draw(self.fill_verts_per_curve * curves)
-        self.render_fill_border()
+        self.draw(WINDING_COUNT, self.fill_module, vertices)
+        self.draw_fill_border()
         # Coloring in everywhere the count came out nonzero, zeroing it on the way through,
         # so that each pixel is colored once and the buffer is left clean
-        self.begin_draw(WINDING_COVER, self.fill_module).draw(self.fill_verts_per_curve * curves)
+        self.draw(WINDING_COVER, self.fill_module, vertices)
 
-    def render_fill_border(self) -> None:
+    def draw_fill_border(self) -> None:
         """
         Traces the boundary of the shape with a stroke in the fill color, which is what
         anti-aliases the fill, a stencil test being all or nothing. It is drawn only where
@@ -537,21 +540,18 @@ class VShaderWrapper(ShaderWrapper):
         about to be filled in anyway, and so that its faded edge never blends on top of the
         fill, which would leave a seam along the boundary for partially transparent colors.
         """
-        self.begin_draw(FILL_BORDER, self.border_module).draw(
-            self.stroke_verts_per_curve * self.get_num_curves()
-        )
+        self.draw(FILL_BORDER, self.border_module, self.stroke_vertices())
 
-    def render_stroke(self) -> None:
-        self.begin_draw(DEFAULT, self.stroke_module).draw(
-            self.stroke_verts_per_curve * self.get_num_curves()
-        )
+    def draw_stroke(self) -> None:
+        self.draw(DEFAULT, self.stroke_module, self.stroke_vertices())
 
-    def render(self) -> None:
-        if len(self.mobject_data) == 0:
-            return
+    def stroke_vertices(self) -> int:
+        return self.stroke_verts_per_curve * self.get_num_curves()
+
+    def draw_passes(self) -> None:
         if self.stroke_behind:
-            self.render_stroke()
-            self.render_fill()
+            self.draw_stroke()
+            self.draw_fill()
         else:
-            self.render_fill()
-            self.render_stroke()
+            self.draw_fill()
+            self.draw_stroke()
