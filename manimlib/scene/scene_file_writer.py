@@ -207,8 +207,9 @@ class SceneFileWriter(object):
         fps = self.scene.camera.fps
         width, height = self.scene.camera.get_pixel_shape()
 
-        vf_arg = 'vflip'
-        vf_arg += f',eq=saturation={self.saturation}:gamma={self.gamma}'
+        # Frames come back a row at a time from the top, as a texture is laid out, so
+        # unlike GL's bottom up reads there is nothing to flip
+        vf_arg = f'eq=saturation={self.saturation}:gamma={self.gamma}'
 
         command = [
             self.ffmpeg_bin,

@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import os
-import ctypes
 import re
 from functools import lru_cache
-import moderngl
-import OpenGL.GL as gl
+import wgpu
 from PIL import Image
 import numpy as np
 
@@ -20,107 +18,32 @@ if TYPE_CHECKING:
     from manimlib.typing import UniformDict
 
 
-# Global maps to reflect uniform status
-PROGRAM_UNIFORM_MIRRORS: dict[int, dict[str, float | tuple]] = dict()
-# Names each program turned out not to have, so they aren't looked up again
-PROGRAM_ABSENT_UNIFORMS: dict[int, set[str]] = dict()
+@lru_cache()
+def image_path_to_texture(path: str, device) -> Any:
+    """An image on the gpu, for whatever samples it. Made once per path."""
+    image = Image.open(path).convert("RGBA")
+    pixels = np.asarray(image, dtype=np.uint8)
+    texture = device.create_texture(
+        size=(image.width, image.height, 1),
+        format=wgpu.TextureFormat.rgba8unorm,
+        usage=wgpu.TextureUsage.TEXTURE_BINDING | wgpu.TextureUsage.COPY_DST,
+    )
+    device.queue.write_texture(
+        {"texture": texture, "mip_level": 0, "origin": (0, 0, 0)},
+        pixels,
+        {"offset": 0, "bytes_per_row": 4 * image.width, "rows_per_image": image.height},
+        (image.width, image.height, 1),
+    )
+    return texture
 
 
 @lru_cache()
-def image_path_to_texture(path: str, ctx: moderngl.Context) -> moderngl.Texture:
-    im = Image.open(path).convert("RGBA")
-    return ctx.texture(
-        size=im.size,
-        components=len(im.getbands()),
-        data=im.tobytes(),
-    )
-
-
-@lru_cache()
-def get_shader_program(
-        ctx: moderngl.context.Context,
-        vertex_shader: str,
-        fragment_shader: Optional[str] = None,
-) -> moderngl.Program:
-    program = ctx.program(
-        vertex_shader=vertex_shader,
-        fragment_shader=fragment_shader,
-    )
-    # Which binding the frame's uniforms will be found at. Every program reads the same
-    # values from the same buffer, so this is settled once, when the program is compiled,
-    # rather than once a frame, see Renderer.
-    if check_uniform_block(program, FRAME_DTYPE, FRAME_BLOCK_NAME):
-        program[FRAME_BLOCK_NAME].binding = FRAME_BLOCK_BINDING
-    return program
-
-
-def set_program_uniform(
-    program: moderngl.Program,
-    name: str,
-    value: float | tuple | np.ndarray
-) -> bool:
+def get_shader_module(device, code: str):
     """
-    Sets a program uniform, and also keeps track of a dictionary
-    of previously set uniforms for that program so that it
-    doesn't needlessly reset it, requiring an exchange with gpu
-    memory, if it sees the same value again.
-
-    Returns True if changed the program, False if it left it as is.
+    One module holds both stages of a shader, so what GL needed two files and a pair of
+    matching varying declarations for is one file whose stages share a struct.
     """
-
-    pid = id(program)
-    if pid not in PROGRAM_UNIFORM_MIRRORS:
-        PROGRAM_UNIFORM_MIRRORS[pid] = dict()
-        PROGRAM_ABSENT_UNIFORMS[pid] = set()
-    uniform_mirror = PROGRAM_UNIFORM_MIRRORS[pid]
-
-    # Shaders which don't mention a uniform get compiled without it, and asking
-    # for one that isn't there is expensive enough to be worth only doing once
-    if name in PROGRAM_ABSENT_UNIFORMS[pid]:
-        return False
-
-    if type(value) is np.ndarray and value.ndim > 0:
-        value = tuple(value.flatten())
-    if uniform_mirror.get(name, None) == value:
-        return False
-
-    try:
-        program[name].value = value
-    except KeyError:
-        PROGRAM_ABSENT_UNIFORMS[pid].add(name)
-        return False
-    uniform_mirror[name] = value
-    return True
-
-
-def set_program_sampler(program: moderngl.Program, name: str, unit: int) -> bool:
-    """
-    Points one of a program's samplers at a texture unit.
-
-    This goes through raw GL rather than moderngl, which takes the assignment and
-    reports it back, but leaves the driver's own value at zero, for programs which use
-    gl_VertexID. This driver counts that among a program's active uniforms, and it is
-    the ones reading their vertices out of a buffer which use it. Every sampler
-    happened to want unit zero, which is where they all start, until surfaces began
-    reading a buffer alongside their textures.
-    """
-    pid = id(program)
-    if pid not in PROGRAM_UNIFORM_MIRRORS:
-        PROGRAM_UNIFORM_MIRRORS[pid] = dict()
-        PROGRAM_ABSENT_UNIFORMS[pid] = set()
-    if name in PROGRAM_ABSENT_UNIFORMS[pid]:
-        return False
-    if PROGRAM_UNIFORM_MIRRORS[pid].get(name, None) == unit:
-        return False
-
-    try:
-        location = program[name].location
-    except KeyError:
-        PROGRAM_ABSENT_UNIFORMS[pid].add(name)
-        return False
-    gl.glProgramUniform1i(program.glo, location, unit)
-    PROGRAM_UNIFORM_MIRRORS[pid][name] = unit
-    return True
+    return device.create_shader_module(code=code)
 
 
 """
@@ -131,6 +54,12 @@ out a matching dtype with uniform_block_dtype, see Mobject.uniform_dtype.
 """
 MOBJECT_BLOCK_NAME = "MobjectUniforms"
 MOBJECT_BLOCK_BINDING = 0
+# Which bind group each kind of thing a shader reads is found in, grouped by how often it
+# changes: once a frame, once a mobject, and once the buffers behind it are replaced. A
+# shader says these numbers itself, so they are here to be agreed with rather than set.
+FRAME_GROUP = 0
+MOBJECT_GROUP = 1
+RESOURCE_GROUP = 2
 # What every mobject holds, whatever kind it is, as a name and a number of floats.
 # Mirrors inserts/common_uniform_members.glsl, and comes first in every block for the
 # same reason it does there: so the inserts reading them work wherever they are used.
@@ -145,14 +74,7 @@ COMMON_UNIFORMS = (
 # What a block member of each size is called in a shader. A mat4 is in there because a
 # block lays one out as four vec4 columns, which is four vec4s and nothing else; a mat3
 # is not, because its columns get padded out to vec4 and this would have to know it.
-BLOCK_MEMBER_TYPES = {1: "float", 2: "vec2", 3: "vec3", 4: "vec4", 16: "mat4"}
-GL_MEMBER_SIZES = {
-    gl.GL_FLOAT: 1,
-    gl.GL_FLOAT_VEC2: 2,
-    gl.GL_FLOAT_VEC3: 3,
-    gl.GL_FLOAT_VEC4: 4,
-    gl.GL_FLOAT_MAT4: 16,
-}
+BLOCK_MEMBER_TYPES = {1: "f32", 2: "vec2f", 3: "vec3f", 4: "vec4f", 16: "mat4x4f"}
 
 """
 The camera's uniforms travel the same way a mobject's do, in one block, except that there
@@ -211,8 +133,11 @@ def uniform_block_dtype(*members: tuple[str, int]) -> np.dtype:
 
 def uniform_block_code(dtype: np.dtype) -> str:
     """
-    How a dtype would be written as a block, for saying what a shader ought to
-    declare when it turns out not to match.
+    A dtype written as the members of a shader struct, which is where a shader gets them:
+    generating the declaration from the dtype rather than asking a shader to repeat it
+    leaves nothing for the two to disagree about. WGSL lays a struct out as std140 does for
+    everything declared here, which uniform_block_dtype has already accounted for, so the
+    padding it inserted is left out and the compiler arrives at the same offsets.
     """
     lines = []
     for name in dtype.names:
@@ -222,7 +147,7 @@ def uniform_block_code(dtype: np.dtype) -> str:
             continue
         shape = dtype.fields[name][0].shape
         size = shape[0] if shape else 1
-        lines.append(f"    {BLOCK_MEMBER_TYPES[size]} {name};")
+        lines.append(f"    {name}: {BLOCK_MEMBER_TYPES[size]},")
     return "\n".join(lines)
 
 
@@ -260,73 +185,25 @@ class Uniforms(StructuredArray):
         self.note_change()
 
 
-@lru_cache()
-def check_uniform_block(
-    program: moderngl.Program,
-    dtype: np.dtype,
-    block_name: str = MOBJECT_BLOCK_NAME,
-) -> bool:
-    """
-    Whether a program declares the block at all, and if it does, that its members sit
-    exactly where the dtype says they do.
-
-    Nothing needs this to render, since std140's layout is what uniform_block_dtype
-    reproduces, but a shader's block and a mobject's uniform_dtype drifting apart
-    would otherwise show up as a wrongly drawn mobject rather than as an error. It
-    costs a handful of calls into the driver, once per program.
-    """
-    glo = program.glo
-    index = gl.glGetUniformBlockIndex(glo, block_name)
-    if index == gl.GL_INVALID_INDEX:
-        return False
-
-    def block_property(enum, length=1):
-        result = (ctypes.c_int * length)()
-        gl.glGetActiveUniformBlockiv(glo, index, enum, result)
-        return list(result)
-
-    count = block_property(gl.GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS)[0]
-    members = block_property(gl.GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, count)
-    indices = (ctypes.c_uint * count)(*members)
-    offsets = (ctypes.c_int * count)()
-    types = (ctypes.c_int * count)()
-    gl.glGetActiveUniformsiv(glo, count, indices, gl.GL_UNIFORM_OFFSET, offsets)
-    gl.glGetActiveUniformsiv(glo, count, indices, gl.GL_UNIFORM_TYPE, types)
-
-    for member, offset, member_type in zip(members, offsets, types):
-        name = gl.glGetActiveUniform(glo, member)[0]
-        name = name.decode() if isinstance(name, bytes) else name
-        # Members a shader never reads get left out by the compiler, which is no
-        # loss: there is nothing to be gained by reading a value nothing uses
-        field = dtype.fields.get(name)
-        size = GL_MEMBER_SIZES.get(member_type)
-        shape = field[0].shape if field else None
-        if field is None or size is None or size != (shape[0] if shape else 1) \
-                or field[1] != offset:
-            raise ValueError(
-                f"The {block_name} block this shader declares does not match what "
-                f"is held for it, starting at {name}. What is held would be declared "
-                f"as:\n"
-                f"layout (std140) uniform {block_name} {{\n"
-                f"{uniform_block_code(dtype)}\n}};"
-            )
-    return True
-
-
-@lru_cache()
 def get_shader_code(
     filename: str,
     data_layout: tuple[int, tuple[tuple[str, int], ...]],
+    uniform_dtype: np.dtype,
 ) -> str | None:
     """
-    Reads a shader from file, filling in where the fields of a vertex record sit for
-    those shaders which read the buffer themselves. That is the only thing about a
-    shader's source which depends on the mobject it will be drawing.
+    Reads a shader from file, filling in the two things about its source which depend on
+    the mobject it will be drawing: where the fields of a vertex record sit, for the
+    shaders which read the buffer themselves, and what that mobject holds for the whole of
+    itself.
     """
     code = get_shader_code_from_file(filename)
     if code is None:
         return None
-    return code.replace("// DATA_LAYOUT", get_data_layout_code(data_layout))
+    return (
+        code
+        .replace("// DATA_LAYOUT", get_data_layout_code(data_layout))
+        .replace("// MOBJECT_UNIFORMS", uniform_block_code(uniform_dtype))
+    )
 
 
 def get_data_layout_code(data_layout: tuple[int, tuple[tuple[str, int], ...]]) -> str:
@@ -336,8 +213,8 @@ def get_data_layout_code(data_layout: tuple[int, tuple[tuple[str, int], ...]]) -
     """
     stride, fields = data_layout
     return "\n".join([
-        f"const int DATA_STRIDE = {stride};",
-        *(f"const int DATA_OFFSET_{name} = {offset};" for name, offset in fields),
+        f"const DATA_STRIDE: u32 = {stride}u;",
+        *(f"const DATA_OFFSET_{name}: u32 = {offset}u;" for name, offset in fields),
     ])
 
 
@@ -362,7 +239,7 @@ def get_shader_code_from_file(filename: str) -> str | None:
     # from other files an inserted into the relevant strings before
     # passing to ctx.program for compiling
     # Replace "#INSERT " lines with relevant code
-    insertions = re.findall(r"^#INSERT .*\.glsl$", result, flags=re.MULTILINE)
+    insertions = re.findall(r"^#INSERT .*\.wgsl$", result, flags=re.MULTILINE)
     for line in insertions:
         inserted_code = get_shader_code_from_file(
             os.path.join("inserts", line.replace("#INSERT ", ""))

@@ -3,24 +3,15 @@ from __future__ import annotations
 import os
 import re
 
-import OpenGL.GL as gl
-import moderngl
-import numpy as np
+import wgpu
 
-from manimlib.renderer import CULL_BACK
-from manimlib.renderer import CULL_FRONT
+from manimlib.renderer import COLOR_FORMAT
 from manimlib.renderer import DEFAULT
-from manimlib.renderer import FILL_BORDER
-from manimlib.renderer import WINDING_COUNT
-from manimlib.renderer import WINDING_COVER
-from manimlib.utils.shaders import MOBJECT_BLOCK_BINDING
-from manimlib.utils.shaders import MOBJECT_BLOCK_NAME
-from manimlib.utils.shaders import check_uniform_block
 from manimlib.utils.shaders import get_shader_code
-from manimlib.utils.shaders import get_shader_program
+from manimlib.utils.shaders import get_shader_module
 from manimlib.utils.shaders import image_path_to_texture
-from manimlib.utils.shaders import set_program_sampler
-from manimlib.utils.shaders import set_program_uniform
+from manimlib.utils.shaders import MOBJECT_GROUP
+from manimlib.utils.shaders import RESOURCE_GROUP
 from manimlib.utils.shaders import Uniforms
 from manimlib.utils.structured_array import StructuredArray
 
@@ -28,32 +19,54 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Optional
-    from manimlib.renderer import Renderer
+    from manimlib.renderer import DrawState, Renderer
+
+
+# What a shader reads from the group of things belonging to the mobject being drawn. Every
+# shader reads its records from binding zero; those with textures take a sampler and then
+# one binding for each, in the order the mobject names them.
+DATA_BINDING = 0
+SAMPLER_BINDING = 1
+FIRST_TEXTURE_BINDING = 2
+
+# Color channels blend in the usual way, but the alpha channel takes the source's alpha
+# whole, so that drawing something half transparent onto an opaque background leaves it
+# opaque rather than eating into its alpha.
+BLEND = {
+    "color": {
+        "src_factor": wgpu.BlendFactor.src_alpha,
+        "dst_factor": wgpu.BlendFactor.one_minus_src_alpha,
+        "operation": wgpu.BlendOperation.add,
+    },
+    "alpha": {
+        "src_factor": wgpu.BlendFactor.one,
+        "dst_factor": wgpu.BlendFactor.one_minus_src_alpha,
+        "operation": wgpu.BlendOperation.add,
+    },
+}
+
 
 class ShaderWrapper(object):
     """
-    One mobject's side of the gpu: the programs it is drawn by, the buffers holding what
-    it sends them, and the drawing itself.
+    One mobject's side of the gpu: the module it is drawn by, the buffers holding what it
+    sends, the groups those are bound in, and the drawing itself.
 
-    A mobject names a folder of shaders, compiled once between all the mobjects naming
-    it, and hands over the two arrays it keeps: its data, a record per point, and its
-    uniforms, one value for the whole of it. Those sit here as a vertex buffer and a
-    uniform buffer, written afresh from the arrays whenever either says it has changed,
-    see write_vertex_buffer and write_uniform_buffer. Values which hold for every mobject
-    at once, where the camera is and the like, are no business of a wrapper's, being set
-    on every program once a frame instead, see set_shared_uniforms.
+    A mobject names a folder holding one shader, compiled once between all the mobjects
+    naming it, and hands over the two arrays it keeps: its data, a record per point, and its
+    uniforms, one value for the whole of it. Those sit here as a storage buffer and a uniform
+    buffer. Values which hold for every mobject at once, where the camera is and the like,
+    are no business of a wrapper's, being bound once a frame by the renderer.
 
-    No shader is handed vertex attributes. Each reads the records of the vertex buffer
-    itself, through a texture pointed at it, and expands every one into verts_per_record
-    vertices, always triangles, see inserts/read_data.glsl.
+    No shader is handed vertex attributes. Each reads the records of its buffer itself, as a
+    flat array of floats indexed by the vertex being drawn, and expands every record into
+    verts_per_record vertices, always triangles, see inserts/read_data.wgsl.
 
     Drawing comes in two halves, so that every write a frame makes lands before any of its
-    draws: write_buffers sends what has changed, and render binds this mobject's buffers,
-    asks the renderer for the state each pass wants, and draws. There is one wrapper to a
-    mobject rather than to a kind of mobject, which is what lets a fill count its own
-    winding in the stencil buffer without the mobject beside it joining in, and what any
-    drawing taking more than a single pass is built on: see VShaderWrapper, for a fill and
-    the stroke around it, and SurfaceShaderWrapper, for the two sides of a surface.
+    draws: write_buffers sends what has changed, and render binds this mobject's groups,
+    asks for the pipeline each pass wants, and draws. There is one wrapper to a mobject
+    rather than to a kind of mobject, which is what lets a fill count its own winding in the
+    stencil buffer without the mobject beside it joining in, and what any drawing taking
+    more than one pass is built on.
     """
 
     def __init__(
@@ -62,53 +75,44 @@ class ShaderWrapper(object):
         mobject_data: StructuredArray,
         mobject_uniforms: Uniforms,
         shader_folder: Optional[str] = None,
-        texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
+        texture_paths: Optional[dict[str, str]] = None,
         depth_test: bool = False,
         code_replacements: dict[str, str] = dict(),
         verts_per_record: int = 0,
     ):
         self.renderer = renderer
-        # The context is the renderer's, kept here as well for how often it is wanted
-        self.ctx = renderer.ctx
+        self.device = renderer.device
         self.mobject_data = mobject_data
+        self.mobject_uniforms = mobject_uniforms
         self.shader_folder = shader_folder
+        self.texture_paths = texture_paths or dict()
         self.depth_test = depth_test
         self.verts_per_record = verts_per_record
-        self.texture_paths = texture_paths or dict()
 
-        self.mobject_uniforms = mobject_uniforms
-
+        self.init_layouts()
         self.init_program_code()
         for old, new in code_replacements.items():
             self.replace_code(old, new)
         self.init_program()
-        self.init_textures()
-        self.init_vertex_objects()
+        self.init_resources()
 
     def __deepcopy__(self, memo):
         # Don't allow deepcopies, e.g. if the mobject with this ShaderWrapper as an
-        # attribute gets copies. Returning None means the parent object with this ShaderWrapper
-        # as an attribute should smoothly handle this case.
+        # attribute gets copied. Returning None means the parent object with this
+        # ShaderWrapper as an attribute should smoothly handle this case.
         return None
 
-    def init_program_code(self) -> None:
-        self.init_layouts()
-        self.program_code: dict[str, str | None] = {
-            "vertex_shader": self.get_code("vert"),
-            "fragment_shader": self.get_code("frag"),
-        }
-
-    def get_code(self, name: str) -> str | None:
-        return get_shader_code(
-            os.path.join(self.shader_folder, f"{name}.glsl"),
-            self.data_layout,
-        )
+    # What the shader is told about the mobject, and what it may bind
 
     def init_layouts(self) -> None:
         """
-        Describes where the fields of one of this mobject's vertex records sit, which
-        is all that the shader source generated for it depends on, and so is also the
-        key that source gets cached under.
+        Where the fields of one of this mobject's vertex records sit, which along with what
+        it holds for the whole of itself is all that the shader source generated for it
+        depends on, and so is also the key that source gets cached under.
+
+        And what the shader may bind: its records, and a sampler with a texture for each
+        image the mobject named. Those are settled once, a shader's bindings being part of
+        what a pipeline is built from.
         """
         dtype = self.mobject_data.dtype
         self.data_layout = (
@@ -116,445 +120,235 @@ class ShaderWrapper(object):
             tuple((name, dtype.fields[name][1] // 4) for name in dtype.names),
         )
 
-    def init_program(self):
-        if not self.shader_folder:
-            self.program = None
-            self.programs = []
-        else:
-            self.program = get_shader_program(self.ctx, **self.program_code)
-            self.programs = [self.program]
-        self.init_uniform_block()
+        entries = [{
+            "binding": DATA_BINDING,
+            "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
+            "buffer": {"type": wgpu.BufferBindingType.read_only_storage},
+        }]
+        if self.texture_paths:
+            entries.append({
+                "binding": SAMPLER_BINDING,
+                "visibility": wgpu.ShaderStage.FRAGMENT,
+                "sampler": {"type": wgpu.SamplerBindingType.filtering},
+            })
+            for index in range(len(self.texture_paths)):
+                entries.append({
+                    "binding": FIRST_TEXTURE_BINDING + index,
+                    "visibility": wgpu.ShaderStage.FRAGMENT,
+                    "texture": {"sample_type": wgpu.TextureSampleType.float},
+                })
+        self.resource_layout = self.device.create_bind_group_layout(entries=entries)
+        self.mobject_layout = self.device.create_bind_group_layout(entries=[{
+            "binding": 0,
+            "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
+            "buffer": {"type": wgpu.BufferBindingType.uniform},
+        }])
+        self.pipeline_layout = self.device.create_pipeline_layout(bind_group_layouts=[
+            self.renderer.frame_layout, self.mobject_layout, self.resource_layout,
+        ])
 
-    def init_uniform_block(self):
-        """
-        Points whichever programs read the mobject's uniforms at the buffer they will
-        travel in. Its layout is settled by the mobject's uniform_dtype, so nothing is
-        needed here beyond making sure the shaders agree about it.
-        """
-        dtype = self.mobject_uniforms.array.dtype
-        self.has_uniform_block = False
-        for program in self.programs:
-            if program is None or not check_uniform_block(program, dtype):
-                continue
-            program[MOBJECT_BLOCK_NAME].binding = MOBJECT_BLOCK_BINDING
-            self.has_uniform_block = True
+    def init_program_code(self) -> None:
+        self.program_code: dict[str, str | None] = {"shader": self.get_code("shader")}
 
-    def init_textures(self):
-        self.texture_names_to_ids = dict()
-        self.textures = []
-        for name, path in self.texture_paths.items():
-            self.add_texture(name, image_path_to_texture(path, self.ctx))
-        # The vertex buffer, exposed to the shader as a texture it can index
-        self.texture_names_to_ids["Data"] = len(self.textures)
+    def get_code(self, name: str) -> str | None:
+        return get_shader_code(
+            os.path.join(self.shader_folder, f"{name}.wgsl"),
+            self.data_layout,
+            self.mobject_uniforms.dtype,
+        )
 
-    def init_vertex_objects(self):
-        self.vbo = None
-        self.vaos = []
-        self.data_texture = None
+    def init_program(self) -> None:
+        code = self.program_code["shader"]
+        self.module = None if code is None else get_shader_module(self.device, code)
+
+    def replace_code(self, old: str, new: str) -> None:
+        for name, code in self.program_code.items():
+            if code is not None:
+                self.program_code[name] = re.sub(old, new, code)
+        self.init_program()
+
+    def init_resources(self) -> None:
+        self.data_buffer = None
         self.uniform_buffer = None
-        # Which write to each of the mobject's arrays was the last to be sent, see
-        # write_vertex_buffer
+        self.mobject_bind_group = None
+        self.resource_bind_group = None
+        self.textures = [
+            image_path_to_texture(path, self.device)
+            for path in self.texture_paths.values()
+        ]
+        self.sampler = None
+        if self.texture_paths:
+            self.sampler = self.device.create_sampler(
+                mag_filter=wgpu.FilterMode.linear, min_filter=wgpu.FilterMode.linear,
+            )
+        # Which write to each of the mobject's arrays was the last to be sent
         self.data_version = 0
         self.uniform_version = 0
 
-    def add_texture(self, name: str, texture: moderngl.Texture):
-        max_units = self.ctx.info['GL_MAX_TEXTURE_IMAGE_UNITS']
-        if len(self.textures) >= max_units:
-            raise ValueError(f"Unable to use more than {max_units} textures for a program")
-        # The position in the list determines its id
-        self.texture_names_to_ids[name] = len(self.textures)
-        self.textures.append(texture)
+    # Sending what the draw will read
 
-    def replace_code(self, old: str, new: str) -> None:
-        code_map = self.program_code
-        for name in code_map:
-            if code_map[name] is None:
-                continue
-            code_map[name] = re.sub(old, new, code_map[name])
-        self.init_program()
-
-    # Adding data
-
-    def write_vertex_buffer(self):
+    def write_buffers(self) -> None:
         """
-        The mobject's data, sent as it sits, when the array has been written to since it
-        last was sent. A buffer of the wrong size counts as much as written values do, an
-        array being replaced rather than written into when it is resized, and no buffer at
-        all means either that nothing has been sent yet or that the shaders were built
-        afresh.
+        The mobject's two arrays into their buffers, where either has been written to since
+        it was last sent. Every wrapper of a frame does this before any of them draws, since
+        a write reaching the gpu partway through a render pass has no say over whether the
+        draws before it see the old values or the new, see Camera.capture.
         """
-        array = self.mobject_data.array
-        if len(array) == 0:
-            if self.vbo is not None:
-                self.vbo.clear()
+        if self.module is None:
             return
-        size = array.itemsize * len(array)
-        if self.vbo is not None and self.vbo.size != size:
-            self.release()  # This sets vbo to be None
-        if self.vbo is None:
-            self.vbo = self.ctx.buffer(array)
-            self.generate_vaos()
-        elif self.mobject_data.version != self.data_version:
-            self.vbo.write(array)
-        else:
-            return
-        self.data_version = self.mobject_data.version
-
-    def write_uniform_buffer(self):
-        uniforms = self.mobject_uniforms
-        # A shader reading none of them declares no block for them to travel in
-        if not self.has_uniform_block:
-            return
-        if self.uniform_buffer is None:
-            self.uniform_buffer = self.ctx.buffer(uniforms.array)
-        elif uniforms.version != self.uniform_version:
-            self.uniform_buffer.write(uniforms.array)
-        else:
-            return
-        self.uniform_version = uniforms.version
-
-    def generate_vaos(self):
-        if not self.programs:
-            # Nothing to draw with, e.g. a mobject holding points but naming no shader
-            return
-        self.init_data_texture()
-        self.vaos = [
-            self.ctx.vertex_array(program=program, content=[], mode=moderngl.TRIANGLES)
-            for program in self.programs
-        ]
-
-    def init_data_texture(self):
-        """
-        Points a buffer texture at the vertex buffer, so shaders can index into
-        it. This aliases the existing buffer rather than copying it, so it needs
-        to be redone whenever the buffer itself is replaced.
-        """
-        if self.data_texture is None:
-            self.data_texture = gl.glGenTextures(1)
-        gl.glBindTexture(gl.GL_TEXTURE_BUFFER, self.data_texture)
-        gl.glTexBuffer(gl.GL_TEXTURE_BUFFER, gl.GL_R32F, self.vbo.glo)
-
-    # Related to data and rendering
-    def write_buffers(self):
-        """
-        The mobject's two arrays into their buffers. Every wrapper of a frame does this
-        before any of them draws, since a write reaching the gpu partway through a wgpu
-        render pass has no say over whether the draws before it see the old values or the
-        new, see Camera.capture.
-        """
-        self.write_vertex_buffer()
+        self.write_data_buffer()
         self.write_uniform_buffer()
 
-    def bind(self):
-        """
-        Points the programs at this mobject's own buffers and textures, which whatever was
-        drawn before it will have pointed at its own.
-        """
-        for tid, texture in enumerate(self.textures):
-            texture.use(tid)
-        if self.data_texture is not None:
-            gl.glActiveTexture(gl.GL_TEXTURE0 + self.texture_names_to_ids["Data"])
-            gl.glBindTexture(gl.GL_TEXTURE_BUFFER, self.data_texture)
-        for program in self.programs:
-            for name, unit in self.texture_names_to_ids.items():
-                set_program_sampler(program, name, unit)
-        if self.uniform_buffer is not None:
-            self.uniform_buffer.bind_to_uniform_block(MOBJECT_BLOCK_BINDING)
+    def write_data_buffer(self) -> None:
+        array = self.mobject_data.array
+        if len(array) == 0:
+            return
+        # A buffer's size is settled when it is made, so a resized array wants a new one,
+        # and whatever was bound to the old one has to be bound afresh
+        if self.data_buffer is not None and self.data_buffer.size != array.nbytes:
+            self.data_buffer.destroy()
+            self.data_buffer = None
+        if self.data_buffer is None:
+            self.data_buffer = self.device.create_buffer(
+                size=array.nbytes,
+                usage=wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_DST,
+            )
+            self.resource_bind_group = None
+        elif self.mobject_data.version == self.data_version:
+            return
+        self.renderer.queue.write_buffer(self.data_buffer, 0, array)
+        self.data_version = self.mobject_data.version
 
-    def render(self):
-        self.bind()
-        self.renderer.use(DEFAULT, self.depth_test)
+    def write_uniform_buffer(self) -> None:
+        array = self.mobject_uniforms.array
+        if self.uniform_buffer is None:
+            self.uniform_buffer = self.device.create_buffer(
+                size=array.nbytes,
+                usage=wgpu.BufferUsage.UNIFORM | wgpu.BufferUsage.COPY_DST,
+            )
+            self.mobject_bind_group = None
+        elif self.mobject_uniforms.version == self.uniform_version:
+            return
+        self.renderer.queue.write_buffer(self.uniform_buffer, 0, array)
+        self.uniform_version = self.mobject_uniforms.version
+
+    def get_bind_groups(self):
+        """
+        The two groups a draw of this mobject binds, made afresh whenever a buffer they
+        point at has been replaced.
+        """
+        if self.mobject_bind_group is None:
+            self.mobject_bind_group = self.device.create_bind_group(
+                layout=self.mobject_layout,
+                entries=[{"binding": 0, "resource": {
+                    "buffer": self.uniform_buffer,
+                    "offset": 0,
+                    "size": self.uniform_buffer.size,
+                }}],
+            )
+        if self.resource_bind_group is None:
+            entries = [{"binding": DATA_BINDING, "resource": {
+                "buffer": self.data_buffer, "offset": 0, "size": self.data_buffer.size,
+            }}]
+            if self.textures:
+                entries.append({"binding": SAMPLER_BINDING, "resource": self.sampler})
+                for index, texture in enumerate(self.textures):
+                    entries.append({
+                        "binding": FIRST_TEXTURE_BINDING + index,
+                        "resource": texture.create_view(),
+                    })
+            self.resource_bind_group = self.device.create_bind_group(
+                layout=self.resource_layout, entries=entries,
+            )
+        return self.mobject_bind_group, self.resource_bind_group
+
+    # Drawing
+
+    def get_pipeline(self, state: DrawState):
+        """
+        The pipeline for one of this mobject's passes. Everything a pass settles is in there:
+        which module runs, what it may bind, and all of what the state names, so a pipeline
+        is what gets cached and there is nothing left to say around the draw itself.
+        """
+        samples = self.renderer.samples
+        key = (id(self.module), id(self.pipeline_layout), state, self.depth_test, samples)
+
+        def build():
+            return self.device.create_render_pipeline(
+                layout=self.pipeline_layout,
+                vertex={"module": self.module, "entry_point": "vs_main", "buffers": []},
+                fragment={
+                    "module": self.module,
+                    "entry_point": "fs_main",
+                    "targets": [{
+                        "format": COLOR_FORMAT,
+                        "blend": BLEND,
+                        "write_mask": state.color_write_mask,
+                    }],
+                },
+                primitive={
+                    "topology": wgpu.PrimitiveTopology.triangle_list,
+                    "cull_mode": state.cull or wgpu.CullMode.none,
+                },
+                depth_stencil=state.depth_stencil_descriptor(self.depth_test),
+                multisample={"count": samples},
+            )
+
+        return self.renderer.get_pipeline(key, build)
+
+    def draw(self, state: DrawState = DEFAULT, vertices: int | None = None) -> None:
+        """One pass over this mobject's records, in the state given"""
+        render_pass = self.renderer.pass_
+        mobject_group, resource_group = self.get_bind_groups()
+        render_pass.set_bind_group(MOBJECT_GROUP, mobject_group)
+        render_pass.set_bind_group(RESOURCE_GROUP, resource_group)
+        render_pass.set_pipeline(self.get_pipeline(state))
+        if vertices is None:
+            vertices = self.verts_per_record * len(self.mobject_data)
+        render_pass.draw(vertices)
+
+    def render(self) -> None:
+        if self.module is None or len(self.mobject_data) == 0:
+            return
         self.draw()
 
-    def draw(self):
-        n_verts = self.verts_per_record * len(self.mobject_data)
-        for vao in self.vaos:
-            vao.render(vertices=n_verts)
-
-    def release(self):
-        for obj in (self.vbo, *self.vaos):
-            if obj is not None:
-                obj.release()
-        if self.data_texture is not None:
-            gl.glDeleteTextures([self.data_texture])
-        if self.uniform_buffer is not None:
-            self.uniform_buffer.release()
-        self.init_vertex_objects()
+    def release(self) -> None:
+        for buffer in (self.data_buffer, self.uniform_buffer):
+            if buffer is not None:
+                buffer.destroy()
+        self.init_resources()
 
 
 class SurfaceShaderWrapper(ShaderWrapper):
-    """
-    A surface is drawn in two passes, the side of it facing away from the camera before
-    the side facing towards it, so that a see through one blends in the order it should:
-    what lies behind first, what lies in front over the top of it.
-
-    Nothing here asks whether a surface is see through. For an opaque one the depth test
-    settles which side wins whatever order they arrive in, so the two passes come out
-    exactly as one would.
-
-    Which side faces which way is taken from the winding of the mesh, which follows how
-    the surface is parametrized, the same thing its normals follow. A surface whose
-    normals point inwards, and which is therefore already lit as though seen from inside,
-    has its two passes the other way around as well.
-
-    A surface which folds over itself needs more than which way it faces, since which of
-    its own folds lies in front has nothing to do with that. Such a one can ask for
-    sort_to_camera, and then its squares are drawn in order of their distance from the
-    camera, furthest first, which is worked out here from the camera position every
-    program is given anyway.
-    """
+    """Not drawn yet on this branch, see phase 2c of WGPU_PORT_PLAN.md"""
 
     def __init__(self, *args, sort_to_camera: bool = False, **kwargs):
         self.sort_to_camera = sort_to_camera
         super().__init__(*args, **kwargs)
 
-    def init_vertex_objects(self):
-        super().init_vertex_objects()
-        self.ordered = False
-        self.order_ibo = None
-        self.order_vao = None
-
-    def write_buffers(self):
-        super().write_buffers()
-        # Ordering the triangles writes a buffer of its own, so it belongs here rather
-        # than among the draws
-        self.ordered = self.sort_to_camera and self.order_triangles_by_depth()
-
-    def render(self):
-        self.bind()
-        if self.ordered:
-            self.renderer.use(DEFAULT, self.depth_test)
-            self.order_vao.render(vertices=self.order_ibo.size // 4)
-            return
-        for state in (CULL_FRONT, CULL_BACK):
-            self.renderer.use(state, self.depth_test)
-            self.draw()
-
-    def order_triangles_by_depth(self) -> bool:
-        """
-        Lists the vertices of every triangle of the mesh, three to each, those furthest
-        from the camera first, in a buffer to be drawn through. False if there is nothing
-        to order that way: no camera yet, or records which are no grid, as an imported
-        mesh's are.
-        """
-        camera_position = self.renderer.frame_uniforms["camera_position"]
-        nu, nv = self.mobject_uniforms["resolution"].astype(int)
-        if camera_position is None or nu < 2 or nv < 2:
-            return False
-
-        # Where the middle of each triangle of each square sits, the two of them taking
-        # the corners the vertex shader gives them, see inserts/surface_mesh.glsl
-        points = self.mobject_data["point"].reshape((nu, nv, 3))
-        middles = np.array([
-            points[:-1, :-1] + points[1:, :-1] + points[:-1, 1:],
-            points[:-1, 1:] + points[1:, :-1] + points[1:, 1:],
-        ])
-        offsets = middles.reshape((-1, 3)) / 3 - np.array(camera_position)
-        order = np.argsort(-np.einsum("ij,ij->i", offsets, offsets))
-
-        # Which vertices each of those triangles is drawn from, six per square, the first
-        # three making one triangle and the last three the other
-        squares = np.arange(nu - 1)[:, np.newaxis] * nv + np.arange(nv - 1)
-        firsts = 6 * squares + np.array([[[0]], [[3]]])
-        vertices = firsts.reshape(-1)[order, np.newaxis] + np.arange(3)
-        self.write_order_buffer(vertices.astype(np.uint32).tobytes())
-        return True
-
-    def write_order_buffer(self, data: bytes):
-        if self.order_ibo is not None and self.order_ibo.size != len(data):
-            self.order_ibo.release()
-            self.order_vao.release()
-            self.order_ibo = None
-        if self.order_ibo is None:
-            self.order_ibo = self.ctx.buffer(data)
-            self.order_vao = self.ctx.vertex_array(
-                program=self.program,
-                content=[],
-                index_buffer=self.order_ibo,
-                index_element_size=4,
-                mode=moderngl.TRIANGLES,
-            )
-        else:
-            self.order_ibo.write(data)
-
-    def release(self):
-        for obj in (self.order_ibo, self.order_vao):
-            if obj is not None:
-                obj.release()
-        super().release()
+    def render(self) -> None:
+        raise NotImplementedError(
+            "Surfaces are not drawn yet on this branch, see phase 2c of WGPU_PORT_PLAN.md"
+        )
 
 
 class VShaderWrapper(ShaderWrapper):
-    """
-    A bezier sits in three consecutive records of the buffer, and both shaders
-    read those records themselves rather than being handed vertex attributes.
-    The fill shader turns each curve into two triangles, and the stroke shader
-    into one quad per polyline segment, up to MAX_STEPS of them.
-    """
-    fill_verts_per_curve = 6
-    stroke_verts_per_curve = 6 * (32 - 1)  # MAX_STEPS in stroke/vert.glsl
+    """Not drawn yet on this branch, see phase 2c of WGPU_PORT_PLAN.md"""
 
     def __init__(
         self,
-        renderer: Renderer,
-        mobject_data: StructuredArray,
-        mobject_uniforms: Uniforms,
-        shader_folder: Optional[str] = None,
-        texture_paths: Optional[dict[str, str]] = None,  # A dictionary mapping names to filepaths for textures.
-        depth_test: bool = False,
-        code_replacements: dict[str, str] = dict(),
+        *args,
         program_type: str | None = None,
         stroke_behind: bool = False,
+        **kwargs,
     ):
         self.stroke_behind = stroke_behind
-        super().__init__(
-            renderer=renderer,
-            mobject_data=mobject_data,
-            shader_folder=shader_folder,
-            mobject_uniforms=mobject_uniforms,
-            texture_paths=texture_paths,
-            depth_test=depth_test,
-        )
-        for old, new in code_replacements.items():
-            self.replace_code_program(old, new, program_type)
-
-    def init_program_code(self) -> None:
-        self.init_layouts()
-        self.program_code = {
-            f"{vtype}_{name}": get_shader_code(
-                os.path.join("quadratic_bezier", f"{vtype}", f"{name}.glsl"),
-                self.data_layout,
-            )
-            for vtype in ["stroke", "fill"]
-            for name in ["vert", "frag"]
-        }
-
-    def init_program(self):
-        self.stroke_program = get_shader_program(
-            self.ctx,
-            vertex_shader=self.program_code["stroke_vert"],
-            fragment_shader=self.program_code["stroke_frag"],
-        )
-        self.fill_program = get_shader_program(
-            self.ctx,
-            vertex_shader=self.program_code["fill_vert"],
-            fragment_shader=self.program_code["fill_frag"],
-        )
-        self.programs = [self.stroke_program, self.fill_program]
-        self.init_uniform_block()
-
-    def init_vertex_objects(self):
-        super().init_vertex_objects()
-        self.has_fill = False
-        self.stroke_vao = None
-        self.fill_vao = None
-
-    def generate_vaos(self):
-        self.init_data_texture()
-        # Neither shader is handed any vertex attributes, since both read the
-        # buffer themselves. The border around a fill comes from the stroke
-        # program too, differing only by the is_fill_border uniform.
-        self.stroke_vao = self.ctx.vertex_array(
-            program=self.stroke_program, content=[], mode=moderngl.TRIANGLES
-        )
-        self.fill_vao = self.ctx.vertex_array(
-            program=self.fill_program, content=[], mode=moderngl.TRIANGLES
-        )
-        self.vaos = [self.stroke_vao, self.fill_vao]
-
-    def write_uniform_buffer(self):
-        # Whether there is any fill to draw, noted whenever the uniforms change rather
-        # than looked at per frame. Many a mobject is stroke alone, and would otherwise
-        # pay for all three of the fill passes, and the state they set, for nothing.
-        uniforms = self.mobject_uniforms
-        if uniforms.version != self.uniform_version:
-            self.has_fill = bool(uniforms["fill_rgba"][3] or uniforms["fill_rgba_end"][3])
-        super().write_uniform_buffer()
-
-    def get_num_curves(self) -> int:
-        # Consecutive beziers share an anchor, so n points make n // 2 curves
-        return len(self.mobject_data) // 2
+        super().__init__(*args, **kwargs)
 
     def replace_code_program(self, old: str, new: str, program_type: str | None = None):
-        if program_type is None:
-            # fallback to generic behaviour
-            super().replace_code(old, new)
-            return
+        self.replace_code(old, new)
 
-        valid = {"stroke", "fill"}
-        if program_type not in valid:
-            raise ValueError(f"Invalid program_type: {program_type}")
-
-        for name in self.program_code:
-            if self.program_code[name] is None:
-                continue
-            if not name.startswith(program_type):
-                continue
-            self.program_code[name] = re.sub(old, new, self.program_code[name])
-
-        self.init_program()
-
-    # Rendering
-    def render_stroke(self):
-        if self.stroke_vao is None:
-            return
-        set_program_uniform(self.stroke_program, "is_fill_border", False)
-        self.renderer.use(DEFAULT, self.depth_test)
-        self.stroke_vao.render(vertices=self.stroke_verts_per_curve * self.get_num_curves())
-
-    def render_fill(self):
-        """
-        Fill is drawn with a "stencil then cover" approach.
-
-        The first pass rasterizes the fill triangles into the stencil buffer
-        alone, incrementing for front facing triangles and decrementing for back
-        facing ones. Since facing is just the sign of a triangle's area in screen
-        space, each pixel ends up holding the winding number of the path around
-        it, with no need for a triangulation of the shape.
-
-        The second pass draws those same triangles again, but only where that
-        winding number is nonzero, and zeros out the stencil as it goes. This
-        means each pixel is colored exactly once, using ordinary alpha blending,
-        and that the stencil buffer is left clean for whatever draws next.
-
-        Note this only works because a wrapper holds a single mobject. Sharing one
-        pair of passes between several would merge their winding numbers into one
-        region, so that overlapping mobjects would color a shared pixel once
-        between them rather than each blending in turn.
-        """
-        if self.fill_vao is None or not self.has_fill:
-            return
-
-        # Pass 1: Count the winding number around each pixel. Depth testing is off for
-        # this, since an occluded triangle which failed to contribute would throw off the
-        # count, and depth writing too, so that these invisible triangles don't clobber
-        # the depth buffer. Nor is any color written.
-        self.renderer.use(WINDING_COUNT)
-        self.fill_vao.render(vertices=self.fill_verts_per_curve * self.get_num_curves())
-
-        # Trace the boundary of the shape with a stroke in the fill color, which is what
-        # anti-aliases the fill, since a stencil test is all or nothing. It's drawn only
-        # where the winding number is zero, meaning outside the shape, both because the
-        # inside is about to be filled in anyway, and so that its faded edge never blends
-        # on top of the fill, which would leave a seam along the boundary for partially
-        # transparent colors.
-        set_program_uniform(self.stroke_program, "is_fill_border", True)
-        self.renderer.use(FILL_BORDER, self.depth_test)
-        self.stroke_vao.render(vertices=self.stroke_verts_per_curve * self.get_num_curves())
-
-        # Pass 2: Color in everywhere the winding number is nonzero. Zeroing the stencil
-        # on the way through means the first triangle to cover a pixel is the only one to
-        # color it, and that no clearing is needed afterwards. Note that zeroing on depth
-        # failure matters just as much as on depth success, else occluded fills would
-        # leave the buffer dirty.
-        self.renderer.use(WINDING_COVER, self.depth_test)
-        self.fill_vao.render(vertices=self.fill_verts_per_curve * self.get_num_curves())
-
-    def render(self):
-        self.bind()
-        if self.stroke_behind:
-            self.render_stroke()
-            self.render_fill()
-        else:
-            self.render_fill()
-            self.render_stroke()
+    def render(self) -> None:
+        raise NotImplementedError(
+            "VMobjects are not drawn yet on this branch, see phase 2c of WGPU_PORT_PLAN.md"
+        )
