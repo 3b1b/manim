@@ -148,9 +148,16 @@ class Window(object):
         Points the surface at the device whose frames it will be showing, which is the first
         moment either knows of the other: a window outlives the scenes shown in it, and a
         scene's camera is what brings a device, see Camera.init_target.
+
+        The surface is asked for the plain form of whatever format it prefers, never the
+        sRGB one. Writing to an sRGB target gamma encodes what the shader returned, on the
+        understanding that a shader returns light rather than color, and a frame here already
+        holds the color it means: encoding it again lightens everything and washes it out,
+        worst in the darks, leaving only black and white where they started.
         """
         self.renderer = renderer
-        self.format = self.context.get_preferred_format(renderer.device.adapter)
+        preferred = self.context.get_preferred_format(renderer.device.adapter)
+        self.format = preferred.removesuffix("-srgb")
         self.context.configure(device=renderer.device, format=self.format)
 
     def get_size(self) -> tuple[int, int]:
