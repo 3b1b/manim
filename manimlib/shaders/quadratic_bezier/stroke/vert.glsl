@@ -19,6 +19,15 @@ const float POLYLINE_FACTOR = 100;
 const int MAX_STEPS = 32;
 // Stands in for a record index where there is no neighboring curve to read
 const int NONE = -1;
+/*
+Shorter than this and a vector holds no direction worth reading. Squaring
+components that small to take a length underflows to zero, so normalizing one
+gives NaN, and a single NaN position quietly drops every triangle it touches.
+Points that are meant to coincide, such as the anchor and handle marking the end
+of a curve, come to rest a hair apart this often enough that testing them for
+equality will miss them, so everything degenerate is measured against this instead.
+*/
+const float DEGENERATE_LENGTH = 1e-12;
 // Over this range of turn cosines, a joint eases from a sharp miter to a round end
 const float ROUND_COS_START = -0.5;
 const float ROUND_COS_END = -0.95;
@@ -81,7 +90,7 @@ vec3 neighbor_tangent(int record, bool at_start, vec3 anchor){
     vec2 subpath_range = read_vec2(record, DATA_OFFSET_subpath_range);
     int first = int(subpath_range.x);
     int last = int(subpath_range.y);
-    bool closed = read_vec3(first, DATA_OFFSET_point) == read_vec3(last, DATA_OFFSET_point);
+    bool closed = length(read_vec3(first, DATA_OFFSET_point) - read_vec3(last, DATA_OFFSET_point)) < DEGENERATE_LENGTH;
     if (at_start){
         int prev = record > first ? record - 1 : (closed ? last - 1 : NONE);
         return prev == NONE ? vec3(0.0) : anchor - read_vec3(prev, DATA_OFFSET_point);
@@ -97,7 +106,7 @@ bool flatten_tangent(vec3 tangent, vec3 facing_normal, out vec3 result){
     no direction to work with and so no joint to make.
     */
     vec3 flat_tan = project(tangent, facing_normal);
-    if (flat_tan == vec3(0.0)) return false;
+    if (length(flat_tan) < DEGENERATE_LENGTH) return false;
     result = normalize(flat_tan);
     return true;
 }
@@ -188,7 +197,7 @@ void main(){
     joint that has no neighbor to turn towards. Collapsing all six corners onto one
     point leaves no area to rasterize.
     */
-    bool blank = (controls[0] == controls[1]);
+    bool blank = (length(controls[1] - controls[0]) < DEGENERATE_LENGTH);
     blank = blank || (!joint_fan && segment >= n_steps - 1);
     if (!is_fill_border){
         blank = blank || (vec3(widths[0], widths[1], widths[2]) == vec3(0.0));
@@ -207,6 +216,10 @@ void main(){
     float t = joint_fan ? 1.0 : float(index) / float(n_steps - 1);
     vec3 point = joint_fan ? controls[2] : point_on_quadratic(t, c0, c1, c2);
     vec3 tangent = tangent_on_quadratic(t, c1, c2);
+    // Where the handle has come to rest on the anchor at this end, the tangent
+    // vanishes and leaves no direction to step away from. Such a curve is a straight
+    // run between its anchors, so the chord across it is the direction wanted.
+    if (length(tangent) < DEGENERATE_LENGTH) tangent = controls[2] - controls[0];
 
     // By default stroke width is measured relative to the frame, so putting it in
     // the units of the space being drawn means scaling by that space's frame
@@ -234,7 +247,7 @@ void main(){
     bool at_start = !joint_fan && index == 0;
     bool at_joint = joint_fan || at_start || index == n_steps - 1;
     vec3 neighbor = at_joint ? neighbor_tangent(record, at_start, point) : vec3(0.0);
-    bool has_joint = at_joint && neighbor != vec3(0.0);
+    bool has_joint = at_joint && length(neighbor) > DEGENERATE_LENGTH;
 
     /*
     Measured from the incoming tangent to the outgoing one either way, so at a curve's

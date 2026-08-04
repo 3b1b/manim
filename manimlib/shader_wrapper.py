@@ -479,6 +479,7 @@ class VShaderWrapper(ShaderWrapper):
         if self.stroke_vao is None:
             return
         set_program_uniform(self.stroke_program, "is_fill_border", False)
+        set_program_uniform(self.stroke_program, "fill_border_inside", False)
         self.stroke_vao.render(vertices=self.stroke_verts_per_curve * self.get_num_curves())
 
     def render_fill(self):
@@ -524,14 +525,31 @@ class VShaderWrapper(ShaderWrapper):
 
         # Trace the boundary of the shape with a stroke in the fill color, which
         # is what anti-aliases the fill, since a stencil test is all or nothing.
-        # It's drawn only where the winding number is zero, meaning outside the
-        # shape, both because the inside is about to be filled in anyway, and so
-        # that its faded edge never blends on top of the fill, which would leave
-        # a seam along the boundary for partially transparent colors.
+        # A pixel the boundary crosses should come out partly covered either way
+        # it falls, so the band is drawn over both sides of the path, in two
+        # passes told apart by the winding number: outside the shape it fades
+        # away, and inside it fades up to full. Each pass covers only what the
+        # other does not, so no pixel is blended into twice, which would leave a
+        # seam along the boundary for partially transparent colors.
         set_program_uniform(self.stroke_program, "is_fill_border", True)
+        n_stroke_verts = self.stroke_verts_per_curve * self.get_num_curves()
+
+        # Outside the shape. This leaves the stencil alone, so that the pass
+        # below still finds the winding numbers it needs to test against.
+        set_program_uniform(self.stroke_program, "fill_border_inside", False)
         gl.glStencilFunc(gl.GL_EQUAL, 0, 0xFF)
         gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, gl.GL_KEEP)
-        self.stroke_vao.render(vertices=self.stroke_verts_per_curve * self.get_num_curves())
+        self.stroke_vao.render(vertices=n_stroke_verts)
+
+        # Inside the shape, zeroing the winding number as it goes so that the
+        # cover pass below skips these pixels and lets this partial coverage
+        # stand, rather than painting over them at full opacity. Zeroing also
+        # keeps overlapping bands, such as those meeting at a joint, from
+        # blending on top of one another.
+        set_program_uniform(self.stroke_program, "fill_border_inside", True)
+        gl.glStencilFunc(gl.GL_NOTEQUAL, 0, 0xFF)
+        gl.glStencilOp(gl.GL_KEEP, gl.GL_ZERO, gl.GL_ZERO)
+        self.stroke_vao.render(vertices=n_stroke_verts)
 
         # Pass 2: Color in everywhere the winding number is nonzero. Zeroing the
         # stencil on the way through means the first triangle to cover a pixel
