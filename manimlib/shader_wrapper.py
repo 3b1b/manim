@@ -7,10 +7,16 @@ import OpenGL.GL as gl
 import moderngl
 import numpy as np
 
+from manimlib.renderer import CULL_BACK
+from manimlib.renderer import CULL_FRONT
+from manimlib.renderer import DEFAULT
+from manimlib.renderer import FILL_BORDER
+from manimlib.renderer import WINDING_COUNT
+from manimlib.renderer import WINDING_COVER
+from manimlib.utils.shaders import MOBJECT_BLOCK_BINDING
 from manimlib.utils.shaders import MOBJECT_BLOCK_NAME
 from manimlib.utils.shaders import check_uniform_block
 from manimlib.utils.shaders import get_shader_code
-from manimlib.utils.shaders import get_shared_uniform
 from manimlib.utils.shaders import get_shader_program
 from manimlib.utils.shaders import image_path_to_texture
 from manimlib.utils.shaders import set_program_sampler
@@ -22,9 +28,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Optional
-
-UNIFORM_BLOCK_BINDING = 0
-
+    from manimlib.renderer import Renderer
 
 class ShaderWrapper(object):
     """
@@ -43,17 +47,18 @@ class ShaderWrapper(object):
     itself, through a texture pointed at it, and expands every one into verts_per_record
     vertices, always triangles, see inserts/read_data.glsl.
 
-    Drawing means pre_render, which asks the context for what this mobject needs, its
-    textures among it, and then render. There is one wrapper to a mobject rather than to
-    a kind of mobject, which is what lets a fill count its own winding in the stencil
-    buffer without the mobject beside it joining in, and what any drawing taking more
-    than a single pass is built on: see VShaderWrapper, for a fill and the stroke around
-    it, and SurfaceShaderWrapper, for the two sides of a surface.
+    Drawing comes in two halves, so that every write a frame makes lands before any of its
+    draws: write_buffers sends what has changed, and render binds this mobject's buffers,
+    asks the renderer for the state each pass wants, and draws. There is one wrapper to a
+    mobject rather than to a kind of mobject, which is what lets a fill count its own
+    winding in the stencil buffer without the mobject beside it joining in, and what any
+    drawing taking more than a single pass is built on: see VShaderWrapper, for a fill and
+    the stroke around it, and SurfaceShaderWrapper, for the two sides of a surface.
     """
 
     def __init__(
         self,
-        ctx: moderngl.context.Context,
+        renderer: Renderer,
         mobject_data: StructuredArray,
         mobject_uniforms: Uniforms,
         shader_folder: Optional[str] = None,
@@ -62,7 +67,9 @@ class ShaderWrapper(object):
         code_replacements: dict[str, str] = dict(),
         verts_per_record: int = 0,
     ):
-        self.ctx = ctx
+        self.renderer = renderer
+        # The context is the renderer's, kept here as well for how often it is wanted
+        self.ctx = renderer.ctx
         self.mobject_data = mobject_data
         self.shader_folder = shader_folder
         self.depth_test = depth_test
@@ -129,7 +136,7 @@ class ShaderWrapper(object):
         for program in self.programs:
             if program is None or not check_uniform_block(program, dtype):
                 continue
-            program[MOBJECT_BLOCK_NAME].binding = UNIFORM_BLOCK_BINDING
+            program[MOBJECT_BLOCK_NAME].binding = MOBJECT_BLOCK_BINDING
             self.has_uniform_block = True
 
     def init_textures(self):
@@ -145,6 +152,10 @@ class ShaderWrapper(object):
         self.vaos = []
         self.data_texture = None
         self.uniform_buffer = None
+        # Which write to each of the mobject's arrays was the last to be sent, see
+        # write_vertex_buffer
+        self.data_version = 0
+        self.uniform_version = 0
 
     def add_texture(self, name: str, texture: moderngl.Texture):
         max_units = self.ctx.info['GL_MAX_TEXTURE_IMAGE_UNITS']
@@ -162,21 +173,15 @@ class ShaderWrapper(object):
             code_map[name] = re.sub(old, new, code_map[name])
         self.init_program()
 
-    # Changing context
-    def set_ctx_depth_test(self, enable: bool = True) -> None:
-        if enable:
-            self.ctx.enable(moderngl.DEPTH_TEST)
-        else:
-            self.ctx.disable(moderngl.DEPTH_TEST)
-
     # Adding data
 
     def write_vertex_buffer(self):
         """
-        The mobject's data, sent as it sits, when it has changed since it last was. A
-        buffer of the wrong size counts as much as changed values do, an array being
-        replaced rather than written into when it is resized, and no buffer at all means
-        either that nothing has been sent yet or that the shaders were built afresh.
+        The mobject's data, sent as it sits, when the array has been written to since it
+        last was sent. A buffer of the wrong size counts as much as written values do, an
+        array being replaced rather than written into when it is resized, and no buffer at
+        all means either that nothing has been sent yet or that the shaders were built
+        afresh.
         """
         array = self.mobject_data.array
         if len(array) == 0:
@@ -189,11 +194,11 @@ class ShaderWrapper(object):
         if self.vbo is None:
             self.vbo = self.ctx.buffer(array)
             self.generate_vaos()
-        elif self.mobject_data.changed:
+        elif self.mobject_data.version != self.data_version:
             self.vbo.write(array)
         else:
             return
-        self.mobject_data.changed = False
+        self.data_version = self.mobject_data.version
 
     def write_uniform_buffer(self):
         uniforms = self.mobject_uniforms
@@ -202,11 +207,11 @@ class ShaderWrapper(object):
             return
         if self.uniform_buffer is None:
             self.uniform_buffer = self.ctx.buffer(uniforms.array)
-        elif uniforms.changed:
+        elif uniforms.version != self.uniform_version:
             self.uniform_buffer.write(uniforms.array)
         else:
             return
-        uniforms.changed = False
+        self.uniform_version = uniforms.version
 
     def generate_vaos(self):
         if not self.programs:
@@ -230,15 +235,21 @@ class ShaderWrapper(object):
         gl.glTexBuffer(gl.GL_TEXTURE_BUFFER, gl.GL_R32F, self.vbo.glo)
 
     # Related to data and rendering
-    def pre_render(self):
+    def write_buffers(self):
         """
-        All that the draw needs in place: the mobject's two arrays written into their
-        buffers, its textures bound with the samplers pointed at them, and the context
-        asked for what this mobject wants of it.
+        The mobject's two arrays into their buffers. Every wrapper of a frame does this
+        before any of them draws, since a write reaching the gpu partway through a wgpu
+        render pass has no say over whether the draws before it see the old values or the
+        new, see Camera.capture.
         """
         self.write_vertex_buffer()
         self.write_uniform_buffer()
-        self.set_ctx_depth_test(self.depth_test)
+
+    def bind(self):
+        """
+        Points the programs at this mobject's own buffers and textures, which whatever was
+        drawn before it will have pointed at its own.
+        """
         for tid, texture in enumerate(self.textures):
             texture.use(tid)
         if self.data_texture is not None:
@@ -248,9 +259,14 @@ class ShaderWrapper(object):
             for name, unit in self.texture_names_to_ids.items():
                 set_program_sampler(program, name, unit)
         if self.uniform_buffer is not None:
-            self.uniform_buffer.bind_to_uniform_block(UNIFORM_BLOCK_BINDING)
+            self.uniform_buffer.bind_to_uniform_block(MOBJECT_BLOCK_BINDING)
 
     def render(self):
+        self.bind()
+        self.renderer.use(DEFAULT, self.depth_test)
+        self.draw()
+
+    def draw(self):
         n_verts = self.verts_per_record * len(self.mobject_data)
         for vao in self.vaos:
             vao.render(vertices=n_verts)
@@ -294,18 +310,25 @@ class SurfaceShaderWrapper(ShaderWrapper):
 
     def init_vertex_objects(self):
         super().init_vertex_objects()
+        self.ordered = False
         self.order_ibo = None
         self.order_vao = None
 
+    def write_buffers(self):
+        super().write_buffers()
+        # Ordering the triangles writes a buffer of its own, so it belongs here rather
+        # than among the draws
+        self.ordered = self.sort_to_camera and self.order_triangles_by_depth()
+
     def render(self):
-        if self.sort_to_camera and self.order_triangles_by_depth():
+        self.bind()
+        if self.ordered:
+            self.renderer.use(DEFAULT, self.depth_test)
             self.order_vao.render(vertices=self.order_ibo.size // 4)
             return
-        gl.glEnable(gl.GL_CULL_FACE)
-        for culled in (gl.GL_FRONT, gl.GL_BACK):
-            gl.glCullFace(culled)
-            super().render()
-        gl.glDisable(gl.GL_CULL_FACE)
+        for state in (CULL_FRONT, CULL_BACK):
+            self.renderer.use(state, self.depth_test)
+            self.draw()
 
     def order_triangles_by_depth(self) -> bool:
         """
@@ -314,7 +337,7 @@ class SurfaceShaderWrapper(ShaderWrapper):
         to order that way: no camera yet, or records which are no grid, as an imported
         mesh's are.
         """
-        camera_position = get_shared_uniform("camera_position")
+        camera_position = self.renderer.frame_uniforms["camera_position"]
         nu, nv = self.mobject_uniforms["resolution"].astype(int)
         if camera_position is None or nu < 2 or nv < 2:
             return False
@@ -373,7 +396,7 @@ class VShaderWrapper(ShaderWrapper):
 
     def __init__(
         self,
-        ctx: moderngl.context.Context,
+        renderer: Renderer,
         mobject_data: StructuredArray,
         mobject_uniforms: Uniforms,
         shader_folder: Optional[str] = None,
@@ -385,7 +408,7 @@ class VShaderWrapper(ShaderWrapper):
     ):
         self.stroke_behind = stroke_behind
         super().__init__(
-            ctx=ctx,
+            renderer=renderer,
             mobject_data=mobject_data,
             shader_folder=shader_folder,
             mobject_uniforms=mobject_uniforms,
@@ -421,13 +444,10 @@ class VShaderWrapper(ShaderWrapper):
         self.init_uniform_block()
 
     def init_vertex_objects(self):
+        super().init_vertex_objects()
         self.has_fill = False
-        self.vbo = None
         self.stroke_vao = None
         self.fill_vao = None
-        self.vaos = []
-        self.data_texture = None
-        self.uniform_buffer = None
 
     def generate_vaos(self):
         self.init_data_texture()
@@ -447,7 +467,7 @@ class VShaderWrapper(ShaderWrapper):
         # than looked at per frame. Many a mobject is stroke alone, and would otherwise
         # pay for all three of the fill passes, and the state they set, for nothing.
         uniforms = self.mobject_uniforms
-        if uniforms.changed:
+        if uniforms.version != self.uniform_version:
             self.has_fill = bool(uniforms["fill_rgba"][3] or uniforms["fill_rgba_end"][3])
         super().write_uniform_buffer()
 
@@ -479,6 +499,7 @@ class VShaderWrapper(ShaderWrapper):
         if self.stroke_vao is None:
             return
         set_program_uniform(self.stroke_program, "is_fill_border", False)
+        self.renderer.use(DEFAULT, self.depth_test)
         self.stroke_vao.render(vertices=self.stroke_verts_per_curve * self.get_num_curves())
 
     def render_fill(self):
@@ -504,52 +525,36 @@ class VShaderWrapper(ShaderWrapper):
         if self.fill_vao is None or not self.has_fill:
             return
 
-        gl.glEnable(gl.GL_STENCIL_TEST)
-
-        # Pass 1: Count the winding number around each pixel. Depth testing must
-        # be off here, since an occluded triangle which failed to contribute
-        # would throw off the count, and depth writing must be off so that these
-        # invisible triangles don't clobber the depth buffer.
-        self.ctx.disable(moderngl.DEPTH_TEST)
-        gl.glDepthMask(gl.GL_FALSE)
-        gl.glColorMask(*4 * [gl.GL_FALSE])
-        gl.glStencilFunc(gl.GL_ALWAYS, 0, 0xFF)
-        gl.glStencilOpSeparate(gl.GL_FRONT, gl.GL_KEEP, gl.GL_INCR_WRAP, gl.GL_INCR_WRAP)
-        gl.glStencilOpSeparate(gl.GL_BACK, gl.GL_KEEP, gl.GL_DECR_WRAP, gl.GL_DECR_WRAP)
+        # Pass 1: Count the winding number around each pixel. Depth testing is off for
+        # this, since an occluded triangle which failed to contribute would throw off the
+        # count, and depth writing too, so that these invisible triangles don't clobber
+        # the depth buffer. Nor is any color written.
+        self.renderer.use(WINDING_COUNT)
         self.fill_vao.render(vertices=self.fill_verts_per_curve * self.get_num_curves())
 
-        gl.glColorMask(*4 * [gl.GL_TRUE])
-        gl.glDepthMask(gl.GL_TRUE)
-        self.set_ctx_depth_test(self.depth_test)
-
-        # Trace the boundary of the shape with a stroke in the fill color, which
-        # is what anti-aliases the fill, since a stencil test is all or nothing.
-        # It's drawn only where the winding number is zero, meaning outside the
-        # shape, both because the inside is about to be filled in anyway, and so
-        # that its faded edge never blends on top of the fill, which would leave
-        # a seam along the boundary for partially transparent colors.
+        # Trace the boundary of the shape with a stroke in the fill color, which is what
+        # anti-aliases the fill, since a stencil test is all or nothing. It's drawn only
+        # where the winding number is zero, meaning outside the shape, both because the
+        # inside is about to be filled in anyway, and so that its faded edge never blends
+        # on top of the fill, which would leave a seam along the boundary for partially
+        # transparent colors.
         set_program_uniform(self.stroke_program, "is_fill_border", True)
-        gl.glStencilFunc(gl.GL_EQUAL, 0, 0xFF)
-        gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, gl.GL_KEEP)
+        self.renderer.use(FILL_BORDER, self.depth_test)
         self.stroke_vao.render(vertices=self.stroke_verts_per_curve * self.get_num_curves())
 
-        # Pass 2: Color in everywhere the winding number is nonzero. Zeroing the
-        # stencil on the way through means the first triangle to cover a pixel
-        # is the only one to color it, and that no clearing is needed afterwards.
-        # Note that zeroing on depth failure matters just as much as on depth
-        # success, else occluded fills would leave the buffer dirty.
-        gl.glStencilFunc(gl.GL_NOTEQUAL, 0, 0xFF)
-        gl.glStencilOp(gl.GL_KEEP, gl.GL_ZERO, gl.GL_ZERO)
+        # Pass 2: Color in everywhere the winding number is nonzero. Zeroing the stencil
+        # on the way through means the first triangle to cover a pixel is the only one to
+        # color it, and that no clearing is needed afterwards. Note that zeroing on depth
+        # failure matters just as much as on depth success, else occluded fills would
+        # leave the buffer dirty.
+        self.renderer.use(WINDING_COVER, self.depth_test)
         self.fill_vao.render(vertices=self.fill_verts_per_curve * self.get_num_curves())
 
-        gl.glDisable(gl.GL_STENCIL_TEST)
-
     def render(self):
+        self.bind()
         if self.stroke_behind:
             self.render_stroke()
             self.render_fill()
         else:
             self.render_fill()
             self.render_stroke()
-
-

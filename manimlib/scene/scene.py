@@ -10,7 +10,6 @@ from contextlib import ExitStack
 
 import numpy as np
 from tqdm.auto import tqdm as ProgressDisplay
-from pyglet.window import key as PygletWindowKeys
 
 from manimlib.animation.animation import prepare_animation
 from manimlib.camera.camera import Camera
@@ -18,6 +17,8 @@ from manimlib.camera.camera_frame import CameraFrame
 from manimlib.config import manim_config
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
+from manimlib.event_keys import Keys
+from manimlib.event_keys import Mods
 from manimlib.logger import log
 from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Group
@@ -823,15 +824,15 @@ class Scene(object):
 
         if char == manim_config.key_bindings.reset:
             self.play(self.camera.frame.animate.to_default_state())
-        elif char == "z" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
+        elif char == "z" and (modifiers & Mods.CTRL_OR_CMD):
             self.undo()
-        elif char == "z" and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL | PygletWindowKeys.MOD_SHIFT)):
+        elif char == "z" and (modifiers & (Mods.CTRL_OR_CMD | Mods.SHIFT)):
             self.redo()
         # command + q
-        elif char == manim_config.key_bindings.quit and (modifiers & (PygletWindowKeys.MOD_COMMAND | PygletWindowKeys.MOD_CTRL)):
+        elif char == manim_config.key_bindings.quit and (modifiers & Mods.CTRL_OR_CMD):
             self.quit_interaction = True
         # Space or right arrow
-        elif char == " " or symbol == PygletWindowKeys.RIGHT:
+        elif char == " " or symbol == Keys.RIGHT:
             self.hold_on_wait = False
 
     def on_resize(self, width: int, height: int) -> None:

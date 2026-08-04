@@ -56,7 +56,7 @@ if TYPE_CHECKING:
     from typing import Callable, Iterator, Union, Tuple, Optional, Any
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4Array, Vect3Array, Self
-    from moderngl.context import Context
+    from manimlib.renderer import Renderer
 
     T = TypeVar('T')
     TimeBasedUpdater = Callable[["Mobject", float], "Mobject" | None]
@@ -235,7 +235,7 @@ class Mobject(object):
         self.data[n:] = self.data[n - 1]
         # Then read in new points, written into rather than replaced, so say so
         self.data["point"][n:] = new_points
-        self.data.changed = True
+        self.data.note_change()
         self.refresh_bounding_box()
         return self
 
@@ -1308,7 +1308,7 @@ class Mobject(object):
     ) -> Self:
         for mob in self.get_family(recurse):
             mob.data.rows_or_defaults[name] = rgba_array
-            mob.data.changed = True
+            mob.data.note_change()
         return self
 
     def set_color_by_rgba_func(
@@ -1357,7 +1357,7 @@ class Mobject(object):
                     opacity = resize_with_interpolation(np.array(opacity), len(data))
                 data[name][:, 3] = opacity
             # Those columns are written into rather than replaced
-            mob.data.changed = True
+            mob.data.note_change()
         return self
 
     def set_color(
@@ -1976,9 +1976,9 @@ class Mobject(object):
 
     # For shader data
 
-    def init_shader_wrapper(self, ctx: Context):
+    def init_shader_wrapper(self, renderer: Renderer):
         self.shader_wrapper = ShaderWrapper(
-            ctx=ctx,
+            renderer=renderer,
             mobject_data=self.data,
             shader_folder=self.shader_folder,
             mobject_uniforms=self.uniforms,
@@ -1988,9 +1988,9 @@ class Mobject(object):
             verts_per_record=self.verts_per_record,
         )
 
-    def get_shader_wrapper(self, ctx: Context) -> ShaderWrapper:
+    def get_shader_wrapper(self, renderer: Renderer) -> ShaderWrapper:
         if self.shader_wrapper is None:
-            self.init_shader_wrapper(ctx)
+            self.init_shader_wrapper(renderer)
         # Whatever the wrapper needs a copy of is told to it here, where it is asked for
         # once a frame, rather than by everything which might change one of them having
         # to remember to pass it along
@@ -2000,14 +2000,13 @@ class Mobject(object):
     def get_uniforms(self):
         return self.uniforms
 
-    def render(self, ctx: Context):
-        for mob in self.get_family():
-            if len(mob.data) == 0:
-                # Groups hold no points of their own, but their members might
-                continue
-            shader_wrapper = mob.get_shader_wrapper(ctx)
-            shader_wrapper.pre_render()
-            shader_wrapper.render()
+    def get_shader_wrappers(self, renderer: Renderer) -> list[ShaderWrapper]:
+        return [
+            mob.get_shader_wrapper(renderer)
+            for mob in self.get_family()
+            # Groups hold no points of their own, but their members might
+            if len(mob.data) > 0
+        ]
 
     # Event Handlers
     """

@@ -1,15 +1,15 @@
-uniform mat4 view;
-uniform float focal_distance;
-uniform vec3 frame_rescale_factors;
-
+#INSERT frame_uniforms.glsl
 #INSERT frame_units.glsl
 
+/*
+How far a point sits on the keeping side of each of the mobject's four clip planes, for the
+fragment shader to cut what falls outside, see clip_test.glsl. A distance is written for
+every plane whether or not it is in use, an unused one being all zeros, which stands for
+keeping everything.
+*/
+out vec4 clip_distances;
+
 float clip_distance(vec3 point, vec4 plane){
-    /*
-    Clipping stays switched on, so a distance has to be written for every plane,
-    whether or not it's in use. An unset plane is all zeros, which stands for
-    keeping everything.
-    */
     if (plane.xyz == vec3(0.0)) return 1.0;
     return dot(vec4(point, 1.0), plane);
 }
@@ -25,8 +25,10 @@ void emit_gl_Position(vec3 point){
     result.z *= -0.1;
     gl_Position = result;
     
-    gl_ClipDistance[0] = clip_distance(point, clip_plane0);
-    gl_ClipDistance[1] = clip_distance(point, clip_plane1);
-    gl_ClipDistance[2] = clip_distance(point, clip_plane2);
-    gl_ClipDistance[3] = clip_distance(point, clip_plane3);
+    clip_distances = vec4(
+        clip_distance(point, clip_plane0),
+        clip_distance(point, clip_plane1),
+        clip_distance(point, clip_plane2),
+        clip_distance(point, clip_plane3)
+    );
 }

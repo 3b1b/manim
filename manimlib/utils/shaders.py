@@ -24,12 +24,6 @@ if TYPE_CHECKING:
 PROGRAM_UNIFORM_MIRRORS: dict[int, dict[str, float | tuple]] = dict()
 # Names each program turned out not to have, so they aren't looked up again
 PROGRAM_ABSENT_UNIFORMS: dict[int, set[str]] = dict()
-# Every program which has been compiled, so that uniforms shared by all of them,
-# like those describing the camera, can be set once rather than once per mobject
-ALL_PROGRAMS: list[moderngl.Program] = []
-# The values last set for all of them, since programs are compiled on first use,
-# which may well be partway through a frame
-SHARED_UNIFORMS: dict[str, float | tuple] = dict()
 
 
 @lru_cache()
@@ -52,32 +46,12 @@ def get_shader_program(
         vertex_shader=vertex_shader,
         fragment_shader=fragment_shader,
     )
-    ALL_PROGRAMS.append(program)
-    for name, value in SHARED_UNIFORMS.items():
-        set_program_uniform(program, name, value)
+    # Which binding the frame's uniforms will be found at. Every program reads the same
+    # values from the same buffer, so this is settled once, when the program is compiled,
+    # rather than once a frame, see Renderer.
+    if check_uniform_block(program, FRAME_DTYPE, FRAME_BLOCK_NAME):
+        program[FRAME_BLOCK_NAME].binding = FRAME_BLOCK_BINDING
     return program
-
-
-def set_shared_uniforms(uniforms: UniformDict) -> None:
-    """
-    Sets uniforms which hold for every program, e.g. those describing where the
-    camera is. Doing this once a frame saves each mobject from pushing values it
-    shares with all the others.
-    """
-    SHARED_UNIFORMS.clear()
-    SHARED_UNIFORMS.update(uniforms)
-    for program in ALL_PROGRAMS:
-        for name, value in uniforms.items():
-            set_program_uniform(program, name, value)
-
-
-def get_shared_uniform(name: str) -> float | tuple | None:
-    """
-    One of the values which hold for every program, e.g. where the camera is, as it was
-    last set for the frame being drawn. None before anything has set them. See
-    set_shared_uniforms.
-    """
-    return SHARED_UNIFORMS.get(name, None)
 
 
 def set_program_uniform(
@@ -156,6 +130,7 @@ members every kind has, see inserts/vmobject_uniforms.glsl for an example, and l
 out a matching dtype with uniform_block_dtype, see Mobject.uniform_dtype.
 """
 MOBJECT_BLOCK_NAME = "MobjectUniforms"
+MOBJECT_BLOCK_BINDING = 0
 # What every mobject holds, whatever kind it is, as a name and a number of floats.
 # Mirrors inserts/common_uniform_members.glsl, and comes first in every block for the
 # same reason it does there: so the inserts reading them work wherever they are used.
@@ -167,16 +142,35 @@ COMMON_UNIFORMS = (
     ("clip_plane2", 4),
     ("clip_plane3", 4),
 )
-# What a block member of each size is called in a shader. Anything wider than a vec4,
-# a matrix say, is left out, since a block pads their columns in ways this would have
-# to know about.
-BLOCK_MEMBER_TYPES = {1: "float", 2: "vec2", 3: "vec3", 4: "vec4"}
+# What a block member of each size is called in a shader. A mat4 is in there because a
+# block lays one out as four vec4 columns, which is four vec4s and nothing else; a mat3
+# is not, because its columns get padded out to vec4 and this would have to know it.
+BLOCK_MEMBER_TYPES = {1: "float", 2: "vec2", 3: "vec3", 4: "vec4", 16: "mat4"}
 GL_MEMBER_SIZES = {
     gl.GL_FLOAT: 1,
     gl.GL_FLOAT_VEC2: 2,
     gl.GL_FLOAT_VEC3: 3,
     gl.GL_FLOAT_VEC4: 4,
+    gl.GL_FLOAT_MAT4: 16,
 }
+
+"""
+The camera's uniforms travel the same way a mobject's do, in one block, except that there
+is one of them for the whole frame rather than one per mobject. Every program reads it from
+the same buffer, bound once when the program is compiled, see get_shader_program.
+"""
+FRAME_BLOCK_NAME = "FrameUniforms"
+FRAME_BLOCK_BINDING = 1
+# Mirrors inserts/frame_uniforms.glsl. Ordered so that each vec3 is followed by the float
+# which fits beside it, leaving nothing padded but the last three floats.
+FRAME_UNIFORMS = (
+    ("view", 16),
+    ("frame_rescale_factors", 3),
+    ("frame_scale", 1),
+    ("camera_position", 3),
+    ("pixel_size", 1),
+    ("light_position", 3),
+)
 
 
 def uniform_block_dtype(*members: tuple[str, int]) -> np.dtype:
@@ -232,6 +226,9 @@ def uniform_block_code(dtype: np.dtype) -> str:
     return "\n".join(lines)
 
 
+FRAME_DTYPE = uniform_block_dtype(*FRAME_UNIFORMS)
+
+
 class Uniforms(StructuredArray):
     """
     A mobject's uniforms: one value each for the whole of it, laid out to match the
@@ -260,14 +257,18 @@ class Uniforms(StructuredArray):
         if np.array_equal(floats1, floats2) and np.array_equal(self.floats, floats1):
             return
         self.floats[:] = (1 - alpha) * floats1 + alpha * floats2
-        self.changed = True
+        self.note_change()
 
 
 @lru_cache()
-def check_uniform_block(program: moderngl.Program, dtype: np.dtype) -> bool:
+def check_uniform_block(
+    program: moderngl.Program,
+    dtype: np.dtype,
+    block_name: str = MOBJECT_BLOCK_NAME,
+) -> bool:
     """
-    Whether a program declares the mobject block at all, and if it does, that its
-    members sit exactly where the dtype says they do.
+    Whether a program declares the block at all, and if it does, that its members sit
+    exactly where the dtype says they do.
 
     Nothing needs this to render, since std140's layout is what uniform_block_dtype
     reproduces, but a shader's block and a mobject's uniform_dtype drifting apart
@@ -275,7 +276,7 @@ def check_uniform_block(program: moderngl.Program, dtype: np.dtype) -> bool:
     costs a handful of calls into the driver, once per program.
     """
     glo = program.glo
-    index = gl.glGetUniformBlockIndex(glo, MOBJECT_BLOCK_NAME)
+    index = gl.glGetUniformBlockIndex(glo, block_name)
     if index == gl.GL_INVALID_INDEX:
         return False
 
@@ -303,10 +304,10 @@ def check_uniform_block(program: moderngl.Program, dtype: np.dtype) -> bool:
         if field is None or size is None or size != (shape[0] if shape else 1) \
                 or field[1] != offset:
             raise ValueError(
-                f"The {MOBJECT_BLOCK_NAME} block this shader declares does not match "
-                f"the uniforms of the mobject drawn with it, starting at {name}. "
-                f"What the mobject holds would be declared as:\n"
-                f"layout (std140) uniform {MOBJECT_BLOCK_NAME} {{\n"
+                f"The {block_name} block this shader declares does not match what "
+                f"is held for it, starting at {name}. What is held would be declared "
+                f"as:\n"
+                f"layout (std140) uniform {block_name} {{\n"
                 f"{uniform_block_code(dtype)}\n}};"
             )
     return True

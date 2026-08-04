@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Tuple
 
-    from moderngl.context import Context
+    from manimlib.renderer import Renderer
 
     from manimlib.camera.camera import Camera
     from manimlib.typing import ManimColor, Vect3, Vect3Array, Self
@@ -226,14 +226,14 @@ class Surface(Mobject):
         # updater to do the sorting, see set_sort_to_camera
         return self.set_sort_to_camera()
 
-    def get_shader_wrapper(self, ctx: Context) -> SurfaceShaderWrapper:
-        wrapper = super().get_shader_wrapper(ctx)
+    def get_shader_wrapper(self, renderer: Renderer) -> SurfaceShaderWrapper:
+        wrapper = super().get_shader_wrapper(renderer)
         wrapper.sort_to_camera = self.sort_to_camera
         return wrapper
 
-    def init_shader_wrapper(self, ctx: Context):
+    def init_shader_wrapper(self, renderer: Renderer):
         self.shader_wrapper = SurfaceShaderWrapper(
-            ctx=ctx,
+            renderer=renderer,
             sort_to_camera=self.sort_to_camera,
             mobject_data=self.data,
             mobject_uniforms=self.uniforms,
@@ -427,7 +427,7 @@ class TexturedSurface(Surface):
     def set_opacity(self, opacity: float | Iterable[float], recurse=True) -> Self:
         op_arr = np.array(listify(opacity))
         self.data["opacity"][:, 0] = resize_with_interpolation(op_arr, len(self.data))
-        self.data.changed = True
+        self.data.note_change()
         return self
 
     def set_color(
@@ -453,7 +453,7 @@ class TexturedSurface(Surface):
         im_coords = self.data["im_coords"]
         im_coords[:] = tsmobject.data["im_coords"]
         # Written into rather than replaced, so say so
-        self.data.changed = True
+        self.data.note_change()
         if a <= 0 and b >= 1:
             return self
         nu, nv = tsmobject.get_resolution()

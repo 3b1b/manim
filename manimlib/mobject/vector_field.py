@@ -309,7 +309,7 @@ class VectorField(VMobject):
             )
 
         # The arrays above are written into rather than replaced
-        self.data.changed = True
+        self.data.note_change()
         return self
 
 

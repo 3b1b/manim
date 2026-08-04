@@ -1,5 +1,4 @@
-uniform float frame_scale;
-uniform float pixel_size;
+#INSERT frame_uniforms.glsl
 
 /*
 Points fixed in frame skip the view matrix (see emit_gl_Position), so they are drawn

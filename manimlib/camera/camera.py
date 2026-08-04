@@ -12,8 +12,8 @@ from manimlib.constants import FRAME_HEIGHT
 from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
+from manimlib.renderer import Renderer
 from manimlib.utils.color import color_to_rgba
-from manimlib.utils.shaders import set_shared_uniforms
 
 from typing import TYPE_CHECKING
 
@@ -61,7 +61,6 @@ class Camera(object):
         self.background_rgba: list[float] = list(color_to_rgba(
             background_color, background_opacity
         ))
-        self.uniforms = dict()
         self.depth_stencil_rbos: list[int] = []
         self.init_frame(**frame_config)
         self.init_context()
@@ -87,11 +86,8 @@ class Camera(object):
             moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA,
         )
         gl.glClearStencil(0)
-        # Every vertex shader writes a distance for all four clip planes, using a
-        # plane of all zeros to mean nothing gets clipped, so these stay on
-        for clip_distance in [gl.GL_CLIP_DISTANCE0, gl.GL_CLIP_DISTANCE1,
-                              gl.GL_CLIP_DISTANCE2, gl.GL_CLIP_DISTANCE3]:
-            gl.glEnable(clip_distance)
+        # What every mobject drawn by this camera is handed in order to draw itself
+        self.renderer = Renderer(self.ctx)
 
     def init_fbo(self) -> None:
         # This is the buffer used when writing to a video/image file
@@ -274,15 +270,25 @@ class Camera(object):
     def capture(self, *mobjects: Mobject) -> None:
         self.clear()
         self.refresh_uniforms()
-        # These hold for every program, so they only need setting once a frame
-        set_shared_uniforms(self.uniforms)
+        self.renderer.send_frame_uniforms()
         self.fbo.use()
         # Fill rendering leaves the stencil buffer zeroed as it goes, so this is
         # only here to guarantee a clean slate, e.g. if a previous frame's
         # rendering was interrupted partway through
         gl.glClear(gl.GL_STENCIL_BUFFER_BIT)
-        for mobject in mobjects:
-            mobject.render(self.ctx)
+
+        wrappers = [
+            wrapper
+            for mobject in mobjects
+            for wrapper in mobject.get_shader_wrappers(self.renderer)
+        ]
+        # Everything the frame sends to the gpu, before anything it draws, see
+        # ShaderWrapper.write_buffers
+        for wrapper in wrappers:
+            wrapper.write_buffers()
+        self.renderer.reset_state()
+        for wrapper in wrappers:
+            wrapper.render()
 
         if self.window:
             self.window.swap_buffers()
@@ -295,13 +301,13 @@ class Camera(object):
                 self.window.swap_buffers()
 
     def refresh_uniforms(self) -> None:
+        """
+        What every program reads about where the frame, the camera and the light are,
+        written into the block they all share, see Renderer.
+        """
         frame = self.frame
-        view_matrix = frame.get_view_matrix()
-        light_pos = self.light_source.get_location()
-        cam_pos = self.frame.get_implied_camera_location()
-
-        self.uniforms.update(
-            view=tuple(view_matrix.T.flatten()),
+        self.renderer.frame_uniforms.update(
+            view=frame.get_view_matrix().T.flatten(),
             frame_scale=frame.get_scale(),
             frame_rescale_factors=(
                 2.0 / FRAME_WIDTH,
@@ -309,8 +315,8 @@ class Camera(object):
                 frame.get_scale() / frame.get_focal_distance(),
             ),
             pixel_size=self.get_pixel_size(),
-            camera_position=tuple(cam_pos),
-            light_position=tuple(light_pos),
+            camera_position=frame.get_implied_camera_location(),
+            light_position=self.light_source.get_location(),
         )
 
 

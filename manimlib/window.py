@@ -6,10 +6,13 @@ import moderngl_window as mglw
 from moderngl_window.context.pyglet.window import Window as PygletWindow
 from moderngl_window.timers.clock import Timer
 from functools import wraps
+from pyglet.window import key as PygletWindowKeys
 import screeninfo
 
 from manimlib.constants import ASPECT_RATIO
 from manimlib.constants import FRAME_SHAPE
+from manimlib.event_keys import Keys
+from manimlib.event_keys import Mods
 
 from typing import TYPE_CHECKING
 
@@ -18,6 +21,45 @@ if TYPE_CHECKING:
     from manimlib.scene.scene import Scene
 
     T = TypeVar("T")
+
+
+# What the window is built on calls a key one thing and manim calls it another, so this
+# is the one place either vocabulary meets the other, see event_keys.py. A key which types
+# something needs no entry, being named by what it types in both.
+KEY_NAMES: dict[int, int] = {
+    PygletWindowKeys.BACKSPACE: Keys.BACKSPACE,
+    PygletWindowKeys.TAB: Keys.TAB,
+    PygletWindowKeys.ENTER: Keys.ENTER,
+    PygletWindowKeys.ESCAPE: Keys.ESCAPE,
+    PygletWindowKeys.DELETE: Keys.DELETE,
+    PygletWindowKeys.LEFT: Keys.LEFT,
+    PygletWindowKeys.RIGHT: Keys.RIGHT,
+    PygletWindowKeys.UP: Keys.UP,
+    PygletWindowKeys.DOWN: Keys.DOWN,
+    PygletWindowKeys.LSHIFT: Keys.SHIFT,
+    PygletWindowKeys.RSHIFT: Keys.SHIFT,
+    PygletWindowKeys.LCTRL: Keys.CTRL,
+    PygletWindowKeys.RCTRL: Keys.CTRL,
+    PygletWindowKeys.LALT: Keys.ALT,
+    PygletWindowKeys.RALT: Keys.ALT,
+    PygletWindowKeys.LCOMMAND: Keys.CMD,
+    PygletWindowKeys.RCOMMAND: Keys.CMD,
+}
+MOD_NAMES: list[tuple[int, int]] = [
+    (PygletWindowKeys.MOD_SHIFT, Mods.SHIFT),
+    (PygletWindowKeys.MOD_CTRL, Mods.CTRL),
+    (PygletWindowKeys.MOD_ALT, Mods.ALT),
+    (PygletWindowKeys.MOD_COMMAND, Mods.CMD),
+    (PygletWindowKeys.MOD_CAPSLOCK, Mods.CAPS_LOCK),
+]
+
+
+def to_key(symbol: int) -> int:
+    return KEY_NAMES.get(symbol, symbol)
+
+
+def to_mods(modifiers: int) -> int:
+    return sum(mine for theirs, mine in MOD_NAMES if modifiers & theirs)
 
 
 class Window(PygletWindow):
@@ -167,7 +209,7 @@ class Window(PygletWindow):
             return
         point = self.pixel_coords_to_space_coords(x, y)
         d_point = self.pixel_coords_to_space_coords(dx, dy, relative=True)
-        self.scene.on_mouse_drag(point, d_point, buttons, modifiers)
+        self.scene.on_mouse_drag(point, d_point, buttons, to_mods(modifiers))
 
     @note_undrawn_event
     def on_mouse_press(self, x: int, y: int, button: int, mods: int) -> None:
@@ -175,7 +217,7 @@ class Window(PygletWindow):
         if not self.scene:
             return
         point = self.pixel_coords_to_space_coords(x, y)
-        self.scene.on_mouse_press(point, button, mods)
+        self.scene.on_mouse_press(point, button, to_mods(mods))
 
     @note_undrawn_event
     def on_mouse_release(self, x: int, y: int, button: int, mods: int) -> None:
@@ -183,7 +225,7 @@ class Window(PygletWindow):
         if not self.scene:
             return
         point = self.pixel_coords_to_space_coords(x, y)
-        self.scene.on_mouse_release(point, button, mods)
+        self.scene.on_mouse_release(point, button, to_mods(mods))
 
     @note_undrawn_event
     def on_mouse_scroll(self, x: int, y: int, x_offset: float, y_offset: float) -> None:
@@ -196,19 +238,19 @@ class Window(PygletWindow):
 
     @note_undrawn_event
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        self.pressed_keys.add(symbol)  # Modifiers?
+        self.pressed_keys.add(to_key(symbol))
         super().on_key_press(symbol, modifiers)
         if not self.scene:
             return
-        self.scene.on_key_press(symbol, modifiers)
+        self.scene.on_key_press(to_key(symbol), to_mods(modifiers))
 
     @note_undrawn_event
     def on_key_release(self, symbol: int, modifiers: int) -> None:
-        self.pressed_keys.difference_update({symbol})  # Modifiers?
+        self.pressed_keys.difference_update({to_key(symbol)})
         super().on_key_release(symbol, modifiers)
         if not self.scene:
             return
-        self.scene.on_key_release(symbol, modifiers)
+        self.scene.on_key_release(to_key(symbol), to_mods(modifiers))
 
     @note_undrawn_event
     def on_resize(self, width: int, height: int) -> None:

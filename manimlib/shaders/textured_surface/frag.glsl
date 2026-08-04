@@ -12,10 +12,12 @@ out vec4 frag_color;
 
 #INSERT textured_surface_uniforms.glsl
 #INSERT finalize_color.glsl
+#INSERT clip_test.glsl
 
 const float dark_shift = 0.2;
 
 void main() {
+    clip_test();
     vec4 color = texture(LightTexture, v_im_coords);
     if(num_textures == 2.0){
         vec4 dark_color = texture(DarkTexture, v_im_coords);

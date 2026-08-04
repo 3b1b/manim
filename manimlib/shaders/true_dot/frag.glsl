@@ -1,6 +1,5 @@
 #version 330
 
-uniform mat4 perspective;
 
 in vec4 color;
 in float scaled_aaw;
@@ -15,8 +14,10 @@ out vec4 frag_color;
 // This includes a declaration of uniform vec3 shading
 #INSERT dot_cloud_uniforms.glsl
 #INSERT finalize_color.glsl
+#INSERT clip_test.glsl
 
 void main() {
+    clip_test();
     float r = length(uv_coords.xy);
     if(r > 1.0) discard;
 

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import numpy as np
-from pyglet.window import key as PygletWindowKeys
 
 from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
 from manimlib.constants import DOWN, LEFT, ORIGIN, RIGHT, UP
 from manimlib.constants import MED_LARGE_BUFF, MED_SMALL_BUFF, SMALL_BUFF
 from manimlib.constants import BLACK, BLUE, GREEN, GREY_A, GREY_C, RED, WHITE, DEFAULT_MOBJECT_COLOR
+from manimlib.event_keys import Keys
+from manimlib.event_keys import Mods
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.geometry import Circle
@@ -450,15 +451,15 @@ class Textbox(ControlMobject):
             old_value = mob.get_value()
             new_value = old_value
             if char.isalnum():
-                if (modifiers & PygletWindowKeys.MOD_SHIFT) or (modifiers & PygletWindowKeys.MOD_CAPSLOCK):
+                if modifiers & (Mods.SHIFT | Mods.CAPS_LOCK):
                     new_value = old_value + char.upper()
                 else:
                     new_value = old_value + char.lower()
-            elif symbol in [PygletWindowKeys.SPACE]:
+            elif symbol == Keys.SPACE:
                 new_value = old_value + char
-            elif symbol == PygletWindowKeys.TAB:
+            elif symbol == Keys.TAB:
                 new_value = old_value + '\t'
-            elif symbol == PygletWindowKeys.BACKSPACE:
+            elif symbol == Keys.BACKSPACE:
                 new_value = old_value[:-1] or ''
             mob.set_value(new_value)
             return False
