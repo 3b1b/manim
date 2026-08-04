@@ -384,10 +384,10 @@ class VMobject(Mobject):
         self.set_stroke(color=colors)
         return self
 
-    def set_color_by_code(self, glsl_code: str, program_type: str | None = None) -> Self:
+    def set_color_by_code(self, wgsl_code: str, program_type: str | None = None) -> Self:
         self.replace_shader_code(
             "///// INSERT COLOR FUNCTION HERE /////",
-            glsl_code,
+            wgsl_code,
             program_type
         )
         return self
