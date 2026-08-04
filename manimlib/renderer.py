@@ -151,6 +151,9 @@ class Renderer(object):
         self.pipelines: dict[Any, Any] = dict()
         self.encoder = None
         self.pass_ = None
+        # What the pass has been told already, see bind and use_pipeline
+        self.bound: list[Any] = 3 * [None]
+        self.pipeline_in_use: Any = None
         self.init_present_resources()
 
     def send_frame_uniforms(self) -> None:
@@ -166,15 +169,35 @@ class Renderer(object):
         state, whether the mobject is depth tested, and how many samples are taken: a key
         has to name all of that.
         """
-        if key not in self.pipelines:
-            self.pipelines[key] = build()
-        return self.pipelines[key]
+        pipeline = self.pipelines.get(key)
+        if pipeline is None:
+            pipeline = self.pipelines[key] = build()
+        return pipeline
+
+    def bind(self, group: int, bind_group: Any) -> None:
+        """
+        Points the pass at what a draw is to read, unless that is where it points already.
+        A pass holds onto what it was told until it is told otherwise, and a mobject drawn in
+        several passes reads the same things in each, so most of what a frame has to say
+        about this it has said already, see ShaderWrapper.bind_for_draw.
+        """
+        if self.bound[group] is not bind_group:
+            self.pass_.set_bind_group(group, bind_group)
+            self.bound[group] = bind_group
+
+    def use_pipeline(self, pipeline: Any) -> None:
+        if self.pipeline_in_use is not pipeline:
+            self.pass_.set_pipeline(pipeline)
+            self.pipeline_in_use = pipeline
 
     def begin_frame(self, attachments: dict) -> None:
         """Opens the one render pass a frame is drawn in"""
         self.encoder = self.device.create_command_encoder()
         self.pass_ = self.encoder.begin_render_pass(**attachments)
-        self.pass_.set_bind_group(FRAME_GROUP, self.frame_bind_group)
+        # A new pass has been told nothing, whatever the last one knew
+        self.bound = 3 * [None]
+        self.pipeline_in_use = None
+        self.bind(FRAME_GROUP, self.frame_bind_group)
 
     def end_frame(self) -> None:
         self.pass_.end()

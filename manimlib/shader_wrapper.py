@@ -284,7 +284,10 @@ class ShaderWrapper(object):
         is what gets cached and there is nothing left to say around the draw itself.
         """
         samples = self.renderer.samples
-        key = (module, len(self.texture_paths), state, self.depth_test, samples)
+        # A module is compiled from code which names the mobject's images, so which images
+        # there are, and therefore which layout a pipeline reading them wants, is already
+        # settled by the module and needs no part of the key
+        key = (module, state, self.depth_test, samples)
 
         def build():
             return self.device.create_render_pipeline(
@@ -312,14 +315,14 @@ class ShaderWrapper(object):
     def bind_for_draw(self, state: DrawState, module):
         """
         Points the frame's pass at what this draw reads and how it is to behave, handing
-        back the pass for whichever kind of draw follows.
+        back the pass for whichever kind of draw follows. Whatever the pass has been told
+        already it is not told again, see Renderer.bind.
         """
-        render_pass = self.renderer.pass_
         mobject_group, resource_group = self.get_bind_groups()
-        render_pass.set_bind_group(MOBJECT_GROUP, mobject_group)
-        render_pass.set_bind_group(RESOURCE_GROUP, resource_group)
-        render_pass.set_pipeline(self.get_pipeline(state, module))
-        return render_pass
+        self.renderer.bind(MOBJECT_GROUP, mobject_group)
+        self.renderer.bind(RESOURCE_GROUP, resource_group)
+        self.renderer.use_pipeline(self.get_pipeline(state, module))
+        return self.renderer.pass_
 
     def draw(self, state: DrawState, module, vertices: int) -> None:
         """One pass over this mobject's records"""
