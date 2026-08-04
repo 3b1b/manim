@@ -4,12 +4,16 @@ A plan, written against the tree as of #2482 ("Cleaner rendering logic").
 
 ## What the spike settled
 
-Phase 1 is done; `wgpu_spike.py` holds it. Eleven questions, all of which the plan had
-guessed at, and the answers are folded into the sections below. The two which changed a
-decision: a window need not be written after all, and reading a frame back needs no padding
-by hand. The one which was riskiest and came out clean: stencil-then-cover, with
-increment-wrap and decrement-wrap by facing, works on Metal inside a single render pass,
-with four samples, and a thrown away fragment writes no stencil.
+Phase 1 is done, and the spike which held it has been deleted along with the GL it was
+checking against. Eleven questions, all of which the plan had guessed at, and the answers
+are folded into the sections below. The two which changed a decision: a window need not be
+written after all, and reading a frame back needs no padding by hand. The one which was
+riskiest and came out clean: stencil-then-cover, with increment-wrap and decrement-wrap by
+facing, works on Metal inside a single render pass, with four samples, and a thrown away
+fragment writes no stencil.
+
+The one answer which was half right is the window, corrected under The window below: driving
+a canvas by hand needs one more thing than the spike checked for.
 
 Pinned at what was spiked against: `wgpu` 0.32.0, `glfw` 2.10.2, `rendercanvas` 2.7.2.
 
@@ -284,22 +288,32 @@ manim cannot do: its loop is what `self.wait` and `self.embed` are. The plan was
 use glfw directly and write manim's window ourselves, on the grounds that adopting
 rendercanvas meant either inverting the interactive model or reaching into private API.
 
-**Spiked, and that turned out to be wrong.** Both halves of driving a canvas by hand are
-public. `canvas.force_draw()` is documented as performing a draw right now, and glfw is a
-library, so its events can be pumped from manim's own loop. Eight frames drawn a frame at a
-time with no `loop.run()` anywhere, resize events arriving through
-`canvas.add_event_handler` while manim was the one polling, HiDPI reported correctly
-(600×400 logical, 1200×800 physical, ratio 2.0):
+**Spiked, and that turned out to be wrong.** A canvas can be driven a frame at a time.
+`canvas.force_draw()` is documented as performing a draw right now. Eight frames drawn with
+no `loop.run()` anywhere, resize events arriving through `canvas.add_event_handler` while
+manim was the one polling, HiDPI reported correctly (600×400 logical, 1200×800 physical,
+ratio 2.0):
 
 ```python
-canvas = RenderCanvas(size=..., title=...)          # rendercanvas.glfw
+canvas = RenderCanvas(size=..., update_mode="manual")   # rendercanvas.glfw
 context = canvas.get_context("wgpu")
 context.configure(device=device, format=context.get_preferred_format(device.adapter))
 canvas.request_draw(draw_frame)
-while ...:                                          # manim's loop, unchanged in shape
-    glfw.poll_events()
+while ...:                                              # manim's loop, unchanged in shape
+    canvas._process_events()
     canvas.force_draw()
 ```
+
+**But the events half needed correcting during Phase 2.** A resize is emitted the moment it
+happens, which is why the spike saw one; a key or pointer event is *submitted* to a queue,
+and only the scheduler flushes it. So `glfw.poll_events()` plus `force_draw()` delivers no
+key at all, checked by queuing one through the public `submit_event` and watching a handler
+not fire. `canvas._process_events()` is what polls, notices a close, emits a resize and
+flushes, and there is no public equivalent. `Window.poll_events` calls it, which is one
+private method in place of the private `window._window.dispatch_events()` it replaces.
+Positioning the window and giving it focus need the glfw handle, which is a second private
+touch, behind `Window.glfw_window`. That is the whole bill for not owning surface creation,
+scale factors, resize and presentation.
 
 **So use rendercanvas's glfw canvas and keep manim's loop.** What that buys over writing our
 own window is what we would least want to own: surface creation and reconfiguration, HiDPI
@@ -311,7 +325,7 @@ and the workarounds go with the framework that needed them:
 
 | Today | With rendercanvas on glfw |
 |---|---|
-| `window._window.dispatch_events()` | `glfw.poll_events()` |
+| `window._window.dispatch_events()` | `canvas._process_events()` |
 | `moderngl_window` `on_mouse_*` / `on_key_*` overrides | `canvas.add_event_handler`, or glfw callbacks |
 | `screeninfo.get_monitors()` | `glfw.get_monitors()` + `get_monitor_workarea` |
 | `focus()` — hide then show, "pyglet's `activate()` didn't work" | `glfw.focus_window` |
@@ -432,13 +446,22 @@ file when Phase 2 lands; until then it is the evidence behind the notes above.
 
 ### Phase 2 — the port
 
-- **2a.** `window.py` on glfw, behind Phase 0a's vocabulary, so nothing above it changes.
-- **2b.** `Renderer` grows its wgpu implementation: device, queue, pipeline cache, bind
-  group layouts, render target, present pipeline, readback.
-- **2c.** Shaders to WGSL in the order above.
-- **2d.** Delete: the GL imports in `shader_wrapper.py`, `attach_depth_stencil`, the blit
-  chain, `use_window_fbo`, the uniform mirrors, `check_uniform_block`, `set_program_*`,
-  `read_data.glsl`'s texelFetch layer, and `OpenGL.ERROR_CHECKING` from `__init__.py`.
+All four done.
+
+- **2a.** `window.py` on a rendercanvas glfw canvas, behind Phase 0a's vocabulary, so nothing
+  above it changes. `use_window_fbo` became `Camera.at_output_resolution`, keeping the policy
+  and deleting the framebuffers.
+- **2b.** `Renderer` grew its wgpu implementation: device, queue, pipeline cache, bind group
+  layouts, render target, present pipeline, readback.
+- **2c.** Every shader to WGSL, in the order above. The fractals had no working mobject to
+  drive them, CONFIG having been removed from manimlib years ago, so each says at the top what
+  uniform block a mobject must declare, and both were checked against the same iteration
+  worked out in numpy.
+- **2d.** Deleted: thirty five GLSL files, the GL imports in `shader_wrapper.py`,
+  `attach_depth_stencil`, the blit chain, `use_window_fbo`, the uniform mirrors,
+  `check_uniform_block`, `set_program_*`, `read_data.glsl`'s texelFetch layer,
+  `OpenGL.ERROR_CHECKING` and `gl_error_checking`, and `moderngl`, `moderngl_window`,
+  `PyOpenGL`, `pyglet` and `screeninfo` from the requirements.
 
 ### Phase 3 — validation
 
