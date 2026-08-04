@@ -12,6 +12,8 @@ from manimlib.renderer import COLOR_FORMAT
 from manimlib.renderer import CULL_BACK
 from manimlib.renderer import CULL_FRONT
 from manimlib.renderer import DEFAULT
+from manimlib.renderer import WINDING_COUNT
+from manimlib.renderer import WINDING_COVER
 from manimlib.utils.shaders import DATA_BINDING
 from manimlib.utils.shaders import FIRST_TEXTURE_BINDING
 from manimlib.utils.shaders import get_shader_code
@@ -160,12 +162,12 @@ class ShaderWrapper(object):
 
     def init_program(self) -> None:
         # A mobject naming no folder, a group say, has nothing to be drawn by
-        self.code = self.get_code() if self.shader_folder else None
+        self.code = self.get_code(self.shader_folder) if self.shader_folder else None
         self.module = None if self.code is None else get_shader_module(self.device, self.code)
 
-    def get_code(self) -> str | None:
+    def get_code(self, folder: str) -> str | None:
         return get_shader_code(
-            os.path.join(self.shader_folder, "shader.wgsl"),
+            os.path.join(folder, "shader.wgsl"),
             self.data_layout,
             self.mobject_uniforms.dtype,
             tuple(self.texture_paths),
@@ -272,21 +274,21 @@ class ShaderWrapper(object):
 
     # Drawing
 
-    def get_pipeline(self, state: DrawState):
+    def get_pipeline(self, state: DrawState, module):
         """
         The pipeline for one of this mobject's passes. Everything a pass settles is in there:
         which module runs, what it may bind, and all of what the state names, so a pipeline
         is what gets cached and there is nothing left to say around the draw itself.
         """
         samples = self.renderer.samples
-        key = (self.module, len(self.texture_paths), state, self.depth_test, samples)
+        key = (module, len(self.texture_paths), state, self.depth_test, samples)
 
         def build():
             return self.device.create_render_pipeline(
                 layout=self.pipeline_layout,
-                vertex={"module": self.module, "entry_point": "vs_main", "buffers": []},
+                vertex={"module": module, "entry_point": "vs_main", "buffers": []},
                 fragment={
-                    "module": self.module,
+                    "module": module,
                     "entry_point": "fs_main",
                     "targets": [{
                         "format": COLOR_FORMAT,
@@ -304,7 +306,7 @@ class ShaderWrapper(object):
 
         return self.renderer.get_pipeline(key, build)
 
-    def begin_draw(self, state: DrawState):
+    def begin_draw(self, state: DrawState, module=None):
         """
         Points the pass at what a draw of this mobject reads and how it is to behave, and
         hands back the pass for the draw itself.
@@ -313,7 +315,7 @@ class ShaderWrapper(object):
         mobject_group, resource_group = self.get_bind_groups()
         render_pass.set_bind_group(MOBJECT_GROUP, mobject_group)
         render_pass.set_bind_group(RESOURCE_GROUP, resource_group)
-        render_pass.set_pipeline(self.get_pipeline(state))
+        render_pass.set_pipeline(self.get_pipeline(state, module or self.module))
         return render_pass
 
     def draw(self, state: DrawState = DEFAULT, vertices: int | None = None) -> None:
@@ -426,7 +428,16 @@ class SurfaceShaderWrapper(ShaderWrapper):
 
 
 class VShaderWrapper(ShaderWrapper):
-    """Not drawn yet on this branch, see phase 2c of WGPU_PORT_PLAN.md"""
+    """
+    A vectorized mobject is drawn by two shaders rather than one: a fill over the region its
+    path encloses, and a stroke along the path itself. So it holds two modules, and names
+    which of them each of its passes runs.
+    """
+    fill_folder = os.path.join("quadratic_bezier", "fill")
+    stroke_folder = os.path.join("quadratic_bezier", "stroke")
+    # Each bezier's fill is two triangles, one covering the interior and one hugging the
+    # curve, see quadratic_bezier/fill/shader.wgsl
+    fill_verts_per_curve = 6
 
     def __init__(
         self,
@@ -438,10 +449,53 @@ class VShaderWrapper(ShaderWrapper):
         self.stroke_behind = stroke_behind
         super().__init__(*args, **kwargs)
 
+    def init_program(self) -> None:
+        self.fill_code = self.get_code(self.fill_folder)
+        self.fill_module = get_shader_module(self.device, self.fill_code)
+        # Nothing is drawn by a module of its own here, so the base class's one is unused
+        self.module = self.fill_module
+
+    def replace_code(self, old: str, new: str) -> None:
+        self.fill_code = re.sub(old, new, self.fill_code)
+        self.fill_module = get_shader_module(self.device, self.fill_code)
+        self.module = self.fill_module
+
     def replace_code_program(self, old: str, new: str, program_type: str | None = None):
         self.replace_code(old, new)
 
+    def get_num_curves(self) -> int:
+        # Consecutive beziers share an anchor, so n points make n // 2 curves
+        return len(self.mobject_data) // 2
+
+    def render_fill(self) -> None:
+        """
+        Fill is drawn with a "stencil then cover" approach.
+
+        The first pass rasterizes the fill triangles into the stencil buffer alone,
+        incrementing for front facing triangles and decrementing for back facing ones. Since
+        facing is just the sign of a triangle's area in screen space, each pixel ends up
+        holding the winding number of the path around it, with no need for a triangulation of
+        the shape.
+
+        The second pass draws those same triangles again, but only where that winding number
+        is nonzero, and zeros out the stencil as it goes. This means each pixel is colored
+        exactly once, using ordinary alpha blending, and that the stencil buffer is left
+        clean for whatever draws next.
+
+        Note this only works because a wrapper holds a single mobject. Sharing one pair of
+        passes between several would merge their winding numbers into one region, so that
+        overlapping mobjects would color a shared pixel once between them rather than each
+        blending in turn.
+        """
+        vertices = self.fill_verts_per_curve * self.get_num_curves()
+        # Counting the windings needs no color, and must see every triangle of the path
+        # whatever stands in front of it, which is what WINDING_COUNT says
+        self.begin_draw(WINDING_COUNT, self.fill_module).draw(vertices)
+        # Coloring in everywhere the count came out nonzero, zeroing it on the way through,
+        # so that each pixel is colored once and the buffer is left clean
+        self.begin_draw(WINDING_COVER, self.fill_module).draw(vertices)
+
     def render(self) -> None:
-        raise NotImplementedError(
-            "VMobjects are not drawn yet on this branch, see phase 2c of WGPU_PORT_PLAN.md"
-        )
+        if len(self.mobject_data) == 0:
+            return
+        self.render_fill()

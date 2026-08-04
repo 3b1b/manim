@@ -442,6 +442,24 @@ file when Phase 2 lands; until then it is the evidence behind the notes above.
 
 ### Phase 3 — validation
 
+**Compare against captured references, never against a second checkout.** `manimgl` is
+installed editable, which since PEP 660 means a *meta path finder* in site-packages, and a
+meta path finder resolves `manimlib` to the working tree whatever `PYTHONPATH` says and
+whatever the cwd is. Rendering "master" that way silently renders the branch instead: four
+comparisons during Phase 2 came out byte for byte identical because they were the wgpu
+renderer against itself. `tests/render_compare.py capture` on master, before the branch
+stops rendering, is the only comparison worth trusting. To render an arbitrary scene with
+another checkout, `python -S` from that checkout's directory keeps both the finder and the
+cwd out of the way, and both are needed.
+
+What the comparison actually shows, for the kinds ported so far: differences confined to a
+one pixel outline around every shape, 82 to 100 percent of differing pixels being within two
+pixels of a colour change, none in any interior. Under half a percent of a frame, with the
+largest per channel difference around 120 where a boundary pixel goes from one flat colour to
+another. Dots come closest, at a maximum difference of 1 over 54 pixels. So the plan's
+expectation holds: a tolerance is needed, and what matters alongside it is that the
+differences stay on boundaries.
+
 There is no test suite, so build the one thing that makes a port like this safe and which is
 worth having regardless: a frame-comparison harness. Render a fixed list of scenes —
 `example_scenes.py` plus a selection from the `videos` repo covering 2D fill, stroke joints,
