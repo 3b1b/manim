@@ -8,11 +8,17 @@ change which has any business leaving the picture alone.
     python tests/render_compare.py capture --refs <dir>
     python tests/render_compare.py compare --refs <dir>
 
-Any case which differs is reported with how far off it is and, for the worst frame, an
-image written to the output directory showing the two side by side over their difference.
+Any case which differs is reported with how far off it is, how much of that is away from
+any edge of any shape, and, for the worst frame, an image written to the output directory
+showing the two side by side over their difference. The count away from an edge is the one
+to read: two rasterizers will never agree along an edge, and are expected to everywhere
+else, so a difference there is a difference worth explaining.
 A tolerance may be given, for comparing renders which have no business being identical to
 the byte, as across a change of graphics api; within one renderer, expect nothing to move
 at all, and leave it at zero.
+
+Videos are written losslessly, see LOSSLESS_CONFIG, since otherwise what is compared is what
+an encoder made of a frame rather than the frame.
 
     --only NAME [NAME ...]   just these cases
     --tolerance N            allow a per channel difference of up to N out of 255
@@ -29,6 +35,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from scipy import ndimage
 
 
 TESTS = Path(__file__).parent
@@ -74,13 +81,26 @@ CASES = [
 
 QUALITY_FLAGS = {"l": "-l", "m": "-m", "hd": "--hd", "uhd": "--uhd"}
 
+# A video written the way one meant for watching is written comes back nothing like the
+# frames that went in: a smooth gradient beside a sharp edge lands a hundred values out of
+# 255 away, which is far more than any difference worth noticing here. So the cases which
+# are videos are written losslessly, which costs disk and nothing else.
+LOSSLESS_CONFIG = """
+file_writer:
+  video_codec: "libx264rgb"
+  pixel_format: "rgb24"
+  crf: 0
+"""
+
 
 def render(case, into: Path, quality: str) -> Path | None:
     """One case into a directory of its own, coming back with what it wrote"""
     path, scene, kind = case
     into.mkdir(parents=True, exist_ok=True)
+    config = into / "lossless.yml"
+    config.write_text(LOSSLESS_CONFIG)
     command = ["manimgl", str(path), scene, "-w", QUALITY_FLAGS[quality],
-               "--video_dir", str(into)]
+               "--video_dir", str(into), "--config_file", str(config)]
     if kind == "still":
         command.append("-s")
     result = subprocess.run(command, capture_output=True, text=True)
@@ -107,21 +127,52 @@ def frames_of(path: Path, into: Path) -> list[np.ndarray]:
     ]
 
 
+# What counts as being where a reference's own color is changing, and how far around a pixel
+# to look for that. Two rasterizers fill a triangle from different sample points, so the
+# pixels along a shape's edge are the ones they were never going to agree about; a pixel in
+# the middle of a flat region is not, and a difference there is worth a closer look.
+EDGE_CONTRAST = 8
+EDGE_REACH = 2
+
+
+def edges_of(reference: np.ndarray) -> np.ndarray:
+    """Which pixels of a reference sit where its own color is changing"""
+    size = 2 * EDGE_REACH + 1
+    spread = np.zeros(reference.shape[:2])
+    for channel in range(3):
+        plane = reference[:, :, channel].astype(float)
+        spread = np.maximum(
+            spread,
+            ndimage.maximum_filter(plane, size) - ndimage.minimum_filter(plane, size),
+        )
+    return spread > EDGE_CONTRAST
+
+
 def compare_frames(new: list[np.ndarray], old: list[np.ndarray]) -> dict:
     """How far apart two renders are, and which frame is the worst of it"""
     if len(new) != len(old):
         return {"error": f"{len(new)} frames against {len(old)}"}
-    worst = {"frame": 0, "max": 0, "pixels": 0}
+    worst = {"frame": 0, "max": 0, "pixels": 0, "inside": 0, "inside_max": 0}
     differing = 0
     for index, (a, b) in enumerate(zip(new, old)):
         if a.shape != b.shape:
             return {"error": f"{a.shape} against {b.shape}"}
-        diff = np.abs(a - b)
-        pixels = int((diff.max(axis=2) > 0).sum())
+        diff = np.abs(a - b).max(axis=2)
+        pixels = int((diff > 0).sum())
         if pixels:
             differing += 1
-        if int(diff.max()) > worst["max"]:
-            worst = {"frame": index, "max": int(diff.max()), "pixels": pixels}
+        inside = (diff > 0) & ~edges_of(b)
+        result = {
+            "frame": index,
+            "max": int(diff.max()),
+            "pixels": pixels,
+            "inside": int(inside.sum()),
+            "inside_max": int(diff[inside].max()) if inside.any() else 0,
+        }
+        # The frame to report is the one differing most where it has least excuse to, and
+        # failing that the one differing most anywhere
+        if (result["inside_max"], result["max"]) > (worst["inside_max"], worst["max"]):
+            worst = result
     return {"frames": len(new), "differing": differing, **worst}
 
 
@@ -194,7 +245,10 @@ def run(args) -> int:
             continue
         where = "" if report["frames"] == 1 else \
             f", {report['differing']}/{report['frames']} frames, worst {report['frame'] + 1}"
-        print(f"  {scene:28s} DIFFERS: max {report['max']} on {report['pixels']} px{where}")
+        inside = "none away from an edge" if not report["inside"] else \
+            f"{report['inside']} away from an edge, max {report['inside_max']} there"
+        print(f"  {scene:28s} DIFFERS: max {report['max']} on {report['pixels']} px, "
+              f"{inside}{where}")
         out = Path(args.out) / f"{scene}.png"
         write_diff_image(new[report["frame"]], old[report["frame"]], out)
         failures.append(scene)

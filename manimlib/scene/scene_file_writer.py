@@ -46,6 +46,11 @@ class SceneFileWriter(object):
         ffmpeg_bin: str = "ffmpeg",
         video_codec: str = "libx264",
         pixel_format: str = "yuv420p",
+        # How hard the encoder should try, where zero means keep every pixel exactly. Left
+        # unsaid, the encoder's own default stands, which throws away a good deal: a smooth
+        # gradient beside a sharp edge comes back a hundred values out of 255 away from what
+        # was drawn. Worth setting for anything a frame is going to be measured against.
+        crf: int | None = None,
         saturation: float = 1.0,
         gamma: float = 1.0,
     ):
@@ -65,6 +70,7 @@ class SceneFileWriter(object):
         self.ffmpeg_bin = ffmpeg_bin
         self.video_codec = video_codec
         self.pixel_format = pixel_format
+        self.crf = crf
         self.saturation = saturation
         self.gamma = gamma
 
@@ -209,8 +215,6 @@ class SceneFileWriter(object):
 
         # Frames come back a row at a time from the top, as a texture is laid out, so
         # unlike GL's bottom up reads there is nothing to flip
-        vf_arg = f'eq=saturation={self.saturation}:gamma={self.gamma}'
-
         command = [
             self.ffmpeg_bin,
             '-y',  # overwrite output file if it exists
@@ -219,14 +223,23 @@ class SceneFileWriter(object):
             '-pix_fmt', 'rgba',
             '-r', str(fps),  # frames per second
             '-i', '-',  # The input comes from a pipe
-            '-vf', vf_arg,
             '-an',  # Tells ffmpeg not to expect any audio
             '-loglevel', 'error',
         ]
+        # Asked for neither more saturation nor a different gamma, there is nothing for a
+        # filter to do, and saying so anyway is not free: eq works in yuv, so an identity
+        # one still sends every pixel out of rgb and back, which moves most of them by one
+        # or two out of 255.
+        if (self.saturation, self.gamma) != (1.0, 1.0):
+            command += [
+                '-vf', f'eq=saturation={self.saturation}:gamma={self.gamma}',
+            ]
         if self.video_codec:
             command += ['-vcodec', self.video_codec]
         if self.pixel_format:
             command += ['-pix_fmt', self.pixel_format]
+        if self.crf is not None:
+            command += ['-crf', str(self.crf)]
         command += [self.temp_file_path]
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
 

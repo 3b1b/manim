@@ -62,6 +62,11 @@ file_writer:
   pixel_format: "yuv420p"
   saturation: 1.0
   gamma: 1.0
+  # For a render nothing is going to be measured against, the encoder's own default is
+  # plenty. To keep every pixel exactly as it was drawn, say
+  #   video_codec: "libx264rgb"
+  #   pixel_format: "rgb24"
+  #   crf: 0
 # Most of the scene configuration will come from CLI arguments,
 # but defaults can be set here
 scene:
