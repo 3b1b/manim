@@ -53,6 +53,10 @@ class Surface(Mobject):
         *COMMON_UNIFORMS,
         ("resolution", 2),
     )
+    # What is_opaque last answered, and the version of the data it read to answer it. No
+    # version being zero, the first asking always looks.
+    opaque: bool = True
+    opacity_version: int = 0
 
     def __init__(
         self,
@@ -208,12 +212,25 @@ class Surface(Mobject):
             mob.resample(resolution)
         return self
 
+    def min_opacity(self) -> float:
+        """The least opaque any point of the surface is"""
+        return float(self.data["rgba"][:, 3].min()) if len(self.data) else 1.0
+
     def is_opaque(self) -> bool:
         """
-        Whether nothing behind the surface shows through it, which is what decides whether
-        its triangles have to be drawn in order, see SurfaceShaderWrapper.
+        Whether nothing behind the surface shows through it, which is what decides whether its
+        triangles have to be drawn in order, see SurfaceShaderWrapper.
+
+        Worked out afresh only when the data has been written to since it was last asked,
+        which for a surface that is not changing means once. It is asked once a frame, and
+        going over every point's alpha that often is worth avoiding; but it cannot be settled
+        in set_opacity instead, because a surface fading in or transforming into another has
+        its alpha interpolated straight into the array with no setter in sight.
         """
-        return bool((self.data["rgba"][:, 3] >= 1).all())
+        if self.opacity_version != self.data.version:
+            self.opacity_version = self.data.version
+            self.opaque = self.min_opacity() >= 1
+        return self.opaque
 
     def set_sort_to_camera(self, sort: bool = True) -> Self:
         """
@@ -431,10 +448,10 @@ class TexturedSurface(Surface):
         super().init_uniforms()
         self.uniforms["num_textures"] = self.num_textures
 
-    def is_opaque(self) -> bool:
+    def min_opacity(self) -> float:
         # Where a Surface keeps a color per point, this keeps an opacity and takes the color
         # from its image. An image with transparency of its own is not accounted for.
-        return bool((self.data["opacity"] >= 1).all())
+        return float(self.data["opacity"].min()) if len(self.data) else 1.0
 
     def set_opacity(self, opacity: float | Iterable[float], recurse=True) -> Self:
         op_arr = np.array(listify(opacity))
