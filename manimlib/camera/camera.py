@@ -26,6 +26,90 @@ if TYPE_CHECKING:
     from manimlib.window import Window
 
 
+class FrameStream(object):
+    """
+    Frames off the gpu and into somewhere they are being written, staying a frame behind so
+    that the copy of one happens while the next is being drawn.
+
+    Getting a frame back means copying the texture into a buffer the cpu can read, which the
+    gpu cannot do until it has finished drawing. Asking for it and reading it in one breath,
+    as Camera.get_frame_bytes does, therefore waits: at 1920x1080 that wait was most of what
+    writing a frame cost. So here the copy of a frame is only asked for, and what gets written
+    is the frame before it, whose copy has had the whole of a frame's drawing to finish.
+
+    Mapping a buffer is asynchronous in wgpu for exactly this reason. What map_async hands
+    back is waited on here, but a frame later, by which time it has long since resolved.
+
+    Nothing else about a frame changes, and there is no cost to a frame's turn coming late:
+    frames go to the same place in the same order. Whoever is writing them has only to drain
+    what is still in flight before closing, see SceneFileWriter.close_movie_pipe.
+    """
+
+    def __init__(self, camera: Camera, sink, behind: int = 1):
+        self.camera = camera
+        self.sink = sink
+        self.behind = behind
+        self.device = camera.renderer.device
+        self.queue = camera.renderer.queue
+        # Settled here rather than read afresh, since whatever is being written was opened
+        # expecting frames of one size
+        self.width, self.height = camera.get_pixel_shape()
+        self.row = 4 * self.width
+        # A texture copy leaves each row a multiple of 256 bytes from the next, so rows come
+        # back with padding on the end of them unless the width happens to suit
+        self.padded_row = self.row + (-self.row % 256)
+        # One buffer per frame in flight and one more to be copying into, which is what being
+        # a frame behind costs: a frame's worth of memory each, so 33MB apiece at 4k
+        self.buffers = [
+            self.device.create_buffer(
+                size=self.padded_row * self.height,
+                usage=wgpu.BufferUsage.COPY_DST | wgpu.BufferUsage.MAP_READ,
+            )
+            for _ in range(behind + 1)
+        ]
+        # Which buffers are waiting to be read, oldest first, and how many have been asked
+        # for. Counted up rather than taken from how many are waiting, so that no buffer is
+        # asked to receive a copy while it is still mapped from an earlier frame.
+        self.waiting: list = []
+        self.asked = 0
+
+    def send(self) -> None:
+        """Asks for the frame as it stands, and writes whichever one is ready"""
+        buffer = self.buffers[self.asked % len(self.buffers)]
+        self.asked += 1
+        encoder = self.device.create_command_encoder()
+        encoder.copy_texture_to_buffer(
+            {"texture": self.camera.color_texture, "mip_level": 0, "origin": (0, 0, 0)},
+            {"buffer": buffer, "offset": 0,
+             "bytes_per_row": self.padded_row, "rows_per_image": self.height},
+            (self.width, self.height, 1),
+        )
+        self.queue.submit([encoder.finish()])
+        self.waiting.append((buffer, buffer.map_async("READ", 0, buffer.size)))
+        if len(self.waiting) > self.behind:
+            self.write_oldest()
+
+    def drain(self) -> None:
+        """
+        Writes every frame still in flight. Whatever is being written to has to be told this
+        before it is closed, or the last frames of it are the ones which never arrive.
+        """
+        while self.waiting:
+            self.write_oldest()
+
+    def write_oldest(self) -> None:
+        buffer, promise = self.waiting.pop(0)
+        promise.sync_wait()
+        frame = buffer.read_mapped(copy=False)
+        if self.padded_row > self.row:
+            rows = np.frombuffer(frame, np.uint8).reshape((self.height, self.padded_row))
+            frame = rows[:, :self.row].tobytes()
+        self.sink.write(frame)
+        # What was read is a view onto the buffer, so it is done with before the buffer is,
+        # and the buffer is free to receive another frame once it is not mapped
+        buffer.unmap()
+
+
 class Camera(object):
     def __init__(
         self,

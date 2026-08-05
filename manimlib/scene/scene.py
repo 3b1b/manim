@@ -255,7 +255,7 @@ class Scene(object):
 
     def emit_frame(self) -> None:
         if not self.skip_animations:
-            self.file_writer.write_frame(self.camera)
+            self.file_writer.write_frame()
 
     # Related to updating
 

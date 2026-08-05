@@ -14,6 +14,7 @@ from pathlib import Path
 from manimlib.logger import log
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.file_ops import guarantee_existence
+from manimlib.camera.camera import FrameStream
 from manimlib.utils.sounds import get_full_sound_file_path
 
 from typing import TYPE_CHECKING
@@ -21,7 +22,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from PIL.Image import Image
 
-    from manimlib.camera.camera import Camera
     from manimlib.scene.scene import Scene
 
 
@@ -242,6 +242,9 @@ class SceneFileWriter(object):
             command += ['-crf', str(self.crf)]
         command += [self.temp_file_path]
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
+        # Frames reach the pipe a frame after they were drawn, which is what keeps the wait
+        # for one off the clock, see FrameStream
+        self.frames = FrameStream(self.scene.camera, self.writing_process.stdin)
 
         if not self.quiet:
             self.progress_display = ProgressDisplay(
@@ -295,14 +298,15 @@ class SceneFileWriter(object):
             full_desc += " " * (desc_len - len(full_desc))
         self.progress_display.set_description(full_desc)
 
-    def write_frame(self, camera: Camera) -> None:
+    def write_frame(self) -> None:
         if self.write_to_movie:
-            raw_bytes = camera.get_frame_bytes()
-            self.writing_process.stdin.write(raw_bytes)
+            self.frames.send()
             if self.progress_display is not None:
                 self.progress_display.update()
 
     def close_movie_pipe(self) -> None:
+        # Whatever is still on its way off the gpu, before there is nowhere to put it
+        self.frames.drain()
         self.writing_process.stdin.close()
         self.writing_process.wait()
         self.writing_process.terminate()
