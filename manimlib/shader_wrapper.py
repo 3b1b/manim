@@ -405,6 +405,14 @@ class SurfaceShaderWrapper(ShaderWrapper):
         A grid of points is expanded into two triangles for every square of it, taking the
         corners the vertex shader gives them, see inserts/surface_mesh.wgsl. Records which are
         no grid, as an imported mesh's are, are already three to a triangle.
+
+        The middle rather than a corner, which would be cheaper, because which corner comes
+        first is whatever the parametrization made first: ordering by one makes the picture
+        depend on how the surface was wound, which is the thing this ordering exists to stop
+        depending on. It was tried, and the same torus wound two ways came out differing on
+        ninety pixels by up to 14, in speckles rather than at a seam, for a fifth off the
+        sorting. Dividing the sums by three was also tried and dropped, being worth nothing
+        measurable: three times the middle sorts in the same order as the middle.
         """
         points = self.mobject_data["point"]
         nu, nv = self.mobject_uniforms["resolution"].astype(int)
