@@ -33,7 +33,7 @@ class DrawState:
     """
     How a draw behaves, beyond which program runs and what it reads: whether depth decides
     what is hidden and whether it is written, whether the stencil buffer is tested and what
-    it is left holding, whether color is written at all, and which facing is dropped.
+    it is left holding, and whether color is written at all.
 
     All of it is settled when a pipeline is built rather than said around each draw, which
     is what wgpu asks for, and there are only the handful of combinations named below.
@@ -41,11 +41,14 @@ class DrawState:
     depth_test is None wherever the mobject being drawn decides, which is most of them. A
     fill counting windings is the exception: it has to see every triangle of the path,
     whatever stands in front of it.
+
+    Nothing here drops a triangle for the way it faces. Both sides of a surface are drawn,
+    the depth test settling an opaque one and the order of its triangles a see through one,
+    see SurfaceShaderWrapper.
     """
     depth_test: bool | None = None
     depth_write: bool = True
     color_write: bool = True
-    cull: str | None = None
     # What the stencil buffer is compared against, "always" leaving it out of the decision
     stencil_compare: str = "always"
     # What to leave in the stencil buffer when the test fails, when depth fails, and when
@@ -84,10 +87,6 @@ class DrawState:
 
 
 DEFAULT = DrawState()
-# A surface draws the side of itself facing away from the camera before the side facing
-# towards it, each pass dropping the other, see SurfaceShaderWrapper
-CULL_FRONT = DrawState(cull="front")
-CULL_BACK = DrawState(cull="back")
 # The three passes a fill takes, see VShaderWrapper.render_fill for what each is for
 WINDING_COUNT = DrawState(
     depth_test=False,

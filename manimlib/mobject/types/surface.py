@@ -208,12 +208,21 @@ class Surface(Mobject):
             mob.resample(resolution)
         return self
 
+    def is_opaque(self) -> bool:
+        """
+        Whether nothing behind the surface shows through it, which is what decides whether
+        its triangles have to be drawn in order, see SurfaceShaderWrapper.
+        """
+        return bool((self.data["rgba"][:, 3] >= 1).all())
+
     def set_sort_to_camera(self, sort: bool = True) -> Self:
         """
-        Whether to draw the surface's squares in order of their distance from the camera,
-        furthest first, rather than leaving it to which way they face. Worth it for a
-        see through surface which folds over itself, where one of its own folds may lie
-        in front of another, and worth nothing otherwise.
+        Asks for the surface's triangles to be drawn in order of their distance from the
+        camera, furthest first, whether or not it can be seen through.
+
+        A surface which can be seen through is drawn that way regardless, having to be, so
+        there is nothing here to turn on for one. What this is for is turning it off, and for
+        the scenes written when it had to be asked for.
         """
         for mob in self.get_family():
             if isinstance(mob, Surface):
@@ -227,7 +236,7 @@ class Surface(Mobject):
 
     def get_shader_wrapper(self, renderer: Renderer) -> SurfaceShaderWrapper:
         wrapper = super().get_shader_wrapper(renderer)
-        wrapper.sort_to_camera = self.sort_to_camera
+        wrapper.sort_to_camera = self.sort_to_camera or not self.is_opaque()
         return wrapper
 
     def init_shader_wrapper(self, renderer: Renderer):
@@ -421,6 +430,11 @@ class TexturedSurface(Surface):
     def init_uniforms(self):
         super().init_uniforms()
         self.uniforms["num_textures"] = self.num_textures
+
+    def is_opaque(self) -> bool:
+        # Where a Surface keeps a color per point, this keeps an opacity and takes the color
+        # from its image. An image with transparency of its own is not accounted for.
+        return bool((self.data["opacity"] >= 1).all())
 
     def set_opacity(self, opacity: float | Iterable[float], recurse=True) -> Self:
         op_arr = np.array(listify(opacity))

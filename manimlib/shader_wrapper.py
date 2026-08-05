@@ -9,8 +9,6 @@ import wgpu
 import numpy as np
 
 from manimlib.renderer import COLOR_FORMAT
-from manimlib.renderer import CULL_BACK
-from manimlib.renderer import CULL_FRONT
 from manimlib.renderer import DEFAULT
 from manimlib.renderer import FILL_BORDER
 from manimlib.renderer import WINDING_COUNT
@@ -307,10 +305,7 @@ class ShaderWrapper(object):
                         "write_mask": state.color_write_mask,
                     }],
                 },
-                primitive={
-                    "topology": wgpu.PrimitiveTopology.triangle_list,
-                    "cull_mode": state.cull or wgpu.CullMode.none,
-                },
+                primitive={"topology": wgpu.PrimitiveTopology.triangle_list},
                 depth_stencil=state.depth_stencil_descriptor(self.depth_test),
                 multisample={"count": samples},
             )
@@ -360,23 +355,17 @@ class ShaderWrapper(object):
 
 class SurfaceShaderWrapper(ShaderWrapper):
     """
-    A surface is drawn in two passes, the side of it facing away from the camera before the
-    side facing towards it, so that a see through one blends in the order it should: what
-    lies behind first, what lies in front over the top of it.
+    An opaque surface is drawn in one pass and left to the depth test, which is what decides
+    what hides what however its triangles arrive.
 
-    Nothing here asks whether a surface is see through. For an opaque one the depth test
-    settles which side wins whatever order they arrive in, so the two passes come out exactly
-    as one would.
+    A surface which can be seen through cannot: blending is not commutative, so what lies
+    behind has to be drawn first. Its triangles are therefore drawn in order of their distance
+    from the camera, furthest first, through a buffer of indices written before the frame's
+    pass opens, see Surface.is_opaque for who asks for this and when.
 
-    Which side faces which way is taken from the winding of the mesh, which follows how the
-    surface is parametrized, the same thing its normals follow. A surface whose normals point
-    inwards, and which is therefore already lit as though seen from inside, has its two
-    passes the other way around as well.
-
-    A surface which folds over itself needs more than which way it faces, since which of its
-    own folds lies in front has nothing to do with that. Such a one can ask for
-    sort_to_camera, and then its triangles are drawn in order of their distance from the
-    camera, furthest first, through a buffer of indices written before the frame's pass opens.
+    Ordering by which way a triangle faces, drawing the far side of the surface and then the
+    near side, is not enough and was tried: it orders two layers, and a torus seen through
+    has more than two, so the far wall of its hole came out cut off where the grid wrapped.
     """
 
     def __init__(self, *args, sort_to_camera: bool = False, **kwargs):
@@ -397,31 +386,42 @@ class SurfaceShaderWrapper(ShaderWrapper):
     def order_triangles_by_depth(self) -> bool:
         """
         Lists the vertices of every triangle of the mesh, three to each, those furthest from
-        the camera first, in a buffer to be drawn through. False if there is nothing to order
-        that way: records which are no grid, as an imported mesh's are.
+        the camera first, in a buffer to be drawn through. False if there are no triangles.
         """
-        camera_position = self.renderer.frame_uniforms["camera_position"]
-        nu, nv = self.mobject_uniforms["resolution"].astype(int)
-        if nu < 2 or nv < 2:
+        first_vertices, middles = self.get_triangles()
+        if len(first_vertices) == 0:
             return False
-
-        # Where the middle of each triangle of each square sits, the two of them taking the
-        # corners the vertex shader gives them, see inserts/surface_mesh.wgsl
-        points = self.mobject_data["point"].reshape((nu, nv, 3))
-        middles = np.array([
-            points[:-1, :-1] + points[1:, :-1] + points[:-1, 1:],
-            points[:-1, 1:] + points[1:, :-1] + points[1:, 1:],
-        ])
-        offsets = middles.reshape((-1, 3)) / 3 - np.array(camera_position)
+        camera_position = self.renderer.frame_uniforms["camera_position"]
+        offsets = middles - np.array(camera_position)
         order = np.argsort(-np.einsum("ij,ij->i", offsets, offsets))
-
-        # Which vertices each of those triangles is drawn from, six per square, the first
-        # three making one triangle and the last three the other
-        squares = np.arange(nu - 1)[:, np.newaxis] * nv + np.arange(nv - 1)
-        firsts = 6 * squares + np.array([[[0]], [[3]]])
-        vertices = firsts.reshape(-1)[order, np.newaxis] + np.arange(3)
+        vertices = first_vertices[order, np.newaxis] + np.arange(3)
         self.write_order_buffer(vertices.astype(np.uint32).reshape(-1))
         return True
+
+    def get_triangles(self):
+        """
+        Which vertex each triangle of the mesh starts at, and where the middle of it sits.
+
+        A grid of points is expanded into two triangles for every square of it, taking the
+        corners the vertex shader gives them, see inserts/surface_mesh.wgsl. Records which are
+        no grid, as an imported mesh's are, are already three to a triangle.
+        """
+        points = self.mobject_data["point"]
+        nu, nv = self.mobject_uniforms["resolution"].astype(int)
+
+        if nu < 2 or nv < 2:
+            triangles = len(points) // 3
+            corners = points[:3 * triangles].reshape((triangles, 3, 3))
+            return 3 * np.arange(triangles), corners.mean(axis=1)
+
+        grid = points.reshape((nu, nv, 3))
+        middles = np.array([
+            grid[:-1, :-1] + grid[1:, :-1] + grid[:-1, 1:],
+            grid[:-1, 1:] + grid[1:, :-1] + grid[1:, 1:],
+        ]).reshape((-1, 3)) / 3
+        squares = np.arange(nu - 1)[:, np.newaxis] * nv + np.arange(nv - 1)
+        firsts = 6 * squares + np.array([[[0]], [[3]]])
+        return firsts.reshape(-1), middles
 
     def write_order_buffer(self, indices: np.ndarray) -> None:
         if self.order_buffer is not None and self.order_buffer.size != indices.nbytes:
@@ -438,10 +438,8 @@ class SurfaceShaderWrapper(ShaderWrapper):
     def draw_passes(self) -> None:
         if self.ordered:
             self.draw_through(DEFAULT, self.module, self.order_buffer, self.order_count)
-            return
-        vertices = self.verts_per_record * len(self.mobject_data)
-        for state in (CULL_FRONT, CULL_BACK):
-            self.draw(state, self.module, vertices)
+        else:
+            self.draw(DEFAULT, self.module, self.verts_per_record * len(self.mobject_data))
 
 
 class VShaderWrapper(ShaderWrapper):
