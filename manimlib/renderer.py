@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 
 import numpy as np
 import wgpu
 
+from manimlib.utils.shaders import DATA_BINDING
+from manimlib.utils.shaders import FIRST_TEXTURE_BINDING
 from manimlib.utils.shaders import FRAME_DTYPE
 from manimlib.utils.shaders import FRAME_GROUP
+from manimlib.utils.shaders import SAMPLER_BINDING
 from manimlib.utils.shaders import Uniforms
 from manimlib.utils.shaders import get_shader_code_from_file
 from manimlib.utils.shaders import get_shader_module
@@ -104,55 +108,137 @@ WINDING_COVER = DrawState(
 )
 
 
-class UniformArena(object):
+@lru_cache()
+def get_bind_layouts(device, frame_layout, mobject_layout, texture_count: int):
     """
-    One buffer holding the uniforms of every mobject whose block is a given size, a row each,
-    and one bind group through which any of those rows is read.
+    What a shader may bind: the values for the whole frame, the values for the mobject being
+    drawn, and the records of its kind along with a texture for each image it names.
 
-    A row is claimed for the length of a frame rather than owned: a frame writes everything
-    before it draws anything, see Camera.capture, so the rows can be handed out in the order
-    the writing goes and given back all at once. Nothing has to be freed, and nothing can be
-    left holding a row it no longer wants.
+    None of that varies between two mobjects of a kind, so it is made once for each number of
+    textures a kind might have. Which matters: a pipeline is built against these, so making
+    them per mobject would have every mobject compiling pipelines of its own.
+    """
+    resource_entries = [{
+        "binding": DATA_BINDING,
+        "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
+        # Which stretch of the arena is the mobject's own is said around the draw, so that
+        # nothing about where its records are has to live among its values, see DataArena
+        "buffer": {
+            "type": wgpu.BufferBindingType.read_only_storage,
+            "has_dynamic_offset": True,
+        },
+    }]
+    if texture_count:
+        resource_entries.append({
+            "binding": SAMPLER_BINDING,
+            "visibility": wgpu.ShaderStage.FRAGMENT,
+            "sampler": {"type": wgpu.SamplerBindingType.filtering},
+        })
+        resource_entries += [{
+            "binding": FIRST_TEXTURE_BINDING + index,
+            "visibility": wgpu.ShaderStage.FRAGMENT,
+            "texture": {"sample_type": wgpu.TextureSampleType.float},
+        } for index in range(texture_count)]
 
-    The point of it is that sending a buffer costs the same whether it holds two hundred bytes
-    or a megabyte, near enough: queue.write_buffer measured 4.7us for one mobject's block and
-    85us for four thousand of them together. So the blocks are gathered here, at 0.1us each,
-    and sent in one go. Which row a draw is to read comes from the dynamic offset its bind
-    group takes, see ShaderWrapper.render.
+    resource_layout = device.create_bind_group_layout(entries=resource_entries)
+    pipeline_layout = device.create_pipeline_layout(bind_group_layouts=[
+        frame_layout, mobject_layout, resource_layout,
+    ])
+    return resource_layout, pipeline_layout
+
+
+class Arena(object):
+    """
+    One buffer holding what many mobjects read, a stretch of it each, gathered a frame at a
+    time and sent in one write.
+
+    A stretch is claimed for the length of a frame rather than owned: a frame writes everything
+    before it draws anything, see Camera.capture, so the stretches can be handed out in the
+    order the writing goes and given back all at once. Nothing is allocated and nothing is
+    freed, so there is no free list to keep, nothing to fragment, and no way for a mobject to
+    be left holding a stretch it has no use for.
+
+    The point of it is that sending a buffer costs about the same whatever it holds: 4.7us for
+    one mobject's uniforms and 178us for two megabytes of every mobject's points. So a frame of
+    six thousand mobjects, which sent six thousand times, gathers here at a memory copy each
+    and sends the stretch which changed.
+
+    Two things keep it from costing anything where there is nothing to gain. A scene which is
+    not changing hands its stretches out in the same order every frame, so a mobject whose
+    values have not moved finds them already in place and copies nothing; and only what was
+    written into is sent, which for such a frame is nothing at all.
     """
 
-    def __init__(self, renderer: Renderer, block_size: int, rows: int = 256):
+    def __init__(self, renderer: Renderer, capacity: int):
         self.renderer = renderer
         self.device = renderer.device
-        self.block_size = block_size
-        # A dynamic offset has to be a multiple of what the device asks for, so a row takes
-        # that much whatever the block holds
-        alignment = self.device.limits["min-uniform-buffer-offset-alignment"]
-        self.stride = block_size + (-block_size % alignment)
-        self.claimed = 0
-        self.make_room(rows)
+        self.used = 0
+        self.make_room(capacity)
 
-    def make_room(self, rows: int) -> None:
+    def make_room(self, capacity: int) -> None:
         """
-        A buffer of that many rows, and the bind group reading one row of it. Growing means
-        making both afresh, which only happens while a frame is being written, so nothing is
-        drawing through the old ones. What the rows held is carried over, so that a row which
-        was already right stays right.
+        A buffer of that many bytes, and whatever reads it. Growing means making both afresh,
+        which only happens while a frame is being written, so nothing is drawing through the
+        old ones. What the stretches held is carried over, so one which was already right
+        stays right, but the new buffer holds none of it yet.
         """
         held = getattr(self, "blocks", None)
-        self.rows = rows
-        self.blocks = np.zeros(rows * self.stride, dtype=np.uint8)
+        self.capacity = capacity
+        self.blocks = np.zeros(capacity, dtype=np.uint8)
         if held is not None:
             self.blocks[:len(held)] = held
-        # Written into a row at a time through this rather than through the array itself,
-        # a memoryview slice being half the cost of a numpy one for a block this small
+        # Copied into a stretch at a time through this rather than through the array, a
+        # memoryview slice being half the cost of a numpy one at these sizes
         self.bytes = memoryview(self.blocks)
-        # A new buffer holds nothing yet, whatever the rows say
-        self.stale = True
-        self.buffer = self.device.create_buffer(
-            size=self.blocks.nbytes,
-            usage=wgpu.BufferUsage.UNIFORM | wgpu.BufferUsage.COPY_DST,
+        self.buffer = self.device.create_buffer(size=capacity, usage=self.usage)
+        self.make_bindings()
+        self.dirty: tuple[int, int] | None = (0, self.used)
+
+    def reset(self) -> None:
+        self.used = 0
+
+    def claim(self, nbytes: int) -> int:
+        """Where the next stretch of that many bytes begins, making room if there is none"""
+        offset = self.used
+        self.used += nbytes
+        while self.used > self.capacity:
+            self.make_room(2 * self.capacity)
+        return offset
+
+    def put(self, offset: int, source: np.ndarray) -> None:
+        end = offset + len(source)
+        self.bytes[offset:end] = source
+        if self.dirty is None:
+            self.dirty = (offset, end)
+        else:
+            self.dirty = (min(self.dirty[0], offset), max(self.dirty[1], end))
+
+    def upload(self) -> None:
+        """Whatever was written into since the last frame sent, in one write"""
+        if self.dirty is None:
+            return
+        start, end = self.dirty
+        self.renderer.queue.write_buffer(
+            self.buffer, start, self.blocks, start, end - start,
         )
+        self.dirty = None
+
+
+class UniformArena(Arena):
+    """
+    An arena of mobject uniform blocks, a row each. Which row a draw reads comes from the
+    dynamic offset its bind group takes, so a row has to begin where the device allows one to,
+    see ShaderWrapper.render.
+    """
+    usage = wgpu.BufferUsage.UNIFORM | wgpu.BufferUsage.COPY_DST
+
+    def __init__(self, renderer: Renderer, block_size: int, rows: int = 256):
+        self.block_size = block_size
+        alignment = renderer.device.limits["min-uniform-buffer-offset-alignment"]
+        self.stride = block_size + (-block_size % alignment)
+        super().__init__(renderer, rows * self.stride)
+
+    def make_bindings(self) -> None:
         self.bind_group = self.device.create_bind_group(
             layout=self.renderer.mobject_layout,
             entries=[{"binding": 0, "resource": {
@@ -160,32 +246,57 @@ class UniformArena(object):
             }}],
         )
 
-    def reset(self) -> None:
-        self.claimed = 0
-
     def next_row(self) -> int:
-        """The offset of the next row to be handed out, making more room if there is none"""
-        if self.claimed == self.rows:
-            self.make_room(2 * self.rows)
-        offset = self.claimed * self.stride
-        self.claimed += 1
+        return self.claim(self.stride)
+
+
+class DataArena(Arena):
+    """
+    An arena of mobject records, every mobject whose records are the same size sharing one.
+
+    A draw is given the stretch belonging to the mobject being drawn, as the dynamic offset of
+    its bind group, so the shader counts a record from the front of what it was given and
+    nothing about where a mobject's records are has to live among the mobject's own values.
+    Which matters: a mobject's values get copied, interpolated and handed to other mobjects,
+    and an offset put among them would be blended halfway through a transform.
+
+    A stretch therefore begins where the device allows a binding to, and the window bound is
+    wide enough for the longest mobject there has been, since one bind group serves them all.
+    """
+    usage = wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_DST
+
+    def __init__(self, renderer: Renderer, record_size: int, records: int = 4096):
+        self.record_size = record_size
+        self.alignment = renderer.device.limits["min-storage-buffer-offset-alignment"]
+        self.window = self.alignment
+        super().__init__(renderer, records * record_size)
+
+    def make_bindings(self) -> None:
+        self.bind_group = self.device.create_bind_group(
+            layout=self.renderer.data_layout,
+            entries=[{"binding": DATA_BINDING, "resource": {
+                "buffer": self.buffer, "offset": 0, "size": self.window,
+            }}],
+        )
+
+    def claim_stretch(self, nbytes: int) -> int:
+        """
+        Where this mobject's records go, as the offset its draw is to be given.
+
+        One bind group serves every mobject of the arena, so the window it binds has to be
+        wide enough for the longest of them, and there has to be a whole window of buffer past
+        the last stretch for the shortest one's binding not to run off the end.
+        """
+        stretch = nbytes + -nbytes % self.alignment
+        offset = self.used
+        self.used += stretch
+        if stretch > self.window or self.used + self.window > self.capacity:
+            self.window = max(self.window, stretch)
+            capacity = self.capacity
+            while self.used + self.window > capacity:
+                capacity *= 2
+            self.make_room(capacity)
         return offset
-
-    def put(self, offset: int, uniforms: Uniforms) -> None:
-        self.bytes[offset:offset + self.block_size] = uniforms.bytes
-        self.stale = True
-
-    def upload(self) -> None:
-        """
-        Every row claimed this frame, in one write, unless no row has been written into since
-        the last one. A scene which is not changing hands its rows out in the same order every
-        frame, so the rows it holds are already the rows it wants.
-        """
-        if self.claimed and self.stale:
-            self.renderer.queue.write_buffer(
-                self.buffer, 0, self.blocks, 0, self.claimed * self.stride,
-            )
-            self.stale = False
 
 
 class Renderer(object):
@@ -230,7 +341,16 @@ class Renderer(object):
                 "has_dynamic_offset": True,
             },
         }])
-        self.arenas: dict[int, UniformArena] = dict()
+        # What a mobject reads its own records through, which is the same for every mobject
+        # of a size that has no images of its own, see DataArena
+        self.data_layout, _ = get_bind_layouts(
+            self.device, self.frame_layout, self.mobject_layout, 0,
+        )
+        # Every arena there is, for the two moments a frame speaks to all of them, along with
+        # the two ways of finding the one a mobject belongs in
+        self.arenas: list[Arena] = []
+        self.uniform_arenas: dict[int, UniformArena] = dict()
+        self.data_arenas: dict[int, DataArena] = dict()
         self.frame_bind_group = self.device.create_bind_group(
             layout=self.frame_layout,
             entries=[{"binding": 0, "resource": {
@@ -266,19 +386,27 @@ class Renderer(object):
             pipeline = self.pipelines[key] = build()
         return pipeline
 
-    def arena_for(self, block_size: int) -> UniformArena:
+    def uniform_arena_for(self, block_size: int) -> UniformArena:
         """Where the uniforms of a mobject whose block is this size are gathered"""
-        if block_size not in self.arenas:
-            self.arenas[block_size] = UniformArena(self, block_size)
-        return self.arenas[block_size]
+        if block_size not in self.uniform_arenas:
+            self.uniform_arenas[block_size] = UniformArena(self, block_size)
+            self.arenas.append(self.uniform_arenas[block_size])
+        return self.uniform_arenas[block_size]
+
+    def data_arena_for(self, record_size: int) -> DataArena:
+        """Where the records of a mobject whose records are this size are gathered"""
+        if record_size not in self.data_arenas:
+            self.data_arenas[record_size] = DataArena(self, record_size)
+            self.arenas.append(self.data_arenas[record_size])
+        return self.data_arenas[record_size]
 
     def begin_writes(self) -> None:
-        """Gives back every row of every arena, a frame's rows being a frame's own"""
-        for arena in self.arenas.values():
+        """Gives back every stretch of every arena, a frame's stretches being a frame's own"""
+        for arena in self.arenas:
             arena.reset()
 
     def end_writes(self) -> None:
-        for arena in self.arenas.values():
+        for arena in self.arenas:
             arena.upload()
 
     def bind(self, group: int, bind_group: Any, offsets: tuple = ()) -> None:

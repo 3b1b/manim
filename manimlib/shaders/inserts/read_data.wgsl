@@ -12,6 +12,10 @@ DATA_STRIDE along with a DATA_OFFSET_<name> for each field, both counted in floa
 // shaders.RESOURCE_GROUP and its bindings say they are
 @group(2) @binding(0) var<storage, read> data: array<f32>;
 
+/*
+What is bound is this mobject's own stretch of an arena its kind shares rather than the whole
+of it, so a record is counted from the front of what was given, see DataArena.
+*/
 fn read_float(record: u32, offset: u32) -> f32 {
     return data[DATA_STRIDE * record + offset];
 }

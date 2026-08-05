@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-from functools import lru_cache
 
 import wgpu
 
@@ -12,6 +11,7 @@ from manimlib.renderer import DEFAULT
 from manimlib.renderer import FILL_BORDER
 from manimlib.renderer import WINDING_COUNT
 from manimlib.renderer import WINDING_COVER
+from manimlib.renderer import get_bind_layouts
 from manimlib.utils.shaders import DATA_BINDING
 from manimlib.utils.shaders import FIRST_TEXTURE_BINDING
 from manimlib.utils.shaders import get_shader_code
@@ -28,40 +28,6 @@ if TYPE_CHECKING:
     from manimlib.renderer import DrawState, Renderer
     from manimlib.utils.shaders import Uniforms
     from manimlib.utils.structured_array import StructuredArray
-
-
-@lru_cache()
-def get_bind_layouts(device, frame_layout, mobject_layout, texture_count: int):
-    """
-    What a shader may bind: the values for the whole frame, the values for the mobject being
-    drawn, and its records along with a texture for each image its kind names.
-
-    None of that varies between two mobjects of a kind, so it is made once for each number
-    of textures a kind might have. Which matters: a pipeline is built against these, so
-    making them per mobject would have every mobject compiling pipelines of its own.
-    """
-    resource_entries = [{
-        "binding": DATA_BINDING,
-        "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
-        "buffer": {"type": wgpu.BufferBindingType.read_only_storage},
-    }]
-    if texture_count:
-        resource_entries.append({
-            "binding": SAMPLER_BINDING,
-            "visibility": wgpu.ShaderStage.FRAGMENT,
-            "sampler": {"type": wgpu.SamplerBindingType.filtering},
-        })
-        resource_entries += [{
-            "binding": FIRST_TEXTURE_BINDING + index,
-            "visibility": wgpu.ShaderStage.FRAGMENT,
-            "texture": {"sample_type": wgpu.TextureSampleType.float},
-        } for index in range(texture_count)]
-
-    resource_layout = device.create_bind_group_layout(entries=resource_entries)
-    pipeline_layout = device.create_pipeline_layout(bind_group_layouts=[
-        frame_layout, mobject_layout, resource_layout,
-    ])
-    return resource_layout, pipeline_layout
 
 
 # Color channels blend in the usual way, but the alpha channel takes the source's alpha
@@ -83,27 +49,28 @@ BLEND = {
 
 class ShaderWrapper(object):
     """
-    One mobject's side of the gpu: the module it is drawn by, the buffers holding what it
-    sends, the groups those are bound in, and the drawing itself.
+    One mobject's side of the gpu: the module it is drawn by, where in the arenas its values
+    are, and the drawing itself.
 
     A mobject names one shader file, compiled once between all the mobjects naming it, and
     hands over the two arrays it keeps: its data, a record per point, and its uniforms, one
-    value for the whole of it. Its data gets a storage buffer of its own, being as long as the
-    mobject has points; its uniforms go in a row of one shared with every other mobject whose
-    block is the same size, see UniformArena. Values which hold for every mobject at once,
-    where the camera is and the like, are no business of a wrapper's, being bound once a frame
-    by the renderer.
+    value for the whole of it. Neither gets a buffer of its own. Both go in a stretch of one
+    the renderer keeps for every mobject whose values are the same size, and what a wrapper
+    holds of them is where that stretch was, see Arena. Values which hold for every mobject at
+    once, where the camera is and the like, are no business of a wrapper's, being bound once a
+    frame by the renderer.
 
-    No shader is handed vertex attributes. Each reads the records of its buffer itself, as a
-    flat array of floats indexed by the vertex being drawn, and expands every record into
-    verts_per_record vertices, always triangles, see inserts/read_data.wgsl.
+    No shader is handed vertex attributes. Each reads the records of its arena itself, as a
+    flat array of floats indexed by the vertex being drawn, counting from where the mobject
+    says its own records begin, and expands every record into verts_per_record vertices,
+    always triangles, see inserts/read_data.wgsl.
 
     Drawing comes in two halves, so that every write a frame makes lands before any of its
-    draws: write_buffers sends what has changed, and render binds this mobject's groups,
-    asks for the pipeline each pass wants, and draws. There is one wrapper to a mobject
-    rather than to a kind of mobject, which is what lets a fill count its own winding in the
-    stencil buffer without the mobject beside it joining in, and what any drawing taking
-    more than one pass is built on.
+    draws: write_buffers puts the mobject's values where the draw will read them, and render
+    says which stretch to read, asks for the pipeline each pass wants, and draws. There is one
+    wrapper to a mobject rather than to a kind of mobject, which is what lets a fill count its
+    own winding in the stencil buffer without the mobject beside it joining in, and what any
+    drawing taking more than one pass is built on.
     """
 
     def __init__(
@@ -155,9 +122,12 @@ class ShaderWrapper(object):
             self.device, self.renderer.frame_layout, self.renderer.mobject_layout,
             len(self.texture_paths),
         )
-        # Where this mobject's uniforms go each frame, shared with every other whose block
-        # is the same size, see UniformArena
-        self.arena = self.renderer.arena_for(self.mobject_uniforms.array.nbytes)
+        # Where this mobject's values go each frame, shared with every other mobject whose
+        # are the same size, see Arena
+        self.uniform_arena = self.renderer.uniform_arena_for(
+            self.mobject_uniforms.array.nbytes,
+        )
+        self.data_arena = self.renderer.data_arena_for(dtype.itemsize)
 
     def init_program(self) -> None:
         # A mobject naming no shader, a group say, has nothing to be drawn by
@@ -179,10 +149,13 @@ class ShaderWrapper(object):
         self.modules = [self.module]
 
     def init_resources(self) -> None:
-        self.data_buffer = None
-        self.resource_bind_group = None
-        # Which row of its arena this mobject's uniforms went into, no row yet being none
+        # Where in their arenas this mobject's values went, no stretch yet being none
         self.uniform_offset = -1
+        self.data_offset = -1
+        # Made only for a mobject with images of its own, the rest reading the arena's, and
+        # made afresh whenever the arena has a new buffer to read
+        self.resource_bind_group = None
+        self.read_buffer = None
         self.textures = [
             image_path_to_texture(path, self.device)
             for path in self.texture_paths.values()
@@ -208,24 +181,18 @@ class ShaderWrapper(object):
         self.write_uniform_buffer()
 
     def write_data_buffer(self) -> None:
-        array = self.mobject_data.array
-        if len(array) == 0:
+        """
+        Puts the mobject's records in a stretch of the arena its kind shares, remembering
+        where they went so that the draw can be given it.
+        """
+        data = self.mobject_data
+        if len(data.array) == 0:
             return
-        changed = self.mobject_data.has_changed(observer=self)
-        # A buffer's size is settled when it is made, so a resized array wants a new one,
-        # and whatever was bound to the old one has to be bound afresh
-        if self.data_buffer is not None and self.data_buffer.size != array.nbytes:
-            self.data_buffer.destroy()
-            self.data_buffer = None
-        if self.data_buffer is None:
-            self.data_buffer = self.device.create_buffer(
-                size=array.nbytes,
-                usage=wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_DST,
-            )
-            self.resource_bind_group = None
-        elif not changed:
-            return
-        self.renderer.queue.write_buffer(self.data_buffer, 0, array)
+        changed = data.has_changed(observer=self)
+        offset = self.data_arena.claim_stretch(data.array.nbytes)
+        if changed or offset != self.data_offset:
+            self.data_arena.put(offset, data.bytes)
+        self.data_offset = offset
 
     def write_uniform_buffer(self) -> bool:
         """
@@ -239,30 +206,35 @@ class ShaderWrapper(object):
         """
         uniforms = self.mobject_uniforms
         changed = uniforms.has_changed(observer=self)
-        offset = self.arena.next_row()
+        offset = self.uniform_arena.next_row()
         # A scene which is not changing hands its rows out in the same order every frame, so
         # a mobject whose uniforms have not moved usually finds its own values already there
         if changed or offset != self.uniform_offset:
-            self.arena.put(offset, uniforms)
+            self.uniform_arena.put(offset, uniforms.bytes)
         self.uniform_offset = offset
         return changed
 
     def get_resource_bind_group(self):
         """
-        What this mobject's records and images are read through, made afresh whenever a buffer
-        it points at has been replaced.
+        What this mobject's records and images are read through. A mobject with no images of
+        its own reads the arena's, which is the same for every mobject of its size and so
+        needs no saying twice; one with images has a group of its own, made afresh whenever
+        the arena has a new buffer to read.
         """
-        if self.resource_bind_group is None:
+        arena = self.data_arena
+        if not self.textures:
+            return arena.bind_group
+        if self.resource_bind_group is None or self.read_buffer is not arena.buffer:
+            self.read_buffer = arena.buffer
             entries = [{"binding": DATA_BINDING, "resource": {
-                "buffer": self.data_buffer, "offset": 0, "size": self.data_buffer.size,
+                "buffer": arena.buffer, "offset": 0, "size": arena.window,
             }}]
-            if self.textures:
-                entries.append({"binding": SAMPLER_BINDING, "resource": self.sampler})
-                for index, texture in enumerate(self.textures):
-                    entries.append({
-                        "binding": FIRST_TEXTURE_BINDING + index,
-                        "resource": texture.create_view(),
-                    })
+            entries.append({"binding": SAMPLER_BINDING, "resource": self.sampler})
+            for index, texture in enumerate(self.textures):
+                entries.append({
+                    "binding": FIRST_TEXTURE_BINDING + index,
+                    "resource": texture.create_view(),
+                })
             self.resource_bind_group = self.device.create_bind_group(
                 layout=self.resource_layout, entries=entries,
             )
@@ -332,18 +304,17 @@ class ShaderWrapper(object):
         """
         if not self.modules or len(self.mobject_data) == 0:
             return
-        self.renderer.bind(MOBJECT_GROUP, self.arena.bind_group, (self.uniform_offset,))
-        self.renderer.bind(RESOURCE_GROUP, self.get_resource_bind_group())
+        self.renderer.bind(
+            MOBJECT_GROUP, self.uniform_arena.bind_group, (self.uniform_offset,),
+        )
+        self.renderer.bind(
+            RESOURCE_GROUP, self.get_resource_bind_group(), (self.data_offset,),
+        )
         self.draw_passes()
 
     def draw_passes(self) -> None:
         """Every pass this kind of mobject takes, which for most kinds is the one"""
         self.draw(DEFAULT, self.module, self.verts_per_record * len(self.mobject_data))
-
-    def release(self) -> None:
-        if self.data_buffer is not None:
-            self.data_buffer.destroy()
-        self.init_resources()
 
 
 class SurfaceShaderWrapper(ShaderWrapper):
