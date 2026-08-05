@@ -336,8 +336,10 @@ class Camera(object):
         # write reaching the gpu partway through a pass has no say over which draws see it
         self.refresh_uniforms()
         self.renderer.send_frame_uniforms()
+        self.renderer.begin_writes()
         for wrapper in wrappers:
             wrapper.write_buffers()
+        self.renderer.end_writes()
 
         self.renderer.begin_frame(self.get_attachments())
         for wrapper in wrappers:

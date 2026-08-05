@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 
 @lru_cache()
-def get_bind_layouts(device, frame_layout, texture_count: int):
+def get_bind_layouts(device, frame_layout, mobject_layout, texture_count: int):
     """
     What a shader may bind: the values for the whole frame, the values for the mobject being
     drawn, and its records along with a texture for each image its kind names.
@@ -57,16 +57,11 @@ def get_bind_layouts(device, frame_layout, texture_count: int):
             "texture": {"sample_type": wgpu.TextureSampleType.float},
         } for index in range(texture_count)]
 
-    mobject_layout = device.create_bind_group_layout(entries=[{
-        "binding": 0,
-        "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
-        "buffer": {"type": wgpu.BufferBindingType.uniform},
-    }])
     resource_layout = device.create_bind_group_layout(entries=resource_entries)
     pipeline_layout = device.create_pipeline_layout(bind_group_layouts=[
         frame_layout, mobject_layout, resource_layout,
     ])
-    return mobject_layout, resource_layout, pipeline_layout
+    return resource_layout, pipeline_layout
 
 
 # Color channels blend in the usual way, but the alpha channel takes the source's alpha
@@ -91,11 +86,13 @@ class ShaderWrapper(object):
     One mobject's side of the gpu: the module it is drawn by, the buffers holding what it
     sends, the groups those are bound in, and the drawing itself.
 
-    A mobject names one shader file, compiled once between all the mobjects naming it,
-    and hands over the two arrays it keeps: its data, a record per point, and its
-    uniforms, one value for the whole of it. Those sit here as a storage buffer and a uniform
-    buffer. Values which hold for every mobject at once, where the camera is and the like,
-    are no business of a wrapper's, being bound once a frame by the renderer.
+    A mobject names one shader file, compiled once between all the mobjects naming it, and
+    hands over the two arrays it keeps: its data, a record per point, and its uniforms, one
+    value for the whole of it. Its data gets a storage buffer of its own, being as long as the
+    mobject has points; its uniforms go in a row of one shared with every other mobject whose
+    block is the same size, see UniformArena. Values which hold for every mobject at once,
+    where the camera is and the like, are no business of a wrapper's, being bound once a frame
+    by the renderer.
 
     No shader is handed vertex attributes. Each reads the records of its buffer itself, as a
     flat array of floats indexed by the vertex being drawn, and expands every record into
@@ -154,9 +151,13 @@ class ShaderWrapper(object):
             dtype.itemsize // 4,
             tuple((name, dtype.fields[name][1] // 4) for name in dtype.names),
         )
-        self.mobject_layout, self.resource_layout, self.pipeline_layout = get_bind_layouts(
-            self.device, self.renderer.frame_layout, len(self.texture_paths),
+        self.resource_layout, self.pipeline_layout = get_bind_layouts(
+            self.device, self.renderer.frame_layout, self.renderer.mobject_layout,
+            len(self.texture_paths),
         )
+        # Where this mobject's uniforms go each frame, shared with every other whose block
+        # is the same size, see UniformArena
+        self.arena = self.renderer.arena_for(self.mobject_uniforms.array.nbytes)
 
     def init_program(self) -> None:
         # A mobject naming no shader, a group say, has nothing to be drawn by
@@ -179,9 +180,9 @@ class ShaderWrapper(object):
 
     def init_resources(self) -> None:
         self.data_buffer = None
-        self.uniform_buffer = None
-        self.mobject_bind_group = None
         self.resource_bind_group = None
+        # Which row of its arena this mobject's uniforms went into, no row yet being none
+        self.uniform_offset = -1
         self.textures = [
             image_path_to_texture(path, self.device)
             for path in self.texture_paths.values()
@@ -228,37 +229,29 @@ class ShaderWrapper(object):
 
     def write_uniform_buffer(self) -> bool:
         """
-        True if the uniforms were sent, which is to say they had been written to since they
-        were last sent. Said rather than asked again, since asking the array counts as having
+        Puts the mobject's uniforms in a row of the arena they share, and says whether they
+        had been written to since the last frame asked. Every frame takes a row whether or not
+        anything changed, a row lasting only as long as the frame, and copying a block in is
+        forty times cheaper than sending one, see UniformArena.
+
+        The answer is said rather than asked again, since asking the array counts as having
         looked and there is one answer to go round, see StructuredArray.has_changed.
         """
-        array = self.mobject_uniforms.array
-        changed = self.mobject_uniforms.has_changed(observer=self)
-        if self.uniform_buffer is None:
-            self.uniform_buffer = self.device.create_buffer(
-                size=array.nbytes,
-                usage=wgpu.BufferUsage.UNIFORM | wgpu.BufferUsage.COPY_DST,
-            )
-            self.mobject_bind_group = None
-        elif not changed:
-            return False
-        self.renderer.queue.write_buffer(self.uniform_buffer, 0, array)
-        return True
+        uniforms = self.mobject_uniforms
+        changed = uniforms.has_changed(observer=self)
+        offset = self.arena.next_row()
+        # A scene which is not changing hands its rows out in the same order every frame, so
+        # a mobject whose uniforms have not moved usually finds its own values already there
+        if changed or offset != self.uniform_offset:
+            self.arena.put(offset, uniforms)
+        self.uniform_offset = offset
+        return changed
 
-    def get_bind_groups(self):
+    def get_resource_bind_group(self):
         """
-        The two groups a draw of this mobject binds, made afresh whenever a buffer they
-        point at has been replaced.
+        What this mobject's records and images are read through, made afresh whenever a buffer
+        it points at has been replaced.
         """
-        if self.mobject_bind_group is None:
-            self.mobject_bind_group = self.device.create_bind_group(
-                layout=self.mobject_layout,
-                entries=[{"binding": 0, "resource": {
-                    "buffer": self.uniform_buffer,
-                    "offset": 0,
-                    "size": self.uniform_buffer.size,
-                }}],
-            )
         if self.resource_bind_group is None:
             entries = [{"binding": DATA_BINDING, "resource": {
                 "buffer": self.data_buffer, "offset": 0, "size": self.data_buffer.size,
@@ -273,7 +266,7 @@ class ShaderWrapper(object):
             self.resource_bind_group = self.device.create_bind_group(
                 layout=self.resource_layout, entries=entries,
             )
-        return self.mobject_bind_group, self.resource_bind_group
+        return self.resource_bind_group
 
     # Drawing
 
@@ -339,9 +332,8 @@ class ShaderWrapper(object):
         """
         if not self.modules or len(self.mobject_data) == 0:
             return
-        mobject_group, resource_group = self.get_bind_groups()
-        self.renderer.bind(MOBJECT_GROUP, mobject_group)
-        self.renderer.bind(RESOURCE_GROUP, resource_group)
+        self.renderer.bind(MOBJECT_GROUP, self.arena.bind_group, (self.uniform_offset,))
+        self.renderer.bind(RESOURCE_GROUP, self.get_resource_bind_group())
         self.draw_passes()
 
     def draw_passes(self) -> None:
@@ -349,9 +341,8 @@ class ShaderWrapper(object):
         self.draw(DEFAULT, self.module, self.verts_per_record * len(self.mobject_data))
 
     def release(self) -> None:
-        for buffer in (self.data_buffer, self.uniform_buffer):
-            if buffer is not None:
-                buffer.destroy()
+        if self.data_buffer is not None:
+            self.data_buffer.destroy()
         self.init_resources()
 
 

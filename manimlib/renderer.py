@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import numpy as np
 import wgpu
 
 from manimlib.utils.shaders import FRAME_DTYPE
@@ -103,6 +104,90 @@ WINDING_COVER = DrawState(
 )
 
 
+class UniformArena(object):
+    """
+    One buffer holding the uniforms of every mobject whose block is a given size, a row each,
+    and one bind group through which any of those rows is read.
+
+    A row is claimed for the length of a frame rather than owned: a frame writes everything
+    before it draws anything, see Camera.capture, so the rows can be handed out in the order
+    the writing goes and given back all at once. Nothing has to be freed, and nothing can be
+    left holding a row it no longer wants.
+
+    The point of it is that sending a buffer costs the same whether it holds two hundred bytes
+    or a megabyte, near enough: queue.write_buffer measured 4.7us for one mobject's block and
+    85us for four thousand of them together. So the blocks are gathered here, at 0.1us each,
+    and sent in one go. Which row a draw is to read comes from the dynamic offset its bind
+    group takes, see ShaderWrapper.render.
+    """
+
+    def __init__(self, renderer: Renderer, block_size: int, rows: int = 256):
+        self.renderer = renderer
+        self.device = renderer.device
+        self.block_size = block_size
+        # A dynamic offset has to be a multiple of what the device asks for, so a row takes
+        # that much whatever the block holds
+        alignment = self.device.limits["min-uniform-buffer-offset-alignment"]
+        self.stride = block_size + (-block_size % alignment)
+        self.claimed = 0
+        self.make_room(rows)
+
+    def make_room(self, rows: int) -> None:
+        """
+        A buffer of that many rows, and the bind group reading one row of it. Growing means
+        making both afresh, which only happens while a frame is being written, so nothing is
+        drawing through the old ones. What the rows held is carried over, so that a row which
+        was already right stays right.
+        """
+        held = getattr(self, "blocks", None)
+        self.rows = rows
+        self.blocks = np.zeros(rows * self.stride, dtype=np.uint8)
+        if held is not None:
+            self.blocks[:len(held)] = held
+        # Written into a row at a time through this rather than through the array itself,
+        # a memoryview slice being half the cost of a numpy one for a block this small
+        self.bytes = memoryview(self.blocks)
+        # A new buffer holds nothing yet, whatever the rows say
+        self.stale = True
+        self.buffer = self.device.create_buffer(
+            size=self.blocks.nbytes,
+            usage=wgpu.BufferUsage.UNIFORM | wgpu.BufferUsage.COPY_DST,
+        )
+        self.bind_group = self.device.create_bind_group(
+            layout=self.renderer.mobject_layout,
+            entries=[{"binding": 0, "resource": {
+                "buffer": self.buffer, "offset": 0, "size": self.block_size,
+            }}],
+        )
+
+    def reset(self) -> None:
+        self.claimed = 0
+
+    def next_row(self) -> int:
+        """The offset of the next row to be handed out, making more room if there is none"""
+        if self.claimed == self.rows:
+            self.make_room(2 * self.rows)
+        offset = self.claimed * self.stride
+        self.claimed += 1
+        return offset
+
+    def put(self, offset: int, uniforms: Uniforms) -> None:
+        self.bytes[offset:offset + self.block_size] = uniforms.bytes
+        self.stale = True
+
+    def upload(self) -> None:
+        """
+        Every row claimed this frame, in one write, unless no row has been written into since
+        the last one. A scene which is not changing hands its rows out in the same order every
+        frame, so the rows it holds are already the rows it wants.
+        """
+        if self.claimed and self.stale:
+            self.renderer.queue.write_buffer(
+                self.buffer, 0, self.blocks, 0, self.claimed * self.stride,
+            )
+            self.stale = False
+
+
 class Renderer(object):
     """
     What a mobject needs of the gpu in order to draw itself, in one thing rather than
@@ -135,6 +220,17 @@ class Renderer(object):
             "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
             "buffer": {"type": wgpu.BufferBindingType.uniform},
         }])
+        # What a mobject's uniforms are read through, one row of an arena at a time, see
+        # UniformArena. Shared by every mobject, so that a pipeline built against it is too.
+        self.mobject_layout = self.device.create_bind_group_layout(entries=[{
+            "binding": 0,
+            "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
+            "buffer": {
+                "type": wgpu.BufferBindingType.uniform,
+                "has_dynamic_offset": True,
+            },
+        }])
+        self.arenas: dict[int, UniformArena] = dict()
         self.frame_bind_group = self.device.create_bind_group(
             layout=self.frame_layout,
             entries=[{"binding": 0, "resource": {
@@ -170,16 +266,31 @@ class Renderer(object):
             pipeline = self.pipelines[key] = build()
         return pipeline
 
-    def bind(self, group: int, bind_group: Any) -> None:
+    def arena_for(self, block_size: int) -> UniformArena:
+        """Where the uniforms of a mobject whose block is this size are gathered"""
+        if block_size not in self.arenas:
+            self.arenas[block_size] = UniformArena(self, block_size)
+        return self.arenas[block_size]
+
+    def begin_writes(self) -> None:
+        """Gives back every row of every arena, a frame's rows being a frame's own"""
+        for arena in self.arenas.values():
+            arena.reset()
+
+    def end_writes(self) -> None:
+        for arena in self.arenas.values():
+            arena.upload()
+
+    def bind(self, group: int, bind_group: Any, offsets: tuple = ()) -> None:
         """
         Points the pass at what a draw is to read, unless that is where it points already.
         A pass holds onto what it was told until it is told otherwise, and a mobject drawn in
         several passes reads the same things in each, so most of what a frame has to say
-        about this it has said already, see ShaderWrapper.bind_for_draw.
+        about this it has said already, see ShaderWrapper.render.
         """
-        if self.bound[group] is not bind_group:
-            self.pass_.set_bind_group(group, bind_group)
-            self.bound[group] = bind_group
+        if self.bound[group] != (bind_group, offsets):
+            self.pass_.set_bind_group(group, bind_group, offsets)
+            self.bound[group] = (bind_group, offsets)
 
     def use_pipeline(self, pipeline: Any) -> None:
         if self.pipeline_in_use is not pipeline:

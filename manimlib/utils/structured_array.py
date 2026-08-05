@@ -45,7 +45,7 @@ class StructuredArray(object):
     """
 
     def __init__(self, dtype: np.dtype, length: int = 0):
-        self.array: np.ndarray = np.zeros(length, dtype=dtype)
+        self.set_array(np.zeros(length, dtype=dtype))
         # What to fill in with when growing from nothing, see resize
         self.defaults: np.ndarray = np.ones(1, dtype=dtype)
         # Counted up by every write. A count rather than a yes or no, since more than one
@@ -74,6 +74,20 @@ class StructuredArray(object):
     def __repr__(self) -> str:
         values = ", ".join(f"{key}={self[key]}" for key in self)
         return f"{type(self).__name__}({values})"
+
+    def set_array(self, array: np.ndarray) -> None:
+        """
+        The array, along with the two ways of seeing the whole of it at once: every field as
+        one run of floats, and the same as bytes. Both include whatever padding the dtype
+        carries, which is harmless to read or write.
+
+        They are made here, once, rather than where they are wanted. Making one costs 195ns,
+        which is more than copying a mobject's block somewhere with it, and copying is what
+        they are for, see UniformArena.put and Uniforms.interpolate.
+        """
+        self.array: np.ndarray = array
+        self.floats: np.ndarray = array.view(np.float32)
+        self.bytes: np.ndarray = array.view(np.uint8)
 
     def note_change(self) -> None:
         """
@@ -128,13 +142,6 @@ class StructuredArray(object):
                 if key in self:
                     self[key] = source[key]
 
-    @property
-    def floats(self) -> np.ndarray:
-        """
-        Every field as one flat array, for reading or writing the lot in one go.
-        Includes whatever padding the dtype carries, which is harmless to touch.
-        """
-        return self.array.view(np.float32)
 
     @property
     def rows_or_defaults(self) -> np.ndarray:
@@ -160,8 +167,8 @@ class StructuredArray(object):
             if len(self.array) > 0:
                 self.defaults[:] = self.array[:1]
         elif len(self.array) == 0:
-            self.array = self.defaults.copy()
-        self.array = resize_func(self.array, length)
+            self.set_array(self.defaults.copy())
+        self.set_array(resize_func(self.array, length))
         self.version += 1
 
     def match(self, other: StructuredArray) -> None:
@@ -177,7 +184,7 @@ class StructuredArray(object):
 
     def copy(self) -> Self:
         result = copy.copy(self)
-        result.array = self.array.copy()
+        result.set_array(self.array.copy())
         result.defaults = self.defaults.copy()
         result.version += 1
         # A copy has been looked at by nobody, whatever has looked at what it was copied from
