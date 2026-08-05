@@ -40,20 +40,21 @@ def norms_along_axis(vectors: Vect3Array) -> np.ndarray:
 
 
 class Surface(Mobject):
-    shader_folder: str = "surface"
+    shader_file: str = "surface.wgsl"
     # Points are sent as the grid they sample, and the vertex shader works out the mesh
     # over it, expanding each of them into one square's worth of vertices. See
-    # inserts/surface_mesh.glsl
+    # inserts/surface_mesh.wgsl
     verts_per_record: int = 6
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ])
-    # Mirrors inserts/surface_uniforms.glsl
     uniform_dtype: np.dtype = uniform_block_dtype(
         *COMMON_UNIFORMS,
         ("resolution", 2),
     )
+    # What is_opaque last answered, which it works out afresh whenever the data has moved on
+    opaque: bool = True
 
     def __init__(
         self,
@@ -209,12 +210,28 @@ class Surface(Mobject):
             mob.resample(resolution)
         return self
 
+    def min_opacity(self) -> float:
+        """The least opaque any point of the surface is"""
+        return float(self.data["rgba"][:, 3].min()) if len(self.data) else 1.0
+
+    def is_opaque(self) -> bool:
+        """
+        Whether nothing behind the surface shows through it, which decides whether its
+        triangles have to be drawn in order, see SurfaceShaderWrapper.
+
+        Asked once a frame, so worked out only when the data has been written to since the last
+        ask. It cannot be settled in set_opacity instead: a surface fading in or transforming
+        has its alpha interpolated straight into the array, passing no setter.
+        """
+        if self.data.has_changed(observer=self):
+            self.opaque = self.min_opacity() >= 1
+        return self.opaque
+
     def set_sort_to_camera(self, sort: bool = True) -> Self:
         """
-        Whether to draw the surface's squares in order of their distance from the camera,
-        furthest first, rather than leaving it to which way they face. Worth it for a
-        see through surface which folds over itself, where one of its own folds may lie
-        in front of another, and worth nothing otherwise.
+        Asks for the surface's triangles to be drawn furthest from the camera first, whether or
+        not it can be seen through. One which can be is drawn that way regardless, so this is
+        really for turning it off, and for scenes written when it had to be asked for.
         """
         for mob in self.get_family():
             if isinstance(mob, Surface):
@@ -228,7 +245,7 @@ class Surface(Mobject):
 
     def get_shader_wrapper(self, renderer: Renderer) -> SurfaceShaderWrapper:
         wrapper = super().get_shader_wrapper(renderer)
-        wrapper.sort_to_camera = self.sort_to_camera
+        wrapper.sort_to_camera = self.sort_to_camera or not self.is_opaque()
         return wrapper
 
     def init_shader_wrapper(self, renderer: Renderer):
@@ -237,7 +254,7 @@ class Surface(Mobject):
             sort_to_camera=self.sort_to_camera,
             mobject_data=self.data,
             mobject_uniforms=self.uniforms,
-            shader_folder=self.shader_folder,
+            shader_file=self.shader_file,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
             code_replacements=self.shader_code_replacements,
@@ -248,7 +265,7 @@ class Surface(Mobject):
         """
         Which way the surface faces at each of its points, from the directions it runs
         in either way from there. The same thing the vertex shader works out, see
-        inserts/surface_mesh.glsl, for the sake of anything in python which wants it.
+        inserts/surface_mesh.wgsl, for the sake of anything in python which wants it.
         """
         nu, nv = self.get_resolution()
         grid = self.get_points().reshape((nu, nv, 3))
@@ -349,13 +366,12 @@ class ParametricSurface(Surface):
 
 
 class TexturedSurface(Surface):
-    shader_folder: str = "textured_surface"
+    shader_file: str = "textured_surface.wgsl"
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ])
-    # Mirrors inserts/textured_surface_uniforms.glsl
     uniform_dtype: np.dtype = uniform_block_dtype(
         *COMMON_UNIFORMS,
         ("resolution", 2),
@@ -424,6 +440,11 @@ class TexturedSurface(Surface):
         super().init_uniforms()
         self.uniforms["num_textures"] = self.num_textures
 
+    def min_opacity(self) -> float:
+        # Where a Surface keeps a color per point, this keeps an opacity and takes the color
+        # from its image. An image with transparency of its own is not accounted for.
+        return float(self.data["opacity"].min()) if len(self.data) else 1.0
+
     def set_opacity(self, opacity: float | Iterable[float], recurse=True) -> Self:
         op_arr = np.array(listify(opacity))
         self.data["opacity"][:, 0] = resize_with_interpolation(op_arr, len(self.data))
@@ -467,7 +488,7 @@ class TexturedGeometry(TexturedSurface):
     """
     An imported mesh, which is a list of triangles rather than a grid of points, so
     each of its faces is written out as three points of its own. A resolution of zero
-    is what tells the vertex shader to read them that way, see surface_mesh.glsl.
+    is what tells the vertex shader to read them that way, see surface_mesh.wgsl.
     """
     # One vertex per record, the records being the corners of each triangle in turn
     verts_per_record: int = 1
@@ -476,7 +497,7 @@ class TexturedGeometry(TexturedSurface):
         self.num_textures = 1
         self.geometry = geometry
         self.texture_file = texture_file
-        # Not a grid, which is what the vertex shader goes by, see surface_mesh.glsl
+        # Not a grid, which is what the vertex shader goes by, see surface_mesh.wgsl
         self.initial_resolution = (0, 0)
         Mobject.__init__(
             self,

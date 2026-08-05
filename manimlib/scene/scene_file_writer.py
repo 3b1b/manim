@@ -14,6 +14,7 @@ from pathlib import Path
 from manimlib.logger import log
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.file_ops import guarantee_existence
+from manimlib.camera.camera import FrameStream
 from manimlib.utils.sounds import get_full_sound_file_path
 
 from typing import TYPE_CHECKING
@@ -21,7 +22,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from PIL.Image import Image
 
-    from manimlib.camera.camera import Camera
     from manimlib.scene.scene import Scene
 
 
@@ -46,6 +46,10 @@ class SceneFileWriter(object):
         ffmpeg_bin: str = "ffmpeg",
         video_codec: str = "libx264",
         pixel_format: str = "yuv420p",
+        # How hard the encoder should try, where zero means keep every pixel exactly. Left
+        # unsaid the encoder's default stands, which throws away a good deal, so it is worth
+        # setting for anything a frame will be measured against.
+        crf: int | None = None,
         saturation: float = 1.0,
         gamma: float = 1.0,
     ):
@@ -65,6 +69,7 @@ class SceneFileWriter(object):
         self.ffmpeg_bin = ffmpeg_bin
         self.video_codec = video_codec
         self.pixel_format = pixel_format
+        self.crf = crf
         self.saturation = saturation
         self.gamma = gamma
 
@@ -207,9 +212,7 @@ class SceneFileWriter(object):
         fps = self.scene.camera.fps
         width, height = self.scene.camera.get_pixel_shape()
 
-        vf_arg = 'vflip'
-        vf_arg += f',eq=saturation={self.saturation}:gamma={self.gamma}'
-
+        # Frames come back a row at a time from the top, as a texture is laid out
         command = [
             self.ffmpeg_bin,
             '-y',  # overwrite output file if it exists
@@ -218,16 +221,26 @@ class SceneFileWriter(object):
             '-pix_fmt', 'rgba',
             '-r', str(fps),  # frames per second
             '-i', '-',  # The input comes from a pipe
-            '-vf', vf_arg,
             '-an',  # Tells ffmpeg not to expect any audio
             '-loglevel', 'error',
         ]
+        # Asked for neither more saturation nor a different gamma there is nothing to filter,
+        # and saying so anyway is not free: eq works in yuv, so even an identity one sends
+        # every pixel out of rgb and back, moving most of them by one or two out of 255.
+        if (self.saturation, self.gamma) != (1.0, 1.0):
+            command += [
+                '-vf', f'eq=saturation={self.saturation}:gamma={self.gamma}',
+            ]
         if self.video_codec:
             command += ['-vcodec', self.video_codec]
         if self.pixel_format:
             command += ['-pix_fmt', self.pixel_format]
+        if self.crf is not None:
+            command += ['-crf', str(self.crf)]
         command += [self.temp_file_path]
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
+        # Frames reach the pipe a frame after they were drawn, see FrameStream
+        self.frames = FrameStream(self.scene.camera, self.writing_process.stdin)
 
         if not self.quiet:
             self.progress_display = ProgressDisplay(
@@ -281,14 +294,15 @@ class SceneFileWriter(object):
             full_desc += " " * (desc_len - len(full_desc))
         self.progress_display.set_description(full_desc)
 
-    def write_frame(self, camera: Camera) -> None:
+    def write_frame(self) -> None:
         if self.write_to_movie:
-            raw_bytes = camera.get_raw_fbo_data()
-            self.writing_process.stdin.write(raw_bytes)
+            self.frames.send()
             if self.progress_display is not None:
                 self.progress_display.update()
 
     def close_movie_pipe(self) -> None:
+        # Whatever is still on its way off the gpu, before there is nowhere to put it
+        self.frames.drain()
         self.writing_process.stdin.close()
         self.writing_process.wait()
         self.writing_process.terminate()

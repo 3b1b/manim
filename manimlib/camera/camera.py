@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import moderngl
+from contextlib import contextmanager
+
 import numpy as np
-import OpenGL.GL as gl
+import wgpu
 from PIL import Image
 
 from manimlib.camera.camera_frame import CameraFrame
@@ -12,6 +13,8 @@ from manimlib.constants import FRAME_HEIGHT
 from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
+from manimlib.renderer import COLOR_FORMAT
+from manimlib.renderer import DEPTH_STENCIL_FORMAT
 from manimlib.renderer import Renderer
 from manimlib.utils.color import color_to_rgba
 
@@ -23,23 +26,94 @@ if TYPE_CHECKING:
     from manimlib.window import Window
 
 
+class FrameStream(object):
+    """
+    Frames off the gpu and into somewhere they are being written, staying a frame behind so
+    that the copy of one happens while the next is being drawn.
+
+    Getting a frame back means copying the texture into a buffer the cpu can read, which the
+    gpu cannot do until it has finished drawing, so asking and reading in one breath waits, as
+    Camera.get_frame_bytes does. Here the copy is only asked for, and what gets written is the
+    frame before it, whose copy has had a whole frame's drawing to finish.
+
+    Frames still go to the same place in the same order. Whoever is writing them has only to
+    drain what is in flight before closing, see SceneFileWriter.close_movie_pipe.
+    """
+
+    def __init__(self, camera: Camera, sink, behind: int = 1):
+        self.camera = camera
+        self.sink = sink
+        self.behind = behind
+        self.device = camera.renderer.device
+        self.queue = camera.renderer.queue
+        # Settled here rather than read afresh, since whatever is being written was opened
+        # expecting frames of one size
+        self.width, self.height = camera.get_pixel_shape()
+        self.row = 4 * self.width
+        # A texture copy leaves each row a multiple of 256 bytes from the next, so rows come
+        # back with padding on the end of them unless the width happens to suit
+        self.padded_row = self.row + (-self.row % 256)
+        # One buffer per frame in flight and one more to be copying into, which is what being
+        # a frame behind costs: a frame's worth of memory each, so 33MB apiece at 4k
+        self.buffers = [
+            self.device.create_buffer(
+                size=self.padded_row * self.height,
+                usage=wgpu.BufferUsage.COPY_DST | wgpu.BufferUsage.MAP_READ,
+            )
+            for _ in range(behind + 1)
+        ]
+        # Which buffers are waiting to be read, oldest first, and how many have been asked
+        # for, counted so that no buffer receives a copy while still mapped from an earlier
+        # frame
+        self.waiting: list = []
+        self.asked = 0
+
+    def send(self) -> None:
+        """Asks for the frame as it stands, and writes whichever one is ready"""
+        buffer = self.buffers[self.asked % len(self.buffers)]
+        self.asked += 1
+        encoder = self.device.create_command_encoder()
+        encoder.copy_texture_to_buffer(
+            {"texture": self.camera.color_texture, "mip_level": 0, "origin": (0, 0, 0)},
+            {"buffer": buffer, "offset": 0,
+             "bytes_per_row": self.padded_row, "rows_per_image": self.height},
+            (self.width, self.height, 1),
+        )
+        self.queue.submit([encoder.finish()])
+        self.waiting.append((buffer, buffer.map_async("READ", 0, buffer.size)))
+        if len(self.waiting) > self.behind:
+            self.write_oldest()
+
+    def drain(self) -> None:
+        """
+        Writes every frame still in flight. Whatever is being written to has to be told this
+        before it is closed, or the last frames of it are the ones which never arrive.
+        """
+        while self.waiting:
+            self.write_oldest()
+
+    def write_oldest(self) -> None:
+        buffer, promise = self.waiting.pop(0)
+        promise.sync_wait()
+        frame = buffer.read_mapped(copy=False)
+        if self.padded_row > self.row:
+            rows = np.frombuffer(frame, np.uint8).reshape((self.height, self.padded_row))
+            frame = rows[:, :self.row].tobytes()
+        self.sink.write(frame)
+        # What was read is a view onto the buffer, so it is done with before the buffer is
+        buffer.unmap()
+
+
 class Camera(object):
     def __init__(
         self,
         window: Optional[Window] = None,
-        background_image: Optional[str] = None,
         frame_config: dict = dict(),
         # Note: frame height and width will be resized to match this resolution aspect ratio
         resolution=DEFAULT_RESOLUTION,
         fps: int = 30,
         background_color: ManimColor = BLACK,
         background_opacity: float = 1.0,
-        # Points in vectorized mobjects with norm greater
-        # than this value will be rescaled.
-        max_allowable_norm: float = FRAME_WIDTH,
-        image_mode: str = "RGBA",
-        n_channels: int = 4,
-        pixel_array_dtype: type = np.uint8,
         light_source_position: Vect3 = np.array([-10, 10, 10]),
         # Although vector graphics handle antialiasing fine
         # without multisampling, for 3d scenes one might want
@@ -47,182 +121,150 @@ class Camera(object):
         samples: int = 0,
     ):
         self.window = window
-        self.background_image = background_image
         self.default_pixel_shape = resolution  # Rename?
         self.fps = fps
-        self.max_allowable_norm = max_allowable_norm
-        self.image_mode = image_mode
-        self.n_channels = n_channels
-        self.pixel_array_dtype = pixel_array_dtype
         self.light_source_position = light_source_position
         self.samples = samples
 
-        self.rgb_max_val: float = np.iinfo(self.pixel_array_dtype).max
         self.background_rgba: list[float] = list(color_to_rgba(
             background_color, background_opacity
         ))
-        self.depth_stencil_rbos: list[int] = []
+        # Where a window is showing the scene, frames are drawn at its size rather than at
+        # the resolution they are written at, since drawing 4k to shrink into a small window
+        # costs more than it shows. See at_output_resolution for the exception.
+        self.draw_at_window_size = window is not None
+        self.pixel_shape = (0, 0)
         self.init_frame(**frame_config)
-        self.init_context()
-        self.init_fbo()
+        self.init_renderer()
+        self.init_target()
         self.init_light_source()
 
     def init_frame(self, **config) -> None:
         self.frame = CameraFrame(**config)
 
-    def init_context(self) -> None:
-        if self.window is None:
-            self.ctx: moderngl.Context = moderngl.create_standalone_context()
-        else:
-            self.ctx: moderngl.Context = self.window.ctx
+    def init_renderer(self) -> None:
+        self.renderer = Renderer()
+        if self.window is not None:
+            self.window.configure(self.renderer)
 
-        self.ctx.enable(moderngl.PROGRAM_POINT_SIZE)
-        self.ctx.enable(moderngl.BLEND)
-        # Color channels blend in the usual way, but the alpha channel takes the
-        # source's alpha whole, so that drawing something half transparent onto an
-        # opaque background leaves it opaque, rather than eating into its alpha.
-        self.ctx.blend_func = (
-            moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
-            moderngl.ONE, moderngl.ONE_MINUS_SRC_ALPHA,
+    def get_target_shape(self) -> tuple[int, int]:
+        if self.draw_at_window_size and self.window is not None:
+            return self.window.get_size()
+        return self.default_pixel_shape
+
+    def resize_target(self) -> None:
+        """
+        Makes what a frame is drawn into the size it ought to be, which changes when the
+        window is resized or when a frame is wanted at the resolution it will be written at.
+        """
+        if self.get_target_shape() != self.pixel_shape:
+            self.init_target()
+
+    @contextmanager
+    def at_output_resolution(self):
+        """
+        Draws at the resolution frames are written at rather than at the window's size, for
+        as long as the block lasts. Without a window the two are already the same.
+        """
+        was_at_window_size = self.draw_at_window_size
+        self.draw_at_window_size = False
+        try:
+            yield
+        finally:
+            self.draw_at_window_size = was_at_window_size
+
+    def init_target(self) -> None:
+        """
+        What every frame is drawn into: one color texture and one depth-stencil texture. Where
+        samples are being taken there is a second color texture holding them, which the first
+        is resolved down to.
+        """
+        device = self.renderer.device
+        self.pixel_shape = self.get_target_shape()
+        width, height = self.pixel_shape
+        samples = self.renderer.samples = max(1, self.samples)
+
+        self.color_texture = device.create_texture(
+            size=(width, height, 1),
+            format=COLOR_FORMAT,
+            usage=(
+                wgpu.TextureUsage.RENDER_ATTACHMENT
+                | wgpu.TextureUsage.COPY_SRC
+                | wgpu.TextureUsage.TEXTURE_BINDING
+            ),
         )
-        gl.glClearStencil(0)
-        # What every mobject drawn by this camera is handed in order to draw itself
-        self.renderer = Renderer(self.ctx)
+        self.multisample_texture = None
+        if samples > 1:
+            self.multisample_texture = device.create_texture(
+                size=(width, height, 1),
+                format=COLOR_FORMAT,
+                usage=wgpu.TextureUsage.RENDER_ATTACHMENT,
+                sample_count=samples,
+            )
+        self.depth_stencil_texture = device.create_texture(
+            size=(width, height, 1),
+            format=DEPTH_STENCIL_FORMAT,
+            usage=wgpu.TextureUsage.RENDER_ATTACHMENT,
+            sample_count=samples,
+        )
 
-    def init_fbo(self) -> None:
-        # This is the buffer used when writing to a video/image file
-        self.fbo_for_files = self.get_fbo(self.samples)
-
-        # This is the frame buffer we'll draw into when emitting frames
-        self.draw_fbo = self.get_fbo(samples=0)
-
-        if self.window is None:
-            self.window_fbo = None
-            self.fbo = self.fbo_for_files
-        else:
-            # Pass in 0 explicitly, rather than letting it detect whatever
-            # framebuffer happens to be bound, so that constructing a camera
-            # after another has been drawing, say on a scene reload, still
-            # finds the window's own framebuffer
-            self.window_fbo = self.ctx.detect_framebuffer(0)
-            self.fbo = self.window_fbo
-
-        self.fbo.use()
+        # A view onto a texture is the same every frame, so they are made along with it
+        drawn_into = self.multisample_texture or self.color_texture
+        self.color_view = drawn_into.create_view()
+        self.resolve_view = self.color_texture.create_view() if samples > 1 else None
+        self.depth_stencil_view = self.depth_stencil_texture.create_view()
+        # What a finished frame is read from, which is where samples end up rather than
+        # where they are taken
+        self.frame_view = self.color_texture.create_view()
 
     def init_light_source(self) -> None:
         self.light_source = Point(self.light_source_position)
 
-    def use_window_fbo(self, use: bool = True):
-        assert self.window is not None
-        if use:
-            self.fbo = self.window_fbo
-        else:
-            self.fbo = self.fbo_for_files
-
-    # Methods associated with the frame buffer
-    def get_fbo(
-        self,
-        samples: int = 0
-    ) -> moderngl.Framebuffer:
-        fbo = self.ctx.framebuffer(
-            color_attachments=self.ctx.texture(
-                self.default_pixel_shape,
-                components=self.n_channels,
-                samples=samples,
-            )
-        )
-        self.attach_depth_stencil(fbo, samples)
-        return fbo
-
-    def attach_depth_stencil(self, fbo: moderngl.Framebuffer, samples: int = 0) -> None:
+    def get_attachments(self) -> dict:
         """
-        VMobject fills are drawn by counting winding numbers in a stencil
-        buffer, so render targets need stencil bits alongside their depth bits.
-        ModernGL only knows how to create depth-only attachments, hence the raw
-        calls here to attach a combined depth-stencil renderbuffer instead.
+        The textures a frame is drawn into, and what to do with what they already hold.
+        Beginning the pass is what clears them.
         """
-        rbo = gl.glGenRenderbuffers(1)
-        gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, rbo)
-        if samples > 0:
-            gl.glRenderbufferStorageMultisample(
-                gl.GL_RENDERBUFFER, samples, gl.GL_DEPTH24_STENCIL8, *fbo.size
-            )
-        else:
-            gl.glRenderbufferStorage(
-                gl.GL_RENDERBUFFER, gl.GL_DEPTH24_STENCIL8, *fbo.size
-            )
-        # Take care to leave the previously bound framebuffer bound, since
-        # callers such as detect_framebuffer depend on what's currently bound
-        previous_fbo = gl.glGetIntegerv(gl.GL_FRAMEBUFFER_BINDING)
-        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, fbo.glo)
-        gl.glFramebufferRenderbuffer(
-            gl.GL_FRAMEBUFFER, gl.GL_DEPTH_STENCIL_ATTACHMENT,
-            gl.GL_RENDERBUFFER, rbo
-        )
-        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, previous_fbo)
-        # ModernGL is unaware of the attachment above, so it must be told
-        # explicitly that writing to depth is okay
-        fbo.depth_mask = True
-        # Hold a reference so the renderbuffer is not collected
-        self.depth_stencil_rbos.append(rbo)
+        return {
+            "color_attachments": [{
+                "view": self.color_view,
+                "resolve_target": self.resolve_view,
+                "clear_value": tuple(self.background_rgba),
+                "load_op": wgpu.LoadOp.clear,
+                "store_op": wgpu.StoreOp.store,
+            }],
+            "depth_stencil_attachment": {
+                "view": self.depth_stencil_view,
+                "depth_clear_value": 1.0,
+                "depth_load_op": wgpu.LoadOp.clear,
+                "depth_store_op": wgpu.StoreOp.store,
+                "stencil_clear_value": 0,
+                "stencil_load_op": wgpu.LoadOp.clear,
+                "stencil_store_op": wgpu.StoreOp.store,
+            },
+        }
 
-    def clear(self) -> None:
-        self.fbo.clear(*self.background_rgba)
-        if self.window:
-            self.window.clear(*self.background_rgba)
-
-    def blit(self, src_fbo, dst_fbo):
+    def get_frame_bytes(self) -> memoryview:
         """
-        Copy blocks between fbo's using Blit
+        The frame as it stands, four bytes to a pixel, a row at a time from the top, as a view
+        onto what came off the gpu rather than a copy of it.
         """
-        gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, src_fbo.glo)
-        gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, dst_fbo.glo)
-        gl.glBlitFramebuffer(
-            *src_fbo.viewport,
-            *dst_fbo.viewport,
-            gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR
-        )
-
-    def get_raw_fbo_data(self, dtype: str = 'f1') -> bytes:
-        self.blit(self.fbo, self.draw_fbo)
-        return self.draw_fbo.read(
-            viewport=self.draw_fbo.viewport,
-            components=self.n_channels,
-            dtype=dtype,
+        width, height = self.pixel_shape
+        return self.renderer.queue.read_texture(
+            {"texture": self.color_texture, "mip_level": 0, "origin": (0, 0, 0)},
+            {"offset": 0, "bytes_per_row": 4 * width, "rows_per_image": height},
+            (width, height, 1),
         )
 
     def get_image(self) -> Image.Image:
-        return Image.frombytes(
-            'RGBA',
-            self.get_pixel_shape(),
-            self.get_raw_fbo_data(),
-            'raw', 'RGBA', 0, -1
-        )
-
-    def get_pixel_array(self) -> np.ndarray:
-        raw = self.get_raw_fbo_data(dtype='f4')
-        flat_arr = np.frombuffer(raw, dtype='f4')
-        arr = flat_arr.reshape([*reversed(self.draw_fbo.size), self.n_channels])
-        arr = arr[::-1]
-        # Convert from float
-        return (self.rgb_max_val * arr).astype(self.pixel_array_dtype)
-
-    # Needed?
-    def get_texture(self) -> moderngl.Texture:
-        texture = self.ctx.texture(
-            size=self.fbo.size,
-            components=4,
-            data=self.get_raw_fbo_data(),
-            dtype='f4'
-        )
-        return texture
+        return Image.frombytes("RGBA", self.pixel_shape, self.get_frame_bytes())
 
     # Getting camera attributes
     def get_pixel_size(self) -> float:
         return self.frame.get_width() / self.get_pixel_shape()[0]
 
     def get_pixel_shape(self) -> tuple[int, int]:
-        return self.fbo.size
+        return self.pixel_shape
 
     def get_pixel_width(self) -> int:
         return self.get_pixel_shape()[0]
@@ -268,37 +310,28 @@ class Camera(object):
 
     # Rendering
     def capture(self, *mobjects: Mobject) -> None:
-        self.clear()
-        self.refresh_uniforms()
-        self.renderer.send_frame_uniforms()
-        self.fbo.use()
-        # Fill rendering leaves the stencil buffer zeroed as it goes, so this is
-        # only here to guarantee a clean slate, e.g. if a previous frame's
-        # rendering was interrupted partway through
-        gl.glClear(gl.GL_STENCIL_BUFFER_BIT)
-
+        self.resize_target()
         wrappers = [
             wrapper
             for mobject in mobjects
             for wrapper in mobject.get_shader_wrappers(self.renderer)
         ]
-        # Everything the frame sends to the gpu, before anything it draws, see
-        # ShaderWrapper.write_buffers
+        # Everything the frame sends to the gpu, before the pass it draws in opens, since a
+        # write reaching the gpu partway through a pass has no say over which draws see it
+        self.refresh_uniforms()
+        self.renderer.send_frame_uniforms()
+        self.renderer.begin_writes()
         for wrapper in wrappers:
             wrapper.write_buffers()
-        self.renderer.reset_state()
+        self.renderer.end_writes()
+
+        self.renderer.begin_frame(self.get_attachments())
         for wrapper in wrappers:
             wrapper.render()
+        self.renderer.end_frame()
 
-        if self.window:
-            self.window.swap_buffers()
-            if self.fbo is not self.window_fbo:
-                # Multisampled buffers cannot be blit with any rescaling, so go
-                # by way of draw_fbo, which matches fbo in size, to resolve down
-                # to a single sample before scaling into the window
-                self.blit(self.fbo, self.draw_fbo)
-                self.blit(self.draw_fbo, self.window_fbo)
-                self.window.swap_buffers()
+        if self.window is not None:
+            self.window.show(self.frame_view)
 
     def refresh_uniforms(self) -> None:
         """

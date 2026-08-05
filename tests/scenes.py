@@ -315,8 +315,9 @@ class ByCode(Scene):
 
     def construct(self):
         square = Square(side_length=3).set_fill(WHITE, 1).set_stroke(width=0)
+        # WGSL, which the shaders are written in, and which has no assigning to a swizzle
         square.set_color_by_code(
-            "color.rgb *= vec3(0.5 + 0.5 * sin(3.0 * point.x), 0.4, 1.0);"
+            "color = vec4f(color.rgb * vec3f(0.5 + 0.5 * sin(3.0 * point.x), 0.4, 1.0), color.a);"
         )
         self.add(square)
 

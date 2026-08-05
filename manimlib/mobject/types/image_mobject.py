@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class ImageMobject(Mobject):
-    shader_folder: str = "image"
+    shader_file: str = "image.wgsl"
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),

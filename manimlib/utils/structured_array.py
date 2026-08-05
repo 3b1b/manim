@@ -15,23 +15,21 @@ if TYPE_CHECKING:
 
 class StructuredArray(object):
     """
-    A structured numpy array laid out to match what a shader reads, and read from
-    python as a dict of its fields.
+    A structured numpy array laid out to match what a shader reads, and read from python as a
+    dict of its fields.
 
-    What a mobject holds for the gpu sits in an array like this, whether it is one value
-    per point, as its data is, or one value for the whole of it, as its uniforms are.
-    Either way, what gets sent is a copy of the whole array, which is why the layout has
-    to mirror what the shader declares, see Mobject.data_dtype and uniform_dtype.
+    What a mobject holds for the gpu sits in an array like this, whether one value per point,
+    as its data is, or one value for the whole of it, as its uniforms are. Either way the whole
+    array is what gets sent, which is why the layout has to mirror what the shader declares,
+    see Mobject.data_dtype and uniform_dtype.
 
-    Three things come with holding it here rather than as a bare array. Every write to
-    it is counted, so that whatever has sent it somewhere can tell whether what it sent
-    is still what the array holds, and nothing needs to say that it changed. Emptying the
-    array remembers what was in it, so that a mobject stripped of its points and given
-    new ones keeps the style it had, see resize. And fields are read and written by name,
-    as with a dict, while rows are read and written by index, as with the array itself.
+    Three things come with holding it here rather than as a bare array. Every write is counted,
+    so whatever has sent the array somewhere can ask whether what it sent is still what the
+    array holds, see has_changed. Emptying the array remembers what was in it, so a mobject
+    stripped of its points and given new ones keeps its style, see resize. And fields are read
+    and written by name, rows by index.
 
-    Either kind of write is counted. Reading, though, hands back a view onto the array,
-    so writing through one of those, as in
+    Reading hands back a view onto the array, so a write through one of those, as in
 
         mob.data["point"][::2] = new_points
 
@@ -39,22 +37,18 @@ class StructuredArray(object):
 
         mob.data.note_change()
 
-    Assigning the whole field instead, mob.data["point"] = new_points, needs no such
-    thing, and is the same operation as far as the array is concerned: a field cannot
-    be rebound, only written into.
+    Assigning the whole field instead, mob.data["point"] = new_points, needs no such thing.
     """
 
     def __init__(self, dtype: np.dtype, length: int = 0):
-        self.array: np.ndarray = np.zeros(length, dtype=dtype)
+        self.set_array(np.zeros(length, dtype=dtype))
         # What to fill in with when growing from nothing, see resize
         self.defaults: np.ndarray = np.ones(1, dtype=dtype)
-        # Counted up by every write, and started above zero so that anything watching
-        # the array, which starts from zero, has something to send in the first place.
-        # A count rather than a yes or no, since more than one thing may be watching,
-        # e.g. a mobject drawn both on its own and as part of a merged family, and each
-        # needs to know what it has missed rather than whether anyone has missed
-        # anything, see ShaderWrapper.write_vertex_buffer and MergedRun.gather.
+        # Counted up by every write, rather than a yes or no, since each of several watchers
+        # needs to know what it has missed
         self.version: int = 1
+        # Which version each of those things last saw, see has_changed
+        self.seen_by: dict[Any, int] = dict()
 
     def __getitem__(self, key: str | int | slice | np.ndarray) -> np.ndarray:
         return self.array[key]
@@ -76,12 +70,38 @@ class StructuredArray(object):
         values = ", ".join(f"{key}={self[key]}" for key in self)
         return f"{type(self).__name__}({values})"
 
+    def set_array(self, array: np.ndarray) -> None:
+        """
+        The array, along with the two ways of seeing the whole of it at once: every field as one
+        run of floats, and the same as bytes, padding included.
+
+        Made once here rather than where they are wanted, making a view costing more than the
+        copy it is for, see Arena.put and Uniforms.interpolate.
+        """
+        self.array: np.ndarray = array
+        self.floats: np.ndarray = array.view(np.float32)
+        self.bytes: np.ndarray = array.view(np.uint8)
+
     def note_change(self) -> None:
-        """
-        Says that the array was written to in a way it had no chance to count, as any
-        write through a view onto it is.
-        """
+        """Says that the array was written to through a view onto it, which it cannot count"""
         self.version += 1
+
+    def has_changed(self, observer: Any) -> bool:
+        """
+        Whether the array has been written to since this observer last asked. A note of the
+        version each has seen is kept here, so that watching an array takes nothing but asking
+        it.
+
+        Asking counts as having looked. So two things wanting the same answer have to be two
+        observers, or ask once between them, see ShaderWrapper.write_uniform_buffer.
+
+        An observer is remembered for as long as the array is. Nothing here is replaced often
+        enough for that to be worth weak references, which cost four times as much to look up.
+        """
+        if self.seen_by.get(observer) == self.version:
+            return False
+        self.seen_by[observer] = self.version
+        return True
 
     @property
     def dtype(self) -> np.dtype:
@@ -89,7 +109,7 @@ class StructuredArray(object):
 
     def keys(self) -> Sequence[str]:
         # Padding, which a uniform block's alignment calls for, is named with a leading
-        # underscore, and is no part of what the array holds as far as anyone can tell
+        # underscore and is no part of what the array holds
         return tuple(
             name for name in self.array.dtype.names
             if not name.startswith("_")
@@ -107,13 +127,6 @@ class StructuredArray(object):
                 if key in self:
                     self[key] = source[key]
 
-    @property
-    def floats(self) -> np.ndarray:
-        """
-        Every field as one flat array, for reading or writing the lot in one go.
-        Includes whatever padding the dtype carries, which is harmless to touch.
-        """
-        return self.array.view(np.float32)
 
     @property
     def rows_or_defaults(self) -> np.ndarray:
@@ -139,8 +152,8 @@ class StructuredArray(object):
             if len(self.array) > 0:
                 self.defaults[:] = self.array[:1]
         elif len(self.array) == 0:
-            self.array = self.defaults.copy()
-        self.array = resize_func(self.array, length)
+            self.set_array(self.defaults.copy())
+        self.set_array(resize_func(self.array, length))
         self.version += 1
 
     def match(self, other: StructuredArray) -> None:
@@ -156,7 +169,9 @@ class StructuredArray(object):
 
     def copy(self) -> Self:
         result = copy.copy(self)
-        result.array = self.array.copy()
+        result.set_array(self.array.copy())
         result.defaults = self.defaults.copy()
         result.version += 1
+        # A copy has been looked at by nobody, whatever has looked at what it was copied from
+        result.seen_by = dict()
         return result

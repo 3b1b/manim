@@ -62,6 +62,11 @@ file_writer:
   pixel_format: "yuv420p"
   saturation: 1.0
   gamma: 1.0
+  # For a render nothing is going to be measured against, the encoder's own default is
+  # plenty. To keep every pixel exactly as it was drawn, say
+  #   video_codec: "libx264rgb"
+  #   pixel_format: "rgb24"
+  #   crf: 0
 # Most of the scene configuration will come from CLI arguments,
 # but defaults can be set here
 scene:
@@ -186,11 +191,6 @@ colors:
   pure_red: "#FF0000"
   pure_green: "#00FF00"
   pure_blue: "#0000FF"
-# PyOpenGL can ask the driver whether anything went wrong after each call it makes.
-# On by default, a mistake in the rendering otherwise showing up only as something
-# looking wrong, or as nothing being drawn at all. Turn it off for the frames it
-# costs: about a tenth of the drawing time for a screen full of text.
-gl_error_checking: True
 # Can be DEBUG / INFO / WARNING / ERROR / CRITICAL
 log_level: "INFO"
 universal_import_line: "from manimlib import *"

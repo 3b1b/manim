@@ -25,7 +25,7 @@ DEFAULT_BUFF_RATIO = 0.5
 
 
 class DotCloud(PMobject):
-    shader_folder: str = "true_dot"
+    shader_file: str = "true_dot.wgsl"
     # Each dot is expanded into a camera facing quad by the vertex shader
     verts_per_record: int = 6
     data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
@@ -33,7 +33,6 @@ class DotCloud(PMobject):
         ('radius', np.float32, (1,)),
         ('rgba', np.float32, (4,)),
     ]
-    # Mirrors inserts/dot_cloud_uniforms.glsl
     uniform_dtype: np.dtype = uniform_block_dtype(
         *COMMON_UNIFORMS,
         ("anti_alias_width", 1),

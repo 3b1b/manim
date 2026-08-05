@@ -9,11 +9,7 @@ except PackageNotFoundError:
     __version__ = "unknown"
 
 
-# Whether PyOpenGL checks for errors is fixed when it is first imported, so this has
-# to be settled before anything below reaches for it
 from manimlib.config import manim_config
-import OpenGL
-OpenGL.ERROR_CHECKING = manim_config.gl_error_checking
 
 from typing import TYPE_CHECKING
 
@@ -43,6 +39,7 @@ from manimlib.camera.camera import *
 from manimlib.mobject.boolean_ops import *
 from manimlib.mobject.changing import *
 from manimlib.mobject.coordinate_systems import *
+from manimlib.mobject.fractals import *
 from manimlib.mobject.frame import *
 from manimlib.mobject.functions import *
 from manimlib.mobject.geometry import *

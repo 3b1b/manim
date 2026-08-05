@@ -69,7 +69,7 @@ class Mobject(object):
     Mathematical Object
     """
     dim: int = 3
-    shader_folder: str = ""
+    shader_file: str = ""
     # If positive, the shader is handed no vertex attributes, and instead reads
     # each record out of the vertex buffer itself, turning it into this many
     # vertices. This is how shapes are expanded without a geometry shader.
@@ -80,8 +80,8 @@ class Mobject(object):
         ('rgba', np.float32, (4,)),
     ])
     # One value each for the whole mobject, as opposed to one per point, given as a
-    # name and how many floats it holds. Must match the block its shaders declare,
-    # see inserts/mobject_uniforms.glsl, which check_uniform_block makes sure of.
+    # name and how many floats it holds. The struct its shaders read is generated from
+    # this, see inserts/mobject_uniforms.wgsl, so the two cannot disagree.
     uniform_dtype: np.dtype = uniform_block_dtype(*COMMON_UNIFORMS)
     aligned_data_keys = ['point']
     pointlike_data_keys = ['point']
@@ -697,7 +697,7 @@ class Mobject(object):
             sm1.set_uniforms(sm2.uniforms)
             sm1.bounding_box[:] = sm2.bounding_box
             sm1.pointlike_uniform_keys = sm2.pointlike_uniform_keys
-            sm1.shader_folder = sm2.shader_folder
+            sm1.shader_file = sm2.shader_file
             sm1.texture_paths = sm2.texture_paths
             sm1.depth_test = sm2.depth_test
             sm1._needs_new_bounding_box = sm2._needs_new_bounding_box
@@ -1935,38 +1935,38 @@ class Mobject(object):
             mob.shader_wrapper = None
         return self
 
-    def set_color_by_code(self, glsl_code: str) -> Self:
+    def set_color_by_code(self, wgsl_code: str) -> Self:
         """
-        Takes a snippet of code and inserts it into a
-        context which has the following variables:
-        vec4 color, vec3 point, vec3 unit_normal.
-        The code should change the color variable
+        Takes a snippet of code and inserts it into a context which has the following
+        variables: color: vec4f, point: vec3f, normal: vec3f. The code should assign to
+        color, which being a vec4f has to be assigned to whole, WGSL having no way to
+        write to part of one.
         """
         self.replace_shader_code(
             "///// INSERT COLOR FUNCTION HERE /////",
-            glsl_code
+            wgsl_code
         )
         return self
 
     def set_color_by_xyz_func(
         self,
-        glsl_snippet: str,
+        wgsl_snippet: str,
         min_value: float = -5.0,
         max_value: float = 5.0,
         colormap: str = "viridis"
     ) -> Self:
         """
-        Pass in a glsl expression in terms of x, y and z which returns
+        Pass in a wgsl expression in terms of x, y and z which returns
         a float.
         """
         # TODO, add a version of this which changes the point data instead
         # of the shader code
         for char in "xyz":
-            glsl_snippet = glsl_snippet.replace(char, "point." + char)
+            wgsl_snippet = wgsl_snippet.replace(char, "point." + char)
         rgb_list = get_colormap_list(colormap)
         self.set_color_by_code(
-            "color.rgb = float_to_color({}, {}, {}, {});".format(
-                glsl_snippet,
+            "color = vec4f(float_to_color({}, {}, {}, {}), color.a);".format(
+                wgsl_snippet,
                 float(min_value),
                 float(max_value),
                 get_colormap_code(rgb_list)
@@ -1980,7 +1980,7 @@ class Mobject(object):
         self.shader_wrapper = ShaderWrapper(
             renderer=renderer,
             mobject_data=self.data,
-            shader_folder=self.shader_folder,
+            shader_file=self.shader_file,
             mobject_uniforms=self.uniforms,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
