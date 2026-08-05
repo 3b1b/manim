@@ -169,41 +169,45 @@ class Arena(object):
     written into is sent, which for such a frame is nothing at all.
     """
 
-    def __init__(self, renderer: Renderer, capacity: int):
+    def __init__(self, renderer: Renderer, first_capacity: int):
         self.renderer = renderer
         self.device = renderer.device
+        self.first_capacity = first_capacity
         self.used = 0
-        self.make_room(capacity)
+        self.capacity = 0
+        # Nothing is set aside until something asks for a stretch: an arena exists as soon as
+        # a mobject of its size does, and a scene has kinds of mobject it never draws
+        self.blocks = np.zeros(0, dtype=np.uint8)
+        self.bytes = memoryview(self.blocks)
+        self.buffer = None
+        self.dirty: tuple[int, int] | None = None
 
-    def make_room(self, capacity: int) -> None:
+    def grow_to(self, needed: int) -> bool:
         """
-        A buffer of that many bytes, and whatever reads it. Growing means making both afresh,
-        which only happens while a frame is being written, so nothing is drawing through the
-        old ones. What the stretches held is carried over, so one which was already right
-        stays right, but the new buffer holds none of it yet.
+        Room for that many bytes, doubling from the size an arena starts at, and whether that
+        meant a new buffer. Whoever asked has to make its bindings afresh if so.
         """
-        held = getattr(self, "blocks", None)
+        capacity = max(self.capacity, self.first_capacity)
+        while capacity < needed:
+            capacity *= 2
+        if capacity == self.capacity:
+            return False
+
+        # What the stretches held is carried over, so one which was already right stays right,
+        # but the new buffer holds none of it yet
+        held = self.blocks
         self.capacity = capacity
         self.blocks = np.zeros(capacity, dtype=np.uint8)
-        if held is not None:
-            self.blocks[:len(held)] = held
+        self.blocks[:len(held)] = held
         # Copied into a stretch at a time through this rather than through the array, a
         # memoryview slice being half the cost of a numpy one at these sizes
         self.bytes = memoryview(self.blocks)
         self.buffer = self.device.create_buffer(size=capacity, usage=self.usage)
-        self.make_bindings()
-        self.dirty: tuple[int, int] | None = (0, self.used)
+        self.dirty = (0, self.used)
+        return True
 
     def reset(self) -> None:
         self.used = 0
-
-    def claim(self, nbytes: int) -> int:
-        """Where the next stretch of that many bytes begins, making room if there is none"""
-        offset = self.used
-        self.used += nbytes
-        while self.used > self.capacity:
-            self.make_room(2 * self.capacity)
-        return offset
 
     def put(self, offset: int, source: np.ndarray) -> None:
         end = offset + len(source)
@@ -247,7 +251,12 @@ class UniformArena(Arena):
         )
 
     def next_row(self) -> int:
-        return self.claim(self.stride)
+        """Where the next block goes, as the offset its draw is to be given"""
+        offset = self.used
+        self.used += self.stride
+        if self.grow_to(self.used):
+            self.make_bindings()
+        return offset
 
 
 class DataArena(Arena):
@@ -290,12 +299,11 @@ class DataArena(Arena):
         stretch = nbytes + -nbytes % self.alignment
         offset = self.used
         self.used += stretch
-        if stretch > self.window or self.used + self.window > self.capacity:
-            self.window = max(self.window, stretch)
-            capacity = self.capacity
-            while self.used + self.window > capacity:
-                capacity *= 2
-            self.make_room(capacity)
+        wider = stretch > self.window
+        if wider:
+            self.window = stretch
+        if self.grow_to(self.used + self.window) or wider:
+            self.make_bindings()
         return offset
 
 
