@@ -216,14 +216,12 @@ class Surface(Mobject):
 
     def is_opaque(self) -> bool:
         """
-        Whether nothing behind the surface shows through it, which is what decides whether its
+        Whether nothing behind the surface shows through it, which decides whether its
         triangles have to be drawn in order, see SurfaceShaderWrapper.
 
-        Worked out afresh only when the data has been written to since it was last asked,
-        which for a surface that is not changing means once. It is asked once a frame, and
-        going over every point's alpha that often is worth avoiding; but it cannot be settled
-        in set_opacity instead, because a surface fading in or transforming into another has
-        its alpha interpolated straight into the array with no setter in sight.
+        Asked once a frame, so worked out only when the data has been written to since the last
+        ask. It cannot be settled in set_opacity instead: a surface fading in or transforming
+        has its alpha interpolated straight into the array, passing no setter.
         """
         if self.data.has_changed(observer=self):
             self.opaque = self.min_opacity() >= 1
@@ -231,12 +229,9 @@ class Surface(Mobject):
 
     def set_sort_to_camera(self, sort: bool = True) -> Self:
         """
-        Asks for the surface's triangles to be drawn in order of their distance from the
-        camera, furthest first, whether or not it can be seen through.
-
-        A surface which can be seen through is drawn that way regardless, having to be, so
-        there is nothing here to turn on for one. What this is for is turning it off, and for
-        the scenes written when it had to be asked for.
+        Asks for the surface's triangles to be drawn furthest from the camera first, whether or
+        not it can be seen through. One which can be is drawn that way regardless, so this is
+        really for turning it off, and for scenes written when it had to be asked for.
         """
         for mob in self.get_family():
             if isinstance(mob, Surface):

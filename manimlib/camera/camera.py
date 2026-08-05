@@ -32,17 +32,12 @@ class FrameStream(object):
     that the copy of one happens while the next is being drawn.
 
     Getting a frame back means copying the texture into a buffer the cpu can read, which the
-    gpu cannot do until it has finished drawing. Asking for it and reading it in one breath,
-    as Camera.get_frame_bytes does, therefore waits: at 1920x1080 that wait was most of what
-    writing a frame cost. So here the copy of a frame is only asked for, and what gets written
-    is the frame before it, whose copy has had the whole of a frame's drawing to finish.
+    gpu cannot do until it has finished drawing, so asking and reading in one breath waits, as
+    Camera.get_frame_bytes does. Here the copy is only asked for, and what gets written is the
+    frame before it, whose copy has had a whole frame's drawing to finish.
 
-    Mapping a buffer is asynchronous in wgpu for exactly this reason. What map_async hands
-    back is waited on here, but a frame later, by which time it has long since resolved.
-
-    Nothing else about a frame changes, and there is no cost to a frame's turn coming late:
-    frames go to the same place in the same order. Whoever is writing them has only to drain
-    what is still in flight before closing, see SceneFileWriter.close_movie_pipe.
+    Frames still go to the same place in the same order. Whoever is writing them has only to
+    drain what is in flight before closing, see SceneFileWriter.close_movie_pipe.
     """
 
     def __init__(self, camera: Camera, sink, behind: int = 1):
@@ -68,8 +63,8 @@ class FrameStream(object):
             for _ in range(behind + 1)
         ]
         # Which buffers are waiting to be read, oldest first, and how many have been asked
-        # for. Counted up rather than taken from how many are waiting, so that no buffer is
-        # asked to receive a copy while it is still mapped from an earlier frame.
+        # for, counted so that no buffer receives a copy while still mapped from an earlier
+        # frame
         self.waiting: list = []
         self.asked = 0
 
@@ -105,8 +100,7 @@ class FrameStream(object):
             rows = np.frombuffer(frame, np.uint8).reshape((self.height, self.padded_row))
             frame = rows[:, :self.row].tobytes()
         self.sink.write(frame)
-        # What was read is a view onto the buffer, so it is done with before the buffer is,
-        # and the buffer is free to receive another frame once it is not mapped
+        # What was read is a view onto the buffer, so it is done with before the buffer is
         buffer.unmap()
 
 
@@ -181,14 +175,9 @@ class Camera(object):
 
     def init_target(self) -> None:
         """
-        What every frame is drawn into: one color texture and one depth-stencil texture,
-        whatever the frame is for. Where samples are being taken there is a second color
-        texture holding them, which the first is resolved down to.
-
-        This is the whole of it. Under GL there were three framebuffers and a pair of blits,
-        because a multisampled buffer cannot be blit with rescaling and because a window
-        owns a framebuffer of its own; here a window is somewhere to present a texture to
-        rather than somewhere to draw.
+        What every frame is drawn into: one color texture and one depth-stencil texture. Where
+        samples are being taken there is a second color texture holding them, which the first
+        is resolved down to.
         """
         device = self.renderer.device
         self.pixel_shape = self.get_target_shape()
@@ -234,8 +223,7 @@ class Camera(object):
     def get_attachments(self) -> dict:
         """
         The textures a frame is drawn into, and what to do with what they already hold.
-        Clearing them is what beginning the pass does, so nothing needs clearing by hand:
-        under GL this was a clear of the color buffer and another of the stencil.
+        Beginning the pass is what clears them.
         """
         return {
             "color_attachments": [{
@@ -258,12 +246,8 @@ class Camera(object):
 
     def get_frame_bytes(self) -> memoryview:
         """
-        The frame as it stands, four bytes to a pixel, a row at a time from the top. GL
-        handed these back from the bottom up, which everything reading them had to undo.
-
-        Handed over as it comes off the gpu, which is a memoryview of its own bytes rather
-        than a copy of them. Whoever wants bytes of it may say so; the two which want this,
-        a pipe to write down and an image to build, both take it as it is.
+        The frame as it stands, four bytes to a pixel, a row at a time from the top, as a view
+        onto what came off the gpu rather than a copy of it.
         """
         width, height = self.pixel_shape
         return self.renderer.queue.read_texture(

@@ -1,11 +1,9 @@
 """
 That every frame drawn reaches the file, and reaches it unaltered.
 
-Frames are copied off the gpu a frame behind the drawing of them, so that the wait for one
-does not land on the clock, see camera.FrameStream. What that buys is speed; what it risks is
-a frame going missing, since the last ones drawn are still on their way off the gpu when the
-file is closed. Nothing about the picture would look wrong: the video would simply be a frame
-short, which is the kind of thing nobody notices until much later.
+Frames are copied off the gpu a frame behind the drawing of them, see camera.FrameStream, so
+the last ones drawn are still on their way off when the file is closed. A frame going missing
+that way would leave nothing about the picture looking wrong, only the video a frame short.
 
 So: render a scene of a known length, count what came out, and check the last frame of it
 against the same frame written straight to a png.

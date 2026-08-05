@@ -47,9 +47,8 @@ class SceneFileWriter(object):
         video_codec: str = "libx264",
         pixel_format: str = "yuv420p",
         # How hard the encoder should try, where zero means keep every pixel exactly. Left
-        # unsaid, the encoder's own default stands, which throws away a good deal: a smooth
-        # gradient beside a sharp edge comes back a hundred values out of 255 away from what
-        # was drawn. Worth setting for anything a frame is going to be measured against.
+        # unsaid the encoder's default stands, which throws away a good deal, so it is worth
+        # setting for anything a frame will be measured against.
         crf: int | None = None,
         saturation: float = 1.0,
         gamma: float = 1.0,
@@ -213,8 +212,7 @@ class SceneFileWriter(object):
         fps = self.scene.camera.fps
         width, height = self.scene.camera.get_pixel_shape()
 
-        # Frames come back a row at a time from the top, as a texture is laid out, so
-        # unlike GL's bottom up reads there is nothing to flip
+        # Frames come back a row at a time from the top, as a texture is laid out
         command = [
             self.ffmpeg_bin,
             '-y',  # overwrite output file if it exists
@@ -226,10 +224,9 @@ class SceneFileWriter(object):
             '-an',  # Tells ffmpeg not to expect any audio
             '-loglevel', 'error',
         ]
-        # Asked for neither more saturation nor a different gamma, there is nothing for a
-        # filter to do, and saying so anyway is not free: eq works in yuv, so an identity
-        # one still sends every pixel out of rgb and back, which moves most of them by one
-        # or two out of 255.
+        # Asked for neither more saturation nor a different gamma there is nothing to filter,
+        # and saying so anyway is not free: eq works in yuv, so even an identity one sends
+        # every pixel out of rgb and back, moving most of them by one or two out of 255.
         if (self.saturation, self.gamma) != (1.0, 1.0):
             command += [
                 '-vf', f'eq=saturation={self.saturation}:gamma={self.gamma}',
@@ -242,8 +239,7 @@ class SceneFileWriter(object):
             command += ['-crf', str(self.crf)]
         command += [self.temp_file_path]
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
-        # Frames reach the pipe a frame after they were drawn, which is what keeps the wait
-        # for one off the clock, see FrameStream
+        # Frames reach the pipe a frame after they were drawn, see FrameStream
         self.frames = FrameStream(self.scene.camera, self.writing_process.stdin)
 
         if not self.quiet:

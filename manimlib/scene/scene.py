@@ -100,7 +100,7 @@ class Scene(object):
         self.window = window
         if self.window:
             self.window.init_for_scene(self)
-            # Make sure camera and Pyglet window sync
+            # Make sure the camera and the window sync
             self.camera_config["fps"] = 30
 
         # Core state of the scene
@@ -184,8 +184,8 @@ class Scene(object):
 
     def interact(self) -> None:
         """
-        If there is a window, enter a loop which updates the frame,
-        each of which pumps whatever the window has to say
+        If there is a window, enter a loop which updates the frame, each of those
+        pulling whatever events the window has to report
         """
         if self.window is None:
             return

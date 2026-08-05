@@ -24,10 +24,9 @@ fn project_point(point: vec3f) -> Projection {
     // Essentially a projection matrix
     let scaled = result.xyz * frame.frame_rescale_factors;
     /*
-    What is left of z decides what hides what. Everything nearer to the camera than the
-    origin has a smaller value of it, and a point at the camera itself would divide by zero,
-    which is where the frame's far end comes from. GL kept this between -w and w; wgpu keeps
-    it between 0 and w, so what GL wrote as -0.1 * z is the midpoint of that and w.
+    What is left of z decides what hides what, between 0 and w. Everything nearer to the
+    camera than the origin has a smaller value of it, and a point at the camera itself would
+    divide by zero, which is where the frame's far end comes from.
     */
     var projection: Projection;
     projection.position = vec4f(

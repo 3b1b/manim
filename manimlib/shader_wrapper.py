@@ -54,23 +54,19 @@ class ShaderWrapper(object):
 
     A mobject names one shader file, compiled once between all the mobjects naming it, and
     hands over the two arrays it keeps: its data, a record per point, and its uniforms, one
-    value for the whole of it. Neither gets a buffer of its own. Both go in a stretch of one
-    the renderer keeps for every mobject whose values are the same size, and what a wrapper
-    holds of them is where that stretch was, see Arena. Values which hold for every mobject at
-    once, where the camera is and the like, are no business of a wrapper's, being bound once a
-    frame by the renderer.
+    value for the whole of it. Neither gets a buffer of its own; both go in a stretch of an
+    arena shared with every mobject whose values are the same size, and what a wrapper holds
+    of them is where that stretch was, see Arena.
 
     No shader is handed vertex attributes. Each reads the records of its arena itself, as a
-    flat array of floats indexed by the vertex being drawn, counting from where the mobject
-    says its own records begin, and expands every record into verts_per_record vertices,
-    always triangles, see inserts/read_data.wgsl.
+    flat array of floats indexed by the vertex being drawn, and expands every record into
+    verts_per_record vertices, always triangles, see inserts/read_data.wgsl.
 
     Drawing comes in two halves, so that every write a frame makes lands before any of its
-    draws: write_buffers puts the mobject's values where the draw will read them, and render
-    says which stretch to read, asks for the pipeline each pass wants, and draws. There is one
-    wrapper to a mobject rather than to a kind of mobject, which is what lets a fill count its
-    own winding in the stencil buffer without the mobject beside it joining in, and what any
-    drawing taking more than one pass is built on.
+    draws: write_buffers puts the values where the draw will read them, and render binds and
+    draws. There is one wrapper to a mobject rather than to a kind of mobject, which is what
+    lets a fill count its own winding in the stencil buffer without the mobject beside it
+    joining in.
     """
 
     def __init__(
@@ -109,9 +105,9 @@ class ShaderWrapper(object):
 
     def init_layouts(self) -> None:
         """
-        Where the fields of one of this mobject's vertex records sit, which along with what
-        it holds for the whole of itself is all that the shader source generated for it
-        depends on, and so is also the key that source gets cached under.
+        Where the fields of one of this mobject's records sit. Together with its uniform dtype
+        this is all the generated shader source depends on, so it is the key that source is
+        cached under.
         """
         dtype = self.mobject_data.dtype
         self.data_layout = (
@@ -122,8 +118,7 @@ class ShaderWrapper(object):
             self.device, self.renderer.frame_layout, self.renderer.mobject_layout,
             len(self.texture_paths),
         )
-        # Where this mobject's values go each frame, shared with every other mobject whose
-        # are the same size, see Arena
+        # Where this mobject's values go each frame, see Arena
         self.uniform_arena = self.renderer.uniform_arena_for(
             self.mobject_uniforms.array.nbytes,
         )
@@ -170,10 +165,9 @@ class ShaderWrapper(object):
 
     def write_buffers(self) -> None:
         """
-        The mobject's two arrays into their buffers, where either has been written to since
-        it was last sent. Every wrapper of a frame does this before any of them draws, since
-        a write reaching the gpu partway through a render pass has no say over whether the
-        draws before it see the old values or the new, see Camera.capture.
+        The mobject's two arrays into their arenas. Every wrapper of a frame does this before
+        any of them draws, a write reaching the gpu partway through a pass having no say over
+        which draws see it, see Camera.capture.
         """
         if not self.modules:
             return
@@ -181,10 +175,7 @@ class ShaderWrapper(object):
         self.write_uniform_buffer()
 
     def write_data_buffer(self) -> None:
-        """
-        Puts the mobject's records in a stretch of the arena its kind shares, remembering
-        where they went so that the draw can be given it.
-        """
+        """Into a stretch of the arena, remembering where so the draw can be given it"""
         data = self.mobject_data
         if len(data.array) == 0:
             return
@@ -196,13 +187,11 @@ class ShaderWrapper(object):
 
     def write_uniform_buffer(self) -> bool:
         """
-        Puts the mobject's uniforms in a row of the arena they share, and says whether they
-        had been written to since the last frame asked. Every frame takes a row whether or not
-        anything changed, a row lasting only as long as the frame, and copying a block in is
-        forty times cheaper than sending one, see UniformArena.
+        Into a row of the arena, saying whether the uniforms had changed since the last frame
+        asked. Every frame takes a row, one lasting only as long as the frame.
 
-        The answer is said rather than asked again, since asking the array counts as having
-        looked and there is one answer to go round, see StructuredArray.has_changed.
+        The answer is returned rather than left to be asked again, since asking counts as
+        having looked, see StructuredArray.has_changed.
         """
         uniforms = self.mobject_uniforms
         changed = uniforms.has_changed(observer=self)
@@ -216,10 +205,9 @@ class ShaderWrapper(object):
 
     def get_resource_bind_group(self):
         """
-        What this mobject's records and images are read through. A mobject with no images of
-        its own reads the arena's, which is the same for every mobject of its size and so
-        needs no saying twice; one with images has a group of its own, made afresh whenever
-        the arena has a new buffer to read.
+        What this mobject's records and images are read through. Without images of its own it
+        reads the arena's group, shared with every mobject of its size; with them it needs one
+        of its own, remade whenever the arena has a new buffer.
         """
         arena = self.data_arena
         if not self.textures:
@@ -244,19 +232,12 @@ class ShaderWrapper(object):
 
     def get_pipeline(self, state: DrawState, module):
         """
-        The pipeline for one of this mobject's passes. Everything a pass settles is in there:
-        which module runs, what it may bind, and all of what the state names, so a pipeline
-        is what gets cached and there is nothing left to say around the draw itself.
-
-        The renderer holds them, so that every mobject of a kind draws through the same ones
-        rather than compiling its own. Keeping the answer here as well, since a mobject asks
-        the same question every frame, was measured and came to nothing: what a lookup costs
-        is hashing the state, which either way happens once per draw.
+        The pipeline for one of this mobject's passes. The renderer holds them, so every
+        mobject of a kind draws through the same ones rather than building its own.
         """
         samples = self.renderer.samples
-        # A module is compiled from code which names the mobject's images, so which images
-        # there are, and therefore which layout a pipeline reading them wants, is already
-        # settled by the module and needs no part of the key
+        # The module already settles which images there are, and so which layout a pipeline
+        # reading them wants
         key = (module, state, self.depth_test, samples)
 
         def build():
@@ -295,12 +276,8 @@ class ShaderWrapper(object):
 
     def render(self) -> None:
         """
-        Every pass this mobject takes, over what every one of them reads.
-
-        Which buffers to read is said once here rather than on the way into each pass, all
-        of a mobject's passes reading the same two: a fill counting its winding and the
-        stroke along the same path differ in which program runs and how the draw behaves,
-        not in where the points come from.
+        Every pass this mobject takes. What they read is bound once here, all of them reading
+        the same two stretches whatever program runs over them.
         """
         if not self.modules or len(self.mobject_data) == 0:
             return
@@ -319,17 +296,12 @@ class ShaderWrapper(object):
 
 class SurfaceShaderWrapper(ShaderWrapper):
     """
-    An opaque surface is drawn in one pass and left to the depth test, which is what decides
-    what hides what however its triangles arrive.
+    An opaque surface is drawn in one pass and left to the depth test, which decides what
+    hides what however its triangles arrive.
 
-    A surface which can be seen through cannot: blending is not commutative, so what lies
-    behind has to be drawn first. Its triangles are therefore drawn in order of their distance
-    from the camera, furthest first, through a buffer of indices written before the frame's
-    pass opens, see Surface.is_opaque for who asks for this and when.
-
-    Ordering by which way a triangle faces, drawing the far side of the surface and then the
-    near side, is not enough and was tried: it orders two layers, and a torus seen through
-    has more than two, so the far wall of its hole came out cut off where the grid wrapped.
+    One which can be seen through cannot: blending is not commutative, so what lies behind has
+    to be drawn first. Its triangles are drawn furthest from the camera first, through a buffer
+    of indices written before the frame's pass opens, see Surface.is_opaque.
     """
 
     def __init__(self, *args, sort_to_camera: bool = False, **kwargs):
@@ -366,17 +338,13 @@ class SurfaceShaderWrapper(ShaderWrapper):
         """
         Which vertex each triangle of the mesh starts at, and where the middle of it sits.
 
-        A grid of points is expanded into two triangles for every square of it, taking the
-        corners the vertex shader gives them, see inserts/surface_mesh.wgsl. Records which are
-        no grid, as an imported mesh's are, are already three to a triangle.
+        A grid of points is expanded into two triangles per square, taking the corners the
+        vertex shader gives them, see inserts/surface_mesh.wgsl. Records which are no grid, as
+        an imported mesh's are, are already three to a triangle.
 
-        The middle rather than a corner, which would be cheaper, because which corner comes
-        first is whatever the parametrization made first: ordering by one makes the picture
-        depend on how the surface was wound, which is the thing this ordering exists to stop
-        depending on. It was tried, and the same torus wound two ways came out differing on
-        ninety pixels by up to 14, in speckles rather than at a seam, for a fifth off the
-        sorting. Dividing the sums by three was also tried and dropped, being worth nothing
-        measurable: three times the middle sorts in the same order as the middle.
+        The middle rather than a corner, cheap as a corner would be, since which corner comes
+        first is whatever the parametrization wound first, and the picture must not depend on
+        that.
         """
         points = self.mobject_data["point"]
         nu, nv = self.mobject_uniforms["resolution"].astype(int)
@@ -416,18 +384,16 @@ class SurfaceShaderWrapper(ShaderWrapper):
 
 class VShaderWrapper(ShaderWrapper):
     """
-    A vectorized mobject is drawn by two shaders rather than one: a fill over the region its
-    path encloses, and a stroke along the path itself. So it holds two modules, and names
-    which of them each of its passes runs.
+    A vectorized mobject is drawn by two shaders: a fill over the region its path encloses,
+    and a stroke along the path itself.
     """
     fill_file = "fill.wgsl"
     stroke_file = "stroke.wgsl"
     # Each bezier's fill is two triangles, one covering the interior and one hugging the
     # curve, see fill.wgsl
     fill_verts_per_curve = 6
-    # And its stroke is a quad for each polyline segment the curve is broken into, the last
-    # few of them going to the fan which rounds off a joint, see
-    # stroke.wgsl, whose MAX_STEPS this follows
+    # And its stroke a quad for each polyline segment the curve is broken into, the last few
+    # going to the fan which rounds off a joint, see stroke.wgsl, whose MAX_STEPS this follows
     stroke_verts_per_curve = 6 * (32 - 1)
     # The one line of the stroke's source which the border compiles differently
     border_declaration = "const IS_FILL_BORDER: bool = false;"
@@ -455,10 +421,9 @@ class VShaderWrapper(ShaderWrapper):
         self.has_fill = False
 
     def write_uniform_buffer(self) -> bool:
-        # Whether the path encloses anything at all to fill, worked out whenever the uniforms
-        # which say so are sent afresh rather than once for every frame. Without it a shape
-        # with no fill still pays for all three of its fill passes, and in a scene of lines
-        # and text those are most of the draws a frame makes.
+        # Whether there is anything to fill, worked out when the uniforms saying so change
+        # rather than every frame. Without it a shape with no fill still pays for all three
+        # fill passes, which in a scene of lines and text is most of the draws.
         if not super().write_uniform_buffer():
             return False
         uniforms = self.mobject_uniforms
@@ -467,9 +432,8 @@ class VShaderWrapper(ShaderWrapper):
 
     def build_modules(self) -> None:
         """
-        Three modules from two sources. The border around a fill is the stroke shader with
-        one constant compiled the other way, which is what wgpu asks for in place of a
-        uniform read per draw, and costs nothing: a module is compiled once per source.
+        Three modules from two sources: the border around a fill is the stroke shader with one
+        constant compiled the other way.
         """
         border_declaration = self.border_declaration
         border_code = self.stroke_code.replace(
@@ -501,44 +465,31 @@ class VShaderWrapper(ShaderWrapper):
         Fill is drawn with a "stencil then cover" approach.
 
         The first pass rasterizes the fill triangles into the stencil buffer alone,
-        incrementing for front facing triangles and decrementing for back facing ones. Since
-        facing is just the sign of a triangle's area in screen space, each pixel ends up
-        holding the winding number of the path around it, with no need for a triangulation of
-        the shape.
+        incrementing for front facing triangles and decrementing for back facing ones. Facing
+        being the sign of a triangle's area in screen space, each pixel ends up holding the
+        winding number of the path around it, with no triangulation of the shape needed.
 
-        The second pass draws those same triangles again, but only where that winding number
-        is nonzero, and zeros out the stencil as it goes. This means each pixel is colored
-        exactly once, using ordinary alpha blending, and that the stencil buffer is left
-        clean for whatever draws next.
+        The last pass draws those triangles again where that number is nonzero, zeroing the
+        stencil as it goes, so each pixel is colored once by ordinary alpha blending and the
+        buffer is left clean for whatever draws next.
 
-        Note this only works because a wrapper holds a single mobject. Sharing one pair of
-        passes between several would merge their winding numbers into one region, so that
-        overlapping mobjects would color a shared pixel once between them rather than each
-        blending in turn.
-
-        A path enclosing nothing to be filled takes none of these passes. Taking them anyway
-        would come to the same picture, the winding count being undone by the pass which
-        reads it and nothing being drawn in a color with no alpha, but at the price of three
-        draws out of a frame's four for every stroked line on screen.
+        This works only because a wrapper holds a single mobject. Sharing passes between
+        several would merge their windings into one region, and overlapping mobjects would
+        color a shared pixel once between them rather than each blending in turn.
         """
         if not self.has_fill:
             return
         vertices = self.fill_verts_per_curve * self.get_num_curves()
-        # Counting the windings needs no color, and must see every triangle of the path
-        # whatever stands in front of it, which is what WINDING_COUNT says
         self.draw(WINDING_COUNT, self.fill_module, vertices)
         self.draw_fill_border()
-        # Coloring in everywhere the count came out nonzero, zeroing it on the way through,
-        # so that each pixel is colored once and the buffer is left clean
         self.draw(WINDING_COVER, self.fill_module, vertices)
 
     def draw_fill_border(self) -> None:
         """
-        Traces the boundary of the shape with a stroke in the fill color, which is what
-        anti-aliases the fill, a stencil test being all or nothing. It is drawn only where
-        the winding number is zero, meaning outside the shape, both because the inside is
-        about to be filled in anyway, and so that its faded edge never blends on top of the
-        fill, which would leave a seam along the boundary for partially transparent colors.
+        Traces the boundary with a stroke in the fill color, which is what anti-aliases the
+        fill, a stencil test being all or nothing. Drawn only where the winding number is
+        zero, meaning outside the shape, so that its faded edge never blends on top of the
+        fill and leaves a seam for partially transparent colors.
         """
         self.draw(FILL_BORDER, self.border_module, self.stroke_vertices())
 

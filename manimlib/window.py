@@ -17,9 +17,9 @@ if TYPE_CHECKING:
     from manimlib.scene.scene import Scene
 
 
-# What the window is built on names a key the way a browser does, and manim names it after
-# event_keys.py, so this is the one place either vocabulary meets the other. A key which
-# types something needs no entry, being named by what it types in both.
+# The canvas names a key the way a browser does, manim names it after event_keys.py, and this
+# is where the two meet. A key which types something needs no entry, being named by what it
+# types in both.
 KEY_NAMES: dict[str, int] = {
     "Backspace": Keys.BACKSPACE,
     "Tab": Keys.TAB,
@@ -41,8 +41,7 @@ MOD_NAMES: dict[str, int] = {
     "Alt": Mods.ALT,
     "Meta": Mods.CMD,
 }
-# A wheel is reported in hundredths of a notch, the way a browser reports one, and manim's
-# scroll_sensitivity was chosen against the whole notches a window used to report
+# A wheel is reported in hundredths of a notch, where scroll_sensitivity expects whole ones
 WHEEL_NOTCH = 100.0
 # Where the corner named by a position string sits along each edge of the monitor
 POSITION_STEPS = {"L": 0.0, "U": 0.0, "O": 0.5, "R": 1.0, "D": 1.0}
@@ -68,12 +67,10 @@ class Window(object):
     Where a scene is previewed: somewhere to show a finished frame, and where mouse and key
     events come from.
 
-    manim's own code drives the loop, self.wait and self.embed being that loop, so a frame is
-    asked for whenever the scene says rather than being drawn from a callback a framework
-    decides when to call. What the canvas is asked for is the part worth not owning: a
-    surface, kept configured through resizes and whatever the display's scale factor is, and
-    the presenting of a texture onto it. Nothing is drawn into the window directly, unlike
-    GL, where the window owned a framebuffer and the whole frame went into it.
+    manim drives its own loop, self.wait and self.embed being that loop, so a frame is asked
+    for whenever the scene says rather than from a callback the canvas decides when to call.
+    What the canvas is left to own is the surface, kept configured through resizes and whatever
+    the display's scale factor is, and the presenting of a texture onto it.
     """
 
     def __init__(
@@ -92,8 +89,8 @@ class Window(object):
         self.pointer_position = np.zeros(2)
         self.undrawn_event = True
 
-        # Asking about monitors needs glfw started, which creating the canvas would
-        # otherwise be what did
+        # Asking about monitors needs glfw started, which creating the canvas would otherwise
+        # be what did
         glfw.init()
         monitor = self.get_monitor(monitor_index)
         self.canvas = RenderCanvas(
@@ -125,9 +122,7 @@ class Window(object):
     def glfw_window(self):
         """
         The window itself, for the two things a canvas offers no way to say: where on which
-        monitor it opens, and that it should take focus. It hands out no handle of its own,
-        so this is the only place reaching past its API, which is a better bargain than
-        owning surface creation, scale factors and presentation for the sake of them.
+        monitor it opens, and that it should take focus.
         """
         return self.canvas._window
 
@@ -145,15 +140,13 @@ class Window(object):
 
     def configure(self, renderer: Renderer) -> None:
         """
-        Points the surface at the device whose frames it will be showing, which is the first
-        moment either knows of the other: a window outlives the scenes shown in it, and a
-        scene's camera is what brings a device, see Camera.init_target.
+        Points the surface at the device whose frames it will be showing, the first moment
+        either knows of the other: a window outlives the scenes shown in it, and a scene's
+        camera is what brings a device.
 
-        The surface is asked for the plain form of whatever format it prefers, never the
-        sRGB one. Writing to an sRGB target gamma encodes what the shader returned, on the
-        understanding that a shader returns light rather than color, and a frame here already
-        holds the color it means: encoding it again lightens everything and washes it out,
-        worst in the darks, leaving only black and white where they started.
+        The plain form of whatever format the surface prefers, never the sRGB one. Writing to
+        an sRGB target gamma encodes what the shader returned, and a frame here already holds
+        the color it means: encoding again lightens everything and washes it out.
         """
         self.renderer = renderer
         preferred = self.context.get_preferred_format(renderer.device.adapter)
@@ -166,14 +159,12 @@ class Window(object):
 
     def show(self, frame_view) -> None:
         """
-        Puts a finished frame on screen. The canvas is what presents, and it presents
-        whatever its draw function drew, so the frame is handed over and then asked for.
+        Puts a finished frame on screen. The canvas presents whatever its draw function drew,
+        so the frame is handed over and then asked for.
         """
         self.frame_view = frame_view
         self.canvas.force_draw()
         self.undrawn_event = False
-        # Whatever happened while that frame was being drawn, in the same place a window
-        # built on GL pulled events: right after putting a frame on screen
         self.poll_events()
 
     def draw(self) -> None:
@@ -182,9 +173,8 @@ class Window(object):
 
     def poll_events(self) -> None:
         """
-        Hands whatever the window has to say to the handlers below, and notices if it has
-        been closed. A canvas does this from its own loop, which manim does not run, and
-        offers no other way of asking for it.
+        Hands whatever the window has to say to the handlers below, and notices if it has been
+        closed. A canvas would do this from its own loop, which manim does not run.
         """
         self.canvas._process_events()
 

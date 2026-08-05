@@ -8,14 +8,13 @@ change which has any business leaving the picture alone.
     python tests/render_compare.py capture --refs <dir>
     python tests/render_compare.py compare --refs <dir>
 
-Any case which differs is reported with how far off it is, how much of that is away from
-any edge of any shape, and, for the worst frame, an image written to the output directory
-showing the two side by side over their difference. The count away from an edge is the one
-to read: two rasterizers will never agree along an edge, and are expected to everywhere
-else, so a difference there is a difference worth explaining.
-A tolerance may be given, for comparing renders which have no business being identical to
-the byte, as across a change of graphics api; within one renderer, expect nothing to move
-at all, and leave it at zero.
+Any case which differs is reported with how far off it is, how much of that is away from any
+edge of any shape, and, for the worst frame, an image written to the output directory showing
+the two side by side over their difference. The count away from an edge is the one to read: two
+rasterizers will never agree along an edge, and are expected to everywhere else.
+
+A tolerance may be given for comparing renders which have no business being identical to the
+byte, as across a change of graphics api. Within one renderer, leave it at zero.
 
 Videos are written losslessly, see LOSSLESS_CONFIG, since otherwise what is compared is what
 an encoder made of a frame rather than the frame.

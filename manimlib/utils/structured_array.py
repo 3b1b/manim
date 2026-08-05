@@ -15,23 +15,21 @@ if TYPE_CHECKING:
 
 class StructuredArray(object):
     """
-    A structured numpy array laid out to match what a shader reads, and read from
-    python as a dict of its fields.
+    A structured numpy array laid out to match what a shader reads, and read from python as a
+    dict of its fields.
 
-    What a mobject holds for the gpu sits in an array like this, whether it is one value
-    per point, as its data is, or one value for the whole of it, as its uniforms are.
-    Either way, what gets sent is a copy of the whole array, which is why the layout has
-    to mirror what the shader declares, see Mobject.data_dtype and uniform_dtype.
+    What a mobject holds for the gpu sits in an array like this, whether one value per point,
+    as its data is, or one value for the whole of it, as its uniforms are. Either way the whole
+    array is what gets sent, which is why the layout has to mirror what the shader declares,
+    see Mobject.data_dtype and uniform_dtype.
 
-    Three things come with holding it here rather than as a bare array. Every write to
-    it is counted, so that whatever has sent it somewhere can ask whether what it sent
-    is still what the array holds, see has_changed. Emptying the array remembers what was
-    in it, so that a mobject stripped of its points and given new ones keeps the style it
-    had, see resize. And fields are read and written by name, as with a dict, while rows
-    are read and written by index, as with the array itself.
+    Three things come with holding it here rather than as a bare array. Every write is counted,
+    so whatever has sent the array somewhere can ask whether what it sent is still what the
+    array holds, see has_changed. Emptying the array remembers what was in it, so a mobject
+    stripped of its points and given new ones keeps its style, see resize. And fields are read
+    and written by name, rows by index.
 
-    Either kind of write is counted. Reading, though, hands back a view onto the array,
-    so writing through one of those, as in
+    Reading hands back a view onto the array, so a write through one of those, as in
 
         mob.data["point"][::2] = new_points
 
@@ -39,18 +37,15 @@ class StructuredArray(object):
 
         mob.data.note_change()
 
-    Assigning the whole field instead, mob.data["point"] = new_points, needs no such
-    thing, and is the same operation as far as the array is concerned: a field cannot
-    be rebound, only written into.
+    Assigning the whole field instead, mob.data["point"] = new_points, needs no such thing.
     """
 
     def __init__(self, dtype: np.dtype, length: int = 0):
         self.set_array(np.zeros(length, dtype=dtype))
         # What to fill in with when growing from nothing, see resize
         self.defaults: np.ndarray = np.ones(1, dtype=dtype)
-        # Counted up by every write. A count rather than a yes or no, since more than one
-        # thing may be watching and each needs to know what it has missed rather than
-        # whether anyone has missed anything.
+        # Counted up by every write, rather than a yes or no, since each of several watchers
+        # needs to know what it has missed
         self.version: int = 1
         # Which version each of those things last saw, see has_changed
         self.seen_by: dict[Any, int] = dict()
@@ -77,41 +72,31 @@ class StructuredArray(object):
 
     def set_array(self, array: np.ndarray) -> None:
         """
-        The array, along with the two ways of seeing the whole of it at once: every field as
-        one run of floats, and the same as bytes. Both include whatever padding the dtype
-        carries, which is harmless to read or write.
+        The array, along with the two ways of seeing the whole of it at once: every field as one
+        run of floats, and the same as bytes, padding included.
 
-        They are made here, once, rather than where they are wanted. Making one costs 195ns,
-        which is more than copying a mobject's block somewhere with it, and copying is what
-        they are for, see UniformArena.put and Uniforms.interpolate.
+        Made once here rather than where they are wanted, making a view costing more than the
+        copy it is for, see Arena.put and Uniforms.interpolate.
         """
         self.array: np.ndarray = array
         self.floats: np.ndarray = array.view(np.float32)
         self.bytes: np.ndarray = array.view(np.uint8)
 
     def note_change(self) -> None:
-        """
-        Says that the array was written to in a way it had no chance to count, as any
-        write through a view onto it is.
-        """
+        """Says that the array was written to through a view onto it, which it cannot count"""
         self.version += 1
 
     def has_changed(self, observer: Any) -> bool:
         """
-        Whether the array has been written to since this observer last asked.
+        Whether the array has been written to since this observer last asked. A note of the
+        version each has seen is kept here, so that watching an array takes nothing but asking
+        it.
 
-        Everything watching an array wants the same thing of it, to know whether what it last
-        read is still what the array holds, and would otherwise each keep its own note of the
-        version it saw and remember to move that note on. The notes are kept here instead, one
-        for each observer, so that watching an array takes nothing but asking it.
+        Asking counts as having looked. So two things wanting the same answer have to be two
+        observers, or ask once between them, see ShaderWrapper.write_uniform_buffer.
 
-        Asking counts as having looked, the answer being about the writes since the last ask.
-        So two things which want the same answer have to be two observers, or ask once between
-        them, see ShaderWrapper.write_uniform_buffer for one which does the latter.
-
-        An observer is remembered for as long as the array is, so one which is thrown away
-        while its array lives on is kept alive by it. Nothing here is replaced often enough
-        for that to be worth weak references, which cost four times as much to look up.
+        An observer is remembered for as long as the array is. Nothing here is replaced often
+        enough for that to be worth weak references, which cost four times as much to look up.
         """
         if self.seen_by.get(observer) == self.version:
             return False
@@ -124,7 +109,7 @@ class StructuredArray(object):
 
     def keys(self) -> Sequence[str]:
         # Padding, which a uniform block's alignment calls for, is named with a leading
-        # underscore, and is no part of what the array holds as far as anyone can tell
+        # underscore and is no part of what the array holds
         return tuple(
             name for name in self.array.dtype.names
             if not name.startswith("_")

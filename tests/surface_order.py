@@ -7,10 +7,8 @@ from a different starting angle is made of the same triangles in a different ord
 two do not come out looking the same, the order is deciding what the picture is, and it should
 not be.
 
-This catches what ordering a surface by which way its triangles face does not: that orders two
-layers, and a torus seen through has more than two, so its far wall came out cut off where the
-grid wrapped. The harness misses it, every see through surface among its cases having only the
-two layers that trick handles.
+The harness misses this, every see through surface among its cases being simple enough to
+come out right either way.
 
     python tests/surface_order.py
 """

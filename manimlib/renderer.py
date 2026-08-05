@@ -21,12 +21,9 @@ if TYPE_CHECKING:
     from typing import Any, Callable, Optional
 
 
-# A depth buffer with stencil bits alongside it, which is what a fill counting windings
-# needs. WebGPU guarantees this format, so unlike GL there is nothing to arrange by hand.
+# Stencil bits alongside the depth, which a fill counting windings needs
 DEPTH_STENCIL_FORMAT = wgpu.TextureFormat.depth24plus_stencil8
-# What a frame is drawn into and read back from
 COLOR_FORMAT = wgpu.TextureFormat.rgba8unorm
-# The shader which puts a finished frame on screen, see Renderer.present
 PRESENT_SHADER = "present.wgsl"
 
 KEEP = ("keep", "keep", "keep")
@@ -35,20 +32,11 @@ KEEP = ("keep", "keep", "keep")
 @dataclass(frozen=True)
 class DrawState:
     """
-    How a draw behaves, beyond which program runs and what it reads: whether depth decides
-    what is hidden and whether it is written, whether the stencil buffer is tested and what
-    it is left holding, and whether color is written at all.
+    How a draw behaves, beyond which program runs and what it reads. All of it is baked into
+    a pipeline, and there are only the few combinations named below.
 
-    All of it is settled when a pipeline is built rather than said around each draw, which
-    is what wgpu asks for, and there are only the handful of combinations named below.
-
-    depth_test is None wherever the mobject being drawn decides, which is most of them. A
-    fill counting windings is the exception: it has to see every triangle of the path,
-    whatever stands in front of it.
-
-    Nothing here drops a triangle for the way it faces. Both sides of a surface are drawn,
-    the depth test settling an opaque one and the order of its triangles a see through one,
-    see SurfaceShaderWrapper.
+    depth_test is None wherever the mobject decides, which is most of them. A fill counting
+    windings is the exception: it must see every triangle of the path, whatever is in front.
     """
     depth_test: bool | None = None
     depth_write: bool = True
@@ -63,7 +51,7 @@ class DrawState:
         return depth_test if self.depth_test is None else self.depth_test
 
     def depth_stencil_descriptor(self, depth_test: bool) -> dict:
-        """What this settles about depth and stencil, as a pipeline wants to hear it"""
+        """This state as a pipeline descriptor wants it"""
         def face(ops):
             fail, depth_fail, passed = ops
             return {
@@ -77,7 +65,6 @@ class DrawState:
         return {
             "format": DEPTH_STENCIL_FORMAT,
             "depth_write_enabled": self.depth_write,
-            # Where depth is not being tested, everything passes whatever its depth
             "depth_compare": "less" if self.tests_depth(depth_test) else "always",
             "stencil_front": face(front),
             "stencil_back": face(back),
@@ -91,7 +78,7 @@ class DrawState:
 
 
 DEFAULT = DrawState()
-# The three passes a fill takes, see VShaderWrapper.render_fill for what each is for
+# The three passes a fill takes, see VShaderWrapper.draw_fill
 WINDING_COUNT = DrawState(
     depth_test=False,
     depth_write=False,
@@ -111,18 +98,16 @@ WINDING_COVER = DrawState(
 @lru_cache()
 def get_bind_layouts(device, frame_layout, mobject_layout, texture_count: int):
     """
-    What a shader may bind: the values for the whole frame, the values for the mobject being
-    drawn, and the records of its kind along with a texture for each image it names.
+    What a shader may bind: the frame's values, the mobject's values, and its records along
+    with a texture for each image it names.
 
-    None of that varies between two mobjects of a kind, so it is made once for each number of
-    textures a kind might have. Which matters: a pipeline is built against these, so making
-    them per mobject would have every mobject compiling pipelines of its own.
+    Made once for each number of textures rather than once per mobject: a pipeline is built
+    against these, so per mobject layouts would mean per mobject pipelines.
     """
     resource_entries = [{
         "binding": DATA_BINDING,
         "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
-        # Which stretch of the arena is the mobject's own is said around the draw, so that
-        # nothing about where its records are has to live among its values, see DataArena
+        # The stretch a draw reads is given as a dynamic offset, see DataArena
         "buffer": {
             "type": wgpu.BufferBindingType.read_only_storage,
             "has_dynamic_offset": True,
@@ -149,24 +134,17 @@ def get_bind_layouts(device, frame_layout, mobject_layout, texture_count: int):
 
 class Arena(object):
     """
-    One buffer holding what many mobjects read, a stretch of it each, gathered a frame at a
-    time and sent in one write.
+    One buffer holding what many mobjects read, a stretch of it each, sent in one write.
+    Sending a buffer costs about the same whatever it holds, so gathering beats sending one
+    mobject at a time.
 
-    A stretch is claimed for the length of a frame rather than owned: a frame writes everything
-    before it draws anything, see Camera.capture, so the stretches can be handed out in the
-    order the writing goes and given back all at once. Nothing is allocated and nothing is
-    freed, so there is no free list to keep, nothing to fragment, and no way for a mobject to
-    be left holding a stretch it has no use for.
+    A stretch is claimed for the length of a frame rather than owned. A frame writes everything
+    before it draws anything, see Camera.capture, so stretches are handed out in the order the
+    writing goes and given back all at once: no free list, nothing to fragment, nothing to free.
 
-    The point of it is that sending a buffer costs about the same whatever it holds: 4.7us for
-    one mobject's uniforms and 178us for two megabytes of every mobject's points. So a frame of
-    six thousand mobjects, which sent six thousand times, gathers here at a memory copy each
-    and sends the stretch which changed.
-
-    Two things keep it from costing anything where there is nothing to gain. A scene which is
-    not changing hands its stretches out in the same order every frame, so a mobject whose
-    values have not moved finds them already in place and copies nothing; and only what was
-    written into is sent, which for such a frame is nothing at all.
+    A scene which is not changing hands them out in the same order every frame, so a mobject
+    whose values have not moved finds them in place and copies nothing, and an arena nothing
+    wrote into is not sent.
     """
 
     def __init__(self, renderer: Renderer, first_capacity: int):
@@ -175,8 +153,8 @@ class Arena(object):
         self.first_capacity = first_capacity
         self.used = 0
         self.capacity = 0
-        # Nothing is set aside until something asks for a stretch: an arena exists as soon as
-        # a mobject of its size does, and a scene has kinds of mobject it never draws
+        # Nothing is set aside until a stretch is asked for, a scene having kinds of mobject
+        # it never draws
         self.blocks = np.zeros(0, dtype=np.uint8)
         self.bytes = memoryview(self.blocks)
         self.buffer = None
@@ -184,8 +162,8 @@ class Arena(object):
 
     def grow_to(self, needed: int) -> bool:
         """
-        Room for that many bytes, doubling from the size an arena starts at, and whether that
-        meant a new buffer. Whoever asked has to make its bindings afresh if so.
+        Room for that many bytes, and whether that meant a new buffer, in which case the
+        caller makes its bindings afresh.
         """
         capacity = max(self.capacity, self.first_capacity)
         while capacity < needed:
@@ -193,14 +171,13 @@ class Arena(object):
         if capacity == self.capacity:
             return False
 
-        # What the stretches held is carried over, so one which was already right stays right,
-        # but the new buffer holds none of it yet
+        # Carried over so that a stretch which was already right stays right, though the new
+        # buffer holds none of it yet
         held = self.blocks
         self.capacity = capacity
         self.blocks = np.zeros(capacity, dtype=np.uint8)
         self.blocks[:len(held)] = held
-        # Copied into a stretch at a time through this rather than through the array, a
-        # memoryview slice being half the cost of a numpy one at these sizes
+        # A memoryview slice being half the cost of a numpy one at these sizes
         self.bytes = memoryview(self.blocks)
         self.buffer = self.device.create_buffer(size=capacity, usage=self.usage)
         self.dirty = (0, self.used)
@@ -218,7 +195,7 @@ class Arena(object):
             self.dirty = (min(self.dirty[0], offset), max(self.dirty[1], end))
 
     def upload(self) -> None:
-        """Whatever was written into since the last frame sent, in one write"""
+        """Whatever was written into since the last send, in one write"""
         if self.dirty is None:
             return
         start, end = self.dirty
@@ -230,9 +207,8 @@ class Arena(object):
 
 class UniformArena(Arena):
     """
-    An arena of mobject uniform blocks, a row each. Which row a draw reads comes from the
-    dynamic offset its bind group takes, so a row has to begin where the device allows one to,
-    see ShaderWrapper.render.
+    An arena of mobject uniform blocks, a row each. A draw is given its row as a dynamic
+    offset, so rows begin where the device allows a binding to.
     """
     usage = wgpu.BufferUsage.UNIFORM | wgpu.BufferUsage.COPY_DST
 
@@ -263,14 +239,12 @@ class DataArena(Arena):
     """
     An arena of mobject records, every mobject whose records are the same size sharing one.
 
-    A draw is given the stretch belonging to the mobject being drawn, as the dynamic offset of
-    its bind group, so the shader counts a record from the front of what it was given and
-    nothing about where a mobject's records are has to live among the mobject's own values.
-    Which matters: a mobject's values get copied, interpolated and handed to other mobjects,
-    and an offset put among them would be blended halfway through a transform.
+    A draw is given its stretch as a dynamic offset, so the shader counts records from the
+    front of what it was given. Keeping the offset out of the mobject's own values matters:
+    those get interpolated, and a blended offset points nowhere.
 
-    A stretch therefore begins where the device allows a binding to, and the window bound is
-    wide enough for the longest mobject there has been, since one bind group serves them all.
+    Stretches therefore begin where the device allows a binding to, and the window bound is
+    wide enough for the longest mobject there has been, one bind group serving them all.
     """
     usage = wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_DST
 
@@ -309,19 +283,16 @@ class DataArena(Arena):
 
 class Renderer(object):
     """
-    What a mobject needs of the gpu in order to draw itself, in one thing rather than
-    several: the device its buffers and programs are made from, the pipelines it is drawn
-    by, the pass it is drawn into, and the values which hold for every mobject of a frame.
+    What a mobject needs of the gpu in order to draw itself: the device its buffers and
+    programs are made from, the arenas its values are gathered in, the pipelines it is drawn
+    by, the pass it is drawn into, and the values which hold for a whole frame.
 
-    Those last travel in one block, written once a frame by the camera which owns this and
-    read by every program from group 0, see inserts/frame_uniforms.wgsl. A mobject wanting
-    one of them, as a surface sorting its triangles wants the camera position, reads it from
-    frame_uniforms rather than being told.
+    Those last are written once a frame by the camera and read by every program from group 0,
+    see inserts/frame_uniforms.wgsl.
 
-    A frame is one render pass from beginning to end. Beginning a pass loads the frame's
-    attachments into fast memory on the sort of gpu this port is for, and ending one writes
-    them back out, so a pass for every mobject would cost more than all the drawing. So
-    everything a frame sends to the gpu happens before the pass opens, see Camera.capture.
+    A frame is one render pass from beginning to end, since opening a pass loads its
+    attachments into fast memory and ending one writes them back out. So everything a frame
+    sends to the gpu happens before the pass opens, see Camera.capture.
     """
 
     def __init__(self):
@@ -339,8 +310,8 @@ class Renderer(object):
             "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
             "buffer": {"type": wgpu.BufferBindingType.uniform},
         }])
-        # What a mobject's uniforms are read through, one row of an arena at a time, see
-        # UniformArena. Shared by every mobject, so that a pipeline built against it is too.
+        # One row of an arena at a time, see UniformArena. Shared by every mobject, so that a
+        # pipeline built against it is too.
         self.mobject_layout = self.device.create_bind_group_layout(entries=[{
             "binding": 0,
             "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
@@ -349,13 +320,12 @@ class Renderer(object):
                 "has_dynamic_offset": True,
             },
         }])
-        # What a mobject reads its own records through, which is the same for every mobject
-        # of a size that has no images of its own, see DataArena
+        # What a mobject with no images of its own reads its records through, see DataArena
         self.data_layout, _ = get_bind_layouts(
             self.device, self.frame_layout, self.mobject_layout, 0,
         )
-        # Every arena there is, for the two moments a frame speaks to all of them, along with
-        # the two ways of finding the one a mobject belongs in
+        # Every arena, for the two moments a frame speaks to all of them, and the two ways of
+        # finding the one a mobject belongs in
         self.arenas: list[Arena] = []
         self.uniform_arenas: dict[int, UniformArena] = dict()
         self.data_arenas: dict[int, DataArena] = dict()
@@ -366,8 +336,8 @@ class Renderer(object):
             }}],
         )
 
-        # How many samples a frame's attachments take, which every pipeline has to match.
-        # The camera says, when it makes what it draws into.
+        # Every pipeline has to match this, which the camera sets when it makes its
+        # attachments
         self.samples = 1
         self.pipelines: dict[Any, Any] = dict()
         self.encoder = None
@@ -384,10 +354,8 @@ class Renderer(object):
 
     def get_pipeline(self, key: Any, build: Callable[[], Any]):
         """
-        The pipeline for a key, built the first time it is asked for. Everything a draw
-        settles sits in one of these, so there is one for each combination of program, draw
-        state, whether the mobject is depth tested, and how many samples are taken: a key
-        has to name all of that.
+        The pipeline for a key, built the first time it is asked for. A pipeline settles
+        everything about a draw but its bindings, so a key has to name all of that.
         """
         pipeline = self.pipelines.get(key)
         if pipeline is None:
@@ -419,10 +387,9 @@ class Renderer(object):
 
     def bind(self, group: int, bind_group: Any, offsets: tuple = ()) -> None:
         """
-        Points the pass at what a draw is to read, unless that is where it points already.
-        A pass holds onto what it was told until it is told otherwise, and a mobject drawn in
-        several passes reads the same things in each, so most of what a frame has to say
-        about this it has said already, see ShaderWrapper.render.
+        Points the pass at what a draw is to read, unless that is where it points already. A
+        pass holds onto what it was told, and a mobject drawn in several passes reads the same
+        things in each.
         """
         if self.bound[group] != (bind_group, offsets):
             self.pass_.set_bind_group(group, bind_group, offsets)
@@ -451,8 +418,7 @@ class Renderer(object):
     def present(self, frame_view, target_view, format: str) -> None:
         """
         Draws a finished frame onto what a window will show, stretched to fill it, see
-        shaders/present.wgsl. This is a pass of its own rather than part of the
-        frame's, the two drawing into textures of different sizes and formats.
+        shaders/present.wgsl. A pass of its own, the two textures differing in size and format.
         """
         module = get_shader_module(self.device, get_shader_code_from_file(PRESENT_SHADER))
         layout = self.present_layout

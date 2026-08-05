@@ -401,7 +401,7 @@ class VMobject(Mobject):
         if program_type is not None:
             for mob in self.get_family():
                 mob.shader_program_type = program_type
-        # Which records the replacement itself, against every member of the family
+        # Which records the replacement against every member of the family
         super().replace_shader_code(old, new)
         return self
 

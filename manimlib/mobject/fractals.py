@@ -24,8 +24,7 @@ MANDELBROT_COLORS = [
     "#00065c", "#061e7e", "#0c37a0", "#205abc", "#4287d3",
     "#D9EDE4", "#F0F9E4", "#BA9F6A", "#573706",
 ]
-# One per root of the polynomial, so the highest degree a NewtonFractal draws is the number
-# of these, and no more room is set aside in its uniforms than that
+# One per root, so the highest degree a NewtonFractal draws is the number of these
 NEWTON_ROOT_COLORS = ["#440154", "#3b528b", "#21908c", "#5dc963", "#29abca"]
 MAX_DEGREE = len(NEWTON_ROOT_COLORS)
 
@@ -67,11 +66,10 @@ class PlaneFractal(Mobject):
     """
     A fractal drawn a pixel at a time by its shader, over a rectangle covering a plane.
 
-    Only four points are held, being the corners, and the fragment shader does all the work,
-    so what a subclass is mostly made of is the uniforms its shader reads. Where a pixel sits
-    on the plane the fractal is drawn over is worked out from scale_factor and offset rather
-    than from where the rectangle ended up, so the picture follows the plane it was built for
-    even once both have been moved.
+    Only the four corners are held and the fragment shader does all the work, so a subclass is
+    mostly the uniforms its shader reads. Where a pixel sits on the plane comes from
+    scale_factor and offset rather than from where the rectangle ended up, so the picture
+    follows the plane it was built for even once both have moved.
     """
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
@@ -110,9 +108,8 @@ class PlaneFractal(Mobject):
 
     def set_color(self, color, opacity=None, recurse=True) -> Self:
         """
-        Nothing: a fractal's colors say what a point converged to or how long it took, so
-        there is no one color for the whole of it. Overridden because there is no color per
-        point either, the data being nothing but the four corners.
+        Nothing: a fractal's colors say what a point converged to or how long it took, and
+        there is no color per point either, the data being nothing but the four corners.
         """
         return self
 

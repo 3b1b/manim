@@ -38,22 +38,18 @@ def image_path_to_texture(path: str, device) -> Any:
 
 @lru_cache()
 def get_shader_module(device, code: str):
-    """
-    One module holds both stages of a shader, so what GL needed two files and a pair of
-    matching varying declarations for is one file whose stages share a struct.
-    """
+    """One module holds both stages of a shader, which share a struct rather than a varying"""
     return device.create_shader_module(code=code)
 
 
 """
-A mobject's uniforms travel in one block, written once per mobject rather than one
-uniform at a time. Each kind of mobject lays out the block it wants with
-uniform_block_dtype, starting with the members every kind has, see Mobject.uniform_dtype,
-and the struct its shaders read is generated from that dtype, see uniform_block_code.
+A mobject's uniforms travel in one block. Each kind of mobject lays out the block it wants
+with uniform_block_dtype, starting with the members every kind has, see
+Mobject.uniform_dtype, and the struct its shaders read is generated from that dtype.
 """
-# Where a shader finds each thing it reads, grouped by how often it changes: once a frame,
-# once a mobject, and once the buffers behind it are replaced. A shader says these numbers
-# itself, in the inserts declaring each, so what is here is what those agree with.
+# Where a shader finds each thing it reads, grouped by how often it changes. A shader says
+# these numbers itself, in the inserts declaring each, so what is here is what those agree
+# with.
 FRAME_GROUP = 0
 MOBJECT_GROUP = 1
 RESOURCE_GROUP = 2
@@ -62,8 +58,8 @@ RESOURCE_GROUP = 2
 DATA_BINDING = 0
 SAMPLER_BINDING = 1
 FIRST_TEXTURE_BINDING = 2
-# What every mobject holds, whatever kind it is, as a name and a number of floats.
-# First in every block, so that the inserts reading them work wherever they are used.
+# What every mobject holds, as a name and a number of floats. First in every block, so that
+# the inserts reading them work wherever they are used.
 COMMON_UNIFORMS = (
     ("is_fixed_in_frame", 1),
     ("shading", 3),
@@ -72,19 +68,16 @@ COMMON_UNIFORMS = (
     ("clip_plane2", 4),
     ("clip_plane3", 4),
 )
-# What a block member of each size is called in a shader. A mat4 is in there because a
-# block lays one out as four vec4 columns, which is four vec4s and nothing else; a mat3
-# is not, because its columns get padded out to vec4 and this would have to know it.
+# What a block member of each size is called in a shader. A mat4 is in there, being four vec4
+# columns and nothing else; a mat3 is not, its columns being padded out to vec4.
 BLOCK_MEMBER_TYPES = {1: "f32", 2: "vec2f", 3: "vec3f", 4: "vec4f", 16: "mat4x4f"}
-# How many floats one element of an array member takes. A block puts its array elements
-# four floats apart whatever they hold, so anything narrower is declared as a vec4f and
-# read from its first components, there being nothing to gain by pretending otherwise.
+# A block puts its array elements four floats apart whatever they hold, so anything narrower
+# is declared as a vec4f and read from its first components.
 ARRAY_ELEMENT_SIZE = 4
 
 """
-The camera's uniforms travel the same way a mobject's do, in one block, except that there
-is one of them for the whole frame rather than one per mobject. Every program reads it from
-the same buffer, bound once a frame rather than once a mobject, see Renderer.
+The camera's uniforms travel the same way, one block for the whole frame, read by every
+program from the same buffer and bound once a frame, see Renderer.
 """
 # Mirrors inserts/frame_uniforms.wgsl. Ordered so that each vec3 is followed by the float
 # which fits beside it, leaving nothing padded but the last three floats.
@@ -100,19 +93,17 @@ FRAME_UNIFORMS = (
 
 def uniform_block_dtype(*members: tuple[str, int] | tuple[str, int, int]) -> np.dtype:
     """
-    Lays out members, each given as a name and how many floats it holds, exactly as
-    std140 does, so that a mobject's uniforms can be handed to the gpu as they sit
-    rather than packed one member at a time.
+    Lays out members, each given as a name and how many floats it holds, exactly as std140
+    does, so a mobject's uniforms can be handed to the gpu as they sit.
 
-    A member given a third number holds that many of itself, e.g. ("colors", 4, 9) for
-    nine colors, and is read from python as an array of that many rows.
+    A member given a third number holds that many of itself, e.g. ("colors", 4, 9) for nine
+    colors, and is read from python as an array of that many rows.
 
-    The rules being reproduced are that a member is aligned to its own size, rounded
-    up to four floats for anything wider than two, and that the block as a whole is
-    rounded up to four floats as well. What that alignment skips over is declared as a
-    field of its own rather than left as a gap in the dtype, since numpy does not carry
-    the contents of a gap over when copying an array, which would leave whatever the
-    memory happened to hold to be compared against and sent to the gpu.
+    The rules reproduced are that a member is aligned to its own size, rounded up to four
+    floats for anything wider than two, and that the block as a whole is rounded up likewise.
+    What that alignment skips over is declared as a field rather than left as a gap, numpy not
+    carrying the contents of a gap over when copying, which would leave whatever the memory
+    held to be compared against and sent.
     """
     names: list[str] = []
     formats: list[Any] = []
@@ -138,24 +129,21 @@ def uniform_block_dtype(*members: tuple[str, int] | tuple[str, int, int]) -> np.
         size_so_far += skipped + count * size
     if -size_so_far % 4:
         add(f"_pad{len(names)}", (-size_so_far % 4,))
-    # Left to pack the fields itself, numpy places them back to back, which is where
-    # the padding above has been chosen to put them
+    # Left to pack the fields itself, numpy places them back to back, which is where the
+    # padding above has been chosen to put them
     return np.dtype({"names": names, "formats": formats})
 
 
 def uniform_block_code(dtype: np.dtype) -> str:
     """
-    A dtype written as the members of a shader struct, which is where a shader gets them:
-    generating the declaration from the dtype rather than asking a shader to repeat it
-    leaves nothing for the two to disagree about. WGSL lays a struct out as std140 does for
-    everything declared here, which uniform_block_dtype has already accounted for, so the
-    padding it inserted is left out and the compiler arrives at the same offsets.
+    A dtype written as the members of a shader struct, which is where a shader gets them,
+    leaving nothing for the two sides to disagree about. WGSL lays a struct out as std140 does
+    for everything declared here, so the padding uniform_block_dtype inserted is left out and
+    the compiler arrives at the same offsets.
     """
     lines = []
     for name in dtype.names:
         if name.startswith("_"):
-            # Alignment is the shader compiler's own business, and writing the padding
-            # it implies would only push everything after it further along
             continue
         shape = dtype.fields[name][0].shape
         if len(shape) == 2:
@@ -172,9 +160,8 @@ FRAME_DTYPE = uniform_block_dtype(*FRAME_UNIFORMS)
 
 class Uniforms(StructuredArray):
     """
-    A mobject's uniforms: one value each for the whole of it, laid out to match the
-    block its shaders declare. Reading one gives the value itself, rather than the
-    single row of the array holding it.
+    A mobject's uniforms: one value each for the whole of it, laid out to match the block its
+    shaders declare. Reading one gives the value itself rather than the row holding it.
     """
 
     def __init__(self, dtype: np.dtype):
@@ -192,9 +179,9 @@ class Uniforms(StructuredArray):
             return
         floats1 = uniforms1.floats
         floats2 = uniforms2.floats
-        # Most transformations leave every uniform alone, e.g. moving a mobject
-        # without restyling it, and writing values equal to those already here would
-        # have the buffer sent again each frame for nothing
+        # Most transformations leave every uniform alone, e.g. moving a mobject without
+        # restyling it, and writing values equal to those here would send the block again for
+        # nothing
         if np.array_equal(floats1, floats2) and np.array_equal(self.floats, floats1):
             return
         self.floats[:] = (1 - alpha) * floats1 + alpha * floats2
@@ -208,12 +195,9 @@ def get_shader_code(
     texture_names: tuple[str, ...] = (),
 ) -> str | None:
     """
-    Reads a shader from file, filling in what its source depends on about the mobject it
-    will be drawing: where the fields of a vertex record sit, what that mobject holds for
-    the whole of itself, and which of its bindings each image it named is at.
-
-    Generating all three rather than asking a shader to repeat them leaves nothing for the
-    two sides to disagree about.
+    Reads a shader from file, filling in what its source depends on about the mobject it will
+    be drawing: where the fields of a record sit, what it holds for the whole of itself, and
+    which binding each image it named is at.
     """
     code = get_shader_code_from_file(filename)
     if code is None:
@@ -228,9 +212,8 @@ def get_shader_code(
 
 def texture_binding_code(texture_names: tuple[str, ...]) -> str:
     """
-    How a shader declares the images its kind of mobject named, and the sampler they share.
-    Generated, so that a shader reads each image from the binding that image was put in
-    rather than from wherever the order of two lists happens to agree.
+    How a shader declares the images its kind of mobject named, and the sampler they share,
+    each from the binding it was actually put in.
     """
     if not texture_names:
         return ""
@@ -245,10 +228,7 @@ def texture_binding_code(texture_names: tuple[str, ...]) -> str:
 
 
 def get_data_layout_code(data_layout: tuple[int, tuple[tuple[str, int], ...]]) -> str:
-    """
-    Constants describing where each field of a vertex record sits within the buffer, in
-    units of floats, every shader indexing into it itself.
-    """
+    """Where each field of a record sits, in floats, for a shader to index by"""
     stride, fields = data_layout
     return "\n".join([
         f"const DATA_STRIDE: u32 = {stride}u;",
@@ -273,10 +253,7 @@ def get_shader_code_from_file(filename: str) -> str | None:
     with open(filepath, "r") as f:
         result = f.read()
 
-    # To share functionality between shaders, some functions are read in
-    # from other files an inserted into the relevant strings before
-    # passing to ctx.program for compiling
-    # Replace "#INSERT " lines with relevant code
+    # Functions shared between shaders live in files of their own, named by "#INSERT" lines
     insertions = re.findall(r"^#INSERT .*\.wgsl$", result, flags=re.MULTILINE)
     for line in insertions:
         inserted_code = get_shader_code_from_file(
