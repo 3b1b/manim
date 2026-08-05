@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 
 import wgpu
@@ -23,7 +22,7 @@ DEPTH_STENCIL_FORMAT = wgpu.TextureFormat.depth24plus_stencil8
 # What a frame is drawn into and read back from
 COLOR_FORMAT = wgpu.TextureFormat.rgba8unorm
 # The shader which puts a finished frame on screen, see Renderer.present
-PRESENT_SHADER = os.path.join("present", "shader.wgsl")
+PRESENT_SHADER = "present.wgsl"
 
 KEEP = ("keep", "keep", "keep")
 
@@ -207,7 +206,7 @@ class Renderer(object):
     def present(self, frame_view, target_view, format: str) -> None:
         """
         Draws a finished frame onto what a window will show, stretched to fill it, see
-        shaders/present/shader.wgsl. This is a pass of its own rather than part of the
+        shaders/present.wgsl. This is a pass of its own rather than part of the
         frame's, the two drawing into textures of different sizes and formats.
         """
         module = get_shader_module(self.device, get_shader_code_from_file(PRESENT_SHADER))

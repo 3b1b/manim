@@ -69,7 +69,7 @@ class Mobject(object):
     Mathematical Object
     """
     dim: int = 3
-    shader_folder: str = ""
+    shader_file: str = ""
     # If positive, the shader is handed no vertex attributes, and instead reads
     # each record out of the vertex buffer itself, turning it into this many
     # vertices. This is how shapes are expanded without a geometry shader.
@@ -697,7 +697,7 @@ class Mobject(object):
             sm1.set_uniforms(sm2.uniforms)
             sm1.bounding_box[:] = sm2.bounding_box
             sm1.pointlike_uniform_keys = sm2.pointlike_uniform_keys
-            sm1.shader_folder = sm2.shader_folder
+            sm1.shader_file = sm2.shader_file
             sm1.texture_paths = sm2.texture_paths
             sm1.depth_test = sm2.depth_test
             sm1._needs_new_bounding_box = sm2._needs_new_bounding_box
@@ -1980,7 +1980,7 @@ class Mobject(object):
         self.shader_wrapper = ShaderWrapper(
             renderer=renderer,
             mobject_data=self.data,
-            shader_folder=self.shader_folder,
+            shader_file=self.shader_file,
             mobject_uniforms=self.uniforms,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,

@@ -40,7 +40,7 @@ def norms_along_axis(vectors: Vect3Array) -> np.ndarray:
 
 
 class Surface(Mobject):
-    shader_folder: str = "surface"
+    shader_file: str = "surface.wgsl"
     # Points are sent as the grid they sample, and the vertex shader works out the mesh
     # over it, expanding each of them into one square's worth of vertices. See
     # inserts/surface_mesh.wgsl
@@ -262,7 +262,7 @@ class Surface(Mobject):
             sort_to_camera=self.sort_to_camera,
             mobject_data=self.data,
             mobject_uniforms=self.uniforms,
-            shader_folder=self.shader_folder,
+            shader_file=self.shader_file,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
             code_replacements=self.shader_code_replacements,
@@ -374,7 +374,7 @@ class ParametricSurface(Surface):
 
 
 class TexturedSurface(Surface):
-    shader_folder: str = "textured_surface"
+    shader_file: str = "textured_surface.wgsl"
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),

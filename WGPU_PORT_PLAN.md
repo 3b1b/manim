@@ -42,7 +42,7 @@ Two things this plan deliberately refuses:
   A/B comparison during the port, then delete it.
 - **No compatibility shim for user GLSL.** `set_color_by_code` takes GLSL today. It takes
   WGSL after. Nothing in the `videos` repo currently calls it, but three scenes name a
-  `shader_folder`: `_2021/newton_fractal.py` and `_2021/holomorphic_dynamics.py` point at
+  a shader of their own: `_2021/newton_fractal.py` and `_2021/holomorphic_dynamics.py` point at
   manimlib's own fractal shaders, and `_2024/holograms/diffraction.py` ships its own
   `diffraction_shader/` pair. Those three get ported by hand.
 

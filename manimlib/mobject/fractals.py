@@ -122,7 +122,7 @@ class MandelbrotFractal(PlaneFractal):
     The Mandelbrot set: which starting points c leave the iteration z -> z^2 + c bounded,
     each colored by how long it took to escape, and left black if it never did.
     """
-    shader_folder: str = "mandelbrot_fractal"
+    shader_file: str = "mandelbrot_fractal.wgsl"
     uniform_dtype: np.dtype = uniform_block_dtype(
         *COMMON_UNIFORMS,
         ("scale_factor", 1),
@@ -195,7 +195,7 @@ class NewtonFractal(PlaneFractal):
     color depends on the order the roots are in. Say roots to choose that order; say coefs
     instead and the order is whatever solving for them produced.
     """
-    shader_folder: str = "newton_fractal"
+    shader_file: str = "newton_fractal.wgsl"
     uniform_dtype: np.dtype = uniform_block_dtype(
         *COMMON_UNIFORMS,
         ("scale_factor", 1),

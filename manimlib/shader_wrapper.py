@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import re
 from functools import lru_cache
 
@@ -92,8 +91,8 @@ class ShaderWrapper(object):
     One mobject's side of the gpu: the module it is drawn by, the buffers holding what it
     sends, the groups those are bound in, and the drawing itself.
 
-    A mobject names a folder holding one shader, compiled once between all the mobjects
-    naming it, and hands over the two arrays it keeps: its data, a record per point, and its
+    A mobject names one shader file, compiled once between all the mobjects naming it,
+    and hands over the two arrays it keeps: its data, a record per point, and its
     uniforms, one value for the whole of it. Those sit here as a storage buffer and a uniform
     buffer. Values which hold for every mobject at once, where the camera is and the like,
     are no business of a wrapper's, being bound once a frame by the renderer.
@@ -115,7 +114,7 @@ class ShaderWrapper(object):
         renderer: Renderer,
         mobject_data: StructuredArray,
         mobject_uniforms: Uniforms,
-        shader_folder: Optional[str] = None,
+        shader_file: Optional[str] = None,
         texture_paths: Optional[dict[str, str]] = None,
         depth_test: bool = False,
         code_replacements: dict[str, str] = dict(),
@@ -125,7 +124,7 @@ class ShaderWrapper(object):
         self.device = renderer.device
         self.mobject_data = mobject_data
         self.mobject_uniforms = mobject_uniforms
-        self.shader_folder = shader_folder
+        self.shader_file = shader_file
         self.texture_paths = texture_paths or dict()
         self.depth_test = depth_test
         self.verts_per_record = verts_per_record
@@ -160,14 +159,14 @@ class ShaderWrapper(object):
         )
 
     def init_program(self) -> None:
-        # A mobject naming no folder, a group say, has nothing to be drawn by
-        self.code = self.get_code(self.shader_folder) if self.shader_folder else None
+        # A mobject naming no shader, a group say, has nothing to be drawn by
+        self.code = self.get_code(self.shader_file) if self.shader_file else None
         self.module = None if self.code is None else get_shader_module(self.device, self.code)
         self.modules = [] if self.module is None else [self.module]
 
-    def get_code(self, folder: str) -> str | None:
+    def get_code(self, filename: str) -> str | None:
         return get_shader_code(
-            os.path.join(folder, "shader.wgsl"),
+            filename,
             self.data_layout,
             self.mobject_uniforms.dtype,
             tuple(self.texture_paths),
@@ -456,14 +455,14 @@ class VShaderWrapper(ShaderWrapper):
     path encloses, and a stroke along the path itself. So it holds two modules, and names
     which of them each of its passes runs.
     """
-    fill_folder = os.path.join("quadratic_bezier", "fill")
-    stroke_folder = os.path.join("quadratic_bezier", "stroke")
+    fill_file = "fill.wgsl"
+    stroke_file = "stroke.wgsl"
     # Each bezier's fill is two triangles, one covering the interior and one hugging the
-    # curve, see quadratic_bezier/fill/shader.wgsl
+    # curve, see fill.wgsl
     fill_verts_per_curve = 6
     # And its stroke is a quad for each polyline segment the curve is broken into, the last
     # few of them going to the fan which rounds off a joint, see
-    # quadratic_bezier/stroke/shader.wgsl, whose MAX_STEPS this follows
+    # stroke.wgsl, whose MAX_STEPS this follows
     stroke_verts_per_curve = 6 * (32 - 1)
     # The one line of the stroke's source which the border compiles differently
     border_declaration = "const IS_FILL_BORDER: bool = false;"
@@ -482,8 +481,8 @@ class VShaderWrapper(ShaderWrapper):
         super().__init__(*args, **kwargs)
 
     def init_program(self) -> None:
-        self.fill_code = self.get_code(self.fill_folder)
-        self.stroke_code = self.get_code(self.stroke_folder)
+        self.fill_code = self.get_code(self.fill_file)
+        self.stroke_code = self.get_code(self.stroke_file)
         self.build_modules()
 
     def init_resources(self) -> None:

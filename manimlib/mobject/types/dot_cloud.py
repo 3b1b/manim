@@ -25,7 +25,7 @@ DEFAULT_BUFF_RATIO = 0.5
 
 
 class DotCloud(PMobject):
-    shader_folder: str = "true_dot"
+    shader_file: str = "true_dot.wgsl"
     # Each dot is expanded into a camera facing quad by the vertex shader
     verts_per_record: int = 6
     data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
