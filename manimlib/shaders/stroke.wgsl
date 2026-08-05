@@ -86,11 +86,13 @@ fn rotate_vector(vect: vec3f, normal: vec3f, turn: vec2f) -> vec3f {
 The tangent of the curve neighbouring this one at the given end, pointing the same way along
 the path. Where the subpath ends, and so has no neighbour to make a joint with, this comes
 back as zero.
+
+A border's closing chord is a neighbour like any other curve: it runs straight, so either of its
+endpoints stands in for the handle a curve would have had at the other.
 */
-fn neighbor_tangent(record: i32, at_start: bool, anchor: vec3f) -> vec3f {
-    let subpath_range = read_vec2(u32(record), DATA_OFFSET_subpath_range);
-    let first = i32(subpath_range.x);
-    let last = i32(subpath_range.y);
+fn neighbor_tangent(record: i32, subpath: vec2f, at_start: bool, anchor: vec3f) -> vec3f {
+    let first = i32(subpath.x);
+    let last = i32(subpath.y);
     let closed = all(
         read_vec3(u32(first), DATA_OFFSET_point) == read_vec3(u32(last), DATA_OFFSET_point)
     );
@@ -100,6 +102,8 @@ fn neighbor_tangent(record: i32, at_start: bool, anchor: vec3f) -> vec3f {
             previous = record - 1;
         } else if (closed) {
             previous = last - 1;
+        } else if (IS_FILL_BORDER) {
+            previous = last;
         }
         if (previous == NONE) { return vec3f(0.0); }
         return anchor - read_vec3(u32(previous), DATA_OFFSET_point);
@@ -107,8 +111,10 @@ fn neighbor_tangent(record: i32, at_start: bool, anchor: vec3f) -> vec3f {
     var next = NONE;
     if (record + 2 < last) {
         next = record + 3;
-    } else if (closed) {
+    } else if (closed || record == last) {
         next = first + 1;
+    } else if (IS_FILL_BORDER) {
+        next = first;
     }
     if (next == NONE) { return vec3f(0.0); }
     return read_vec3(u32(next), DATA_OFFSET_point) - anchor;
@@ -190,11 +196,22 @@ fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {
     // Segments past the polyline's allowance go to the fan rounding off the joint
     let joint_fan = segment >= POLYLINE_SEGMENTS;
 
-    let controls = array<vec3f, 3>(
+    let subpath = read_vec2(record, DATA_OFFSET_subpath_range);
+    var controls = array<vec3f, 3>(
         read_vec3(record, DATA_OFFSET_point),
         read_vec3(record + 1u, DATA_OFFSET_point),
         read_vec3(record + 2u, DATA_OFFSET_point),
     );
+    /*
+    A fill counts its winding as though every subpath ran back to its own first point, see
+    fill.wgsl, so the border traces that chord too, in the slot the curve marking the subpath's
+    end sits in. A subpath which already comes round leaves the chord no length, so it draws
+    nothing.
+    */
+    if (IS_FILL_BORDER && record == u32(subpath.y)) {
+        controls[2] = read_vec3(u32(subpath.x), DATA_OFFSET_point);
+        controls[1] = 0.5 * (controls[0] + controls[2]);
+    }
     let widths = array<f32, 3>(
         read_float(record, DATA_OFFSET_stroke_width),
         read_float(record + 1u, DATA_OFFSET_stroke_width),
@@ -288,7 +305,7 @@ fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {
     let at_joint = joint_fan || at_start || index == n_steps - 1;
     var neighbor = vec3f(0.0);
     if (at_joint) {
-        neighbor = neighbor_tangent(i32(record), at_start, point);
+        neighbor = neighbor_tangent(i32(record), subpath, at_start, point);
     }
     let has_joint = at_joint && !all(neighbor == vec3f(0.0));
 

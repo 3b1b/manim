@@ -490,14 +490,17 @@ class VShaderWrapper(ShaderWrapper):
         fill, a stencil test being all or nothing. Drawn only where the winding number is
         zero, meaning outside the shape, so that its faded edge never blends on top of the
         fill and leaves a seam for partially transparent colors.
+
+        One curve more than the path holds, since the chord closing the last subpath has no
+        end-of-subpath curve to be drawn in place of, see stroke.wgsl.
         """
-        self.draw(FILL_BORDER, self.border_module, self.stroke_vertices())
+        self.draw(FILL_BORDER, self.border_module, self.stroke_vertices(extra_curves=1))
 
     def draw_stroke(self) -> None:
         self.draw(DEFAULT, self.stroke_module, self.stroke_vertices())
 
-    def stroke_vertices(self) -> int:
-        return self.stroke_verts_per_curve * self.get_num_curves()
+    def stroke_vertices(self, extra_curves: int = 0) -> int:
+        return self.stroke_verts_per_curve * (self.get_num_curves() + extra_curves)
 
     def draw_passes(self) -> None:
         if self.stroke_behind:
