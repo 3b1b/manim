@@ -147,10 +147,9 @@ class ShaderWrapper(object):
         # Where in their arenas this mobject's values went, no stretch yet being none
         self.uniform_offset = -1
         self.data_offset = -1
-        # Made only for a mobject with images of its own, the rest reading the arena's, and
-        # made afresh whenever the arena has a new buffer to read
+        # Made only for a mobject with images of its own, the rest reading the arena's
         self.resource_bind_group = None
-        self.read_buffer = None
+        self.arena_bind_group = None
         self.textures = [
             image_path_to_texture(path, self.device)
             for path in self.texture_paths.values()
@@ -207,13 +206,13 @@ class ShaderWrapper(object):
         """
         What this mobject's records and images are read through. Without images of its own it
         reads the arena's group, shared with every mobject of its size; with them it needs one
-        of its own, remade whenever the arena has a new buffer.
+        of its own, made again whenever the arena makes its own again.
         """
         arena = self.data_arena
         if not self.textures:
             return arena.bind_group
-        if self.resource_bind_group is None or self.read_buffer is not arena.buffer:
-            self.read_buffer = arena.buffer
+        if self.arena_bind_group is not arena.bind_group:
+            self.arena_bind_group = arena.bind_group
             entries = [{"binding": DATA_BINDING, "resource": {
                 "buffer": arena.buffer, "offset": 0, "size": arena.window,
             }}]
