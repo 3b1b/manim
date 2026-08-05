@@ -74,9 +74,9 @@ class LooseTriangles(ThreeDScene):
         mesh.set_points(np.array(corners))
         mesh.set_color(TEAL, opacity=0.45)
         self.add(mesh)
-        wrapper = mesh.get_shader_wrapper(self.camera.renderer)
         self.update_frame(force_draw=True)
-        print(f"ORDERED|{wrapper.ordered}|{wrapper.order_count}|{len(mesh.data) // 3}")
+        slot = self.camera.draw_list.slots[mesh]
+        print(f"ORDERED|{slot.ordered}|{slot.order_count}|{len(mesh.data) // 3}")
 '''
 
 

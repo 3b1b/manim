@@ -13,6 +13,7 @@ from manimlib.constants import FRAME_HEIGHT
 from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
+from manimlib.draw_list import DrawList
 from manimlib.renderer import COLOR_FORMAT
 from manimlib.renderer import DEPTH_STENCIL_FORMAT
 from manimlib.renderer import Renderer
@@ -144,6 +145,7 @@ class Camera(object):
 
     def init_renderer(self) -> None:
         self.renderer = Renderer()
+        self.draw_list = DrawList(self.renderer)
         if self.window is not None:
             self.window.configure(self.renderer)
 
@@ -311,25 +313,9 @@ class Camera(object):
     # Rendering
     def capture(self, *mobjects: Mobject) -> None:
         self.resize_target()
-        wrappers = [
-            wrapper
-            for mobject in mobjects
-            for wrapper in mobject.get_shader_wrappers(self.renderer)
-        ]
-        # Everything the frame sends to the gpu, before the pass it draws in opens, since a
-        # write reaching the gpu partway through a pass has no say over which draws see it
         self.refresh_uniforms()
         self.renderer.send_frame_uniforms()
-        self.renderer.begin_writes()
-        for wrapper in wrappers:
-            wrapper.write_buffers()
-        self.renderer.end_writes()
-
-        self.renderer.begin_frame(self.get_attachments())
-        for wrapper in wrappers:
-            wrapper.render()
-        self.renderer.end_frame()
-
+        self.draw_list.draw(mobjects, self.get_attachments())
         if self.window is not None:
             self.window.show(self.frame_view)
 

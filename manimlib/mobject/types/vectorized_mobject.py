@@ -43,7 +43,7 @@ from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.space_ops import poly_line_length
-from manimlib.shader_wrapper import VShaderWrapper
+from manimlib.program import VProgram
 from manimlib.utils.shaders import COMMON_UNIFORMS
 from manimlib.utils.shaders import uniform_block_dtype
 
@@ -54,13 +54,13 @@ SubVmobjectType = TypeVar('SubVmobjectType', bound='VMobject')
 if TYPE_CHECKING:
     from typing import Callable, Tuple, Any, Optional
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Self
-    from manimlib.renderer import Renderer
 
 
 GRADIENT_POINT_KEYS = ['gradient_start', 'gradient_end']
 
 
 class VMobject(Mobject):
+    program_class: type = VProgram
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('stroke_rgba', np.float32, (4,)),
@@ -1271,24 +1271,6 @@ class VMobject(Mobject):
         for mob in self.get_family():
             mob.get_unit_normal(refresh=True)
         return self
-
-    # For shaders
-
-    def init_shader_wrapper(self, renderer: Renderer):
-        self.shader_wrapper = VShaderWrapper(
-            renderer=renderer,
-            mobject_data=self.data,
-            mobject_uniforms=self.uniforms,
-            code_replacements=self.shader_code_replacements,
-            program_type=self.shader_program_type,
-            stroke_behind=self.stroke_behind,
-            depth_test=self.depth_test
-        )
-
-    def get_shader_wrapper(self, renderer: Renderer) -> VShaderWrapper:
-        wrapper = super().get_shader_wrapper(renderer)
-        wrapper.stroke_behind = self.stroke_behind
-        return wrapper
 
 
 class VGroup(Group, VMobject, Generic[SubVmobjectType]):

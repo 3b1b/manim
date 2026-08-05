@@ -78,7 +78,7 @@ class DrawState:
 
 
 DEFAULT = DrawState()
-# The three passes a fill takes, see VShaderWrapper.draw_fill
+# The three passes a fill takes, see VProgram.draw_fill
 WINDING_COUNT = DrawState(
     depth_test=False,
     depth_write=False,
@@ -158,6 +158,7 @@ class Arena(object):
         self.blocks = np.zeros(0, dtype=np.uint8)
         self.bytes = memoryview(self.blocks)
         self.buffer = None
+        self.bind_group = None
         self.dirty: tuple[int, int] | None = None
 
     def grow_to(self, needed: int) -> bool:
