@@ -191,9 +191,6 @@ class ShaderWrapper(object):
             self.sampler = self.device.create_sampler(
                 mag_filter=wgpu.FilterMode.linear, min_filter=wgpu.FilterMode.linear,
             )
-        # Which write to each of the mobject's arrays was the last to be sent
-        self.data_version = 0
-        self.uniform_version = 0
 
     # Sending what the draw will read
 
@@ -213,6 +210,7 @@ class ShaderWrapper(object):
         array = self.mobject_data.array
         if len(array) == 0:
             return
+        changed = self.mobject_data.has_changed(observer=self)
         # A buffer's size is settled when it is made, so a resized array wants a new one,
         # and whatever was bound to the old one has to be bound afresh
         if self.data_buffer is not None and self.data_buffer.size != array.nbytes:
@@ -224,23 +222,28 @@ class ShaderWrapper(object):
                 usage=wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_DST,
             )
             self.resource_bind_group = None
-        elif self.mobject_data.version == self.data_version:
+        elif not changed:
             return
         self.renderer.queue.write_buffer(self.data_buffer, 0, array)
-        self.data_version = self.mobject_data.version
 
-    def write_uniform_buffer(self) -> None:
+    def write_uniform_buffer(self) -> bool:
+        """
+        True if the uniforms were sent, which is to say they had been written to since they
+        were last sent. Said rather than asked again, since asking the array counts as having
+        looked and there is one answer to go round, see StructuredArray.has_changed.
+        """
         array = self.mobject_uniforms.array
+        changed = self.mobject_uniforms.has_changed(observer=self)
         if self.uniform_buffer is None:
             self.uniform_buffer = self.device.create_buffer(
                 size=array.nbytes,
                 usage=wgpu.BufferUsage.UNIFORM | wgpu.BufferUsage.COPY_DST,
             )
             self.mobject_bind_group = None
-        elif self.mobject_uniforms.version == self.uniform_version:
-            return
+        elif not changed:
+            return False
         self.renderer.queue.write_buffer(self.uniform_buffer, 0, array)
-        self.uniform_version = self.mobject_uniforms.version
+        return True
 
     def get_bind_groups(self):
         """
@@ -489,15 +492,16 @@ class VShaderWrapper(ShaderWrapper):
         super().init_resources()
         self.has_fill = False
 
-    def write_buffers(self) -> None:
-        # Whether the path encloses anything at all to fill, worked out whenever the
-        # uniforms which say so change rather than once for every frame. Without it a shape
+    def write_uniform_buffer(self) -> bool:
+        # Whether the path encloses anything at all to fill, worked out whenever the uniforms
+        # which say so are sent afresh rather than once for every frame. Without it a shape
         # with no fill still pays for all three of its fill passes, and in a scene of lines
         # and text those are most of the draws a frame makes.
-        if self.mobject_uniforms.version != self.uniform_version:
-            uniforms = self.mobject_uniforms
-            self.has_fill = bool(uniforms["fill_rgba"][3] or uniforms["fill_rgba_end"][3])
-        super().write_buffers()
+        if not super().write_uniform_buffer():
+            return False
+        uniforms = self.mobject_uniforms
+        self.has_fill = bool(uniforms["fill_rgba"][3] or uniforms["fill_rgba_end"][3])
+        return True
 
     def build_modules(self) -> None:
         """

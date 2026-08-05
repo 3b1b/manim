@@ -141,7 +141,6 @@ class Renderer(object):
                 "buffer": self.frame_buffer, "offset": 0, "size": self.frame_buffer.size,
             }}],
         )
-        self.sent_version = 0
 
         # How many samples a frame's attachments take, which every pipeline has to match.
         # The camera says, when it makes what it draws into.
@@ -156,9 +155,8 @@ class Renderer(object):
 
     def send_frame_uniforms(self) -> None:
         """The frame's uniforms, if they have been written to since they were last sent"""
-        if self.frame_uniforms.version != self.sent_version:
+        if self.frame_uniforms.has_changed(observer=self):
             self.queue.write_buffer(self.frame_buffer, 0, self.frame_uniforms.array)
-            self.sent_version = self.frame_uniforms.version
 
     def get_pipeline(self, key: Any, build: Callable[[], Any]):
         """

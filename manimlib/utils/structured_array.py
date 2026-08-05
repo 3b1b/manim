@@ -24,11 +24,11 @@ class StructuredArray(object):
     to mirror what the shader declares, see Mobject.data_dtype and uniform_dtype.
 
     Three things come with holding it here rather than as a bare array. Every write to
-    it is counted, so that whatever has sent it somewhere can tell whether what it sent
-    is still what the array holds, and nothing needs to say that it changed. Emptying the
-    array remembers what was in it, so that a mobject stripped of its points and given
-    new ones keeps the style it had, see resize. And fields are read and written by name,
-    as with a dict, while rows are read and written by index, as with the array itself.
+    it is counted, so that whatever has sent it somewhere can ask whether what it sent
+    is still what the array holds, see has_changed. Emptying the array remembers what was
+    in it, so that a mobject stripped of its points and given new ones keeps the style it
+    had, see resize. And fields are read and written by name, as with a dict, while rows
+    are read and written by index, as with the array itself.
 
     Either kind of write is counted. Reading, though, hands back a view onto the array,
     so writing through one of those, as in
@@ -48,13 +48,12 @@ class StructuredArray(object):
         self.array: np.ndarray = np.zeros(length, dtype=dtype)
         # What to fill in with when growing from nothing, see resize
         self.defaults: np.ndarray = np.ones(1, dtype=dtype)
-        # Counted up by every write, and started above zero so that anything watching
-        # the array, which starts from zero, has something to send in the first place.
-        # A count rather than a yes or no, since more than one thing may be watching,
-        # e.g. a mobject drawn both on its own and as part of a merged family, and each
-        # needs to know what it has missed rather than whether anyone has missed
-        # anything, see ShaderWrapper.write_vertex_buffer and MergedRun.gather.
+        # Counted up by every write. A count rather than a yes or no, since more than one
+        # thing may be watching and each needs to know what it has missed rather than
+        # whether anyone has missed anything.
         self.version: int = 1
+        # Which version each of those things last saw, see has_changed
+        self.seen_by: dict[Any, int] = dict()
 
     def __getitem__(self, key: str | int | slice | np.ndarray) -> np.ndarray:
         return self.array[key]
@@ -82,6 +81,28 @@ class StructuredArray(object):
         write through a view onto it is.
         """
         self.version += 1
+
+    def has_changed(self, observer: Any) -> bool:
+        """
+        Whether the array has been written to since this observer last asked.
+
+        Everything watching an array wants the same thing of it, to know whether what it last
+        read is still what the array holds, and would otherwise each keep its own note of the
+        version it saw and remember to move that note on. The notes are kept here instead, one
+        for each observer, so that watching an array takes nothing but asking it.
+
+        Asking counts as having looked, the answer being about the writes since the last ask.
+        So two things which want the same answer have to be two observers, or ask once between
+        them, see ShaderWrapper.write_uniform_buffer for one which does the latter.
+
+        An observer is remembered for as long as the array is, so one which is thrown away
+        while its array lives on is kept alive by it. Nothing here is replaced often enough
+        for that to be worth weak references, which cost four times as much to look up.
+        """
+        if self.seen_by.get(observer) == self.version:
+            return False
+        self.seen_by[observer] = self.version
+        return True
 
     @property
     def dtype(self) -> np.dtype:
@@ -159,4 +180,6 @@ class StructuredArray(object):
         result.array = self.array.copy()
         result.defaults = self.defaults.copy()
         result.version += 1
+        # A copy has been looked at by nobody, whatever has looked at what it was copied from
+        result.seen_by = dict()
         return result
