@@ -16,6 +16,7 @@ pygments
 pyperclip
 pywavefront
 pyyaml
+rendercanvas
 rich
 scipy
 setuptools

@@ -71,6 +71,9 @@ class Window(object):
     for whenever the scene says rather than from a callback the canvas decides when to call.
     What the canvas is left to own is the surface, kept configured through resizes and whatever
     the display's scale factor is, and the presenting of a texture onto it.
+
+    That canvas is rendercanvas's glfw one, over a glfw window this reaches for directly in the
+    two places a canvas offers no say, see glfw_window.
     """
 
     def __init__(
