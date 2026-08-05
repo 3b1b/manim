@@ -463,7 +463,47 @@ All four done.
   `OpenGL.ERROR_CHECKING` and `gl_error_checking`, and `moderngl`, `moderngl_window`,
   `PyOpenGL`, `pyglet` and `screeninfo` from the requirements.
 
-### Phase 3 — validation
+### Phase 3 — validation — **done, and the port is sound**
+
+Twenty nine cases. Five come out byte for byte identical. Of the twenty four which differ,
+twenty two differ *only* along the edges of shapes, and the other two by at most four values
+out of 255 across a few hundred pixels of a surface's interior. Nothing differs structurally,
+nothing is offset, and nothing is systematically brighter or darker.
+
+Getting to that answer meant fixing the instrument twice.
+
+- **An identity colour filter was moving nearly every pixel.** Every video manim writes went
+  through `-vf eq=saturation=1.0:gamma=1.0`, and `eq` works in yuv, so asking it for nothing
+  still sent every pixel out of rgb and back, worth up to 2 out of 255 almost everywhere. It
+  is now only named when it has something to do, which changes what manim writes for
+  everyone, towards what it drew.
+- **The video references were lossy.** They were written through libx264 at its default
+  quality in yuv420p. Re-encoding a case's own frames, unchanged, moved 389,000 pixels of a
+  frame of `AnimCamera`, against 14,707 for the entire difference under investigation: the
+  noise was twenty six times the signal, and the "interior" differences being chased were
+  macroblocks. The harness writes losslessly now (`libx264rgb`, `rgb24`, `crf 0`), verified
+  by rendering on GL both ways and finding a video's last frame byte for byte the frame
+  written straight to png. The five video cases went from maxima of 34, 54, 73, 68 and 105
+  to 1, 1, 1, 8 and 68.
+
+Two checks separate "differs along the edges" from the faults which would look the same from
+a distance, and both are worth repeating on any renderer change:
+
+- **Where the differences sit.** A pixel is on an edge if the reference's own colour varies
+  within two pixels of it. `compare` now reports how many differing pixels are *not*, which
+  is the number to read. The largest interior count across all cases is 232 pixels at a
+  maximum of 4, on a shaded sphere: float32 arithmetic landing either side of a rounding
+  boundary.
+- **Whether either render is shifted.** A render half a pixel out would also show as
+  edge-only differences. Rolling one against the other by a pixel in each of eight directions
+  makes the difference eight to seventy times *worse* in every case, so the two are aligned;
+  and the sign of the difference is balanced 44 to 58 percent, so neither anti-aliases
+  consistently heavier than the other.
+
+The largest maxima left — 110 on `TexturedAndImages`, 99 on `OpeningManimExample`, 85 on
+`Surfaces` — are all single boundary pixels going from one flat colour to another, where half
+a pixel of coverage is worth half the distance between two very different colours. That is
+the expected cost of a different rasterizer and not a defect.
 
 **Compare against captured references, never against a second checkout.** `manimgl` is
 installed editable, which since PEP 660 means a *meta path finder* in site-packages, and a
@@ -475,13 +515,9 @@ stops rendering, is the only comparison worth trusting. To render an arbitrary s
 another checkout, `python -S` from that checkout's directory keeps both the finder and the
 cwd out of the way, and both are needed.
 
-What the comparison actually shows, for the kinds ported so far: differences confined to a
-one pixel outline around every shape, 82 to 100 percent of differing pixels being within two
-pixels of a colour change, none in any interior. Under half a percent of a frame, with the
-largest per channel difference around 120 where a boundary pixel goes from one flat colour to
-another. Dots come closest, at a maximum difference of 1 over 54 pixels. So the plan's
-expectation holds: a tolerance is needed, and what matters alongside it is that the
-differences stay on boundaries.
+That warning earned itself: four comparisons during Phase 2 came out byte for byte identical
+because they were the wgpu renderer against itself. The GL worktree is still what references
+are captured from, and `python -S` from its directory is the only way to run it.
 
 There is no test suite, so build the one thing that makes a port like this safe and which is
 worth having regardless: a frame-comparison harness. Render a fixed list of scenes —
