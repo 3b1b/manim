@@ -172,17 +172,21 @@ class Camera(object):
             },
         }
 
-    def get_frame_bytes(self) -> bytes:
+    def get_frame_bytes(self) -> memoryview:
         """
         The frame as it stands, four bytes to a pixel, a row at a time from the top. GL
         handed these back from the bottom up, which everything reading them had to undo.
+
+        Handed over as it comes off the gpu, which is a memoryview of its own bytes rather
+        than a copy of them. Whoever wants bytes of it may say so; the two which want this,
+        a pipe to write down and an image to build, both take it as it is.
         """
         width, height = self.pixel_shape
-        return bytes(self.renderer.queue.read_texture(
+        return self.renderer.queue.read_texture(
             {"texture": self.color_texture, "mip_level": 0, "origin": (0, 0, 0)},
             {"offset": 0, "bytes_per_row": 4 * width, "rows_per_image": height},
             (width, height, 1),
-        ))
+        )
 
     def get_image(self) -> Image.Image:
         return Image.frombytes("RGBA", self.pixel_shape, self.get_frame_bytes())
