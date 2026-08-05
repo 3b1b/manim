@@ -18,7 +18,7 @@ from manimlib.utils.shaders import get_shader_module
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Optional
+    from typing import Any, Callable
 
 
 # Stencil bits alongside the depth, which a fill counting windings needs

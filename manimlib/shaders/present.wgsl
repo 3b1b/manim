@@ -1,6 +1,5 @@
 /*
-A finished frame drawn onto whatever a window gave us to present, which is all a window is
-for now that nothing draws into it directly.
+A finished frame drawn onto whatever a window gave us to present.
 
 One triangle covers the screen rather than two, its corners reaching past the far side of
 clip space so that its middle is exactly what the frame fills, which needs no buffer of

@@ -25,11 +25,7 @@ fn read_vec2(record: u32, offset: u32) -> vec2f {
 }
 
 fn read_vec3(record: u32, offset: u32) -> vec3f {
-    return vec3f(
-        read_float(record, offset),
-        read_float(record, offset + 1u),
-        read_float(record, offset + 2u),
-    );
+    return vec3f(read_vec2(record, offset), read_float(record, offset + 2u));
 }
 
 fn read_vec4(record: u32, offset: u32) -> vec4f {
