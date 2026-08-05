@@ -282,6 +282,11 @@ class ShaderWrapper(object):
         The pipeline for one of this mobject's passes. Everything a pass settles is in there:
         which module runs, what it may bind, and all of what the state names, so a pipeline
         is what gets cached and there is nothing left to say around the draw itself.
+
+        The renderer holds them, so that every mobject of a kind draws through the same ones
+        rather than compiling its own. Keeping the answer here as well, since a mobject asks
+        the same question every frame, was measured and came to nothing: what a lookup costs
+        is hashing the state, which either way happens once per draw.
         """
         samples = self.renderer.samples
         # A module is compiled from code which names the mobject's images, so which images
@@ -312,34 +317,34 @@ class ShaderWrapper(object):
 
         return self.renderer.get_pipeline(key, build)
 
-    def bind_for_draw(self, state: DrawState, module):
-        """
-        Points the frame's pass at what this draw reads and how it is to behave, handing
-        back the pass for whichever kind of draw follows. Whatever the pass has been told
-        already it is not told again, see Renderer.bind.
-        """
-        mobject_group, resource_group = self.get_bind_groups()
-        self.renderer.bind(MOBJECT_GROUP, mobject_group)
-        self.renderer.bind(RESOURCE_GROUP, resource_group)
-        self.renderer.use_pipeline(self.get_pipeline(state, module))
-        return self.renderer.pass_
-
     def draw(self, state: DrawState, module, vertices: int) -> None:
         """One pass over this mobject's records"""
-        self.bind_for_draw(state, module).draw(vertices)
+        self.renderer.use_pipeline(self.get_pipeline(state, module))
+        self.renderer.pass_.draw(vertices)
 
     def draw_through(self, state: DrawState, module, indices, count: int) -> None:
         """
         One pass over this mobject's records in the order a buffer of indices gives, each
         index being the vertex the shader is to work out.
         """
-        render_pass = self.bind_for_draw(state, module)
-        render_pass.set_index_buffer(indices, wgpu.IndexFormat.uint32)
-        render_pass.draw_indexed(count)
+        self.renderer.use_pipeline(self.get_pipeline(state, module))
+        self.renderer.pass_.set_index_buffer(indices, wgpu.IndexFormat.uint32)
+        self.renderer.pass_.draw_indexed(count)
 
     def render(self) -> None:
+        """
+        Every pass this mobject takes, over what every one of them reads.
+
+        Which buffers to read is said once here rather than on the way into each pass, all
+        of a mobject's passes reading the same two: a fill counting its winding and the
+        stroke along the same path differ in which program runs and how the draw behaves,
+        not in where the points come from.
+        """
         if not self.modules or len(self.mobject_data) == 0:
             return
+        mobject_group, resource_group = self.get_bind_groups()
+        self.renderer.bind(MOBJECT_GROUP, mobject_group)
+        self.renderer.bind(RESOURCE_GROUP, resource_group)
         self.draw_passes()
 
     def draw_passes(self) -> None:
@@ -475,6 +480,20 @@ class VShaderWrapper(ShaderWrapper):
         self.stroke_code = self.get_code(self.stroke_folder)
         self.build_modules()
 
+    def init_resources(self) -> None:
+        super().init_resources()
+        self.has_fill = False
+
+    def write_buffers(self) -> None:
+        # Whether the path encloses anything at all to fill, worked out whenever the
+        # uniforms which say so change rather than once for every frame. Without it a shape
+        # with no fill still pays for all three of its fill passes, and in a scene of lines
+        # and text those are most of the draws a frame makes.
+        if self.mobject_uniforms.version != self.uniform_version:
+            uniforms = self.mobject_uniforms
+            self.has_fill = bool(uniforms["fill_rgba"][3] or uniforms["fill_rgba_end"][3])
+        super().write_buffers()
+
     def build_modules(self) -> None:
         """
         Three modules from two sources. The border around a fill is the stroke shader with
@@ -525,7 +544,14 @@ class VShaderWrapper(ShaderWrapper):
         passes between several would merge their winding numbers into one region, so that
         overlapping mobjects would color a shared pixel once between them rather than each
         blending in turn.
+
+        A path enclosing nothing to be filled takes none of these passes. Taking them anyway
+        would come to the same picture, the winding count being undone by the pass which
+        reads it and nothing being drawn in a color with no alpha, but at the price of three
+        draws out of a frame's four for every stroked line on screen.
         """
+        if not self.has_fill:
+            return
         vertices = self.fill_verts_per_curve * self.get_num_curves()
         # Counting the windings needs no color, and must see every triangle of the path
         # whatever stands in front of it, which is what WINDING_COUNT says
