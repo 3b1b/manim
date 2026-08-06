@@ -91,8 +91,9 @@ A border's closing chord is a neighbour like any other curve: it runs straight, 
 endpoints stands in for the handle a curve would have had at the other.
 */
 fn neighbor_tangent(record: i32, subpath: vec2f, at_start: bool, anchor: vec3f) -> vec3f {
-    let first = i32(subpath.x);
-    let last = i32(subpath.y);
+    // How far the subpath reaches either side of the record, see VMobject.set_subpath_range
+    let first = record - i32(subpath.x);
+    let last = record + i32(subpath.y);
     let closed = all(
         read_vec3(u32(first), DATA_OFFSET_point) == read_vec3(u32(last), DATA_OFFSET_point)
     );
@@ -208,8 +209,8 @@ fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {
     end sits in. A subpath which already comes round leaves the chord no length, so it draws
     nothing.
     */
-    if (IS_FILL_BORDER && record == u32(subpath.y)) {
-        controls[2] = read_vec3(u32(subpath.x), DATA_OFFSET_point);
+    if (IS_FILL_BORDER && subpath.y == 0.0) {
+        controls[2] = read_vec3(u32(i32(record) - i32(subpath.x)), DATA_OFFSET_point);
         controls[1] = 0.5 * (controls[0] + controls[2]);
     }
     let widths = array<f32, 3>(

@@ -24,9 +24,10 @@ an encoder made of a frame rather than the frame.
     --quality l|m|hd|uhd     what to render at, low by default
     --twice                  (capture) render everything twice and report anything unstable
     --no-recording           draw every frame afresh rather than replaying a recording
+    --no-merging             draw every mobject on its own rather than gathering runs
 
-Recording draws is meant to be invisible, so capturing with --no-recording and comparing
-without it is a test of that, animations included.
+Both of those are meant to be invisible, so capturing with one and comparing without it is a
+test of that, animations included.
 """
 from __future__ import annotations
 
@@ -35,6 +36,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Sequence
 
 import numpy as np
 from PIL import Image
@@ -62,12 +64,14 @@ CASES = [
     (SCENES, "FixedInFrame", "still"),
     (SCENES, "Zoomed", "still"),
     (SCENES, "ByCode", "still"),
+    (SCENES, "DrawnTogether", "still"),
     (SCENES, "AnimWrite", "video"),
     (SCENES, "AnimTransform", "video"),
     (SCENES, "AnimShapes", "video"),
     (SCENES, "AnimUpdaters", "video"),
     (SCENES, "AnimCamera", "video"),
     (SCENES, "AnimSorted", "video"),
+    (SCENES, "AnimTextTransform", "video"),
     # The example scenes are the closest thing to real content in the repository, and
     # between them they exercise most of what a video would
     (EXAMPLES, "OpeningManimExample", "still"),
@@ -95,20 +99,19 @@ file_writer:
   pixel_format: "rgb24"
   crf: 0
 """
-# What a render says when told to make every draw afresh rather than replaying a recording of
-# them, which is meant to come out to the same picture, see DrawList
-NO_RECORDING = """
-camera:
-  record_draws: False
-"""
+# What a render is told when asked to draw the plain way rather than by replaying a recording
+# or gathering mobjects into runs, both of which are meant to come out to the same picture,
+# see DrawList
+PLAIN_DRAWING = {"record_draws": "--no-recording", "draw_together": "--no-merging"}
 
 
-def render(case, into: Path, quality: str, record: bool = True) -> Path | None:
+def render(case, into: Path, quality: str, plainly: Sequence[str] = ()) -> Path | None:
     """One case into a directory of its own, coming back with what it wrote"""
     path, scene, kind = case
     into.mkdir(parents=True, exist_ok=True)
     config = into / "lossless.yml"
-    config.write_text(LOSSLESS_CONFIG if record else LOSSLESS_CONFIG + NO_RECORDING)
+    settings = "".join(f"  {name}: False\n" for name in plainly)
+    config.write_text(LOSSLESS_CONFIG + (f"camera:\n{settings}" if settings else ""))
     command = ["manimgl", str(path), scene, "-w", QUALITY_FLAGS[quality],
                "--video_dir", str(into), "--config_file", str(config)]
     if kind == "still":
@@ -204,6 +207,10 @@ def run(args) -> int:
             print(f"No such case: {', '.join(sorted(missing))}")
             return 2
 
+    plainly = [
+        setting for setting, flag in PLAIN_DRAWING.items()
+        if getattr(args, flag.lstrip("-").replace("-", "_"))
+    ]
     refs = Path(args.refs).expanduser()
     work = refs / "_work"
     if work.exists():
@@ -213,7 +220,7 @@ def run(args) -> int:
     for case in cases:
         _, scene, kind = case
         if args.command == "capture":
-            rendered = render(case, refs / "render", args.quality, not args.no_recording)
+            rendered = render(case, refs / "render", args.quality, plainly)
             if rendered is None:
                 failures.append(scene)
                 continue
@@ -221,7 +228,7 @@ def run(args) -> int:
             shutil.move(str(rendered), kept)
             note = ""
             if args.twice:
-                again = render(case, work / "again", args.quality, not args.no_recording)
+                again = render(case, work / "again", args.quality, plainly)
                 same = again is not None and compare_frames(
                     frames_of(again, work / "frames_a"),
                     frames_of(kept, work / "frames_b"),
@@ -238,7 +245,7 @@ def run(args) -> int:
             print(f"  {scene:28s} NO REFERENCE")
             failures.append(scene)
             continue
-        rendered = render(case, work / "render", args.quality, not args.no_recording)
+        rendered = render(case, work / "render", args.quality, plainly)
         if rendered is None:
             failures.append(scene)
             continue
@@ -286,6 +293,7 @@ def main() -> int:
     parser.add_argument("--quality", choices=list(QUALITY_FLAGS), default="l")
     parser.add_argument("--twice", action="store_true")
     parser.add_argument("--no-recording", action="store_true")
+    parser.add_argument("--no-merging", action="store_true")
     args = parser.parse_args()
     if args.command == "list":
         for path, scene, kind in CASES:

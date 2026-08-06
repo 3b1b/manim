@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from manimlib.mobject.mobject import Mobject
+    from manimlib.utils.structured_array import StructuredArray
     from manimlib.renderer.renderer import DrawState, Renderer
 
 
@@ -66,6 +67,8 @@ class Slot(object):
         # Where in the shared buffers this mobject's values went, no stretch yet being none
         self.uniform_offset = -1
         self.data_offset = -1
+        # How many records this slot's draw covers, which for one drawing a run of mobjects
+        # together is the whole run's, and for one drawn as part of a run is none
         self.records = 0
         self.depth_test = False
         # Made only for a mobject with images of its own, the rest reading the shared one's
@@ -78,6 +81,9 @@ class Slot(object):
         # VProgram
         self.has_fill = False
         self.stroke_behind = False
+        # The mobjects this one is drawn together with, itself first, or none where it is
+        # drawn on its own, see DrawList.group
+        self.members: list[Slot] | None = None
         # The order a surface's triangles are drawn in, where it is drawn in one, see
         # SurfaceProgram
         self.order_buffer = None
@@ -99,6 +105,11 @@ class Program(object):
     as a flat array of floats indexed by the vertex being drawn, and expands every record into
     verts_per_record vertices, always triangles, see inserts/read_data.wgsl.
     """
+    # Whether several of these mobjects may be drawn by one draw, which asks of their shader
+    # that it read every record on the record's own terms, see DrawList.group
+    merges = False
+    # How many records hold one mobject of a run apart from the next
+    records_between = 0
 
     @classmethod
     def key(cls, mobject: Mobject) -> tuple:
@@ -130,8 +141,9 @@ class Program(object):
             len(self.texture_paths),
         )
         # Where these mobjects' values go each frame, see SharedBuffer
+        self.record_size = mobject.data.dtype.itemsize
         self.uniform_buffer = self.renderer.uniform_buffer_for(mobject.uniforms.array.nbytes)
-        self.data_buffer = self.renderer.data_buffer_for(mobject.data.dtype.itemsize)
+        self.data_buffer = self.renderer.data_buffer_for(self.record_size)
 
     def init_program(self, mobject: Mobject) -> None:
         # A mobject naming no shader, a group say, has nothing to be drawn by
@@ -200,34 +212,67 @@ class Program(object):
 
     # Sending what the draw will read
 
-    def write(self, slot: Slot) -> None:
+    def write_style(self, slot: Slot) -> bool:
         """
-        A mobject's two arrays into the buffers they share, along with whatever else its draw
-        to know. Every mobject of a frame is written before any of them is drawn, a write
-        reaching the gpu partway through a pass having no say over which draws see it, see
-        Camera.capture.
+        A mobject's uniforms into the buffer they share, along with everything its draw needs
+        to know besides where its records went. Settled first, since which mobjects may be
+        drawn together depends on it, see DrawList.group, and says whether the style moved.
 
-        Noting on the way whether any of what was settled here moved, which every comparison
-        below was making anyway, so that a recorded draw knows to be made again.
+        Noting on the way whether any of it moved, which every comparison here was making
+        anyway, so that a recorded draw knows to be made again.
         """
-        records = len(slot.data)
         depth_test = slot.mobject.depth_test
-        slot.resequenced = records != slot.records or depth_test != slot.depth_test
-        slot.records = records
+        slot.resequenced = depth_test != slot.depth_test
         slot.depth_test = depth_test
-        self.write_data(slot)
-        self.write_uniforms(slot)
+        return self.write_uniforms(slot)
 
-    def write_data(self, slot: Slot) -> None:
-        """Into a stretch of the shared buffer, remembering where the draw is to read"""
-        data = slot.data
-        changed = data.has_changed(observer=slot)
-        offset = self.data_buffer.claim(data.array.nbytes)
-        moved = offset != slot.data_offset
-        if changed or moved:
-            self.data_buffer.put(offset, data.bytes)
-        slot.resequenced = slot.resequenced or moved
-        slot.data_offset = offset
+    def write_records(self, leader: Slot) -> None:
+        """
+        A mobject's records into a stretch of the shared buffer, or, where it draws a run of
+        mobjects together, all of theirs into one stretch, back to back with records between
+        them holding each one's last record over again: for a vectorized mobject that repeat
+        is a null curve, which is already how one mobject's own subpaths are held apart, so
+        the run reads as one path and the shaders need know nothing of any of this.
+
+        Either way the mobject which draws is given the whole stretch.
+        """
+        run = leader.members
+        if run is None:
+            data = leader.data
+            records = len(data)
+            offset = self.data_buffer.claim(data.array.nbytes)
+            changed = data.has_changed(observer=leader)
+            moved = offset != leader.data_offset or records != leader.records
+            if changed or moved:
+                self.data_buffer.put(offset, data.bytes)
+            leader.data_offset = offset
+            leader.records = records
+            leader.resequenced = leader.resequenced or moved
+            return
+
+        sizes = [len(slot.data) for slot in run]
+        records = sum(sizes) + self.records_between * (len(run) - 1)
+        offset = self.data_buffer.claim(records * self.record_size)
+        moved = offset != leader.data_offset or records != leader.records
+        at = offset
+        last = len(run) - 1
+        for index, (slot, size) in enumerate(zip(run, sizes)):
+            data = slot.data
+            changed = data.has_changed(observer=slot)
+            if changed or at != slot.data_offset:
+                self.data_buffer.put(at, data.bytes)
+                if index != last:
+                    self.write_gap(at + size * self.record_size, data)
+            slot.data_offset = at
+            at += (size + self.records_between) * self.record_size
+        leader.records = records
+        leader.resequenced = leader.resequenced or moved
+
+    def write_gap(self, offset: int, data: StructuredArray) -> None:
+        """The last record over again, as many times as hold one mobject apart from the next"""
+        last = data.bytes[-self.record_size:]
+        for step in range(self.records_between):
+            self.data_buffer.put(offset + step * self.record_size, last)
 
     def write_uniforms(self, slot: Slot) -> bool:
         """
@@ -319,8 +364,8 @@ class SurfaceProgram(Program):
     to be drawn first. Its triangles are drawn furthest from the camera first, through a buffer
     of indices written before the frame's pass opens, see Surface.is_opaque.
     """
-    def write(self, slot: Slot) -> None:
-        super().write(slot)
+    def write_style(self, slot: Slot) -> bool:
+        restyled = super().write_style(slot)
         surface = slot.mobject
         was, count = slot.ordered, slot.order_count
         # Ordering the triangles writes a buffer of its own, so it belongs among the writes
@@ -328,6 +373,7 @@ class SurfaceProgram(Program):
         slot.ordered = sort and self.order_triangles_by_depth(slot)
         slot.resequenced = slot.resequenced or slot.ordered != was \
             or slot.order_count != count
+        return restyled
 
     def order_triangles_by_depth(self, slot: Slot) -> bool:
         """
@@ -397,6 +443,10 @@ class VProgram(Program):
     A vectorized mobject is drawn by two shaders: a fill over the region its path encloses,
     and a stroke along the path itself.
     """
+    merges = True
+    # A curve begins at every other record, so one mobject of a run has to begin at an even
+    # one, and every mobject holds an odd number of them
+    records_between = 1
     fill_file = "fill.wgsl"
     stroke_file = "stroke.wgsl"
     # Each bezier's fill is two triangles, one covering the interior and one hugging the
@@ -442,11 +492,12 @@ class VProgram(Program):
         self.border_module = get_shader_module(self.device, border_code)
         self.draws = True
 
-    def write(self, slot: Slot) -> None:
-        super().write(slot)
+    def write_style(self, slot: Slot) -> bool:
+        restyled = super().write_style(slot)
         stroke_behind = slot.mobject.stroke_behind
         slot.resequenced = slot.resequenced or stroke_behind != slot.stroke_behind
         slot.stroke_behind = stroke_behind
+        return restyled
 
     def write_uniforms(self, slot: Slot) -> bool:
         # Whether there is anything to fill, worked out when the uniforms saying so change

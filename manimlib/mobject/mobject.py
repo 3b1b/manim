@@ -86,6 +86,11 @@ class Mobject(object):
     uniform_dtype: np.dtype = uniform_block_dtype(*COMMON_UNIFORMS)
     aligned_data_keys = ['point']
     pointlike_data_keys = ['point']
+    # Values saying how the points are grouped rather than where they are. A marker of the
+    # grouping survives a blend of two mobjects only where both of them had one, so the
+    # grouping of a blend is the coarser of the two, which is the larger reach of each, see
+    # VMobject.set_subpath_range.
+    structural_data_keys: list[str] = []
     # Uniforms holding a point, which transforms act on just as they do on the points
     pointlike_uniform_keys: list[str] = []
 
@@ -1804,6 +1809,8 @@ class Mobject(object):
                 md2 = md2[0]
             if key in self.pointlike_data_keys:
                 self.data[key] = path_func(md1, md2, alpha)
+            elif key in self.structural_data_keys:
+                self.data[key] = np.maximum(md1, md2)
             else:
                 self.data[key] = (1 - alpha) * md1 + alpha * md2
 
