@@ -12,21 +12,22 @@ from manimlib.utils.shaders import FRAME_DTYPE
 from manimlib.utils.shaders import FRAME_GROUP
 from manimlib.utils.shaders import SAMPLER_BINDING
 from manimlib.utils.shaders import Uniforms
-from manimlib.utils.shaders import get_shader_code_from_file
-from manimlib.utils.shaders import get_shader_module
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Any, Callable
+    from typing import Any
 
 
 # Stencil bits alongside the depth, which a fill counting windings needs
 DEPTH_STENCIL_FORMAT = wgpu.TextureFormat.depth24plus_stencil8
 COLOR_FORMAT = wgpu.TextureFormat.rgba8unorm
-PRESENT_SHADER = "present.wgsl"
 
 KEEP = ("keep", "keep", "keep")
+
+# How many mobjects' worth of room a shared buffer starts with, doubling from there
+UNIFORM_BLOCKS = 256
+RECORDS = 4096
 
 
 @dataclass(frozen=True)
@@ -107,7 +108,7 @@ def get_bind_layouts(device, frame_layout, mobject_layout, texture_count: int):
     resource_entries = [{
         "binding": DATA_BINDING,
         "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
-        # The stretch a draw reads is given as a dynamic offset, see DataArena
+        # The stretch a draw reads is given as a dynamic offset, see SharedBuffer
         "buffer": {
             "type": wgpu.BufferBindingType.read_only_storage,
             "has_dynamic_offset": True,
@@ -132,7 +133,7 @@ def get_bind_layouts(device, frame_layout, mobject_layout, texture_count: int):
     return resource_layout, pipeline_layout
 
 
-class Arena(object):
+class SharedBuffer(object):
     """
     One buffer holding what many mobjects read, a stretch of it each, sent in one write.
     Sending a buffer costs about the same whatever it holds, so gathering beats sending one
@@ -143,13 +144,30 @@ class Arena(object):
     writing goes and given back all at once: no free list, nothing to fragment, nothing to free.
 
     A scene which is not changing hands them out in the same order every frame, so a mobject
-    whose values have not moved finds them in place and copies nothing, and an arena nothing
+    whose values have not moved finds them in place and copies nothing, and a buffer nothing
     wrote into is not sent.
+
+    A draw is given its own stretch as a dynamic offset, so a shader counts from the front of
+    what it was given and nothing about where a mobject's values sit has to live among the
+    values themselves, which get interpolated. One bind group serves everything here, so
+    stretches begin where the device allows a binding to and the window bound is as wide as the
+    widest stretch there has been.
     """
 
-    def __init__(self, renderer: Renderer, first_capacity: int):
+    def __init__(
+        self,
+        renderer: Renderer,
+        layout: Any,
+        usage: int,
+        alignment: int,
+        first_capacity: int,
+    ):
         self.renderer = renderer
         self.device = renderer.device
+        self.layout = layout
+        self.usage = usage | wgpu.BufferUsage.COPY_DST
+        self.alignment = alignment
+        self.window = alignment
         self.first_capacity = first_capacity
         self.used = 0
         self.capacity = 0
@@ -161,11 +179,24 @@ class Arena(object):
         self.bind_group = None
         self.dirty: tuple[int, int] | None = None
 
+    def claim(self, nbytes: int) -> int:
+        """
+        Where the next stretch goes, as the offset its draw is to be given. There has to be a
+        whole window of buffer past the last stretch, so that the binding of even the shortest
+        does not run off the end.
+        """
+        stretch = nbytes + -nbytes % self.alignment
+        offset = self.used
+        self.used += stretch
+        wider = stretch > self.window
+        if wider:
+            self.window = stretch
+        if self.grow_to(self.used + self.window) or wider:
+            self.make_bindings()
+        return offset
+
     def grow_to(self, needed: int) -> bool:
-        """
-        Room for that many bytes, and whether that meant a new buffer, in which case the
-        caller makes its bindings afresh.
-        """
+        """Room for that many bytes, and whether that meant a new buffer"""
         capacity = max(self.capacity, self.first_capacity)
         while capacity < needed:
             capacity *= 2
@@ -186,7 +217,12 @@ class Arena(object):
 
     def make_bindings(self) -> None:
         """A group afresh, which whatever binds through this one has to hear about"""
-        self.bind_group = self.create_bind_group()
+        self.bind_group = self.device.create_bind_group(
+            layout=self.layout,
+            entries=[{"binding": 0, "resource": {
+                "buffer": self.buffer, "offset": 0, "size": self.window,
+            }}],
+        )
         self.renderer.rebindings += 1
 
     def reset(self) -> None:
@@ -211,86 +247,10 @@ class Arena(object):
         self.dirty = None
 
 
-class UniformArena(Arena):
-    """
-    An arena of mobject uniform blocks, a row each. A draw is given its row as a dynamic
-    offset, so rows begin where the device allows a binding to.
-    """
-    usage = wgpu.BufferUsage.UNIFORM | wgpu.BufferUsage.COPY_DST
-
-    def __init__(self, renderer: Renderer, block_size: int, rows: int = 256):
-        self.block_size = block_size
-        alignment = renderer.device.limits["min-uniform-buffer-offset-alignment"]
-        self.stride = block_size + (-block_size % alignment)
-        super().__init__(renderer, rows * self.stride)
-
-    def create_bind_group(self):
-        return self.device.create_bind_group(
-            layout=self.renderer.mobject_layout,
-            entries=[{"binding": 0, "resource": {
-                "buffer": self.buffer, "offset": 0, "size": self.block_size,
-            }}],
-        )
-
-    def next_row(self) -> int:
-        """Where the next block goes, as the offset its draw is to be given"""
-        offset = self.used
-        self.used += self.stride
-        if self.grow_to(self.used):
-            self.make_bindings()
-        return offset
-
-
-class DataArena(Arena):
-    """
-    An arena of mobject records, every mobject whose records are the same size sharing one.
-
-    A draw is given its stretch as a dynamic offset, so the shader counts records from the
-    front of what it was given. Keeping the offset out of the mobject's own values matters:
-    those get interpolated, and a blended offset points nowhere.
-
-    Stretches therefore begin where the device allows a binding to, and the window bound is
-    wide enough for the longest mobject there has been, one bind group serving them all.
-    """
-    usage = wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_DST
-
-    def __init__(self, renderer: Renderer, record_size: int, records: int = 4096):
-        self.record_size = record_size
-        self.alignment = renderer.device.limits["min-storage-buffer-offset-alignment"]
-        self.window = self.alignment
-        super().__init__(renderer, records * record_size)
-
-    def create_bind_group(self):
-        return self.device.create_bind_group(
-            layout=self.renderer.data_layout,
-            entries=[{"binding": DATA_BINDING, "resource": {
-                "buffer": self.buffer, "offset": 0, "size": self.window,
-            }}],
-        )
-
-    def claim_stretch(self, nbytes: int) -> int:
-        """
-        Where this mobject's records go, as the offset its draw is to be given.
-
-        One bind group serves every mobject of the arena, so the window it binds has to be
-        wide enough for the longest of them, and there has to be a whole window of buffer past
-        the last stretch for the shortest one's binding not to run off the end.
-        """
-        stretch = nbytes + -nbytes % self.alignment
-        offset = self.used
-        self.used += stretch
-        wider = stretch > self.window
-        if wider:
-            self.window = stretch
-        if self.grow_to(self.used + self.window) or wider:
-            self.make_bindings()
-        return offset
-
-
 class Renderer(object):
     """
     What a mobject needs of the gpu in order to draw itself: the device its buffers and
-    programs are made from, the arenas its values are gathered in, the pipelines it is drawn
+    programs are made from, the buffers its values are gathered in, the pipelines it is drawn
     by, the pass it is drawn into, and the values which hold for a whole frame.
 
     Those last are written once a frame by the camera and read by every program from group 0,
@@ -316,8 +276,8 @@ class Renderer(object):
             "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
             "buffer": {"type": wgpu.BufferBindingType.uniform},
         }])
-        # One row of an arena at a time, see UniformArena. Shared by every mobject, so that a
-        # pipeline built against it is too.
+        # One stretch of a shared buffer at a time, see SharedBuffer. Shared by every
+        # mobject, so that a pipeline built against it is too.
         self.mobject_layout = self.device.create_bind_group_layout(entries=[{
             "binding": 0,
             "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
@@ -326,18 +286,14 @@ class Renderer(object):
                 "has_dynamic_offset": True,
             },
         }])
-        # What a mobject with no images of its own reads its records through, see DataArena
+        # What a mobject with no images of its own reads its records through
         self.data_layout, _ = get_bind_layouts(
             self.device, self.frame_layout, self.mobject_layout, 0,
         )
-        # Every arena, for the two moments a frame speaks to all of them, and the two ways of
-        # finding the one a mobject belongs in
-        # How many times an arena has made a new bind group, which a recorded draw holds
-        # references to, see DrawList
+        # How many times a shared buffer has made a new bind group, which a recorded draw
+        # holds references to, see DrawList
         self.rebindings = 0
-        self.arenas: list[Arena] = []
-        self.uniform_arenas: dict[int, UniformArena] = dict()
-        self.data_arenas: dict[int, DataArena] = dict()
+        self.shared_buffers: dict[tuple, SharedBuffer] = dict()
         self.frame_bind_group = self.device.create_bind_group(
             layout=self.frame_layout,
             entries=[{"binding": 0, "resource": {
@@ -348,13 +304,14 @@ class Renderer(object):
         # Every pipeline has to match this, which the camera sets when it makes its
         # attachments
         self.samples = 1
+        # A pipeline settles everything about a draw but its bindings, so it is kept against a
+        # key naming all of that, see Program.get_pipeline
         self.pipelines: dict[Any, Any] = dict()
         self.encoder = None
         self.pass_ = None
         # What the pass has been told already, see bind and use_pipeline
         self.bound: list[Any] = 3 * [None]
         self.pipeline_in_use: Any = None
-        self.init_present_resources()
 
     def record(self, draw: Callable[[], None]) -> Any:
         """
@@ -386,38 +343,37 @@ class Renderer(object):
         if self.frame_uniforms.has_changed(observer=self):
             self.queue.write_buffer(self.frame_buffer, 0, self.frame_uniforms.array)
 
-    def get_pipeline(self, key: Any, build: Callable[[], Any]):
-        """
-        The pipeline for a key, built the first time it is asked for. A pipeline settles
-        everything about a draw but its bindings, so a key has to name all of that.
-        """
-        pipeline = self.pipelines.get(key)
-        if pipeline is None:
-            pipeline = self.pipelines[key] = build()
-        return pipeline
-
-    def uniform_arena_for(self, block_size: int) -> UniformArena:
+    def uniform_buffer_for(self, block_size: int) -> SharedBuffer:
         """Where the uniforms of a mobject whose block is this size are gathered"""
-        if block_size not in self.uniform_arenas:
-            self.uniform_arenas[block_size] = UniformArena(self, block_size)
-            self.arenas.append(self.uniform_arenas[block_size])
-        return self.uniform_arenas[block_size]
+        return self.shared_buffer_for(
+            ("uniforms", block_size), self.mobject_layout, wgpu.BufferUsage.UNIFORM,
+            "min-uniform-buffer-offset-alignment", UNIFORM_BLOCKS * block_size,
+        )
 
-    def data_arena_for(self, record_size: int) -> DataArena:
+    def data_buffer_for(self, record_size: int) -> SharedBuffer:
         """Where the records of a mobject whose records are this size are gathered"""
-        if record_size not in self.data_arenas:
-            self.data_arenas[record_size] = DataArena(self, record_size)
-            self.arenas.append(self.data_arenas[record_size])
-        return self.data_arenas[record_size]
+        return self.shared_buffer_for(
+            ("records", record_size), self.data_layout, wgpu.BufferUsage.STORAGE,
+            "min-storage-buffer-offset-alignment", RECORDS * record_size,
+        )
+
+    def shared_buffer_for(
+        self, key: tuple, layout: Any, usage: int, limit: str, first_capacity: int,
+    ) -> SharedBuffer:
+        if key not in self.shared_buffers:
+            self.shared_buffers[key] = SharedBuffer(
+                self, layout, usage, self.device.limits[limit], first_capacity,
+            )
+        return self.shared_buffers[key]
 
     def begin_writes(self) -> None:
-        """Gives back every stretch of every arena, a frame's stretches being a frame's own"""
-        for arena in self.arenas:
-            arena.reset()
+        """Gives back every stretch of every buffer, a frame's stretches being a frame's own"""
+        for shared in self.shared_buffers.values():
+            shared.reset()
 
     def end_writes(self) -> None:
-        for arena in self.arenas:
-            arena.upload()
+        for shared in self.shared_buffers.values():
+            shared.upload()
 
     def bind(self, group: int, bind_group: Any, offsets: tuple = ()) -> None:
         """
@@ -451,60 +407,3 @@ class Renderer(object):
         self.queue.submit([self.encoder.finish()])
         self.pass_ = None
         self.encoder = None
-
-    def present(self, frame_view, target_view, format: str) -> None:
-        """
-        Draws a finished frame onto what a window will show, stretched to fill it, see
-        shaders/present.wgsl. A pass of its own, the two textures differing in size and format.
-        """
-        module = get_shader_module(self.device, get_shader_code_from_file(PRESENT_SHADER))
-        layout = self.present_layout
-        pipeline = self.get_pipeline(
-            (module, format),
-            lambda: self.device.create_render_pipeline(
-                layout=self.device.create_pipeline_layout(bind_group_layouts=[layout]),
-                vertex={"module": module, "entry_point": "vs_main"},
-                fragment={
-                    "module": module,
-                    "entry_point": "fs_main",
-                    "targets": [{"format": format}],
-                },
-                primitive={"topology": wgpu.PrimitiveTopology.triangle_list},
-            ),
-        )
-        bind_group = self.device.create_bind_group(layout=layout, entries=[
-            {"binding": 0, "resource": frame_view},
-            {"binding": 1, "resource": self.present_sampler},
-        ])
-
-        encoder = self.device.create_command_encoder()
-        render_pass = encoder.begin_render_pass(color_attachments=[{
-            "view": target_view,
-            "load_op": wgpu.LoadOp.clear,
-            "store_op": wgpu.StoreOp.store,
-            "clear_value": (0.0, 0.0, 0.0, 1.0),
-        }])
-        render_pass.set_pipeline(pipeline)
-        render_pass.set_bind_group(0, bind_group)
-        render_pass.draw(3)
-        render_pass.end()
-        self.queue.submit([encoder.finish()])
-
-    def init_present_resources(self) -> None:
-        """What Renderer.present reads a finished frame through, made once"""
-        self.present_layout = self.device.create_bind_group_layout(entries=[
-            {
-                "binding": 0,
-                "visibility": wgpu.ShaderStage.FRAGMENT,
-                "texture": {"sample_type": wgpu.TextureSampleType.float},
-            },
-            {
-                "binding": 1,
-                "visibility": wgpu.ShaderStage.FRAGMENT,
-                "sampler": {"type": wgpu.SamplerBindingType.filtering},
-            },
-        ])
-        # Smoothly, since a window is rarely exactly the size of the frame drawn for it
-        self.present_sampler = self.device.create_sampler(
-            mag_filter=wgpu.FilterMode.linear, min_filter=wgpu.FilterMode.linear,
-        )

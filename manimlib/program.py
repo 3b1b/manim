@@ -46,11 +46,12 @@ BLEND = {
 
 class Slot(object):
     """
-    One mobject's place in a frame: where its values went in the arenas, and everything else
-    its draw needs to know.
+    One mobject's place in a frame: where its values went in the shared buffers, and everything
+    else its draw needs to know.
 
     The write phase settles all of this and the draw phase reads nothing besides, so what gets
-    drawn is decided before the pass opens, see DrawList.
+    drawn is decided before the pass opens, see DrawList. The last few belong to one kind of
+    drawing each, which is cheaper than a slot per kind of mobject.
     """
 
     def __init__(self, program: Program, mobject: Mobject):
@@ -62,34 +63,42 @@ class Slot(object):
         # What the program was compiled from, so a mobject given new code gets a new program,
         # see DrawList.resolve
         self.replacements = mobject.shader_code_replacements
-        # Where in the arenas this mobject's values went, no stretch yet being none
+        # Where in the shared buffers this mobject's values went, no stretch yet being none
         self.uniform_offset = -1
         self.data_offset = -1
         self.records = 0
         self.depth_test = False
-        # Made only for a mobject with images of its own, the rest reading the arena's
+        # Made only for a mobject with images of its own, the rest reading the shared one's
         self.resource_bind_group = None
-        self.arena_bind_group = None
+        self.shared_bind_group = None
         # Whether the write phase found anything a recorded draw would have baked in to have
         # moved, which for a slot nothing has drawn yet is everything, see DrawList
         self.resequenced = True
+        # Whether the path encloses anything, and which way round its two passes go, see
+        # VProgram
+        self.has_fill = False
+        self.stroke_behind = False
+        # The order a surface's triangles are drawn in, where it is drawn in one, see
+        # SurfaceProgram
+        self.order_buffer = None
+        self.order_count = 0
+        self.ordered = False
 
 
 class Program(object):
     """
     Everything about drawing which does not vary between two mobjects of a kind: the modules
-    they are drawn by, what they may bind, the arenas their values are gathered in, and the
+    they are drawn by, what they may bind, the buffers their values are gathered in, and the
     passes each of them takes.
 
     A mobject says which of these draws it by its program_class, and one program stands behind
     however many mobjects agree about the rest, see DrawList.program_for. Per mobject there is
     only a Slot.
 
-    No shader is handed vertex attributes. Each reads the records of its arena itself, as a
-    flat array of floats indexed by the vertex being drawn, and expands every record into
+    No shader is handed vertex attributes. Each reads the records of its shared buffer itself,
+    as a flat array of floats indexed by the vertex being drawn, and expands every record into
     verts_per_record vertices, always triangles, see inserts/read_data.wgsl.
     """
-    slot_class = Slot
 
     @classmethod
     def key(cls, mobject: Mobject) -> tuple:
@@ -109,47 +118,45 @@ class Program(object):
         self.device = renderer.device
         self.verts_per_record = mobject.verts_per_record
         self.texture_paths = dict(mobject.texture_paths)
-        self.init_layouts(mobject)
+        self.init_bindings(mobject)
         self.init_program(mobject)
         self.init_textures()
 
     # What the shader is told about a mobject, and what it may bind
 
-    def init_layouts(self, mobject: Mobject) -> None:
-        """
-        Where the fields of one of these mobjects' records sit. Together with their uniform
-        dtype this is all the generated shader source depends on, so it is the key that source
-        is cached under.
-        """
-        dtype = mobject.data.dtype
-        self.data_layout = (
-            dtype.itemsize // 4,
-            tuple((name, dtype.fields[name][1] // 4) for name in dtype.names),
-        )
-        self.uniform_dtype = mobject.uniforms.dtype
+    def init_bindings(self, mobject: Mobject) -> None:
         self.resource_layout, self.pipeline_layout = get_bind_layouts(
             self.device, self.renderer.frame_layout, self.renderer.mobject_layout,
             len(self.texture_paths),
         )
-        # Where these mobjects' values go each frame, see Arena
-        self.uniform_arena = self.renderer.uniform_arena_for(mobject.uniforms.array.nbytes)
-        self.data_arena = self.renderer.data_arena_for(dtype.itemsize)
+        # Where these mobjects' values go each frame, see SharedBuffer
+        self.uniform_buffer = self.renderer.uniform_buffer_for(mobject.uniforms.array.nbytes)
+        self.data_buffer = self.renderer.data_buffer_for(mobject.data.dtype.itemsize)
 
     def init_program(self, mobject: Mobject) -> None:
         # A mobject naming no shader, a group say, has nothing to be drawn by
         self.module = None
-        self.modules = []
-        if not mobject.shader_file:
+        self.draws = bool(mobject.shader_file)
+        if not self.draws:
             return
         self.module = get_shader_module(
             self.device,
-            self.get_code(mobject.shader_file, mobject.shader_code_replacements),
+            self.get_code(mobject, mobject.shader_file, mobject.shader_code_replacements),
         )
-        self.modules = [self.module]
 
-    def get_code(self, filename: str, replacements: dict[str, str]) -> str:
+    def get_code(self, mobject: Mobject, filename: str, replacements: dict[str, str]) -> str:
+        """
+        A shader's source, told where the fields of one of these mobjects' records sit and what
+        it holds for the whole of itself, which is all the source depends on and so is what it
+        gets cached under.
+        """
+        dtype = mobject.data.dtype
+        layout = (
+            dtype.itemsize // 4,
+            tuple((name, dtype.fields[name][1] // 4) for name in dtype.names),
+        )
         code = get_shader_code(
-            filename, self.data_layout, self.uniform_dtype, tuple(self.texture_paths),
+            filename, layout, mobject.uniforms.dtype, tuple(self.texture_paths),
         )
         for old, new in replacements.items():
             code = re.sub(old, new, code)
@@ -169,16 +176,16 @@ class Program(object):
     def get_resource_bind_group(self, slot: Slot):
         """
         What a mobject's records and images are read through. Without images of its own it
-        reads the arena's group, shared with every mobject of its size; with them it needs one
-        of its own, made again whenever the arena makes its own again.
+        reads the shared group, which serves every mobject of its size; with them it needs one
+        of its own, made again whenever the shared one is.
         """
-        arena = self.data_arena
+        shared = self.data_buffer
         if not self.textures:
-            return arena.bind_group
-        if slot.arena_bind_group is not arena.bind_group:
-            slot.arena_bind_group = arena.bind_group
+            return shared.bind_group
+        if slot.shared_bind_group is not shared.bind_group:
+            slot.shared_bind_group = shared.bind_group
             entries = [{"binding": DATA_BINDING, "resource": {
-                "buffer": arena.buffer, "offset": 0, "size": arena.window,
+                "buffer": shared.buffer, "offset": 0, "size": shared.window,
             }}]
             entries.append({"binding": SAMPLER_BINDING, "resource": self.sampler})
             for index, texture in enumerate(self.textures):
@@ -195,7 +202,7 @@ class Program(object):
 
     def write(self, slot: Slot) -> None:
         """
-        A mobject's two arrays into their arenas, along with whatever else its draw will want
+        A mobject's two arrays into the buffers they share, along with whatever else its draw
         to know. Every mobject of a frame is written before any of them is drawn, a write
         reaching the gpu partway through a pass having no say over which draws see it, see
         Camera.capture.
@@ -212,32 +219,32 @@ class Program(object):
         self.write_uniforms(slot)
 
     def write_data(self, slot: Slot) -> None:
-        """Into a stretch of the arena, remembering where so the draw can be given it"""
+        """Into a stretch of the shared buffer, remembering where the draw is to read"""
         data = slot.data
         changed = data.has_changed(observer=slot)
-        offset = self.data_arena.claim_stretch(data.array.nbytes)
+        offset = self.data_buffer.claim(data.array.nbytes)
         moved = offset != slot.data_offset
         if changed or moved:
-            self.data_arena.put(offset, data.bytes)
+            self.data_buffer.put(offset, data.bytes)
         slot.resequenced = slot.resequenced or moved
         slot.data_offset = offset
 
     def write_uniforms(self, slot: Slot) -> bool:
         """
-        Into a row of the arena, saying whether the uniforms had changed since the last frame
-        asked. Every frame takes a row, one lasting only as long as the frame.
+        Into a stretch of the shared buffer, saying whether the uniforms had changed since the
+        last frame asked. Every frame takes a stretch, one lasting only as long as the frame.
 
         The answer is returned rather than left to be asked again, since asking counts as
         having looked, see StructuredArray.has_changed.
         """
         uniforms = slot.uniforms
         changed = uniforms.has_changed(observer=slot)
-        offset = self.uniform_arena.next_row()
+        offset = self.uniform_buffer.claim(uniforms.array.nbytes)
         moved = offset != slot.uniform_offset
-        # A scene which is not changing hands its rows out in the same order every frame, so
-        # a mobject whose uniforms have not moved usually finds its own values already there
+        # A scene which is not changing hands its stretches out in the same order every frame,
+        # so a mobject whose uniforms have not moved usually finds its values already there
         if changed or moved:
-            self.uniform_arena.put(offset, uniforms.bytes)
+            self.uniform_buffer.put(offset, uniforms.bytes)
         slot.resequenced = slot.resequenced or moved
         slot.uniform_offset = offset
         return changed
@@ -253,9 +260,9 @@ class Program(object):
         # The module already settles which images there are, and so which layout a pipeline
         # reading them wants
         key = (module, state, depth_test, samples)
-
-        def build():
-            return self.device.create_render_pipeline(
+        pipeline = self.renderer.pipelines.get(key)
+        if pipeline is None:
+            pipeline = self.renderer.pipelines[key] = self.device.create_render_pipeline(
                 layout=self.pipeline_layout,
                 vertex={"module": module, "entry_point": "vs_main", "buffers": []},
                 fragment={
@@ -271,22 +278,19 @@ class Program(object):
                 depth_stencil=state.depth_stencil_descriptor(depth_test),
                 multisample={"count": samples},
             )
+        return pipeline
 
-        return self.renderer.get_pipeline(key, build)
-
-    def draw(self, slot: Slot, state: DrawState, module, vertices: int) -> None:
-        """One pass over a mobject's records"""
-        self.renderer.use_pipeline(self.get_pipeline(state, module, slot.depth_test))
-        self.renderer.pass_.draw(vertices)
-
-    def draw_through(self, slot: Slot, state: DrawState, module, indices, count: int) -> None:
+    def draw(self, slot: Slot, state: DrawState, module, vertices: int, indices=None) -> None:
         """
-        One pass over a mobject's records in the order a buffer of indices gives, each index
-        being the vertex the shader is to work out.
+        One pass over a mobject's records, taking them in the order a buffer of indices gives
+        where it is handed one, each index being the vertex the shader is to work out.
         """
         self.renderer.use_pipeline(self.get_pipeline(state, module, slot.depth_test))
-        self.renderer.pass_.set_index_buffer(indices, wgpu.IndexFormat.uint32)
-        self.renderer.pass_.draw_indexed(count)
+        if indices is None:
+            self.renderer.pass_.draw(vertices)
+        else:
+            self.renderer.pass_.set_index_buffer(indices, wgpu.IndexFormat.uint32)
+            self.renderer.pass_.draw_indexed(vertices)
 
     def render(self, slot: Slot) -> None:
         """
@@ -294,7 +298,7 @@ class Program(object):
         same two stretches whatever program runs over them.
         """
         self.renderer.bind(
-            MOBJECT_GROUP, self.uniform_arena.bind_group, (slot.uniform_offset,),
+            MOBJECT_GROUP, self.uniform_buffer.bind_group, (slot.uniform_offset,),
         )
         self.renderer.bind(
             RESOURCE_GROUP, self.get_resource_bind_group(slot), (slot.data_offset,),
@@ -306,14 +310,6 @@ class Program(object):
         self.draw(slot, DEFAULT, self.module, self.verts_per_record * slot.records)
 
 
-class SurfaceSlot(Slot):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.order_buffer = None
-        self.order_count = 0
-        self.ordered = False
-
-
 class SurfaceProgram(Program):
     """
     An opaque surface is drawn in one pass and left to the depth test, which decides what
@@ -323,9 +319,7 @@ class SurfaceProgram(Program):
     to be drawn first. Its triangles are drawn furthest from the camera first, through a buffer
     of indices written before the frame's pass opens, see Surface.is_opaque.
     """
-    slot_class = SurfaceSlot
-
-    def write(self, slot: SurfaceSlot) -> None:
+    def write(self, slot: Slot) -> None:
         super().write(slot)
         surface = slot.mobject
         was, count = slot.ordered, slot.order_count
@@ -335,7 +329,7 @@ class SurfaceProgram(Program):
         slot.resequenced = slot.resequenced or slot.ordered != was \
             or slot.order_count != count
 
-    def order_triangles_by_depth(self, slot: SurfaceSlot) -> bool:
+    def order_triangles_by_depth(self, slot: Slot) -> bool:
         """
         Lists the vertices of every triangle of the mesh, three to each, those furthest from
         the camera first, in a buffer to be drawn through. False if there are no triangles.
@@ -379,7 +373,7 @@ class SurfaceProgram(Program):
         firsts = 6 * squares + np.array([[[0]], [[3]]])
         return firsts.reshape(-1), middles
 
-    def write_order_buffer(self, slot: SurfaceSlot, indices: np.ndarray) -> None:
+    def write_order_buffer(self, slot: Slot, indices: np.ndarray) -> None:
         if slot.order_buffer is not None and slot.order_buffer.size != indices.nbytes:
             slot.order_buffer.destroy()
             slot.order_buffer = None
@@ -391,18 +385,11 @@ class SurfaceProgram(Program):
         self.renderer.queue.write_buffer(slot.order_buffer, 0, indices)
         slot.order_count = len(indices)
 
-    def draw_passes(self, slot: SurfaceSlot) -> None:
-        if slot.ordered:
-            self.draw_through(slot, DEFAULT, self.module, slot.order_buffer, slot.order_count)
-        else:
-            self.draw(slot, DEFAULT, self.module, self.verts_per_record * slot.records)
-
-
-class VSlot(Slot):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.has_fill = False
-        self.stroke_behind = False
+    def draw_passes(self, slot: Slot) -> None:
+        if not slot.ordered:
+            super().draw_passes(slot)
+            return
+        self.draw(slot, DEFAULT, self.module, slot.order_count, slot.order_buffer)
 
 
 class VProgram(Program):
@@ -410,7 +397,6 @@ class VProgram(Program):
     A vectorized mobject is drawn by two shaders: a fill over the region its path encloses,
     and a stroke along the path itself.
     """
-    slot_class = VSlot
     fill_file = "fill.wgsl"
     stroke_file = "stroke.wgsl"
     # Each bezier's fill is two triangles, one covering the interior and one hugging the
@@ -437,10 +423,12 @@ class VProgram(Program):
         # A snippet is meant for one of the two sources where it names one of their fields,
         # since a snippet reading stroke_rgba would not compile against the fill
         fill_code = self.get_code(
-            self.fill_file, replacements if program_type in (None, "fill") else nothing,
+            mobject, self.fill_file,
+            replacements if program_type in (None, "fill") else nothing,
         )
         stroke_code = self.get_code(
-            self.stroke_file, replacements if program_type in (None, "stroke") else nothing,
+            mobject, self.stroke_file,
+            replacements if program_type in (None, "stroke") else nothing,
         )
         declaration = self.border_declaration
         border_code = stroke_code.replace(declaration, declaration.replace("false", "true"))
@@ -452,15 +440,15 @@ class VProgram(Program):
         self.fill_module = get_shader_module(self.device, fill_code)
         self.stroke_module = get_shader_module(self.device, stroke_code)
         self.border_module = get_shader_module(self.device, border_code)
-        self.modules = [self.fill_module, self.stroke_module, self.border_module]
+        self.draws = True
 
-    def write(self, slot: VSlot) -> None:
+    def write(self, slot: Slot) -> None:
         super().write(slot)
         stroke_behind = slot.mobject.stroke_behind
         slot.resequenced = slot.resequenced or stroke_behind != slot.stroke_behind
         slot.stroke_behind = stroke_behind
 
-    def write_uniforms(self, slot: VSlot) -> bool:
+    def write_uniforms(self, slot: Slot) -> bool:
         # Whether there is anything to fill, worked out when the uniforms saying so change
         # rather than every frame. Without it a shape with no fill still pays for all three
         # fill passes, which in a scene of lines and text is most of the draws.
@@ -472,11 +460,11 @@ class VProgram(Program):
         slot.has_fill = has_fill
         return True
 
-    def get_num_curves(self, slot: VSlot) -> int:
+    def get_num_curves(self, slot: Slot) -> int:
         # Consecutive beziers share an anchor, so n points make n // 2 curves
         return slot.records // 2
 
-    def draw_fill(self, slot: VSlot) -> None:
+    def draw_fill(self, slot: Slot) -> None:
         """
         Fill is drawn with a "stencil then cover" approach.
 
@@ -500,7 +488,7 @@ class VProgram(Program):
         self.draw_fill_border(slot)
         self.draw(slot, WINDING_COVER, self.fill_module, vertices)
 
-    def draw_fill_border(self, slot: VSlot) -> None:
+    def draw_fill_border(self, slot: Slot) -> None:
         """
         Traces the boundary with a stroke in the fill color, which is what anti-aliases the
         fill, a stencil test being all or nothing. Drawn only where the winding number is
@@ -514,13 +502,13 @@ class VProgram(Program):
             slot, FILL_BORDER, self.border_module, self.stroke_vertices(slot, extra_curves=1),
         )
 
-    def draw_stroke(self, slot: VSlot) -> None:
+    def draw_stroke(self, slot: Slot) -> None:
         self.draw(slot, DEFAULT, self.stroke_module, self.stroke_vertices(slot))
 
-    def stroke_vertices(self, slot: VSlot, extra_curves: int = 0) -> int:
+    def stroke_vertices(self, slot: Slot, extra_curves: int = 0) -> int:
         return self.stroke_verts_per_curve * (self.get_num_curves(slot) + extra_curves)
 
-    def draw_passes(self, slot: VSlot) -> None:
+    def draw_passes(self, slot: Slot) -> None:
         if slot.stroke_behind:
             self.draw_stroke(slot)
             self.draw_fill(slot)

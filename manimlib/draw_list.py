@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from manimlib.program import Slot
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Any, Iterable
     from manimlib.mobject.mobject import Mobject
-    from manimlib.program import Program, Slot
+    from manimlib.program import Program
     from manimlib.renderer import Renderer
 
 
@@ -21,14 +23,14 @@ class DrawList(object):
     What a frame draws, in the order it draws it: a slot for each mobject holding points, each
     knowing the program which draws it.
 
-    A frame is two walks of that list. The first writes every mobject's values into the arenas
-    and settles everything else its draw needs; the second draws. They are separate because a
+    A frame is two walks of that list. The first writes every mobject's values into the shared
+    buffers and settles everything else its draw needs; the second draws. They are separate because a
     write reaching the gpu partway through a render pass has no say over which draws see it.
 
     The second walk is recorded once the first stops finding anything different to say, and
     replayed with one call for as long as that holds, see Renderer.record. A recording holds
     the order of the draws, which stretch each reads, how many vertices each covers and which
-    pipeline each runs, and reads the arenas afresh every time: so a scene whose mobjects only
+    pipeline each runs, and reads the buffers afresh every time: so a scene whose mobjects only
     move, or fade, or are looked at from somewhere else, replays what it recorded.
 
     Programs are kept for as long as the renderer, there being one per kind of mobject rather
@@ -94,10 +96,9 @@ class DrawList(object):
                     continue
                 slot = held.get(mob)
                 if slot is None or slot.replacements is not mob.shader_code_replacements:
-                    program = self.program_for(mob)
-                    slot = program.slot_class(program, mob)
+                    slot = Slot(self.program_for(mob), mob)
                 self.slots[mob] = slot
-                if slot.program.modules:
+                if slot.program.draws:
                     drawn.append(slot)
         return drawn
 

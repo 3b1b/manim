@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import glfw
 import numpy as np
+import wgpu
 from rendercanvas.glfw import RenderCanvas
 
 from manimlib.constants import ASPECT_RATIO
 from manimlib.constants import FRAME_SHAPE
 from manimlib.event_keys import Keys
 from manimlib.event_keys import Mods
+from manimlib.utils.shaders import get_shader_code_from_file
+from manimlib.utils.shaders import get_shader_module
 
 from typing import TYPE_CHECKING
 
@@ -43,6 +46,8 @@ MOD_NAMES: dict[str, int] = {
 }
 # A wheel is reported in hundredths of a notch, where scroll_sensitivity expects whole ones
 WHEEL_NOTCH = 100.0
+# The shader which puts a finished frame on the surface, see Window.present
+PRESENT_SHADER = "present.wgsl"
 # Where the corner named by a position string sits along each edge of the monitor
 POSITION_STEPS = {"L": 0.0, "U": 0.0, "O": 0.5, "R": 1.0, "D": 1.0}
 
@@ -152,9 +157,11 @@ class Window(object):
         the color it means: encoding again lightens everything and washes it out.
         """
         self.renderer = renderer
+        self.device = renderer.device
         preferred = self.context.get_preferred_format(renderer.device.adapter)
         self.format = preferred.removesuffix("-srgb")
         self.context.configure(device=renderer.device, format=self.format)
+        self.init_present_resources()
 
     def get_size(self) -> tuple[int, int]:
         """How many pixels there are to draw, which is not the size in screen coordinates"""
@@ -171,8 +178,57 @@ class Window(object):
         self.poll_events()
 
     def draw(self) -> None:
-        target = self.context.get_current_texture()
-        self.renderer.present(self.frame_view, target.create_view(), self.format)
+        self.present(self.context.get_current_texture().create_view())
+
+    def init_present_resources(self) -> None:
+        """What a finished frame is read through on its way to the surface, made once"""
+        self.present_layout = self.device.create_bind_group_layout(entries=[
+            {"binding": 0, "visibility": wgpu.ShaderStage.FRAGMENT,
+             "texture": {"sample_type": wgpu.TextureSampleType.float}},
+            {"binding": 1, "visibility": wgpu.ShaderStage.FRAGMENT,
+             "sampler": {"type": wgpu.SamplerBindingType.filtering}},
+        ])
+        # Smoothly, since a window is rarely exactly the size of the frame drawn for it
+        self.present_sampler = self.device.create_sampler(
+            mag_filter=wgpu.FilterMode.linear, min_filter=wgpu.FilterMode.linear,
+        )
+        module = get_shader_module(
+            self.device, get_shader_code_from_file(PRESENT_SHADER),
+        )
+        self.present_pipeline = self.device.create_render_pipeline(
+            layout=self.device.create_pipeline_layout(
+                bind_group_layouts=[self.present_layout],
+            ),
+            vertex={"module": module, "entry_point": "vs_main"},
+            fragment={
+                "module": module,
+                "entry_point": "fs_main",
+                "targets": [{"format": self.format}],
+            },
+            primitive={"topology": wgpu.PrimitiveTopology.triangle_list},
+        )
+
+    def present(self, target_view) -> None:
+        """
+        Draws the finished frame onto what the surface gave us, stretched to fill it, see
+        shaders/present.wgsl. A pass of its own, the two textures differing in size and format.
+        """
+        bind_group = self.device.create_bind_group(layout=self.present_layout, entries=[
+            {"binding": 0, "resource": self.frame_view},
+            {"binding": 1, "resource": self.present_sampler},
+        ])
+        encoder = self.device.create_command_encoder()
+        render_pass = encoder.begin_render_pass(color_attachments=[{
+            "view": target_view,
+            "load_op": wgpu.LoadOp.clear,
+            "store_op": wgpu.StoreOp.store,
+            "clear_value": (0.0, 0.0, 0.0, 1.0),
+        }])
+        render_pass.set_pipeline(self.present_pipeline)
+        render_pass.set_bind_group(0, bind_group)
+        render_pass.draw(3)
+        render_pass.end()
+        self.renderer.queue.submit([encoder.finish()])
 
     def poll_events(self) -> None:
         """
