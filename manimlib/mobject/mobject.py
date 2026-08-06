@@ -84,7 +84,9 @@ class Mobject(object):
     # name and how many floats it holds. The struct its shaders read is generated from
     # this, see inserts/mobject_uniforms.wgsl, so the two cannot disagree.
     uniform_dtype: np.dtype = uniform_block_dtype(*COMMON_UNIFORMS)
-    aligned_data_keys = ['point']
+    # Data holding a point, which transforms act on, and which a blend of two mobjects
+    # sends along a path rather than straight from one to the other. Nothing overrides
+    # this yet; it is here for the likes of per-point normals or tangents.
     pointlike_data_keys = ['point']
     # Values saying how the points are grouped rather than where they are. A marker of the
     # grouping survives a blend of two mobjects only where both of them had one, so the
@@ -723,9 +725,8 @@ class Mobject(object):
                 return False
             if not m1.data.dtype == m2.data.dtype:
                 return False
-            for key in m1.data.dtype.names:
-                if not np.isclose(m1.data[key], m2.data[key]).all():
-                    return False
+            if not np.isclose(m1.data.floats, m2.data.floats).all():
+                return False
             if not m1.uniforms.array.dtype == m2.uniforms.array.dtype:
                 return False
             if not np.isclose(m1.uniforms.floats, m2.uniforms.floats).all():
