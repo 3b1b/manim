@@ -66,14 +66,14 @@ class Transform(Animation):
         self.mobject.align_data_and_family(self.target_copy)
         super().begin()
         if not self.mobject.has_updaters():
-            self.mobject.lock_matching_data(
+            self.mobject.note_static_data(
                 self.starting_mobject,
                 self.target_copy,
             )
 
     def finish(self) -> None:
         super().finish()
-        self.mobject.unlock_data()
+        self.mobject.clear_static_data()
 
     def create_target(self) -> Mobject:
         # Has no meaningful effect here, but may be useful

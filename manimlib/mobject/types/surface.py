@@ -183,12 +183,14 @@ class Surface(Mobject):
         """
         nu, nv = self.get_resolution()
         new_nu, new_nv = resolution
+        # Every field of a record being a float32, the whole of it is resampled in one
+        # pass rather than one per field, see StructuredArray.floats
+        grid = self.data.floats.reshape((nu, nv, -1))
+        grid = resize_with_interpolation(grid, new_nu)
+        grid = resize_with_interpolation(grid.transpose(1, 0, 2), new_nv)
         data = np.zeros(new_nu * new_nv, dtype=self.data.dtype)
-        for key in self.data.keys():
-            grid = self.data[key].reshape((nu, nv, -1))
-            grid = resize_with_interpolation(grid, new_nu)
-            grid = resize_with_interpolation(grid.transpose(1, 0, 2), new_nv)
-            data[key] = grid.transpose(1, 0, 2).reshape((new_nu * new_nv, -1))
+        data.view(np.float32).reshape((new_nu * new_nv, -1))[:] = \
+            grid.transpose(1, 0, 2).reshape((new_nu * new_nv, -1))
         self.set_resolution(resolution)
         self.set_data(data)
         return self

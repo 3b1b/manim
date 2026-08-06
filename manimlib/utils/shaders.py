@@ -14,7 +14,7 @@ from manimlib.utils.file_ops import find_file
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Any, Sequence
+    from typing import Any, Callable, Sequence
 
 
 @lru_cache()
@@ -170,22 +170,12 @@ class Uniforms(StructuredArray):
     def __getitem__(self, key: str) -> Any:
         return self.array[key][0]
 
-    def interpolate(self, uniforms1: Uniforms, uniforms2: Uniforms, alpha: float) -> None:
-        if not self.array.dtype == uniforms1.array.dtype == uniforms2.array.dtype:
-            # Different kinds of mobject, so only what they have in common carries over
-            for key in self:
-                if key in uniforms1 and key in uniforms2:
-                    self[key] = (1 - alpha) * uniforms1[key] + alpha * uniforms2[key]
-            return
-        floats1 = uniforms1.floats
-        floats2 = uniforms2.floats
-        # Most transformations leave every uniform alone, e.g. moving a mobject without
-        # restyling it, and writing values equal to those here would send the block again for
-        # nothing
-        if np.array_equal(floats1, floats2) and np.array_equal(self.floats, floats1):
-            return
-        self.floats[:] = (1 - alpha) * floats1 + alpha * floats2
-        self.note_change()
+    def apply(self, key: str, func: Callable[[np.ndarray], np.ndarray]) -> None:
+        """
+        Passes one uniform through a function written for many rows of values, e.g. one
+        that moves points, which reading a single value back has to be dressed up as.
+        """
+        self[key] = func(self[key][np.newaxis])[0]
 
 
 def get_shader_code(
