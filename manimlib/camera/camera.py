@@ -13,10 +13,10 @@ from manimlib.constants import FRAME_HEIGHT
 from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
-from manimlib.draw_list import DrawList
-from manimlib.renderer import COLOR_FORMAT
-from manimlib.renderer import DEPTH_STENCIL_FORMAT
-from manimlib.renderer import Renderer
+from manimlib.renderer.draw_list import DrawList
+from manimlib.renderer.renderer import COLOR_FORMAT
+from manimlib.renderer.renderer import DEPTH_STENCIL_FORMAT
+from manimlib.renderer.renderer import Renderer
 from manimlib.utils.color import color_to_rgba
 
 from typing import TYPE_CHECKING

@@ -23,7 +23,7 @@ from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_listner import EventListener
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
-from manimlib.program import Program
+from manimlib.renderer.shader_program import Program
 from manimlib.utils.shaders import COMMON_UNIFORMS
 from manimlib.utils.shaders import Uniforms
 from manimlib.utils.shaders import uniform_block_dtype

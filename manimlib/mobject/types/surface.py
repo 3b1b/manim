@@ -9,7 +9,7 @@ from pathlib import Path
 from manimlib.constants import GREY
 from manimlib.constants import OUT
 from manimlib.mobject.mobject import Mobject
-from manimlib.program import SurfaceProgram
+from manimlib.renderer.shader_program import SurfaceProgram
 from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate

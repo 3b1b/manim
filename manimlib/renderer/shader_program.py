@@ -5,12 +5,12 @@ import re
 import numpy as np
 import wgpu
 
-from manimlib.renderer import COLOR_FORMAT
-from manimlib.renderer import DEFAULT
-from manimlib.renderer import FILL_BORDER
-from manimlib.renderer import WINDING_COUNT
-from manimlib.renderer import WINDING_COVER
-from manimlib.renderer import get_bind_layouts
+from manimlib.renderer.renderer import COLOR_FORMAT
+from manimlib.renderer.renderer import DEFAULT
+from manimlib.renderer.renderer import FILL_BORDER
+from manimlib.renderer.renderer import WINDING_COUNT
+from manimlib.renderer.renderer import WINDING_COVER
+from manimlib.renderer.renderer import get_bind_layouts
 from manimlib.utils.shaders import DATA_BINDING
 from manimlib.utils.shaders import FIRST_TEXTURE_BINDING
 from manimlib.utils.shaders import MOBJECT_GROUP
@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from manimlib.mobject.mobject import Mobject
-    from manimlib.renderer import DrawState, Renderer
+    from manimlib.renderer.renderer import DrawState, Renderer
 
 
 # Color channels blend in the usual way, but the alpha channel takes the source's alpha

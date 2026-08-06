@@ -43,7 +43,7 @@ from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.space_ops import poly_line_length
-from manimlib.program import VProgram
+from manimlib.renderer.shader_program import VProgram
 from manimlib.utils.shaders import COMMON_UNIFORMS
 from manimlib.utils.shaders import uniform_block_dtype
 

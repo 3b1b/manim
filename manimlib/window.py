@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Optional, Sequence
-    from manimlib.renderer import Renderer
+    from manimlib.renderer.renderer import Renderer
     from manimlib.scene.scene import Scene
 
 

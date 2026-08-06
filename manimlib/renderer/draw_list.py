@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from manimlib.program import Slot
+from manimlib.renderer.shader_program import Slot
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Any, Iterable
     from manimlib.mobject.mobject import Mobject
-    from manimlib.program import Program
-    from manimlib.renderer import Renderer
+    from manimlib.renderer.shader_program import Program
+    from manimlib.renderer.renderer import Renderer
 
 
 # How many frames a sequence of draws has to hold before it is worth recording. Recording
