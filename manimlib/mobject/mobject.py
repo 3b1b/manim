@@ -33,7 +33,6 @@ from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.iterables import arrays_match
-from manimlib.utils.iterables import array_is_constant
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import resize_array
@@ -119,8 +118,7 @@ class Mobject(object):
         self.submobjects: list[Mobject] = []
         self.parents: list[Mobject] = []
         self.family: list[Mobject] | None = [self]
-        self.locked_data_keys: set[str] = set()
-        self.const_data_keys: set[str] = set()
+        self.data_is_static: bool = False
         self.saved_state = None
         self.target = None
         self.bounding_box: Vect3Array = np.zeros((3, 3))
@@ -1801,19 +1799,16 @@ class Mobject(object):
         alpha: float,
         path_func: Callable[[np.ndarray, np.ndarray, float], np.ndarray] = straight_path
     ) -> Self:
-        keys = [k for k in self.data.dtype.names if k not in self.locked_data_keys]
-        for key in keys:
-            md1 = mobject1.data[key]
-            md2 = mobject2.data[key]
-            if key in self.const_data_keys:
-                md1 = md1[0]
-                md2 = md2[0]
-            if key in self.pointlike_data_keys:
-                self.data[key] = path_func(md1, md2, alpha)
-            elif key in self.structural_data_keys:
-                self.data[key] = np.maximum(md1, md2)
-            else:
-                self.data[key] = (1 - alpha) * md1 + alpha * md2
+        if not self.data_is_static:
+            # Blending the whole array at once costs less than picking out the fields
+            # wanting something other than a blend, so those are simply written over
+            # afterwards, see StructuredArray.interpolate
+            self.data.interpolate(mobject1.data, mobject2.data, alpha)
+            if path_func is not straight_path:
+                for key in self.pointlike_data_keys:
+                    self.data[key] = path_func(mobject1.data[key], mobject2.data[key], alpha)
+            for key in self.structural_data_keys:
+                self.data[key] = np.maximum(mobject1.data[key], mobject2.data[key])
 
         self.uniforms.interpolate(mobject1.uniforms, mobject2.uniforms, alpha)
         self.bounding_box[:] = path_func(mobject1.bounding_box, mobject2.bounding_box, alpha)
@@ -1829,48 +1824,33 @@ class Mobject(object):
         # To be implemented in subclass
         return self
 
-    # Locking data
+    # Static data
 
-    def lock_data(self, keys: Iterable[str]) -> Self:
+    def note_static_data(self, mobject1: Mobject, mobject2: Mobject) -> Self:
         """
-        To speed up some animations, particularly transformations,
-        it can be handy to acknowledge which pieces of data
-        won't change during the animation so that calls to
-        interpolate can skip this
-        """
-        if self.has_updaters():
-            return self
-        self.locked_data_keys = set(keys)
-        return self
+        Marks each submobject holding the same data at both ends of an animation, which
+        interpolate then leaves alone. Blending it would only write back what is already
+        there, at the cost of sending the array to the gpu again for nothing.
 
-    def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject) -> Self:
+        A submobject with updaters is never counted as static, since what it holds partway
+        through is not fixed by its two ends.
+        """
         tuples = zip(
             self.get_family(),
             mobject1.get_family(),
             mobject2.get_family(),
         )
         for sm, sm1, sm2 in tuples:
-            if not sm.data.dtype == sm1.data.dtype == sm2.data.dtype:
-                continue
-            sm.lock_data(
-                key for key in sm.data.dtype.names
-                if arrays_match(sm1.data[key], sm2.data[key])
+            sm.data_is_static = (
+                not sm.has_updaters()
+                and sm.data.dtype == sm1.data.dtype == sm2.data.dtype
+                and arrays_match(sm1.data.floats, sm2.data.floats)
             )
-            sm.const_data_keys = set(
-                key for key in sm.data.dtype.names
-                if key not in sm.locked_data_keys
-                if all(
-                    array_is_constant(mob.data[key])
-                    for mob in (sm, sm1, sm2)
-                )
-            )
-
         return self
 
-    def unlock_data(self) -> Self:
+    def clear_static_data(self) -> Self:
         for mob in self.get_family():
-            mob.locked_data_keys = set()
-            mob.const_data_keys = set()
+            mob.data_is_static = False
         return self
 
     # Operations touching shader uniforms

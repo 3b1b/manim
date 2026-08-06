@@ -167,6 +167,34 @@ class StructuredArray(object):
         else:
             self.update(other)
 
+    def interpolate(self, array1: StructuredArray, array2: StructuredArray, alpha: float) -> None:
+        """
+        Takes on the blend of two others, every field at once.
+
+        Laid out the same way, the three can be read as one flat run of floats and blended
+        in a single pass. That is several times quicker than working field by field, each
+        of those reaching across the array in strides rather than straight along it, and it
+        costs no more to blend a field than to decide whether to. Whatever a field wants
+        done to it other than a blend, the caller writes over afterwards, see
+        Mobject.interpolate.
+        """
+        same_layout = self.dtype == array1.dtype == array2.dtype
+        if not (same_layout and len(self) == len(array1) == len(array2)):
+            # Different kinds of mobject, so only what they have in common carries over
+            for key in self:
+                if key in array1 and key in array2:
+                    self[key] = (1 - alpha) * array1[key] + alpha * array2[key]
+            return
+        floats1 = array1.floats
+        floats2 = array2.floats
+        # Most transformations leave most of what they move through alone, e.g. shifting a
+        # mobject without restyling it, and writing values equal to those here would send
+        # the array again for nothing
+        if np.array_equal(floats1, floats2) and np.array_equal(self.floats, floats1):
+            return
+        self.floats[:] = (1 - alpha) * floats1 + alpha * floats2
+        self.note_change()
+
     def copy(self) -> Self:
         result = copy.copy(self)
         result.set_array(self.array.copy())
