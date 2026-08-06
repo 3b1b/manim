@@ -8,6 +8,7 @@ renderer makes, and every uniform a shader reads.
 """
 from __future__ import annotations
 
+import itertools as it
 import numpy as np
 from pathlib import Path
 from PIL import Image
@@ -370,3 +371,75 @@ class AnimCamera(ThreeDScene):
         label.fix_in_frame()
         self.add(ThreeDAxes(), Sphere(radius=1.2).set_color(BLUE_E), label)
         self.play(self.frame.animate.reorient(40, 60), run_time=0.3)
+
+
+class AnimTextTransform(Scene):
+    """
+    Text transformed into other text, whose middle is where a subpath range is a blend of two
+    which disagree. The glyphs are what to watch: a fill anchors its fan at the start of its
+    own subpath, so a range which came out meaning nothing would eat pieces out of them.
+    """
+
+    def construct(self):
+        first = Tex(r"\frac{1}{2} + \frac{1}{3}").scale(2)
+        second = TexText("one half plus one third").scale(1.2)
+        self.add(first)
+        self.play(FadeTransform(first, second), run_time=0.3)
+
+
+class DrawnTogether(Scene):
+    """
+    Many small stroked mobjects, which the renderer gathers into runs and draws a run at a
+    time, see DrawList.group. The joints are what to watch: a run's members sit in one buffer
+    with a null curve between them, so a joint reaching into its neighbour would show here.
+
+    Stroke color and width are held per point rather than per mobject, so they are no reason
+    to cut a run. What is: a fill, which counts its winding across the whole of a draw, and a
+    uniform such as the anti alias width.
+    """
+
+    def construct(self):
+        def zigzag(color, width):
+            mob = VMobject().set_points_as_corners([DL, UP * 0.6, DR, RIGHT * 0.3 + UP * 0.4])
+            return mob.set_stroke(color, width).set_height(0.5)
+
+        rows = VGroup(*(
+            zigzag(color, width)
+            for color, width in zip(color_gradient([YELLOW, TEAL], 40), it.cycle([6, 2]))
+        ))
+        # Cut in three: a fill in the middle of them, and a wider edge on the last dozen
+        rows[20].set_fill(BLUE, 0.6)
+        rows[28:].set_anti_alias_width(6.0)
+        rows.arrange_in_grid(5, 8, buff=0.25).set_height(FRAME_HEIGHT - 2)
+        self.add(rows)
+        closed = VGroup(*(
+            RegularPolygon(5).set_stroke(RED, 3).set_fill(opacity=0).scale(0.3)
+            for _ in range(8)
+        )).arrange(RIGHT, buff=0.15).to_edge(DOWN, buff=0.1)
+        self.add(closed)
+        # Filled shapes, which are drawn on their own however they are laid out, see
+        # DrawList.follows
+        apart = VGroup(*(
+            Square().set_fill(BLUE, 0.5).set_stroke(WHITE, 2).scale(0.22)
+            for _ in range(6)
+        )).arrange(RIGHT, buff=0.12)
+        over = VGroup(*(
+            Circle().set_fill(YELLOW, 0.5).set_stroke(width=0).scale(0.3)
+            for _ in range(2)
+        )).arrange(RIGHT, buff=-0.35)
+        VGroup(apart, over).arrange(RIGHT, buff=0.4).to_edge(UP, buff=0.1)
+        self.add(apart, over)
+
+
+class AnimSorted(ThreeDScene):
+    """
+    A see through surface turned past the camera, whose triangles are put in a new order every
+    frame. The order is a buffer of its own, so this is the one case where what a frame draws
+    is settled by something a recorded draw reads rather than bakes in, see DrawList.
+    """
+
+    def construct(self):
+        torus = Torus(r1=1.6, r2=0.6, resolution=(51, 25)).set_color(TEAL, 0.4)
+        self.add(torus)
+        self.frame.reorient(20, 70)
+        self.play(self.frame.animate.reorient(70, 55), run_time=0.3)

@@ -57,8 +57,14 @@ fn vs_main(@builtin(vertex_index) index: u32) -> VertexOutput {
         return out;
     }
 
-    // The fan reaching back to the mobject's first point covers its interior
-    let base_point = read_vec3(0u, DATA_OFFSET_point);
+    /*
+    The fan reaching back to the first point of this curve's own subpath covers the interior.
+    Where the subpath closes back on itself the anchor makes no difference, the winding coming
+    out the same wherever the fan reaches from; where it is left open, the fan is what closes
+    it, and its own start is where the border closes it too, see stroke.wgsl.
+    */
+    let subpath = read_vec2(record, DATA_OFFSET_subpath_range);
+    let base_point = read_vec3(u32(i32(record) - i32(subpath.x)), DATA_OFFSET_point);
 
     /*
     The first triangle fills in towards the base point, the second hugs the curve. No

@@ -43,7 +43,7 @@ from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.space_ops import poly_line_length
-from manimlib.shader_wrapper import VShaderWrapper
+from manimlib.renderer.shader_program import VProgram
 from manimlib.utils.shaders import COMMON_UNIFORMS
 from manimlib.utils.shaders import uniform_block_dtype
 
@@ -54,18 +54,21 @@ SubVmobjectType = TypeVar('SubVmobjectType', bound='VMobject')
 if TYPE_CHECKING:
     from typing import Callable, Tuple, Any, Optional
     from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Self
-    from manimlib.renderer import Renderer
 
 
 GRADIENT_POINT_KEYS = ['gradient_start', 'gradient_end']
 
 
 class VMobject(Mobject):
+    program_class: type = VProgram
+    structural_data_keys = ['subpath_range']
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('stroke_rgba', np.float32, (4,)),
         ('stroke_width', np.float32, (1,)),
-        # First and last record index of the subpath a point belongs to
+        # How far the subpath a point belongs to reaches back before it and on after it, as
+        # a distance rather than an index, so that a record means the same thing wherever it
+        # sits, see set_subpath_range
         ('subpath_range', np.float32, (2,)),
     ])
     uniform_dtype: np.dtype = uniform_block_dtype(
@@ -864,20 +867,27 @@ class VMobject(Mobject):
 
     def set_subpath_range(self) -> Self:
         """
-        Notes on every point where the subpath holding it begins and ends. The stroke
-        shader reads this to find the tangents either side of a joint, and to tell
-        whether a subpath closes back on itself, and everything else that needs to
-        know where the subpaths lie reads it from here rather than looking again.
+        Notes against every point how far off the ends of its subpath are. The stroke shader
+        reads this to find the tangents either side of a joint, and to tell whether a subpath
+        closes back on itself, and everything else that needs to know where the subpaths lie
+        reads it from here rather than looking again.
+
+        Held as how far the subpath reaches either side of the point rather than as an index
+        into the array, so that a record says the same thing wherever it is read from, and so
+        that two of them interpolate to the subpaths their blended points actually have, see
+        structural_data_keys.
         """
         points = self.get_points()
         if len(points) == 0:
             return self
         ends = self.get_subpath_end_indices_from_points(points)
         starts = [0, *(ends[:-1] + 2)]
+        ranges = self.data["subpath_range"]
         for start, end in zip(starts, ends):
             # Reaching one past the end takes in the null curve's handle sitting
             # there, which belongs to no subpath, so that every point gets written
-            self.data["subpath_range"][start:end + 2] = (start, end)
+            ranges[start:end + 2] = (-start, end)
+        ranges += np.arange(len(points))[:, np.newaxis] * (1, -1)
         self.data.note_change()
         return self
 
@@ -885,11 +895,13 @@ class VMobject(Mobject):
         """
         Where the subpath holding the point at the given index begins and ends
         """
-        start, end = self.data["subpath_range"][index]
-        return int(start), int(end)
+        back, on = self.data["subpath_range"][index]
+        at = range(len(self.data))[index]
+        return at - int(back), at + int(on)
 
     def get_subpath_end_indices(self) -> np.ndarray:
-        return np.unique(self.data["subpath_range"][:, 1]).astype(int)
+        ends = self.data["subpath_range"][:, 1] + np.arange(len(self.data))
+        return np.unique(ends).astype(int)
 
     def get_subpaths_from_points(self, points: Vect3Array) -> list[Vect3Array]:
         if len(points) == 0:
@@ -1271,24 +1283,6 @@ class VMobject(Mobject):
         for mob in self.get_family():
             mob.get_unit_normal(refresh=True)
         return self
-
-    # For shaders
-
-    def init_shader_wrapper(self, renderer: Renderer):
-        self.shader_wrapper = VShaderWrapper(
-            renderer=renderer,
-            mobject_data=self.data,
-            mobject_uniforms=self.uniforms,
-            code_replacements=self.shader_code_replacements,
-            program_type=self.shader_program_type,
-            stroke_behind=self.stroke_behind,
-            depth_test=self.depth_test
-        )
-
-    def get_shader_wrapper(self, renderer: Renderer) -> VShaderWrapper:
-        wrapper = super().get_shader_wrapper(renderer)
-        wrapper.stroke_behind = self.stroke_behind
-        return wrapper
 
 
 class VGroup(Group, VMobject, Generic[SubVmobjectType]):

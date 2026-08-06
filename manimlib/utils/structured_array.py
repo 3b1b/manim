@@ -93,7 +93,7 @@ class StructuredArray(object):
         it.
 
         Asking counts as having looked. So two things wanting the same answer have to be two
-        observers, or ask once between them, see ShaderWrapper.write_uniform_buffer.
+        observers, or ask once between them, see Program.write_uniforms.
 
         An observer is remembered for as long as the array is. Nothing here is replaced often
         enough for that to be worth weak references, which cost four times as much to look up.

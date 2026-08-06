@@ -23,7 +23,7 @@ from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_listner import EventListener
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
-from manimlib.shader_wrapper import ShaderWrapper
+from manimlib.renderer.shader_program import Program
 from manimlib.utils.shaders import COMMON_UNIFORMS
 from manimlib.utils.shaders import Uniforms
 from manimlib.utils.shaders import uniform_block_dtype
@@ -56,7 +56,6 @@ if TYPE_CHECKING:
     from typing import Callable, Iterator, Union, Tuple, Optional, Any
     import numpy.typing as npt
     from manimlib.typing import ManimColor, Vect3, Vect4Array, Vect3Array, Self
-    from manimlib.renderer import Renderer
 
     T = TypeVar('T')
     TimeBasedUpdater = Callable[["Mobject", float], "Mobject" | None]
@@ -69,6 +68,8 @@ class Mobject(object):
     Mathematical Object
     """
     dim: int = 3
+    # What draws this kind of mobject, see program.Program
+    program_class: type = Program
     shader_file: str = ""
     # If positive, the shader is handed no vertex attributes, and instead reads
     # each record out of the vertex buffer itself, turning it into this many
@@ -85,6 +86,11 @@ class Mobject(object):
     uniform_dtype: np.dtype = uniform_block_dtype(*COMMON_UNIFORMS)
     aligned_data_keys = ['point']
     pointlike_data_keys = ['point']
+    # Values saying how the points are grouped rather than where they are. A marker of the
+    # grouping survives a blend of two mobjects only where both of them had one, so the
+    # grouping of a blend is the coarser of the two, which is the larger reach of each, see
+    # VMobject.set_subpath_range.
+    structural_data_keys: list[str] = []
     # Uniforms holding a point, which transforms act on just as they do on the points
     pointlike_uniform_keys: list[str] = []
 
@@ -103,7 +109,7 @@ class Mobject(object):
         self.color = color
         self.opacity = opacity
         self.shading = shading
-        self.texture_paths = texture_paths
+        self.texture_paths = texture_paths or dict()
         self.depth_test = depth_test
         self.z_index = z_index
 
@@ -116,7 +122,6 @@ class Mobject(object):
         self.saved_state = None
         self.target = None
         self.bounding_box: Vect3Array = np.zeros((3, 3))
-        self.shader_wrapper: Optional[ShaderWrapper] = None
         self._is_animating: bool = False
         self._needs_new_bounding_box: bool = True
         self.shader_code_replacements: dict[str, str] = dict()
@@ -657,7 +662,6 @@ class Mobject(object):
         # Similarly, instead of calling match_updaters, since we know the status
         # won't have changed, just directly match.
         result.updaters = list(self.updaters)
-        result.shader_wrapper = None
 
         family = self.get_family()
         for attr, value in self.__dict__.items():
@@ -1805,6 +1809,8 @@ class Mobject(object):
                 md2 = md2[0]
             if key in self.pointlike_data_keys:
                 self.data[key] = path_func(md1, md2, alpha)
+            elif key in self.structural_data_keys:
+                self.data[key] = np.maximum(md1, md2)
             else:
                 self.data[key] = (1 - alpha) * md1 + alpha * md2
 
@@ -1829,8 +1835,7 @@ class Mobject(object):
         To speed up some animations, particularly transformations,
         it can be handy to acknowledge which pieces of data
         won't change during the animation so that calls to
-        interpolate can skip this, and so that it's not
-        read into the shader_wrapper objects needlessly
+        interpolate can skip this
         """
         if self.has_updaters():
             return self
@@ -1931,8 +1936,9 @@ class Mobject(object):
 
     def replace_shader_code(self, old: str, new: str) -> Self:
         for mob in self.get_family():
-            mob.shader_code_replacements[old] = new
-            mob.shader_wrapper = None
+            # A new dict rather than a write into the old one, so that whatever is drawing
+            # this mobject can see that its program has changed, see DrawList.resolve
+            mob.shader_code_replacements = {**mob.shader_code_replacements, old: new}
         return self
 
     def set_color_by_code(self, wgsl_code: str) -> Self:
@@ -1974,39 +1980,8 @@ class Mobject(object):
         )
         return self
 
-    # For shader data
-
-    def init_shader_wrapper(self, renderer: Renderer):
-        self.shader_wrapper = ShaderWrapper(
-            renderer=renderer,
-            mobject_data=self.data,
-            shader_file=self.shader_file,
-            mobject_uniforms=self.uniforms,
-            texture_paths=self.texture_paths,
-            depth_test=self.depth_test,
-            code_replacements=self.shader_code_replacements,
-            verts_per_record=self.verts_per_record,
-        )
-
-    def get_shader_wrapper(self, renderer: Renderer) -> ShaderWrapper:
-        if self.shader_wrapper is None:
-            self.init_shader_wrapper(renderer)
-        # Whatever the wrapper needs a copy of is told to it here, where it is asked for
-        # once a frame, rather than by everything which might change one of them having
-        # to remember to pass it along
-        self.shader_wrapper.depth_test = self.depth_test
-        return self.shader_wrapper
-
     def get_uniforms(self):
         return self.uniforms
-
-    def get_shader_wrappers(self, renderer: Renderer) -> list[ShaderWrapper]:
-        return [
-            mob.get_shader_wrapper(renderer)
-            for mob in self.get_family()
-            # Groups hold no points of their own, but their members might
-            if len(mob.data) > 0
-        ]
 
     # Event Handlers
     """

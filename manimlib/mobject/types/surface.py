@@ -9,7 +9,7 @@ from pathlib import Path
 from manimlib.constants import GREY
 from manimlib.constants import OUT
 from manimlib.mobject.mobject import Mobject
-from manimlib.shader_wrapper import SurfaceShaderWrapper
+from manimlib.renderer.shader_program import SurfaceProgram
 from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
@@ -29,7 +29,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Tuple
 
-    from manimlib.renderer import Renderer
 
     from manimlib.camera.camera import Camera
     from manimlib.typing import ManimColor, Vect3, Vect3Array, Self
@@ -40,6 +39,7 @@ def norms_along_axis(vectors: Vect3Array) -> np.ndarray:
 
 
 class Surface(Mobject):
+    program_class: type = SurfaceProgram
     shader_file: str = "surface.wgsl"
     # Points are sent as the grid they sample, and the vertex shader works out the mesh
     # over it, expanding each of them into one square's worth of vertices. See
@@ -217,7 +217,7 @@ class Surface(Mobject):
     def is_opaque(self) -> bool:
         """
         Whether nothing behind the surface shows through it, which decides whether its
-        triangles have to be drawn in order, see SurfaceShaderWrapper.
+        triangles have to be drawn in order, see SurfaceProgram.
 
         Asked once a frame, so worked out only when the data has been written to since the last
         ask. It cannot be settled in set_opacity instead: a surface fading in or transforming
@@ -242,24 +242,6 @@ class Surface(Mobject):
         # Kept for the scenes which call it. Nothing needs the camera any more, nor an
         # updater to do the sorting, see set_sort_to_camera
         return self.set_sort_to_camera()
-
-    def get_shader_wrapper(self, renderer: Renderer) -> SurfaceShaderWrapper:
-        wrapper = super().get_shader_wrapper(renderer)
-        wrapper.sort_to_camera = self.sort_to_camera or not self.is_opaque()
-        return wrapper
-
-    def init_shader_wrapper(self, renderer: Renderer):
-        self.shader_wrapper = SurfaceShaderWrapper(
-            renderer=renderer,
-            sort_to_camera=self.sort_to_camera,
-            mobject_data=self.data,
-            mobject_uniforms=self.uniforms,
-            shader_file=self.shader_file,
-            texture_paths=self.texture_paths,
-            depth_test=self.depth_test,
-            code_replacements=self.shader_code_replacements,
-            verts_per_record=self.verts_per_record,
-        )
 
     def get_unit_normals(self) -> Vect3Array:
         """

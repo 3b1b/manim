@@ -13,9 +13,10 @@ from manimlib.constants import FRAME_HEIGHT
 from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
-from manimlib.renderer import COLOR_FORMAT
-from manimlib.renderer import DEPTH_STENCIL_FORMAT
-from manimlib.renderer import Renderer
+from manimlib.renderer.draw_list import DrawList
+from manimlib.renderer.renderer import COLOR_FORMAT
+from manimlib.renderer.renderer import DEPTH_STENCIL_FORMAT
+from manimlib.renderer.renderer import Renderer
 from manimlib.utils.color import color_to_rgba
 
 from typing import TYPE_CHECKING
@@ -115,6 +116,8 @@ class Camera(object):
         background_color: ManimColor = BLACK,
         background_opacity: float = 1.0,
         light_source_position: Vect3 = np.array([-10, 10, 10]),
+        record_draws: bool = True,
+        draw_together: bool = True,
         # Although vector graphics handle antialiasing fine
         # without multisampling, for 3d scenes one might want
         # to set samples to be greater than 0.
@@ -125,6 +128,8 @@ class Camera(object):
         self.fps = fps
         self.light_source_position = light_source_position
         self.samples = samples
+        self.record_draws = record_draws
+        self.draw_together = draw_together
 
         self.background_rgba: list[float] = list(color_to_rgba(
             background_color, background_opacity
@@ -144,6 +149,9 @@ class Camera(object):
 
     def init_renderer(self) -> None:
         self.renderer = Renderer()
+        self.draw_list = DrawList(
+            self.renderer, record=self.record_draws, together=self.draw_together,
+        )
         if self.window is not None:
             self.window.configure(self.renderer)
 
@@ -311,25 +319,9 @@ class Camera(object):
     # Rendering
     def capture(self, *mobjects: Mobject) -> None:
         self.resize_target()
-        wrappers = [
-            wrapper
-            for mobject in mobjects
-            for wrapper in mobject.get_shader_wrappers(self.renderer)
-        ]
-        # Everything the frame sends to the gpu, before the pass it draws in opens, since a
-        # write reaching the gpu partway through a pass has no say over which draws see it
         self.refresh_uniforms()
         self.renderer.send_frame_uniforms()
-        self.renderer.begin_writes()
-        for wrapper in wrappers:
-            wrapper.write_buffers()
-        self.renderer.end_writes()
-
-        self.renderer.begin_frame(self.get_attachments())
-        for wrapper in wrappers:
-            wrapper.render()
-        self.renderer.end_frame()
-
+        self.draw_list.draw(mobjects, self.get_attachments())
         if self.window is not None:
             self.window.show(self.frame_view)
 
