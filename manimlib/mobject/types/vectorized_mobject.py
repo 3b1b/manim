@@ -256,15 +256,13 @@ class VMobject(Mobject):
 
         if width is not None:
             for mob in self.get_family(recurse):
-                data = mob.data.rows_or_defaults
-                if isinstance(width, (float, int, np.floating)):
-                    data['stroke_width'][:, 0] = width
-                else:
-                    data['stroke_width'][:, 0] = resize_with_interpolation(
-                        np.array(width), len(data)
-                    ).flatten()
-                # That column is written into rather than replaced
-                mob.data.note_change()
+                with mob.data.being_written() as data:
+                    if isinstance(width, (float, int, np.floating)):
+                        data['stroke_width'][:, 0] = width
+                    else:
+                        data['stroke_width'][:, 0] = resize_with_interpolation(
+                            np.array(width), len(data)
+                        ).flatten()
 
         if behind is not None:
             for mob in self.get_family(recurse):
@@ -882,13 +880,13 @@ class VMobject(Mobject):
             return self
         ends = self.get_subpath_end_indices_from_points(points)
         starts = [0, *(ends[:-1] + 2)]
-        ranges = self.data["subpath_range"]
-        for start, end in zip(starts, ends):
-            # Reaching one past the end takes in the null curve's handle sitting
-            # there, which belongs to no subpath, so that every point gets written
-            ranges[start:end + 2] = (-start, end)
-        ranges += np.arange(len(points))[:, np.newaxis] * (1, -1)
-        self.data.note_change()
+        with self.data.being_written() as data:
+            ranges = data["subpath_range"]
+            for start, end in zip(starts, ends):
+                # Reaching one past the end takes in the null curve's handle sitting
+                # there, which belongs to no subpath, so that every point gets written
+                ranges[start:end + 2] = (-start, end)
+            ranges += np.arange(len(points))[:, np.newaxis] * (1, -1)
         return self
 
     def get_subpath_range(self, index: int = -1) -> Tuple[int, int]:
@@ -1234,8 +1232,8 @@ class VMobject(Mobject):
             # Move the null curve marking the end of each subpath, so that it still
             # marks an end once the order of the points is flipped
             inner_ends = mob.get_subpath_end_indices()[:-1]
-            mob.data["point"][inner_ends + 1] = mob.data["point"][inner_ends + 2]
-            mob.data.note_change()
+            with mob.data.being_written() as data:
+                data["point"][inner_ends + 1] = data["point"][inner_ends + 2]
             mob.uniforms["unit_normal"] = -mob.uniforms["unit_normal"]
         super().reverse_points()
         for mob in self.get_family(recurse):

@@ -114,8 +114,8 @@ class DotCloud(PMobject):
         return self.data["radius"]
 
     def set_radius(self, radius: float) -> Self:
-        self.data.rows_or_defaults["radius"] = radius
-        self.data.note_change()
+        with self.data.being_written() as data:
+            data["radius"] = radius
         self.refresh_bounding_box()
         return self
 

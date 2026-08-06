@@ -238,9 +238,9 @@ class Mobject(object):
         self.resize_points(n + len(new_points))
         # Have most data default to the last value
         self.data[n:] = self.data[n - 1]
-        # Then read in new points, written into rather than replaced, so say so
-        self.data["point"][n:] = new_points
-        self.data.note_change()
+        # Then read in the new points
+        with self.data.being_written() as data:
+            data["point"][n:] = new_points
         self.refresh_bounding_box()
         return self
 
@@ -1310,8 +1310,8 @@ class Mobject(object):
         recurse: bool = False
     ) -> Self:
         for mob in self.get_family(recurse):
-            mob.data.rows_or_defaults[name] = rgba_array
-            mob.data.note_change()
+            with mob.data.being_written() as data:
+                data[name] = rgba_array
         return self
 
     def set_color_by_rgba_func(
@@ -1349,18 +1349,16 @@ class Mobject(object):
         recurse: bool = True
     ) -> Self:
         for mob in self.get_family(recurse):
-            data = mob.data.rows_or_defaults
-            if color is not None:
-                rgbs = np.array(list(map(color_to_rgb, listify(color))))
-                if 1 < len(rgbs):
-                    rgbs = resize_with_interpolation(rgbs, len(data))
-                data[name][:, :3] = rgbs
-            if opacity is not None:
-                if not isinstance(opacity, (float, int, np.floating)):
-                    opacity = resize_with_interpolation(np.array(opacity), len(data))
-                data[name][:, 3] = opacity
-            # Those columns are written into rather than replaced
-            mob.data.note_change()
+            with mob.data.being_written() as data:
+                if color is not None:
+                    rgbs = np.array(list(map(color_to_rgb, listify(color))))
+                    if 1 < len(rgbs):
+                        rgbs = resize_with_interpolation(rgbs, len(data))
+                    data[name][:, :3] = rgbs
+                if opacity is not None:
+                    if not isinstance(opacity, (float, int, np.floating)):
+                        opacity = resize_with_interpolation(np.array(opacity), len(data))
+                    data[name][:, 3] = opacity
         return self
 
     def set_color(

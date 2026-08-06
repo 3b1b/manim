@@ -43,8 +43,8 @@ class PMobject(Mobject):
                 axis=0
             )
         if rgbas is not None:
-            self.data["rgba"][-len(rgbas):] = rgbas
-            self.data.note_change()
+            with self.data.being_written() as data:
+                data["rgba"][-len(rgbas):] = rgbas
         return self
 
     def add_point(self, point: Vect3, rgba=None, color=None, opacity=None) -> Self:

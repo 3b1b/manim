@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+from contextlib import contextmanager
 
 import numpy as np
 
@@ -33,11 +34,14 @@ class StructuredArray(object):
 
         mob.data["point"][::2] = new_points
 
-    goes uncounted, and whoever does it has to say so with
+    goes uncounted. Wrap such writes in
 
-        mob.data.note_change()
+        with mob.data.being_written() as data:
+            data["point"][::2] = new_points
 
-    Assigning the whole field instead, mob.data["point"] = new_points, needs no such thing.
+    which counts them on the way out, rather than leaving it to whoever wrote them to
+    remember. Assigning the whole field instead, mob.data["point"] = new_points, needs
+    no such thing.
     """
 
     def __init__(self, dtype: np.dtype, length: int = 0):
@@ -85,6 +89,21 @@ class StructuredArray(object):
     def note_change(self) -> None:
         """Says that the array was written to through a view onto it, which it cannot count"""
         self.version += 1
+
+    @contextmanager
+    def being_written(self) -> Iterator[np.ndarray]:
+        """
+        The rows, for writing into. Writes made through the view this hands back cannot be
+        counted as they happen, so they are counted here on the way out, whether or not
+        they all went through.
+
+        What comes back is rows_or_defaults, since a style written while there are no
+        points belongs in the row standing in for them.
+        """
+        try:
+            yield self.rows_or_defaults
+        finally:
+            self.version += 1
 
     def has_changed(self, observer: Any) -> bool:
         """

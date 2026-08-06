@@ -279,37 +279,36 @@ class VectorField(VMobject):
         # the base of its head?
         dist_to_head_base = np.clip(drawn_norms - tip_len, 0, np.inf)  # Mixing units!
 
-        # Set all points
-        points = self.get_points()
-        points[0::8] = self.sample_points
-        points[2::8] = self.sample_points + dist_to_head_base * unit_outputs
-        points[4::8] = points[2::8]
-        points[6::8] = self.sample_points + drawn_norms * unit_outputs
-        for i in (1, 3, 5):
-            points[i::8] = 0.5 * (points[i - 1::8] + points[i + 1::8])
-        points[7::8] = points[6:-1:8]
+        # Everything below writes through views onto the data rather than replacing fields
+        with self.data.being_written():
+            # Set all points
+            points = self.get_points()
+            points[0::8] = self.sample_points
+            points[2::8] = self.sample_points + dist_to_head_base * unit_outputs
+            points[4::8] = points[2::8]
+            points[6::8] = self.sample_points + drawn_norms * unit_outputs
+            for i in (1, 3, 5):
+                points[i::8] = 0.5 * (points[i - 1::8] + points[i + 1::8])
+            points[7::8] = points[6:-1:8]
 
-        # Adjust stroke widths
-        width_arr = self.stroke_width * self.base_stroke_width_array
-        width_scalars = np.clip(drawn_norms / tip_len, 0, 1)
-        width_scalars = np.repeat(width_scalars, 8)[:-1]
-        self.get_stroke_widths()[:] = width_scalars * width_arr
+            # Adjust stroke widths
+            width_arr = self.stroke_width * self.base_stroke_width_array
+            width_scalars = np.clip(drawn_norms / tip_len, 0, 1)
+            width_scalars = np.repeat(width_scalars, 8)[:-1]
+            self.get_stroke_widths()[:] = width_scalars * width_arr
 
-        # Potentially adjust opacity and color
-        if self.color_map is not None:
-            self.get_stroke_colors()  # Ensures the array is updated to appropriate length
-            low, high = self.magnitude_range
-            self.data['stroke_rgba'][:, :3] = self.color_map(
-                inverse_interpolate(low, high, np.repeat(output_norms, 8)[:-1])
-            )[:, :3]
+            # Potentially adjust opacity and color
+            if self.color_map is not None:
+                self.get_stroke_colors()  # Ensures the array is updated to appropriate length
+                low, high = self.magnitude_range
+                self.data['stroke_rgba'][:, :3] = self.color_map(
+                    inverse_interpolate(low, high, np.repeat(output_norms, 8)[:-1])
+                )[:, :3]
 
-        if self.norm_to_opacity_func is not None:
-            self.get_stroke_opacities()[:] = self.norm_to_opacity_func(
-                np.repeat(output_norms, 8)[:-1]
-            )
-
-        # The arrays above are written into rather than replaced
-        self.data.note_change()
+            if self.norm_to_opacity_func is not None:
+                self.get_stroke_opacities()[:] = self.norm_to_opacity_func(
+                    np.repeat(output_norms, 8)[:-1]
+                )
         return self
 
 

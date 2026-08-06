@@ -1421,8 +1421,8 @@ class ArrowTip(Triangle):
         self.set_width(length, stretch=True)
         if tip_style == 1:
             self.set_height(length * 0.9, stretch=True)
-            self.data["point"][4] += np.array([0.6 * length, 0, 0])
-            self.data.note_change()
+            with self.data.being_written() as data:
+                data["point"][4] += np.array([0.6 * length, 0, 0])
         elif tip_style == 2:
             h = length / 2
             self.set_points(Dot().set_width(h).get_points())

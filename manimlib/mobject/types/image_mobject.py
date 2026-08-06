@@ -51,11 +51,11 @@ class ImageMobject(Mobject):
         self.set_height(self.height)
 
     def set_opacity(self, opacity: float, recurse: bool = True):
-        self.data["opacity"][:, 0] = resize_with_interpolation(
-            np.array(listify(opacity)),
-            self.get_num_points()
-        )
-        self.data.note_change()
+        with self.data.being_written() as data:
+            data["opacity"][:, 0] = resize_with_interpolation(
+                np.array(listify(opacity)),
+                self.get_num_points()
+            )
         return self
 
     def set_color(self, color, opacity=None, recurse=None):
