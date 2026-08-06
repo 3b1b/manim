@@ -184,6 +184,11 @@ class Arena(object):
         self.dirty = (0, self.used)
         return True
 
+    def make_bindings(self) -> None:
+        """A group afresh, which whatever binds through this one has to hear about"""
+        self.bind_group = self.create_bind_group()
+        self.renderer.rebindings += 1
+
     def reset(self) -> None:
         self.used = 0
 
@@ -219,8 +224,8 @@ class UniformArena(Arena):
         self.stride = block_size + (-block_size % alignment)
         super().__init__(renderer, rows * self.stride)
 
-    def make_bindings(self) -> None:
-        self.bind_group = self.device.create_bind_group(
+    def create_bind_group(self):
+        return self.device.create_bind_group(
             layout=self.renderer.mobject_layout,
             entries=[{"binding": 0, "resource": {
                 "buffer": self.buffer, "offset": 0, "size": self.block_size,
@@ -255,8 +260,8 @@ class DataArena(Arena):
         self.window = self.alignment
         super().__init__(renderer, records * record_size)
 
-    def make_bindings(self) -> None:
-        self.bind_group = self.device.create_bind_group(
+    def create_bind_group(self):
+        return self.device.create_bind_group(
             layout=self.renderer.data_layout,
             entries=[{"binding": DATA_BINDING, "resource": {
                 "buffer": self.buffer, "offset": 0, "size": self.window,
@@ -327,6 +332,9 @@ class Renderer(object):
         )
         # Every arena, for the two moments a frame speaks to all of them, and the two ways of
         # finding the one a mobject belongs in
+        # How many times an arena has made a new bind group, which a recorded draw holds
+        # references to, see DrawList
+        self.rebindings = 0
         self.arenas: list[Arena] = []
         self.uniform_arenas: dict[int, UniformArena] = dict()
         self.data_arenas: dict[int, DataArena] = dict()
@@ -347,6 +355,31 @@ class Renderer(object):
         self.bound: list[Any] = 3 * [None]
         self.pipeline_in_use: Any = None
         self.init_present_resources()
+
+    def record(self, draw: Callable[[], None]) -> Any:
+        """
+        The draws a callable makes, gathered into a bundle to be replayed with one call rather
+        than made again. Recorded without a pass open, a bundle being a thing of its own.
+
+        A bundle begins knowing nothing, so what a frame tells its pass once has to be said in
+        here as well.
+        """
+        encoder = self.device.create_render_bundle_encoder(
+            color_formats=[COLOR_FORMAT],
+            depth_stencil_format=DEPTH_STENCIL_FORMAT,
+            sample_count=self.samples,
+        )
+        self.pass_ = encoder
+        self.forget_pass_state()
+        self.bind(FRAME_GROUP, self.frame_bind_group)
+        draw()
+        self.pass_ = None
+        return encoder.finish()
+
+    def replay(self, bundle: Any) -> None:
+        self.pass_.execute_bundles([bundle])
+        # A bundle leaves the pass knowing nothing of what it was told
+        self.forget_pass_state()
 
     def send_frame_uniforms(self) -> None:
         """The frame's uniforms, if they have been written to since they were last sent"""
@@ -401,13 +434,16 @@ class Renderer(object):
             self.pass_.set_pipeline(pipeline)
             self.pipeline_in_use = pipeline
 
+    def forget_pass_state(self) -> None:
+        """Whatever was told to a pass is forgotten, a new one having been told nothing"""
+        self.bound = 3 * [None]
+        self.pipeline_in_use = None
+
     def begin_frame(self, attachments: dict) -> None:
         """Opens the one render pass a frame is drawn in"""
         self.encoder = self.device.create_command_encoder()
         self.pass_ = self.encoder.begin_render_pass(**attachments)
-        # A new pass has been told nothing, whatever the last one knew
-        self.bound = 3 * [None]
-        self.pipeline_in_use = None
+        self.forget_pass_state()
         self.bind(FRAME_GROUP, self.frame_bind_group)
 
     def end_frame(self) -> None:

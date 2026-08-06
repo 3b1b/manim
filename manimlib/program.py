@@ -70,6 +70,9 @@ class Slot(object):
         # Made only for a mobject with images of its own, the rest reading the arena's
         self.resource_bind_group = None
         self.arena_bind_group = None
+        # Whether the write phase found anything a recorded draw would have baked in to have
+        # moved, which for a slot nothing has drawn yet is everything, see DrawList
+        self.resequenced = True
 
 
 class Program(object):
@@ -196,9 +199,15 @@ class Program(object):
         to know. Every mobject of a frame is written before any of them is drawn, a write
         reaching the gpu partway through a pass having no say over which draws see it, see
         Camera.capture.
+
+        Noting on the way whether any of what was settled here moved, which every comparison
+        below was making anyway, so that a recorded draw knows to be made again.
         """
-        slot.records = len(slot.data)
-        slot.depth_test = slot.mobject.depth_test
+        records = len(slot.data)
+        depth_test = slot.mobject.depth_test
+        slot.resequenced = records != slot.records or depth_test != slot.depth_test
+        slot.records = records
+        slot.depth_test = depth_test
         self.write_data(slot)
         self.write_uniforms(slot)
 
@@ -207,8 +216,10 @@ class Program(object):
         data = slot.data
         changed = data.has_changed(observer=slot)
         offset = self.data_arena.claim_stretch(data.array.nbytes)
-        if changed or offset != slot.data_offset:
+        moved = offset != slot.data_offset
+        if changed or moved:
             self.data_arena.put(offset, data.bytes)
+        slot.resequenced = slot.resequenced or moved
         slot.data_offset = offset
 
     def write_uniforms(self, slot: Slot) -> bool:
@@ -222,10 +233,12 @@ class Program(object):
         uniforms = slot.uniforms
         changed = uniforms.has_changed(observer=slot)
         offset = self.uniform_arena.next_row()
+        moved = offset != slot.uniform_offset
         # A scene which is not changing hands its rows out in the same order every frame, so
         # a mobject whose uniforms have not moved usually finds its own values already there
-        if changed or offset != slot.uniform_offset:
+        if changed or moved:
             self.uniform_arena.put(offset, uniforms.bytes)
+        slot.resequenced = slot.resequenced or moved
         slot.uniform_offset = offset
         return changed
 
@@ -315,9 +328,12 @@ class SurfaceProgram(Program):
     def write(self, slot: SurfaceSlot) -> None:
         super().write(slot)
         surface = slot.mobject
+        was, count = slot.ordered, slot.order_count
         # Ordering the triangles writes a buffer of its own, so it belongs among the writes
         sort = surface.sort_to_camera or not surface.is_opaque()
         slot.ordered = sort and self.order_triangles_by_depth(slot)
+        slot.resequenced = slot.resequenced or slot.ordered != was \
+            or slot.order_count != count
 
     def order_triangles_by_depth(self, slot: SurfaceSlot) -> bool:
         """
@@ -440,7 +456,9 @@ class VProgram(Program):
 
     def write(self, slot: VSlot) -> None:
         super().write(slot)
-        slot.stroke_behind = slot.mobject.stroke_behind
+        stroke_behind = slot.mobject.stroke_behind
+        slot.resequenced = slot.resequenced or stroke_behind != slot.stroke_behind
+        slot.stroke_behind = stroke_behind
 
     def write_uniforms(self, slot: VSlot) -> bool:
         # Whether there is anything to fill, worked out when the uniforms saying so change
@@ -449,7 +467,9 @@ class VProgram(Program):
         if not super().write_uniforms(slot):
             return False
         uniforms = slot.uniforms
-        slot.has_fill = bool(uniforms["fill_rgba"][3] or uniforms["fill_rgba_end"][3])
+        has_fill = bool(uniforms["fill_rgba"][3] or uniforms["fill_rgba_end"][3])
+        slot.resequenced = slot.resequenced or has_fill != slot.has_fill
+        slot.has_fill = has_fill
         return True
 
     def get_num_curves(self, slot: VSlot) -> int:

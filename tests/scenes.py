@@ -370,3 +370,17 @@ class AnimCamera(ThreeDScene):
         label.fix_in_frame()
         self.add(ThreeDAxes(), Sphere(radius=1.2).set_color(BLUE_E), label)
         self.play(self.frame.animate.reorient(40, 60), run_time=0.3)
+
+
+class AnimSorted(ThreeDScene):
+    """
+    A see through surface turned past the camera, whose triangles are put in a new order every
+    frame. The order is a buffer of its own, so this is the one case where what a frame draws
+    is settled by something a recorded draw reads rather than bakes in, see DrawList.
+    """
+
+    def construct(self):
+        torus = Torus(r1=1.6, r2=0.6, resolution=(51, 25)).set_color(TEAL, 0.4)
+        self.add(torus)
+        self.frame.reorient(20, 70)
+        self.play(self.frame.animate.reorient(70, 55), run_time=0.3)

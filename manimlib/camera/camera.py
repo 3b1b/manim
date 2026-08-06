@@ -116,6 +116,7 @@ class Camera(object):
         background_color: ManimColor = BLACK,
         background_opacity: float = 1.0,
         light_source_position: Vect3 = np.array([-10, 10, 10]),
+        record_draws: bool = True,
         # Although vector graphics handle antialiasing fine
         # without multisampling, for 3d scenes one might want
         # to set samples to be greater than 0.
@@ -126,6 +127,7 @@ class Camera(object):
         self.fps = fps
         self.light_source_position = light_source_position
         self.samples = samples
+        self.record_draws = record_draws
 
         self.background_rgba: list[float] = list(color_to_rgba(
             background_color, background_opacity
@@ -145,7 +147,7 @@ class Camera(object):
 
     def init_renderer(self) -> None:
         self.renderer = Renderer()
-        self.draw_list = DrawList(self.renderer)
+        self.draw_list = DrawList(self.renderer, record=self.record_draws)
         if self.window is not None:
             self.window.configure(self.renderer)
 
