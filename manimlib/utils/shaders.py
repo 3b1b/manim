@@ -14,7 +14,7 @@ from manimlib.utils.file_ops import find_file
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Any, Sequence
+    from typing import Any, Callable, Sequence
 
 
 @lru_cache()
@@ -169,6 +169,13 @@ class Uniforms(StructuredArray):
 
     def __getitem__(self, key: str) -> Any:
         return self.array[key][0]
+
+    def apply(self, key: str, func: Callable[[np.ndarray], np.ndarray]) -> None:
+        """
+        Passes one uniform through a function written for many rows of values, e.g. one
+        that moves points, which reading a single value back has to be dressed up as.
+        """
+        self[key] = func(self[key][np.newaxis])[0]
 
 
 def get_shader_code(

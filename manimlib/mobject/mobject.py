@@ -272,7 +272,7 @@ class Mobject(object):
                 for key in mob.pointlike_data_keys:
                     mob.data[key] = moved(mob.data[key])
             for key in mob.pointlike_uniform_keys:
-                mob.uniforms[key] = moved(mob.uniforms[key][np.newaxis])[0]
+                mob.uniforms.apply(key, moved)
             if box is not None:
                 box[:] = moved(box)
 
