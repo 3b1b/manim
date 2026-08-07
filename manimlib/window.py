@@ -51,6 +51,19 @@ PRESENT_SHADER = "present.wgsl"
 # Where the corner named by a position string sits along each edge of the monitor
 POSITION_STEPS = {"L": 0.0, "U": 0.0, "O": 0.5, "R": 1.0, "D": 1.0}
 
+import os, sys, pyglet
+
+# It should be natively supported by Pyglet, but it doesn't work at the moment.
+# See https://github.com/pyglet/pyglet/issues/1342
+dpi_scaling = os.environ.get('PYGLET_DPI_SCALING')
+if dpi_scaling:
+    # dpi_scaling introduced in Pyglet 2.1
+    if hasattr(pyglet.options, 'dpi_scaling'):
+        pyglet.options.dpi_scaling = dpi_scaling
+    else:
+        print("Installed Pyglet doesn't support DPI scaling.",
+              file=sys.stderr)
+
 
 def to_key(name: str) -> Optional[int]:
     """
