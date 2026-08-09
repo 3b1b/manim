@@ -27,7 +27,10 @@ an encoder made of a frame rather than the frame.
     --no-merging             draw every mobject on its own rather than gathering runs
 
 Both of those are meant to be invisible, so capturing with one and comparing without it is a
-test of that, animations included.
+test of that, animations included. With one exception: gathering anti-aliases a fill against
+the whole run's winding rather than one mobject's, so an edge pixel between two close glyphs
+may land differently. A render made without gathering is judged by what differs away from an
+edge, see run.
 """
 from __future__ import annotations
 
@@ -256,8 +259,15 @@ def run(args) -> int:
             print(f"  {scene:28s} SHAPE MISMATCH: {report['error']}")
             failures.append(scene)
             continue
-        if report["max"] <= args.tolerance:
-            within = "" if report["max"] == 0 else f" (within tolerance, max {report['max']})"
+        # Gathering can only move a pixel where a fill meets its own edge, so a render made
+        # without it is allowed to differ from a gathered reference exactly there
+        edges_only = "draw_together" in plainly and report["pixels"] and not report["inside"]
+        if report["max"] <= args.tolerance or edges_only:
+            within = ""
+            if edges_only:
+                within = f" (differs on {report['pixels']} px, all along an edge)"
+            elif report["max"]:
+                within = f" (within tolerance, max {report['max']})"
             print(f"  {scene:28s} matches{within}")
             continue
         where = "" if report["frames"] == 1 else \
