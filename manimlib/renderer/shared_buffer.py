@@ -54,7 +54,11 @@ class SharedBuffer(object):
         self.bytes = memoryview(self.blocks)
         self.buffer = None
         self.bind_group = None
-        self.dirty: tuple[int, int] | None = None
+        # What was written into since the last send, as two ints rather than a tuple: put is
+        # called once per mobject per frame, and at that rate building a tuple and comparing
+        # through min and max costs more than the copy it is bookkeeping for
+        self.dirty_start = -1
+        self.dirty_end = 0
 
     def claim(self, nbytes: int) -> int:
         """
@@ -89,7 +93,9 @@ class SharedBuffer(object):
         # A memoryview slice being half the cost of a numpy one at these sizes
         self.bytes = memoryview(self.blocks)
         self.buffer = self.device.create_buffer(size=capacity, usage=self.usage)
-        self.dirty = (0, self.used)
+        self.dirty_start = 0
+        if self.used > self.dirty_end:
+            self.dirty_end = self.used
         return True
 
     def make_bindings(self) -> None:
@@ -105,23 +111,43 @@ class SharedBuffer(object):
     def reset(self) -> None:
         self.used = 0
 
-    def put(self, offset: int, source: np.ndarray) -> None:
+    def put(
+        self,
+        offset: int,
+        source: np.ndarray,
+        record_size: int = 0,
+        repeats: int = 0,
+    ) -> None:
+        """
+        Bytes into the buffer, followed by the last record_size of them written again that many
+        times, which is what holds one mobject of a run apart from the next.
+
+        The two go in together rather than being put separately, the stretch being one either
+        way. put is called once per mobject per frame, and at that rate the marking below costs
+        about what the copy does, so halving the calls is worth the two arguments.
+        """
         end = offset + len(source)
         self.bytes[offset:end] = source
-        if self.dirty is None:
-            self.dirty = (offset, end)
-        else:
-            self.dirty = (min(self.dirty[0], offset), max(self.dirty[1], end))
+        if repeats:
+            last = source[-record_size:]
+            for step in range(repeats):
+                self.bytes[end:end + record_size] = last
+                end += record_size
+        if offset < self.dirty_start or self.dirty_start < 0:
+            self.dirty_start = offset
+        if end > self.dirty_end:
+            self.dirty_end = end
 
     def upload(self) -> None:
         """Whatever was written into since the last send, in one write"""
-        if self.dirty is None:
+        start = self.dirty_start
+        if start < 0:
             return
-        start, end = self.dirty
         self.gpu.queue.write_buffer(
-            self.buffer, start, self.blocks, start, end - start,
+            self.buffer, start, self.blocks, start, self.dirty_end - start,
         )
-        self.dirty = None
+        self.dirty_start = -1
+        self.dirty_end = 0
 
     def matching_neighbours(self, first: int, last: int, count: int) -> np.ndarray | None:
         """

@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from manimlib.mobject.mobject import Mobject
     from manimlib.renderer.gpu import RenderPass
     from manimlib.renderer.material import Material, ModuleSpec
-    from manimlib.utils.structured_array import StructuredArray
 
 
 class Drawing(object):
@@ -147,26 +146,22 @@ class Drawing(object):
         offset = buffer.claim(records * record_size)
         moved = offset != self.data_offset or records != self.records
         at = offset
+        # Every mobject of the run but the last is followed by records holding its own last
+        # one over again, which hold it apart from the next
+        between = self.records_between
         last = len(run) - 1
         for index, (drawing, size) in enumerate(zip(run, sizes)):
             data = drawing.data
             changed = data.has_changed(observer=drawing)
             if changed or at != drawing.data_offset:
-                buffer.put(at, data.bytes)
-                if index != last:
-                    self.write_gap(at + size * record_size, data)
+                buffer.put(
+                    at, data.bytes, record_size, between if index != last else 0,
+                )
             drawing.data_offset = at
-            at += (size + self.records_between) * record_size
+            at += (size + between) * record_size
         self.data_offset = offset
         self.records = records
         self.invalidated = self.invalidated or moved
-
-    def write_gap(self, offset: int, data: StructuredArray) -> None:
-        """The last record over again, as many times as hold one mobject apart from the next"""
-        record_size = self.material.record_size
-        last = data.bytes[-record_size:]
-        for step in range(self.records_between):
-            self.material.data_buffer.put(offset + step * record_size, last)
 
     # Gathering into runs
 
