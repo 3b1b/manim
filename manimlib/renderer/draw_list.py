@@ -109,7 +109,7 @@ class DrawList(object):
         """
         runs: list[list[Slot]] = []
         for slot in slots:
-            if runs and self.follows(runs[-1][-1], slot):
+            if runs and self.can_draw_together(runs[-1][-1], slot):
                 runs[-1].append(slot)
             else:
                 runs.append([slot])
@@ -121,15 +121,13 @@ class DrawList(object):
             lengths.append(len(run))
         return tuple(lengths)
 
-    def follows(self, last: Slot, slot: Slot) -> bool:
+    def can_draw_together(self, last: Slot, slot: Slot) -> bool:
         """
         What one draw settles for every mobject it covers, and so has to agree about.
 
         A fill is left out of this. It counts its winding across the whole of a draw, so two
         filled mobjects may share one only where they do not overlap, and telling whether they
-        do costs more than sharing saves: the answer turns on where they are, so it has to be
-        found again whenever any of them moves, and 700 glyphs cost 0.84ms to look through
-        against the 0.32ms that drawing them together saves.
+        do costs more than sharing saves.
         """
         return (
             self.may_merge
