@@ -379,12 +379,18 @@ class VDrawing(Drawing):
         # Whether the path encloses anything, and which way round its two passes go
         self.has_fill = False
         self.stroke_behind = False
+        # Which mobjects this one's fill has been promised not to overlap, see
+        # VMobject.set_fills_disjoint
+        self.fill_group: Any = None
 
     def write_uniforms(self) -> bool:
         stroke_behind = self.mobject.stroke_behind
+        fill_group = self.mobject.fill_group
         changed = super().write_uniforms()
-        self.invalidated = self.invalidated or stroke_behind != self.stroke_behind
+        self.invalidated = self.invalidated or stroke_behind != self.stroke_behind \
+            or fill_group is not self.fill_group
         self.stroke_behind = stroke_behind
+        self.fill_group = fill_group
         # Whether there is anything to fill, worked out when the uniforms saying so change
         # rather than every frame. Without it a shape with no fill still pays for all three
         # fill passes, which in a scene of lines and text is most of the draws.
@@ -398,15 +404,22 @@ class VDrawing(Drawing):
 
     def can_follow(self, previous: Drawing) -> bool:
         """
-        A fill is left out of what may be gathered. It counts its winding across the whole of
-        a draw, so two filled mobjects may share one only where they do not overlap, and
-        telling whether they do costs more than sharing saves.
+        A fill counts its winding across the whole of a draw, so two filled mobjects may share
+        one only where they do not overlap. Telling whether they do costs more than sharing
+        saves, so it is left to the mobjects to say, see VMobject.set_fills_disjoint, and only
+        those which have said so about the same group are gathered.
+
+        Unfilled strokes are gathered whatever they promise, a stroke being drawn along its own
+        path and reading nothing of what else the draw covers.
         """
-        return (
+        if not (
             super().can_follow(previous)
             and self.stroke_behind == previous.stroke_behind
-            and not (self.has_fill or previous.has_fill)
-        )
+        ):
+            return False
+        if not (self.has_fill or previous.has_fill):
+            return True
+        return self.fill_group is not None and self.fill_group is previous.fill_group
 
     def get_num_curves(self) -> int:
         # Consecutive beziers share an anchor, so n points make n // 2 curves

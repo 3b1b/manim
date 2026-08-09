@@ -132,8 +132,49 @@ class VMobject(Mobject):
         self.needs_new_unit_normal = True
 
         self.shader_code_target = None
+        # Which set of mobjects this one's fill has been promised not to overlap, see
+        # set_fills_disjoint. None, meaning no such promise, for all but text.
+        self.fill_group: VMobject | None = None
 
         super().__init__(**kwargs)
+
+    def set_fills_disjoint(self, disjoint: bool = True, recurse: bool = True) -> Self:
+        """
+        Promises that these mobjects' filled regions do not overlap one another, which lets
+        one draw cover the lot of them rather than three passes each, see VDrawing.can_follow.
+        A page of text drawn this way is a handful of draws rather than one per glyph.
+
+        The promise is kept against this mobject in particular, so two groups which have each
+        made it are still drawn apart: glyphs of one string are laid out by the typesetter and
+        really do not overlap, while two strings laid over one another say nothing of the sort.
+
+        Broken, what changes is the overlap: filled once between them rather than each blending
+        in turn. For opaque fills that is the same picture, and for partly transparent ones it
+        is a lighter one.
+        """
+        group = self if disjoint else None
+        for mob in self.get_family(recurse):
+            mob.fill_group = group
+        return self
+
+    def copy(self, deep: bool = False) -> Self:
+        """
+        A copy is a group of its own. Left pointing at what it was copied from, its fills
+        would be taken to be disjoint from that original's, which a copy laid over the thing
+        it copies is the opposite of.
+        """
+        result = super().copy(deep)
+        if deep:
+            return result
+        originals = self.get_family()
+        copies = result.get_family()
+        if len(originals) != len(copies):
+            return result
+        matching = {id(mob): copies[index] for index, mob in enumerate(originals)}
+        for mob in copies:
+            if mob.fill_group is not None:
+                mob.fill_group = matching.get(id(mob.fill_group))
+        return result
 
     def get_group_class(self):
         return VGroup
