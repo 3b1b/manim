@@ -23,10 +23,10 @@ from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_listner import EventListener
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
-from manimlib.renderer.shader_program import Program
-from manimlib.utils.shaders import COMMON_UNIFORMS
-from manimlib.utils.shaders import Uniforms
-from manimlib.utils.shaders import uniform_block_dtype
+from manimlib.renderer.drawing import Drawing
+from manimlib.renderer.uniform_block import COMMON_UNIFORMS
+from manimlib.renderer.uniform_block import Uniforms
+from manimlib.renderer.uniform_block import uniform_block_dtype
 from manimlib.utils.structured_array import StructuredArray
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgb
@@ -41,7 +41,7 @@ from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.paths import straight_path
-from manimlib.utils.shaders import get_colormap_code
+from manimlib.renderer.shader_source import get_colormap_code
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
@@ -67,30 +67,25 @@ class Mobject(object):
     Mathematical Object
     """
     dim: int = 3
-    # What draws this kind of mobject, see program.Program
-    program_class: type = Program
+    # What draws this kind of mobject, see drawing.Drawing
+    drawing_class: type = Drawing
     shader_file: str = ""
-    # If positive, the shader is handed no vertex attributes, and instead reads
-    # each record out of the vertex buffer itself, turning it into this many
-    # vertices. This is how shapes are expanded without a geometry shader.
+    # No shader is handed vertex attributes. Each reads the records of the buffer they
+    # are gathered in itself, see inserts/read_data.wgsl.
     verts_per_record: int = 0
-    # Must match in attributes of vert shader
+    # The offsets a shader indexes its records by are generated from this,
+    # so the two cannot disagree. See shader_source.data_layout_code, 
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ])
-    # One value each for the whole mobject, as opposed to one per point, given as a
-    # name and how many floats it holds. The struct its shaders read is generated from
-    # this, see inserts/mobject_uniforms.wgsl, so the two cannot disagree.
+    # One value each for the whole mobject, as opposed to one per point
     uniform_dtype: np.dtype = uniform_block_dtype(*COMMON_UNIFORMS)
     # Data holding a point, which transforms act on, and which a blend of two mobjects
-    # sends along a path rather than straight from one to the other. Nothing overrides
-    # this yet; it is here for the likes of per-point normals or tangents.
+    # sends along a path rather than straight from one to the other.
     pointlike_data_keys = ['point']
-    # Values saying how the points are grouped rather than where they are. A marker of the
-    # grouping survives a blend of two mobjects only where both of them had one, so the
-    # grouping of a blend is the coarser of the two, which is the larger reach of each, see
-    # VMobject.set_subpath_range.
+    # Values saying how the points are grouped rather than where they are.
+    # See VMobject.set_subpath_range.
     structural_data_keys: list[str] = []
     # Uniforms holding a point, which transforms act on just as they do on the points
     pointlike_uniform_keys: list[str] = []
@@ -1916,7 +1911,7 @@ class Mobject(object):
     def replace_shader_code(self, old: str, new: str) -> Self:
         for mob in self.get_family():
             # A new dict rather than a write into the old one, so that whatever is drawing
-            # this mobject can see that its program has changed, see DrawList.resolve
+            # this mobject can see that its shaders have changed, see Renderer.resolve
             mob.shader_code_replacements = {**mob.shader_code_replacements, old: new}
         return self
 

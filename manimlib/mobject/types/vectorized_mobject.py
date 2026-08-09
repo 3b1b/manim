@@ -43,9 +43,9 @@ from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotation_between_vectors
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.space_ops import poly_line_length
-from manimlib.renderer.shader_program import VProgram
-from manimlib.utils.shaders import COMMON_UNIFORMS
-from manimlib.utils.shaders import uniform_block_dtype
+from manimlib.renderer.drawing import VDrawing
+from manimlib.renderer.uniform_block import COMMON_UNIFORMS
+from manimlib.renderer.uniform_block import uniform_block_dtype
 
 from typing import TYPE_CHECKING
 from typing import Generic, TypeVar, Iterable
@@ -60,7 +60,7 @@ GRADIENT_POINT_KEYS = ['gradient_start', 'gradient_end']
 
 
 class VMobject(Mobject):
-    program_class: type = VProgram
+    drawing_class: type = VDrawing
     structural_data_keys = ['subpath_range']
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
@@ -131,7 +131,7 @@ class VMobject(Mobject):
 
         self.needs_new_unit_normal = True
 
-        self.shader_program_type = None
+        self.shader_code_target = None
 
         super().__init__(**kwargs)
 
@@ -385,11 +385,11 @@ class VMobject(Mobject):
         self.set_stroke(color=colors)
         return self
 
-    def set_color_by_code(self, wgsl_code: str, program_type: str | None = None) -> Self:
+    def set_color_by_code(self, wgsl_code: str, code_target: str | None = None) -> Self:
         self.replace_shader_code(
             "///// INSERT COLOR FUNCTION HERE /////",
             wgsl_code,
-            program_type
+            code_target
         )
         return self
 
@@ -397,11 +397,16 @@ class VMobject(Mobject):
         self,
         old: str,
         new: str,
-        program_type: str | None = None
+        code_target: str | None = None
     ) -> Self:
-        if program_type is not None:
+        """
+        A snippet naming a field of one of the two shaders, stroke_rgba say, would not compile
+        against the other, so code_target says which of "fill" and "stroke" it is meant for.
+        Left out, it goes to both, see VDrawing.module_specs.
+        """
+        if code_target is not None:
             for mob in self.get_family():
-                mob.shader_program_type = program_type
+                mob.shader_code_target = code_target
         # Which records the replacement against every member of the family
         super().replace_shader_code(old, new)
         return self

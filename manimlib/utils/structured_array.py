@@ -80,7 +80,7 @@ class StructuredArray(object):
         run of floats, and the same as bytes, padding included.
 
         Made once here rather than where they are wanted, making a view costing more than the
-        copy it is for, see Arena.put and Uniforms.interpolate.
+        copy it is for, see SharedBuffer.put and StructuredArray.interpolate.
         """
         self.array: np.ndarray = array
         self.floats: np.ndarray = array.view(np.float32)
@@ -145,7 +145,6 @@ class StructuredArray(object):
             for key in source:
                 if key in self:
                     self[key] = source[key]
-
 
     @property
     def rows_or_defaults(self) -> np.ndarray:

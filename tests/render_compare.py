@@ -23,7 +23,7 @@ an encoder made of a frame rather than the frame.
     --tolerance N            allow a per channel difference of up to N out of 255
     --quality l|m|hd|uhd     what to render at, low by default
     --twice                  (capture) render everything twice and report anything unstable
-    --no-recording           draw every frame afresh rather than replaying a recording
+    --no-bundling            draw every frame afresh rather than replaying a render bundle
     --no-merging             draw every mobject on its own rather than gathering runs
 
 Both of those are meant to be invisible, so capturing with one and comparing without it is a
@@ -99,10 +99,10 @@ file_writer:
   pixel_format: "rgb24"
   crf: 0
 """
-# What a render is told when asked to draw the plain way rather than by replaying a recording
+# What a render is told when asked to draw the plain way rather than by replaying a bundle
 # or gathering mobjects into runs, both of which are meant to come out to the same picture,
-# see DrawList
-PLAIN_DRAWING = {"record_draws": "--no-recording", "draw_together": "--no-merging"}
+# see Renderer
+PLAIN_DRAWING = {"bundle_draws": "--no-bundling", "draw_together": "--no-merging"}
 
 
 def render(case, into: Path, quality: str, plainly: Sequence[str] = ()) -> Path | None:
@@ -292,7 +292,7 @@ def main() -> int:
     parser.add_argument("--tolerance", type=int, default=0)
     parser.add_argument("--quality", choices=list(QUALITY_FLAGS), default="l")
     parser.add_argument("--twice", action="store_true")
-    parser.add_argument("--no-recording", action="store_true")
+    parser.add_argument("--no-bundling", action="store_true")
     parser.add_argument("--no-merging", action="store_true")
     args = parser.parse_args()
     if args.command == "list":

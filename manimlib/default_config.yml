@@ -50,11 +50,11 @@ window:
   # position: (500, 500)  # Specific position, in pixel coordinates, for upper right corner
   # size: (1920, 1080)  # Specific size, in pixels
 camera:
-  # A frame's draws are recorded and replayed for as long as the sequence of them holds, see
-  # DrawList. Turning this off makes every draw afresh each frame, which says the same thing
-  # more slowly.
-  record_draws: True
-  # Mobjects which one draw could cover are gathered and drawn together, see DrawList.group.
+  # A frame's draws are gathered into a render bundle and replayed for as long as the sequence
+  # of them holds, see Bundling. Turning this off makes every draw afresh each frame, which
+  # says the same thing more slowly.
+  bundle_draws: True
+  # Mobjects which one draw could cover are gathered and drawn together, see Renderer.group.
   # Turning this off draws each on its own, which says the same thing more slowly.
   draw_together: True
   resolution: (1920, 1080)

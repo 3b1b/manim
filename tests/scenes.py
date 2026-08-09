@@ -390,7 +390,7 @@ class AnimTextTransform(Scene):
 class DrawnTogether(Scene):
     """
     Many small stroked mobjects, which the renderer gathers into runs and draws a run at a
-    time, see DrawList.group. The joints are what to watch: a run's members sit in one buffer
+    time, see Renderer.group. The joints are what to watch: a run's members sit in one buffer
     with a null curve between them, so a joint reaching into its neighbour would show here.
 
     Stroke color and width are held per point rather than per mobject, so they are no reason
@@ -418,7 +418,7 @@ class DrawnTogether(Scene):
         )).arrange(RIGHT, buff=0.15).to_edge(DOWN, buff=0.1)
         self.add(closed)
         # Filled shapes, which are drawn on their own however they are laid out, see
-        # DrawList.follows
+        # Drawing.can_follow
         apart = VGroup(*(
             Square().set_fill(BLUE, 0.5).set_stroke(WHITE, 2).scale(0.22)
             for _ in range(6)
@@ -435,7 +435,7 @@ class AnimSorted(ThreeDScene):
     """
     A see through surface turned past the camera, whose triangles are put in a new order every
     frame. The order is a buffer of its own, so this is the one case where what a frame draws
-    is settled by something a recorded draw reads rather than bakes in, see DrawList.
+    is settled by something a bundled draw reads rather than bakes in, see Renderer.
     """
 
     def construct(self):

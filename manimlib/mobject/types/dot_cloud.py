@@ -7,8 +7,8 @@ from manimlib.constants import ORIGIN, NULL_POINTS
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.utils.iterables import resize_with_interpolation
-from manimlib.utils.shaders import COMMON_UNIFORMS
-from manimlib.utils.shaders import uniform_block_dtype
+from manimlib.renderer.uniform_block import COMMON_UNIFORMS
+from manimlib.renderer.uniform_block import uniform_block_dtype
 
 from typing import TYPE_CHECKING
 

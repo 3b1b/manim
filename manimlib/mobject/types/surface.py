@@ -9,7 +9,7 @@ from pathlib import Path
 from manimlib.constants import GREY
 from manimlib.constants import OUT
 from manimlib.mobject.mobject import Mobject
-from manimlib.renderer.shader_program import SurfaceProgram
+from manimlib.renderer.drawing import SurfaceDrawing
 from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
@@ -21,8 +21,8 @@ from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.simple_functions import clip
 from manimlib.utils.space_ops import normalize_along_axis
 from manimlib.utils.paths import straight_path
-from manimlib.utils.shaders import COMMON_UNIFORMS
-from manimlib.utils.shaders import uniform_block_dtype
+from manimlib.renderer.uniform_block import COMMON_UNIFORMS
+from manimlib.renderer.uniform_block import uniform_block_dtype
 
 from typing import TYPE_CHECKING
 
@@ -39,7 +39,7 @@ def norms_along_axis(vectors: Vect3Array) -> np.ndarray:
 
 
 class Surface(Mobject):
-    program_class: type = SurfaceProgram
+    drawing_class: type = SurfaceDrawing
     shader_file: str = "surface.wgsl"
     # Points are sent as the grid they sample, and the vertex shader works out the mesh
     # over it, expanding each of them into one square's worth of vertices. See
@@ -219,7 +219,7 @@ class Surface(Mobject):
     def is_opaque(self) -> bool:
         """
         Whether nothing behind the surface shows through it, which decides whether its
-        triangles have to be drawn in order, see SurfaceProgram.
+        triangles have to be drawn in order, see SurfaceDrawing.
 
         Asked once a frame, so worked out only when the data has been written to since the last
         ask. It cannot be settled in set_opacity instead: a surface fading in or transforming
@@ -228,6 +228,35 @@ class Surface(Mobject):
         if self.data.has_changed(observer=self):
             self.opaque = self.min_opacity() >= 1
         return self.opaque
+
+    def get_triangles(self) -> Tuple[np.ndarray, Vect3Array]:
+        """
+        Which vertex each triangle of the mesh starts at, and where the middle of it sits, for
+        whatever wants them in an order of its own, see SurfaceDrawing.
+
+        A grid of points is expanded into two triangles per square, taking the corners the
+        vertex shader gives them, see inserts/surface_mesh.wgsl. Points which are no grid, as
+        an imported mesh's are, are already three to a triangle.
+
+        The middle rather than a corner, cheap as a corner would be, since which corner comes
+        first is whatever the parametrization wound first, and nothing which sorts by these
+        must depend on that.
+        """
+        points = self.data["point"]
+        if not self.has_grid():
+            triangles = len(points) // 3
+            corners = points[:3 * triangles].reshape((triangles, 3, 3))
+            return 3 * np.arange(triangles), corners.mean(axis=1)
+
+        nu, nv = self.get_resolution()
+        grid = points.reshape((nu, nv, 3))
+        middles = np.array([
+            grid[:-1, :-1] + grid[1:, :-1] + grid[:-1, 1:],
+            grid[:-1, 1:] + grid[1:, :-1] + grid[1:, 1:],
+        ]).reshape((-1, 3)) / 3
+        squares = np.arange(nu - 1)[:, np.newaxis] * nv + np.arange(nv - 1)
+        firsts = 6 * squares + np.array([[[0]], [[3]]])
+        return firsts.reshape(-1), middles
 
     def set_sort_to_camera(self, sort: bool = True) -> Self:
         """
