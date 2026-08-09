@@ -148,12 +148,14 @@ class Camera(object):
         self.frame = CameraFrame(**config)
 
     def init_renderer(self) -> None:
-        self.gpu = Gpu()
+        # A window's surface can be configured for one device only, so a scene shown in one
+        # draws through the device it already holds rather than bringing another, see
+        # Window.configure. That also spares every scene after the first the compiling of
+        # every pipeline again, those being kept on the device.
+        self.gpu = Gpu() if self.window is None else self.window.gpu
         self.renderer = Renderer(
             self.gpu, bundle=self.bundle_draws, together=self.draw_together,
         )
-        if self.window is not None:
-            self.window.configure(self.gpu)
 
     def get_target_shape(self) -> tuple[int, int]:
         if self.draw_at_window_size and self.window is not None:
