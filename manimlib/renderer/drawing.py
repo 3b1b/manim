@@ -141,7 +141,9 @@ class Drawing(object):
             return
 
         record_size = self.material.record_size
-        sizes = [len(drawing.data) for drawing in run]
+        # The array's own length rather than the StructuredArray's, which is a python call
+        # per mobject of the run and answers the same
+        sizes = [len(drawing.data.array) for drawing in run]
         records = sum(sizes) + self.records_between * (len(run) - 1)
         offset = buffer.claim(records * record_size)
         moved = offset != self.data_offset or records != self.records
