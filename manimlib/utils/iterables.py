@@ -75,6 +75,27 @@ def batch_by_property(
     return batch_prop_pairs
 
 
+def batch_by_comparison(
+    items: Iterable[T],
+    comparison: Callable[[T, T], bool]
+) -> List[List[T]]:
+    """
+    Runs of consecutive items, each item joining the one before it wherever the comparison
+    says the two belong together, and beginning a run of its own wherever it does not.
+
+    The comparison is handed the last item of the run so far and the one being placed, in
+    that order, and is asked about neighbors only: a run is however far that reaches, not a
+    set of items all alike.
+    """
+    batches = []
+    for item in items:
+        if batches and comparison(batches[-1][-1], item):
+            batches[-1].append(item)
+        else:
+            batches.append([item])
+    return batches
+
+
 def listify(obj: object) -> list:
     if isinstance(obj, str):
         return [obj]

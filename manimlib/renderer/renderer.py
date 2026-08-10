@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from manimlib.renderer.material import Material
+from manimlib.utils.iterables import batch_by_comparison
 
 from typing import TYPE_CHECKING
 
@@ -138,12 +139,13 @@ class Renderer(object):
         Leaves the mobjects which draw in self.leaders, each holding the run it draws, and
         gives back how long each run came out, which is what says the gathering has moved.
         """
-        runs: list[list[Drawing]] = []
-        for drawing in drawings:
-            if runs and self.may_merge and drawing.can_follow(runs[-1][-1]):
-                runs[-1].append(drawing)
-            else:
-                runs.append([drawing])
+        if not self.may_merge:
+            self.leaders = list(drawings)
+            return (1,) * len(drawings)
+
+        runs = batch_by_comparison(
+            drawings, lambda prev, drawing: drawing.can_follow(prev)
+        )
         self.leaders = []
         lengths = []
         for run in (part for run in runs for part in self.split_by_uniforms(run)):
