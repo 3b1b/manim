@@ -149,16 +149,18 @@ class SharedBuffer(object):
         self.dirty_start = -1
         self.dirty_end = 0
 
-    def matching_neighbours(self, first: int, last: int, count: int) -> np.ndarray | None:
+    def matching_claims(self) -> list[bool]:
         """
-        For a run of stretches claimed one after another, whether each holds the same bytes as
-        the one before it, which is how a run of mobjects is cut where their uniforms differ,
-        see Renderer.split_by_uniforms.
+        For every stretch claimed since the last reset, whether it holds the same bytes as the
+        stretch claimed before it, the first counting as different since it follows nothing.
+        This is how mobjects are told apart by their uniforms, see Renderer.compare_uniforms.
 
-        None where the stretches did not in fact land side by side, there being nothing to
-        compare along.
+        Only for a buffer whose claims are all one size, which the uniform buffers are, being
+        kept per block size; the reshape below says so by failing where they are not. That is
+        what lets a frame's worth of them be compared in one pass rather than a pair at a time.
         """
-        if last - first != (count - 1) * self.window:
-            return None
-        blocks = self.blocks[first:last + self.window].reshape((count, self.window))
-        return (blocks[1:] == blocks[:-1]).all(axis=1)
+        blocks = self.blocks[:self.used].reshape((-1, self.window))
+        same = np.zeros(len(blocks), dtype=bool)
+        if len(blocks) > 1:
+            (blocks[1:] == blocks[:-1]).all(axis=1, out=same[1:])
+        return same.tolist()

@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from manimlib.mobject.mobject import Mobject
     from manimlib.renderer.drawing import Drawing
     from manimlib.renderer.gpu import Gpu, RenderPass
+    from manimlib.renderer.shared_buffer import SharedBuffer
 
 
 # How many frames a sequence of draws has to hold before it is worth bundling. Making a bundle
@@ -143,38 +144,38 @@ class Renderer(object):
             self.leaders = list(drawings)
             return (1,) * len(drawings)
 
+        self.compare_uniforms(drawings)
         runs = batch_by_comparison(
             drawings, lambda prev, drawing: drawing.can_follow(prev)
         )
+
+        # Pull out first of each run as a leader
         self.leaders = []
         lengths = []
-        for run in (part for run in runs for part in self.split_by_uniforms(run)):
+        for run in runs:
             run[0].members = run if len(run) > 1 else None
             self.leaders.append(run[0])
             lengths.append(len(run))
         return tuple(lengths)
 
-    def split_by_uniforms(self, run: list[Drawing]) -> list[list[Drawing]]:
+    def compare_uniforms(self, drawings: list[Drawing]) -> None:
         """
-        The run cut wherever two neighbours hold different uniforms. Their blocks sit side by
-        side in the buffer they share, having been claimed in this order, so one comparison
-        answers for the whole run.
+        Tells every mobject whether the one drawn before it holds the same uniforms, which is
+        the last thing can_follow needs and the one thing not worth asking a pair at a time.
+
+        Each mobject claimed a block of its uniform buffer as it was written, in drawing order,
+        so one pass over a buffer answers for every mobject which took a block from it, see
+        SharedBuffer.matching_claims. A mobject only ever reads its answer against one of its
+        own material, and two of a material share a buffer with nothing claiming between them,
+        so the block before a mobject's own is the block of the mobject before it.
         """
-        if len(run) == 1:
-            return [run]
-        alike = run[0].material.uniform_buffer.matching_neighbours(
-            run[0].uniform_offset, run[-1].uniform_offset, len(run),
-        )
-        if alike is None:
-            return [[drawing] for drawing in run]
-        parts = []
-        start = 0
-        for index, same in enumerate(alike, start=1):
-            if not same:
-                parts.append(run[start:index])
-                start = index
-        parts.append(run[start:])
-        return parts
+        matching: dict[SharedBuffer, list[bool]] = dict()
+        for drawing in drawings:
+            buffer = drawing.material.uniform_buffer
+            claims = matching.get(buffer)
+            if claims is None:
+                claims = matching[buffer] = buffer.matching_claims()
+            drawing.repeats_uniforms = claims[drawing.uniform_offset // buffer.window]
 
     def resolve(self, mobjects: Iterable[Mobject]) -> list[Drawing]:
         """

@@ -72,6 +72,9 @@ class Drawing(object):
         # Where in the shared buffers this mobject's values went, no stretch yet being none
         self.uniform_offset = -1
         self.data_offset = -1
+        # Whether the mobject drawn before this one holds the same uniforms, which is not
+        # asked here but told, see Renderer.compare_uniforms
+        self.repeats_uniforms = False
         # How many records this drawing covers, which for one drawing a run of mobjects
         # together is the whole run's, and for one drawn as part of a run is none
         self.records = 0
@@ -173,11 +176,14 @@ class Drawing(object):
         agreeing about everything a draw settles for every mobject it covers.
 
         Sharing a material already means sharing a kind, a shader and a record layout, since
-        all of those are in the key a material is kept under.
+        all of those are in the key a material is kept under. The uniforms have to agree too,
+        a draw carrying one block of them; that one comparison is made for a whole buffer at a
+        time rather than here and read off, see Renderer.compare_uniforms.
         """
         return (
             self.merges
             and previous.material is self.material
+            and self.repeats_uniforms
             and self.depth_test == previous.depth_test
         )
 
