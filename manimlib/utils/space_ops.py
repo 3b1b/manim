@@ -363,6 +363,42 @@ def get_closest_point_on_line(a: VectN, b: VectN, p: VectN) -> VectN:
     return ((t * a) + ((1 - t) * b))
 
 
+def boxes_are_disjoint(mins: Vect3Array, maxs: Vect3Array) -> bool:
+    """
+    Whether no two of the boxes with these lower and upper corners share any of their
+    insides, two which meet along a face counting as apart.
+
+    Rather than ask it of every pair, the boxes are swept along the axis they are most
+    spread out on: sorted by where each begins, it is compared only with those which
+    have begun and not yet ended. For a row of things laid out side by side, which is
+    mostly what this is asked about, that is a couple of neighbors each where all pairs
+    would be the whole row.
+    """
+    if len(mins) < 2:
+        return True
+    spread = maxs.max(0) - mins.min(0)
+    # A flat shape has no thickness at all in some direction, and two of them sharing
+    # nothing there are not thereby apart, so any such direction is given a little and
+    # what is compared is where the two lie in their own plane
+    thickness = 1e-6 * max(spread.max(), 1.0)
+    maxs = np.where(maxs - mins < thickness, mins + thickness, maxs)
+
+    axis = int(spread.argmax())
+    order = np.argsort(mins[:, axis])
+    mins, maxs = mins[order], maxs[order]
+    # Where the run of boxes still to compare against begins. Since one which ends before
+    # the sweep has reached this box ends before every box after it too, the run only ever
+    # moves forward, and its first box always reaches past the sweep, so it stops in time
+    first = 0
+    for index, (low, high) in enumerate(zip(mins, maxs)):
+        while maxs[first, axis] <= low[axis]:
+            first += 1
+        others = slice(first, index)
+        if ((mins[others] < high) & (maxs[others] > low)).all(1).any():
+            return False
+    return True
+
+
 def get_winding_number(points: Sequence[Vect2 | Vect3]) -> float:
     total_angle = 0
     for p1, p2 in adjacent_pairs(points):
