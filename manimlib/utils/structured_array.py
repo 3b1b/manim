@@ -6,6 +6,7 @@ from contextlib import contextmanager
 import numpy as np
 
 from manimlib.utils.iterables import resize_array
+from manimlib.utils.bezier import interpolate
 
 from typing import TYPE_CHECKING
 
@@ -49,10 +50,13 @@ class StructuredArray(object):
         self.set_array(np.zeros(length, dtype=dtype))
         # What to fill in with when growing from nothing, see resize
         self.defaults: np.ndarray = np.ones(1, dtype=dtype)
-        # Counted up by every write, rather than a yes or no, since each of several watchers
-        # needs to know what it has missed. A watcher keeps the count it last saw and compares,
-        # so an array is watched by however many without hearing of any of them, and two
-        # watchers wanting the same answer do not take it from one another.
+        # What a blend between two other arrays comes to, settled by whoever knows the pair
+        # rather than worked out again every frame, see prepare_interpolation. Until it is
+        # settled an array blends, and blends a field at a time, that being the way which is
+        # right whatever the two it blends between are laid out like.
+        self.skip_interpolation = False
+        self.blend_in_one_pass = False
+        # Counted up by every write
         self.version: int = 1
 
     def __getitem__(self, key: str | int | slice | np.ndarray) -> np.ndarray:
@@ -169,32 +173,65 @@ class StructuredArray(object):
         else:
             self.update(other)
 
-    def interpolate(self, array1: StructuredArray, array2: StructuredArray, alpha: float) -> None:
+    def prepare_interpolation(self, array1: StructuredArray, array2: StructuredArray) -> None:
+        """
+        Settles what a blend between these two comes to for as long as the pair stands:
+        whether it has anything to say at all, and whether it can be made in one pass.
+
+        Both are facts about the pair rather than about any one frame, and interpolate runs
+        once per mobject per frame, so they are worked out here and read off there.
+        """
+        self.skip_interpolation = np.array_equal(array1.floats, array2.floats)
+        self.blend_in_one_pass = (
+            self.dtype == array1.dtype == array2.dtype
+            and len(self) == len(array1) == len(array2)
+        )
+
+    def turn_off_interpolation_skip(self) -> None:
+        self.skip_interpolation = False
+        self.blend_in_one_pass = False
+
+    def interpolate(
+        self,
+        array1: StructuredArray,
+        array2: StructuredArray,
+        alpha: float,
+        # A map from keys to alternate interpolation functions
+        keys_to_alt_func: dict[str, Callable] | None = None
+    ) -> None:
         """
         Takes on the blend of two others, every field at once.
 
-        Laid out the same way, the three can be read as one flat run of floats and blended
-        in a single pass. That is several times quicker than working field by field, each
-        of those reaching across the array in strides rather than straight along it, and it
-        costs no more to blend a field than to decide whether to. Whatever a field wants
-        done to it other than a blend, the caller writes over afterwards, see
-        Mobject.interpolate.
+        Laid out the same way, the three can be read as one flat run of floats and blended in
+        a single pass. That is several times quicker than working field by field, each of
+        those reaching across the array in strides rather than straight along it.
+
+        Two different kinds of mobject are laid out differently, and then only what they have
+        in common carries over, a field at a time. Which of the two it is was settled when the
+        pair was, see prepare_interpolation.
         """
-        same_layout = self.dtype == array1.dtype == array2.dtype
-        if not (same_layout and len(self) == len(array1) == len(array2)):
-            # Different kinds of mobject, so only what they have in common carries over
+        if self.skip_interpolation:
+            return
+
+        if not self.blend_in_one_pass:
+            if keys_to_alt_func is None:
+                keys_to_alt_func = dict()
             for key in self:
                 if key in array1 and key in array2:
-                    self[key] = (1 - alpha) * array1[key] + alpha * array2[key]
+                    func = keys_to_alt_func.get(key, interpolate)
+                    self[key] = func(array1[key], array2[key], alpha)
+            self.note_change()
             return
-        floats1 = array1.floats
-        floats2 = array2.floats
-        # Most transformations leave most of what they move through alone, e.g. shifting a
-        # mobject without restyling it, and writing values equal to those here would send
-        # the array again for nothing
-        if np.array_equal(floats1, floats2) and np.array_equal(self.floats, floats1):
-            return
-        self.floats[:] = (1 - alpha) * floats1 + alpha * floats2
+
+        # Interpolate the arrays with as much in-place computation as we can
+        np.multiply(array1.floats, 1 - alpha, out=self.floats)
+        np.add(self.floats, alpha * array2.floats, out=self.floats)
+
+        # Sweep through any keys with special interpolation functions
+        if keys_to_alt_func:
+            for key, func in keys_to_alt_func.items():
+                self[key] = func(array1[key], array2[key], alpha)
+
         self.note_change()
 
     def copy(self) -> Self:

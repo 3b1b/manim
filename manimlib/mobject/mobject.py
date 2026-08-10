@@ -32,7 +32,6 @@ from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
 from manimlib.utils.color import rgb_to_hex
-from manimlib.utils.iterables import arrays_match
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import resize_array
@@ -60,6 +59,17 @@ if TYPE_CHECKING:
     TimeBasedUpdater = Callable[["Mobject", float], "Mobject" | None]
     NonTimeUpdater = Callable[["Mobject"], "Mobject" | None]
     UpdateFunction = Union[TimeBasedUpdater, NonTimeUpdater]
+
+
+def keep_larger(start: np.ndarray, end: np.ndarray, alpha: float) -> np.ndarray:
+    """
+    Takes in both rather than blending between them, for a field which counts something and
+    would mean nothing partway, see Mobject.structural_data_keys.
+
+    Shaped like a path function, alpha and all, so that everything interpolate is handed to
+    write over a field with can be called the one way.
+    """
+    return np.maximum(start, end)
 
 
 class Mobject(object):
@@ -113,7 +123,6 @@ class Mobject(object):
         self.submobjects: list[Mobject] = []
         self.parents: list[Mobject] = []
         self.family: list[Mobject] | None = [self]
-        self.data_is_static: bool = False
         self.saved_state = None
         self.target = None
         self.bounding_box: Vect3Array = np.zeros((3, 3))
@@ -1792,18 +1801,30 @@ class Mobject(object):
         alpha: float,
         path_func: Callable[[np.ndarray, np.ndarray, float], np.ndarray] = straight_path
     ) -> Self:
-        if not self.data_is_static:
-            # Blending the whole array at once costs less than picking out the fields
-            # wanting something other than a blend, so those are simply written over
-            # afterwards, see StructuredArray.interpolate
-            self.data.interpolate(mobject1.data, mobject2.data, alpha)
-            if path_func is not straight_path:
-                for key in self.pointlike_data_keys:
-                    self.data[key] = path_func(mobject1.data[key], mobject2.data[key], alpha)
-            for key in self.structural_data_keys:
-                self.data[key] = np.maximum(mobject1.data[key], mobject2.data[key])
+        # Maps from keys to what to write over a blend of them with, none where a plain
+        # blend is right for every field, which for most mobjects going straight it is
+        data_keys_to_alt_func = None
+        uniform_keys_to_alt_func = None
+        along_a_path = path_func is not straight_path
+        if along_a_path or self.structural_data_keys:
+            data_keys_to_alt_func = {
+                key: keep_larger
+                for key in self.structural_data_keys
+            }
+        if along_a_path:
+            data_keys_to_alt_func.update({
+                key: path_func
+                for key in self.pointlike_data_keys
+            })
+            uniform_keys_to_alt_func = {
+                key: path_func
+                for key in self.pointlike_uniform_keys
+            }
 
-        self.uniforms.interpolate(mobject1.uniforms, mobject2.uniforms, alpha)
+        self.data.interpolate(mobject1.data, mobject2.data, alpha, data_keys_to_alt_func)
+        self.uniforms.interpolate(
+            mobject1.uniforms, mobject2.uniforms, alpha, uniform_keys_to_alt_func,
+        )
         self.bounding_box[:] = path_func(mobject1.bounding_box, mobject2.bounding_box, alpha)
         return self
 
@@ -1817,33 +1838,29 @@ class Mobject(object):
         # To be implemented in subclass
         return self
 
-    # Static data
+    # Settling what an interpolation comes to before it is made
 
-    def note_static_data(self, mobject1: Mobject, mobject2: Mobject) -> Self:
+    def prepare_interpolation(self, mobject1: Mobject, mobject2: Mobject) -> Self:
         """
-        Marks each submobject holding the same data at both ends of an animation, which
-        interpolate then leaves alone. Blending it would only write back what is already
-        there, at the cost of sending the array to the gpu again for nothing.
+        Tells every submobject's arrays what a blend between the two ends of an animation
+        comes to, before any of it is made, see StructuredArray.prepare_interpolation.
 
-        A submobject with updaters is never counted as static, since what it holds partway
-        through is not fixed by its two ends.
+        A submobject holding the same values at both ends is left alone for the length of the
+        animation: blending would only write back what is already there, at the cost of
+        sending the array to the gpu again for nothing. One whose ends are laid out
+        differently, as two kinds of mobject are, is blended a field at a time instead.
         """
-        tuples = zip(
-            self.get_family(),
-            mobject1.get_family(),
-            mobject2.get_family(),
-        )
-        for sm, sm1, sm2 in tuples:
-            sm.data_is_static = (
-                not sm.has_updaters()
-                and sm.data.dtype == sm1.data.dtype == sm2.data.dtype
-                and arrays_match(sm1.data.floats, sm2.data.floats)
-            )
+        fam1 = mobject1.get_family()
+        fam2 = mobject2.get_family()
+        for sm, sm1, sm2 in zip(self.get_family(), fam1, fam2):
+            sm.data.prepare_interpolation(sm1.data, sm2.data)
+            sm.uniforms.prepare_interpolation(sm1.uniforms, sm2.uniforms)
         return self
 
-    def clear_static_data(self) -> Self:
+    def turn_off_interpolation_skip(self) -> Self:
         for mob in self.get_family():
-            mob.data_is_static = False
+            for arr in [mob.data, mob.uniforms]:
+                arr.turn_off_interpolation_skip()
         return self
 
     # Operations touching shader uniforms
