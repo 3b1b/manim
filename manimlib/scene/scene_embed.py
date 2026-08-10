@@ -85,9 +85,7 @@ class InteractiveSceneEmbed:
         """Enables gui interactions during the embed"""
         def inputhook(context):
             # Redraw the window and process its events while the shell waits
-            # for input, pacing it to the target frame rate. Without the sleep,
-            # this loop spins as fast as the interpreter allows, pegging a full
-            # CPU core the whole time the prompt sits idle.
+            # for input, pacing it to the target frame rate.
             frame_duration = 1 / self.scene.camera.fps
             while not context.input_is_ready():
                 if self.scene.is_window_closing():
