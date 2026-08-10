@@ -84,27 +84,17 @@ class InteractiveSceneEmbed:
     def enable_gui(self):
         """Enables gui interactions during the embed"""
         def inputhook(context):
-            # Keep redrawing the window and processing its events while
-            # the shell waits for the next line of input. Without a sleep
-            # here, this would spin as fast as the interpreter allows,
-            # pegging a full CPU core the whole time the embedded prompt
-            # sits idle. (Compare to normal playback, where update_frame
-            # sleeps to line up with the target frame rate.) Following the
-            # lead of IPython's own pyglet inputhook, back off the poll
-            # rate the longer the shell has been sitting idle, so a quick
-            # window interaction still feels immediate.
-            start_time = time.time()
+            # Redraw the window and process its events while the shell waits
+            # for input, pacing it to the target frame rate. Without the sleep,
+            # this loop spins as fast as the interpreter allows, pegging a full
+            # CPU core the whole time the prompt sits idle.
+            frame_duration = 1 / self.scene.camera.fps
             while not context.input_is_ready():
                 if self.scene.is_window_closing():
                     break
+                start_time = time.time()
                 self.scene.update_frame(dt=0)
-                idle_time = time.time() - start_time
-                if idle_time > 10:
-                    time.sleep(1)
-                elif idle_time > 0.1:
-                    time.sleep(0.05)
-                else:
-                    time.sleep(0.001)
+                time.sleep(max(frame_duration - (time.time() - start_time), 0))
             if self.scene.is_window_closing():
                 self.shell.ask_exit()
 
