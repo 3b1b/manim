@@ -113,6 +113,9 @@ class FadeTransform(Transform):
         start, end = self.starting_mobject, self.ending_mobject
         for m0, m1 in ((start[1], start[0]), (end[0], end[1])):
             self.ghost_to(m0, m1)
+        # The two ends only became what they are here, so what a blend between them comes to
+        # has to be settled again, having been settled over what they held a moment ago
+        self.prepare_interpolation()
 
     def ghost_to(self, source: Mobject, target: Mobject) -> None:
         source.replace(target, stretch=self.stretch, dim_to_match=self.dim_to_match)

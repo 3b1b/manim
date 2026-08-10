@@ -74,10 +74,26 @@ class Animation(object):
             self.mobject_was_updating = not self.mobject.updating_suspended
             self.mobject.suspend_updating()
         self.families = list(self.get_all_families_zipped())
+        self.prepare_interpolation()
         self.interpolate(0)
+
+    def prepare_interpolation(self) -> None:
+        """
+        Whatever holds of the two ends for the whole of the animation, settled here rather
+        than found again in every blend, see Mobject.prepare_interpolation.
+
+        The ends are whichever mobjects interpolate_submobject is handed alongside each one,
+        so an animation blending between two states has nothing to say here. One which changes
+        its ends after they have been made says so by calling this again, see FadeTransform.
+        """
+        first = self.families[0] if self.families else ()
+        if len(first) == 3:
+            mobject, *ends = first
+            mobject.prepare_interpolation(*ends)
 
     def finish(self) -> None:
         self.interpolate(self.final_alpha_value)
+        self.mobject.turn_off_interpolation_skip()
         self.mobject.set_animating_status(False)
         if self.suspend_mobject_updating and self.mobject_was_updating:
             self.mobject.resume_updating()

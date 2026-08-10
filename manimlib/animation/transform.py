@@ -65,11 +65,6 @@ class Transform(Animation):
             self.target_copy = self.target_mobject.copy()
         self.mobject.align_data_and_family(self.target_copy)
         super().begin()
-        self.mobject.prepare_interpolation(self.starting_mobject, self.target_copy)
-
-    def finish(self) -> None:
-        super().finish()
-        self.mobject.turn_off_interpolation_skip()
 
     def create_target(self) -> Mobject:
         # Has no meaningful effect here, but may be useful
