@@ -37,6 +37,7 @@ from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.iterables import resize_with_interpolation
+from manimlib.utils.iterables import keep_larger
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.paths import straight_path
@@ -59,17 +60,6 @@ if TYPE_CHECKING:
     TimeBasedUpdater = Callable[["Mobject", float], "Mobject" | None]
     NonTimeUpdater = Callable[["Mobject"], "Mobject" | None]
     UpdateFunction = Union[TimeBasedUpdater, NonTimeUpdater]
-
-
-def keep_larger(start: np.ndarray, end: np.ndarray, alpha: float) -> np.ndarray:
-    """
-    Takes in both rather than blending between them, for a field which counts something and
-    would mean nothing partway, see Mobject.structural_data_keys.
-
-    Shaped like a path function, alpha and all, so that everything interpolate is handed to
-    write over a field with can be called the one way.
-    """
-    return np.maximum(start, end)
 
 
 class Mobject(object):

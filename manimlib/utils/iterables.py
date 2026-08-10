@@ -164,6 +164,17 @@ def array_is_constant(arr: np.ndarray) -> bool:
     return len(arr) > 0 and (arr == arr[0]).all()
 
 
+def keep_larger(start: np.ndarray, end: np.ndarray, alpha: float) -> np.ndarray:
+    """
+    Takes in both rather than blending between them, for a field which counts something and
+    would mean nothing partway, see Mobject.structural_data_keys.
+
+    Shaped like a path function, alpha and all, so that everything interpolate is handed to
+    write over a field with can be called the one way.
+    """
+    return np.maximum(start, end)
+
+
 def cartesian_product(*arrays: np.ndarray):
     """
     Copied from https://stackoverflow.com/a/11146645
