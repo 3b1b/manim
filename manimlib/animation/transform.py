@@ -110,6 +110,9 @@ class Transform(Animation):
             ]
         ])
 
+    def get_interpolation_ends(self) -> tuple[Mobject, Mobject]:
+        return self.starting_mobject, self.target_copy
+
     def interpolate_submobject(
         self,
         submob: Mobject,

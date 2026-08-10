@@ -132,6 +132,10 @@ class FadeTransform(Transform):
     def get_all_families_zipped(self) -> zip[tuple[Mobject]]:
         return Animation.get_all_families_zipped(self)
 
+    def get_interpolation_ends(self) -> tuple[Mobject, Mobject]:
+        # Its own pair rather than Transform's, this one never having made a target_copy
+        return self.starting_mobject, self.ending_mobject
+
     def clean_up_from_scene(self, scene: Scene) -> None:
         Animation.clean_up_from_scene(self, scene)
         scene.remove(self.mobject)
