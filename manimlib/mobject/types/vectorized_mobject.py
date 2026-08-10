@@ -132,8 +132,7 @@ class VMobject(Mobject):
         self.needs_new_unit_normal = True
 
         self.shader_code_target = None
-        # Which set of mobjects this one's fill has been promised not to overlap, see
-        # set_fills_disjoint. None, meaning no such promise, for all but text.
+        # Which set of mobjects this one's fill has been promised not to overlap
         self.fill_group: VMobject | None = None
 
         super().__init__(**kwargs)
