@@ -35,6 +35,7 @@ from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.space_ops import angle_between_vectors
+from manimlib.utils.space_ops import boxes_are_disjoint
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import line_intersects_path
@@ -137,7 +138,7 @@ class VMobject(Mobject):
 
         super().__init__(**kwargs)
 
-    def set_fills_disjoint(self, disjoint: bool = True, recurse: bool = True) -> Self:
+    def draw_fills_together(self, draw_together: bool = True) -> Self:
         """
         Promises that these mobjects' filled regions do not overlap one another, which lets
         one draw cover the lot of them rather than three passes each, see VDrawing.can_follow.
@@ -151,10 +152,48 @@ class VMobject(Mobject):
         in turn. For opaque fills that is the same picture, and for partly transparent ones it
         is a lighter one.
         """
-        group = self if disjoint else None
-        for mob in self.get_family(recurse):
+        group = self if draw_together else None
+        for mob in self.get_family():
             mob.fill_group = group
         return self
+
+    def draw_fills_together_if_disjoint(self) -> Self:
+        """
+        Looks at where the filled members of this family sit, and makes the promise of
+        draw_fills_together when none of them meet, so that a group laid out with room
+        between its members is drawn together without anyone having to say so.
+
+        What is compared is bounding boxes, so two shapes which do not overlap but whose
+        boxes do are taken to, which costs a few draws and never the picture. And what is
+        answered is how things stand now, so a group moved about or added to afterwards
+        is worth asking again.
+        """
+        filled = [
+            mob for mob in self.get_family()
+            if mob.has_points() and mob.has_fill()
+        ]
+        # Each member's own points rather than its bounding box, which for one holding
+        # submobjects covers them too and would have it overlap its own children
+        boxes = np.array([
+            [points.min(0), points.max(0)]
+            for points in (mob.get_points() for mob in filled)
+        ]).reshape((len(filled), 2, self.dim))
+        if boxes_are_disjoint(boxes[:, 0], boxes[:, 1]):
+            return self.draw_fills_together(True)
+        # Nothing to promise here, but one made about some smaller group, a string's
+        # glyphs say, is about a family this says nothing of and still holds. Only this
+        # mobject's own promise, which the layout no longer bears out, is dropped.
+        for mob in self.get_family():
+            if mob.fill_group is self:
+                mob.fill_group = None
+        return self
+
+    def get_grid(self, *args, **kwargs) -> Self:
+        """
+        Copies laid out apart from one another, so unless the layout crowds them their
+        fills may share a draw.
+        """
+        return super().get_grid(*args, **kwargs).draw_fills_together_if_disjoint()
 
     def copy(self, deep: bool = False) -> Self:
         """

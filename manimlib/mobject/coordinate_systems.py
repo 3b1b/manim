@@ -781,5 +781,7 @@ class ComplexPlane(NumberPlane):
                 value = z.real
             number_mob = axis.get_number_mobject(value, font_size=font_size, **kwargs)
             self.coordinate_labels.add(number_mob)
+        # Confirm they can be safely drawn together
+        self.coordinate_labels.draw_fills_together_if_disjoint()
         self.add(self.coordinate_labels)
         return self
