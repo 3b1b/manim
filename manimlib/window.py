@@ -9,14 +9,13 @@ from manimlib.constants import ASPECT_RATIO
 from manimlib.constants import FRAME_SHAPE
 from manimlib.event_keys import Keys
 from manimlib.event_keys import Mods
-from manimlib.utils.shaders import get_shader_code_from_file
-from manimlib.utils.shaders import get_shader_module
+from manimlib.renderer.gpu import Gpu
+from manimlib.renderer.shader_source import read_shader_file
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Optional, Sequence
-    from manimlib.renderer.renderer import Renderer
     from manimlib.scene.scene import Scene
 
 
@@ -91,7 +90,6 @@ class Window(object):
         position: Optional[tuple[int, int]] = None,
     ):
         self.scene: Optional[Scene] = None
-        self.renderer: Optional[Renderer] = None
         self.frame_view = None
         self.pressed_keys: set[int] = set()
         self.pointer_position = np.zeros(2)
@@ -107,6 +105,10 @@ class Window(object):
         )
         self.canvas.request_draw(self.draw)
         self.context = self.canvas.get_context("wgpu")
+        # The device this window's frames are drawn by, made here and kept for as long as the
+        # window, see configure
+        self.gpu = Gpu()
+        self.configure()
         glfw.set_window_pos(self.glfw_window, *(
             position or self.get_position(monitor, position_string)
         ))
@@ -146,21 +148,23 @@ class Window(object):
         self.scene = scene
         self.canvas.set_title(str(scene))
 
-    def configure(self, renderer: Renderer) -> None:
+    def configure(self) -> None:
         """
-        Points the surface at the device whose frames it will be showing, the first moment
-        either knows of the other: a window outlives the scenes shown in it, and a scene's
-        camera is what brings a device.
+        Points the surface at the device whose frames it will be showing.
+
+        A surface can be configured for one device only, and a window outlives the scenes
+        shown in it, so the device belongs to the window rather than to any of them: a scene
+        previewed here draws through this one, see Camera.init_renderer. A scene which is
+        being written to file rather than shown brings its own.
 
         The plain form of whatever format the surface prefers, never the sRGB one. Writing to
         an sRGB target gamma encodes what the shader returned, and a frame here already holds
         the color it means: encoding again lightens everything and washes it out.
         """
-        self.renderer = renderer
-        self.device = renderer.device
-        preferred = self.context.get_preferred_format(renderer.device.adapter)
+        self.device = self.gpu.device
+        preferred = self.context.get_preferred_format(self.gpu.adapter)
         self.format = preferred.removesuffix("-srgb")
-        self.context.configure(device=renderer.device, format=self.format)
+        self.context.configure(device=self.device, format=self.format)
         self.init_present_resources()
 
     def get_size(self) -> tuple[int, int]:
@@ -192,9 +196,7 @@ class Window(object):
         self.present_sampler = self.device.create_sampler(
             mag_filter=wgpu.FilterMode.linear, min_filter=wgpu.FilterMode.linear,
         )
-        module = get_shader_module(
-            self.device, get_shader_code_from_file(PRESENT_SHADER),
-        )
+        module = self.gpu.module(read_shader_file(PRESENT_SHADER))
         self.present_pipeline = self.device.create_render_pipeline(
             layout=self.device.create_pipeline_layout(
                 bind_group_layouts=[self.present_layout],
@@ -228,7 +230,7 @@ class Window(object):
         render_pass.set_bind_group(0, bind_group)
         render_pass.draw(3)
         render_pass.end()
-        self.renderer.queue.submit([encoder.finish()])
+        self.gpu.queue.submit([encoder.finish()])
 
     def poll_events(self) -> None:
         """

@@ -75,6 +75,27 @@ def batch_by_property(
     return batch_prop_pairs
 
 
+def batch_by_comparison(
+    items: Iterable[T],
+    comparison: Callable[[T, T], bool]
+) -> List[List[T]]:
+    """
+    Runs of consecutive items, each item joining the one before it wherever the comparison
+    says the two belong together, and beginning a run of its own wherever it does not.
+
+    The comparison is handed the last item of the run so far and the one being placed, in
+    that order, and is asked about neighbors only: a run is however far that reaches, not a
+    set of items all alike.
+    """
+    batches = []
+    for item in items:
+        if batches and comparison(batches[-1][-1], item):
+            batches[-1].append(item)
+        else:
+            batches.append([item])
+    return batches
+
+
 def listify(obj: object) -> list:
     if isinstance(obj, str):
         return [obj]
@@ -141,6 +162,17 @@ def arrays_match(arr1: np.ndarray, arr2: np.ndarray) -> bool:
 
 def array_is_constant(arr: np.ndarray) -> bool:
     return len(arr) > 0 and (arr == arr[0]).all()
+
+
+def keep_larger(start: np.ndarray, end: np.ndarray, alpha: float) -> np.ndarray:
+    """
+    Takes in both rather than blending between them, for a field which counts something and
+    would mean nothing partway, see Mobject.structural_data_keys.
+
+    Shaped like a path function, alpha and all, so that everything interpolate is handed to
+    write over a field with can be called the one way.
+    """
+    return np.maximum(start, end)
 
 
 def cartesian_product(*arrays: np.ndarray):

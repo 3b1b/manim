@@ -13,9 +13,9 @@ from manimlib.constants import FRAME_HEIGHT
 from manimlib.constants import FRAME_WIDTH
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
-from manimlib.renderer.draw_list import DrawList
-from manimlib.renderer.renderer import COLOR_FORMAT
-from manimlib.renderer.renderer import DEPTH_STENCIL_FORMAT
+from manimlib.renderer.gpu import Gpu
+from manimlib.renderer.pipeline import COLOR_FORMAT
+from manimlib.renderer.pipeline import DEPTH_STENCIL_FORMAT
 from manimlib.renderer.renderer import Renderer
 from manimlib.utils.color import color_to_rgba
 
@@ -45,8 +45,8 @@ class FrameStream(object):
         self.camera = camera
         self.sink = sink
         self.behind = behind
-        self.device = camera.renderer.device
-        self.queue = camera.renderer.queue
+        self.device = camera.gpu.device
+        self.queue = camera.gpu.queue
         # Settled here rather than read afresh, since whatever is being written was opened
         # expecting frames of one size
         self.width, self.height = camera.get_pixel_shape()
@@ -116,7 +116,7 @@ class Camera(object):
         background_color: ManimColor = BLACK,
         background_opacity: float = 1.0,
         light_source_position: Vect3 = np.array([-10, 10, 10]),
-        record_draws: bool = True,
+        bundle_draws: bool = True,
         draw_together: bool = True,
         # Although vector graphics handle antialiasing fine
         # without multisampling, for 3d scenes one might want
@@ -128,7 +128,7 @@ class Camera(object):
         self.fps = fps
         self.light_source_position = light_source_position
         self.samples = samples
-        self.record_draws = record_draws
+        self.bundle_draws = bundle_draws
         self.draw_together = draw_together
 
         self.background_rgba: list[float] = list(color_to_rgba(
@@ -148,12 +148,14 @@ class Camera(object):
         self.frame = CameraFrame(**config)
 
     def init_renderer(self) -> None:
-        self.renderer = Renderer()
-        self.draw_list = DrawList(
-            self.renderer, record=self.record_draws, together=self.draw_together,
+        # A window's surface can be configured for one device only, so a scene shown in one
+        # draws through the device it already holds rather than bringing another, see
+        # Window.configure. That also spares every scene after the first the compiling of
+        # every pipeline again, those being kept on the device.
+        self.gpu = Gpu() if self.window is None else self.window.gpu
+        self.renderer = Renderer(
+            self.gpu, bundle=self.bundle_draws, together=self.draw_together,
         )
-        if self.window is not None:
-            self.window.configure(self.renderer)
 
     def get_target_shape(self) -> tuple[int, int]:
         if self.draw_at_window_size and self.window is not None:
@@ -187,10 +189,10 @@ class Camera(object):
         samples are being taken there is a second color texture holding them, which the first
         is resolved down to.
         """
-        device = self.renderer.device
+        device = self.gpu.device
         self.pixel_shape = self.get_target_shape()
         width, height = self.pixel_shape
-        samples = self.renderer.samples = max(1, self.samples)
+        samples = self.gpu.samples = max(1, self.samples)
 
         self.color_texture = device.create_texture(
             size=(width, height, 1),
@@ -258,7 +260,7 @@ class Camera(object):
         onto what came off the gpu rather than a copy of it.
         """
         width, height = self.pixel_shape
-        return self.renderer.queue.read_texture(
+        return self.gpu.queue.read_texture(
             {"texture": self.color_texture, "mip_level": 0, "origin": (0, 0, 0)},
             {"offset": 0, "bytes_per_row": 4 * width, "rows_per_image": height},
             (width, height, 1),
@@ -320,18 +322,18 @@ class Camera(object):
     def capture(self, *mobjects: Mobject) -> None:
         self.resize_target()
         self.refresh_uniforms()
-        self.renderer.send_frame_uniforms()
-        self.draw_list.draw(mobjects, self.get_attachments())
+        self.gpu.send_frame_uniforms()
+        self.renderer.draw(mobjects, self.get_attachments())
         if self.window is not None:
             self.window.show(self.frame_view)
 
     def refresh_uniforms(self) -> None:
         """
-        What every program reads about where the frame, the camera and the light are,
-        written into the block they all share, see Renderer.
+        What every shader reads about where the frame, the camera and the light are,
+        written into the block they all share, see Gpu.
         """
         frame = self.frame
-        self.renderer.frame_uniforms.update(
+        self.gpu.frame_uniforms.update(
             view=frame.get_view_matrix().T.flatten(),
             frame_scale=frame.get_scale(),
             frame_rescale_factors=(

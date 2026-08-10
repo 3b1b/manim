@@ -13,8 +13,8 @@ from manimlib.constants import PI
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.space_ops import normalize
 from manimlib.utils.simple_functions import clip
-from manimlib.utils.shaders import COMMON_UNIFORMS
-from manimlib.utils.shaders import uniform_block_dtype
+from manimlib.renderer.uniform_block import COMMON_UNIFORMS
+from manimlib.renderer.uniform_block import uniform_block_dtype
 
 from typing import TYPE_CHECKING
 

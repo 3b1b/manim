@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import copy
+from contextlib import contextmanager
 
 import numpy as np
 
 from manimlib.utils.iterables import resize_array
+from manimlib.utils.bezier import interpolate
 
 from typing import TYPE_CHECKING
 
@@ -24,8 +26,9 @@ class StructuredArray(object):
     see Mobject.data_dtype and uniform_dtype.
 
     Three things come with holding it here rather than as a bare array. Every write is counted,
-    so whatever has sent the array somewhere can ask whether what it sent is still what the
-    array holds, see has_changed. Emptying the array remembers what was in it, so a mobject
+    so whatever has sent the array somewhere can tell whether what it sent is still what the
+    array holds by keeping the count it saw, see version. Emptying the array remembers what was
+    in it, so a mobject
     stripped of its points and given new ones keeps its style, see resize. And fields are read
     and written by name, rows by index.
 
@@ -33,22 +36,28 @@ class StructuredArray(object):
 
         mob.data["point"][::2] = new_points
 
-    goes uncounted, and whoever does it has to say so with
+    goes uncounted. Wrap such writes in
 
-        mob.data.note_change()
+        with mob.data.being_written() as data:
+            data["point"][::2] = new_points
 
-    Assigning the whole field instead, mob.data["point"] = new_points, needs no such thing.
+    which counts them on the way out, rather than leaving it to whoever wrote them to
+    remember. Assigning the whole field instead, mob.data["point"] = new_points, needs
+    no such thing.
     """
 
     def __init__(self, dtype: np.dtype, length: int = 0):
         self.set_array(np.zeros(length, dtype=dtype))
         # What to fill in with when growing from nothing, see resize
         self.defaults: np.ndarray = np.ones(1, dtype=dtype)
-        # Counted up by every write, rather than a yes or no, since each of several watchers
-        # needs to know what it has missed
+        # What a blend between two other arrays comes to, settled by whoever knows the pair
+        # rather than worked out again every frame, see prepare_interpolation. Until it is
+        # settled an array blends, and blends a field at a time, that being the way which is
+        # right whatever the two it blends between are laid out like.
+        self.skip_interpolation = False
+        self.blend_in_one_pass = False
+        # Counted up by every write
         self.version: int = 1
-        # Which version each of those things last saw, see has_changed
-        self.seen_by: dict[Any, int] = dict()
 
     def __getitem__(self, key: str | int | slice | np.ndarray) -> np.ndarray:
         return self.array[key]
@@ -76,7 +85,7 @@ class StructuredArray(object):
         run of floats, and the same as bytes, padding included.
 
         Made once here rather than where they are wanted, making a view costing more than the
-        copy it is for, see Arena.put and Uniforms.interpolate.
+        copy it is for, see SharedBuffer.put and StructuredArray.interpolate.
         """
         self.array: np.ndarray = array
         self.floats: np.ndarray = array.view(np.float32)
@@ -86,22 +95,20 @@ class StructuredArray(object):
         """Says that the array was written to through a view onto it, which it cannot count"""
         self.version += 1
 
-    def has_changed(self, observer: Any) -> bool:
+    @contextmanager
+    def being_written(self) -> Iterator[np.ndarray]:
         """
-        Whether the array has been written to since this observer last asked. A note of the
-        version each has seen is kept here, so that watching an array takes nothing but asking
-        it.
+        The rows, for writing into. Writes made through the view this hands back cannot be
+        counted as they happen, so they are counted here on the way out, whether or not
+        they all went through.
 
-        Asking counts as having looked. So two things wanting the same answer have to be two
-        observers, or ask once between them, see Program.write_uniforms.
-
-        An observer is remembered for as long as the array is. Nothing here is replaced often
-        enough for that to be worth weak references, which cost four times as much to look up.
+        What comes back is rows_or_defaults, since a style written while there are no
+        points belongs in the row standing in for them.
         """
-        if self.seen_by.get(observer) == self.version:
-            return False
-        self.seen_by[observer] = self.version
-        return True
+        try:
+            yield self.rows_or_defaults
+        finally:
+            self.version += 1
 
     @property
     def dtype(self) -> np.dtype:
@@ -126,7 +133,6 @@ class StructuredArray(object):
             for key in source:
                 if key in self:
                     self[key] = source[key]
-
 
     @property
     def rows_or_defaults(self) -> np.ndarray:
@@ -167,39 +173,72 @@ class StructuredArray(object):
         else:
             self.update(other)
 
-    def interpolate(self, array1: StructuredArray, array2: StructuredArray, alpha: float) -> None:
+    def prepare_interpolation(self, array1: StructuredArray, array2: StructuredArray) -> None:
+        """
+        Settles what a blend between these two comes to for as long as the pair stands:
+        whether it has anything to say at all, and whether it can be made in one pass.
+
+        Both are facts about the pair rather than about any one frame, and interpolate runs
+        once per mobject per frame, so they are worked out here and read off there.
+        """
+        self.skip_interpolation = np.array_equal(array1.floats, array2.floats)
+        self.blend_in_one_pass = (
+            self.dtype == array1.dtype == array2.dtype
+            and len(self) == len(array1) == len(array2)
+        )
+
+    def turn_off_interpolation_skip(self) -> None:
+        self.skip_interpolation = False
+        self.blend_in_one_pass = False
+
+    def interpolate(
+        self,
+        array1: StructuredArray,
+        array2: StructuredArray,
+        alpha: float,
+        # A map from keys to alternate interpolation functions
+        keys_to_alt_func: dict[str, Callable] | None = None
+    ) -> None:
         """
         Takes on the blend of two others, every field at once.
 
-        Laid out the same way, the three can be read as one flat run of floats and blended
-        in a single pass. That is several times quicker than working field by field, each
-        of those reaching across the array in strides rather than straight along it, and it
-        costs no more to blend a field than to decide whether to. Whatever a field wants
-        done to it other than a blend, the caller writes over afterwards, see
-        Mobject.interpolate.
+        Laid out the same way, the three can be read as one flat run of floats and blended in
+        a single pass. That is several times quicker than working field by field, each of
+        those reaching across the array in strides rather than straight along it.
+
+        Two different kinds of mobject are laid out differently, and then only what they have
+        in common carries over, a field at a time. Which of the two it is was settled when the
+        pair was, see prepare_interpolation.
         """
-        same_layout = self.dtype == array1.dtype == array2.dtype
-        if not (same_layout and len(self) == len(array1) == len(array2)):
-            # Different kinds of mobject, so only what they have in common carries over
+        if self.skip_interpolation:
+            return
+
+        if not self.blend_in_one_pass:
+            if keys_to_alt_func is None:
+                keys_to_alt_func = dict()
             for key in self:
                 if key in array1 and key in array2:
-                    self[key] = (1 - alpha) * array1[key] + alpha * array2[key]
+                    func = keys_to_alt_func.get(key, interpolate)
+                    self[key] = func(array1[key], array2[key], alpha)
+            self.note_change()
             return
-        floats1 = array1.floats
-        floats2 = array2.floats
-        # Most transformations leave most of what they move through alone, e.g. shifting a
-        # mobject without restyling it, and writing values equal to those here would send
-        # the array again for nothing
-        if np.array_equal(floats1, floats2) and np.array_equal(self.floats, floats1):
-            return
-        self.floats[:] = (1 - alpha) * floats1 + alpha * floats2
+
+        # Interpolate the arrays with as much in-place computation as we can
+        np.multiply(array1.floats, 1 - alpha, out=self.floats)
+        np.add(self.floats, alpha * array2.floats, out=self.floats)
+
+        # Sweep through any keys with special interpolation functions
+        if keys_to_alt_func:
+            for key, func in keys_to_alt_func.items():
+                self[key] = func(array1[key], array2[key], alpha)
+
         self.note_change()
 
     def copy(self) -> Self:
         result = copy.copy(self)
         result.set_array(self.array.copy())
         result.defaults = self.defaults.copy()
+        # Counted on, so that a watcher carried over from what this was copied from finds it
+        # different rather than taking its own array to be the one it has already seen
         result.version += 1
-        # A copy has been looked at by nobody, whatever has looked at what it was copied from
-        result.seen_by = dict()
         return result

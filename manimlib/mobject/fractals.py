@@ -6,8 +6,8 @@ from manimlib.constants import BLACK
 from manimlib.constants import DL, DR, UL, UR
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.color import color_to_rgba
-from manimlib.utils.shaders import COMMON_UNIFORMS
-from manimlib.utils.shaders import uniform_block_dtype
+from manimlib.renderer.uniform_block import COMMON_UNIFORMS
+from manimlib.renderer.uniform_block import uniform_block_dtype
 
 from typing import TYPE_CHECKING
 

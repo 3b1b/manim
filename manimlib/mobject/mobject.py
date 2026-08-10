@@ -23,25 +23,25 @@ from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_listner import EventListener
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
-from manimlib.renderer.shader_program import Program
-from manimlib.utils.shaders import COMMON_UNIFORMS
-from manimlib.utils.shaders import Uniforms
-from manimlib.utils.shaders import uniform_block_dtype
+from manimlib.renderer.drawing import Drawing
+from manimlib.renderer.uniform_block import COMMON_UNIFORMS
+from manimlib.renderer.uniform_block import Uniforms
+from manimlib.renderer.uniform_block import uniform_block_dtype
 from manimlib.utils.structured_array import StructuredArray
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
 from manimlib.utils.color import rgb_to_hex
-from manimlib.utils.iterables import arrays_match
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.iterables import resize_with_interpolation
+from manimlib.utils.iterables import keep_larger
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.paths import straight_path
-from manimlib.utils.shaders import get_colormap_code
+from manimlib.renderer.shader_source import get_colormap_code
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
@@ -67,30 +67,25 @@ class Mobject(object):
     Mathematical Object
     """
     dim: int = 3
-    # What draws this kind of mobject, see program.Program
-    program_class: type = Program
+    # What draws this kind of mobject, see drawing.Drawing
+    drawing_class: type = Drawing
     shader_file: str = ""
-    # If positive, the shader is handed no vertex attributes, and instead reads
-    # each record out of the vertex buffer itself, turning it into this many
-    # vertices. This is how shapes are expanded without a geometry shader.
+    # No shader is handed vertex attributes. Each reads the records of the buffer they
+    # are gathered in itself, see inserts/read_data.wgsl.
     verts_per_record: int = 0
-    # Must match in attributes of vert shader
+    # The offsets a shader indexes its records by are generated from this,
+    # so the two cannot disagree. See shader_source.data_layout_code, 
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ])
-    # One value each for the whole mobject, as opposed to one per point, given as a
-    # name and how many floats it holds. The struct its shaders read is generated from
-    # this, see inserts/mobject_uniforms.wgsl, so the two cannot disagree.
+    # One value each for the whole mobject, as opposed to one per point
     uniform_dtype: np.dtype = uniform_block_dtype(*COMMON_UNIFORMS)
     # Data holding a point, which transforms act on, and which a blend of two mobjects
-    # sends along a path rather than straight from one to the other. Nothing overrides
-    # this yet; it is here for the likes of per-point normals or tangents.
+    # sends along a path rather than straight from one to the other.
     pointlike_data_keys = ['point']
-    # Values saying how the points are grouped rather than where they are. A marker of the
-    # grouping survives a blend of two mobjects only where both of them had one, so the
-    # grouping of a blend is the coarser of the two, which is the larger reach of each, see
-    # VMobject.set_subpath_range.
+    # Values saying how the points are grouped rather than where they are.
+    # See VMobject.set_subpath_range.
     structural_data_keys: list[str] = []
     # Uniforms holding a point, which transforms act on just as they do on the points
     pointlike_uniform_keys: list[str] = []
@@ -118,7 +113,6 @@ class Mobject(object):
         self.submobjects: list[Mobject] = []
         self.parents: list[Mobject] = []
         self.family: list[Mobject] | None = [self]
-        self.data_is_static: bool = False
         self.saved_state = None
         self.target = None
         self.bounding_box: Vect3Array = np.zeros((3, 3))
@@ -238,9 +232,9 @@ class Mobject(object):
         self.resize_points(n + len(new_points))
         # Have most data default to the last value
         self.data[n:] = self.data[n - 1]
-        # Then read in new points, written into rather than replaced, so say so
-        self.data["point"][n:] = new_points
-        self.data.note_change()
+        # Then read in the new points
+        with self.data.being_written() as data:
+            data["point"][n:] = new_points
         self.refresh_bounding_box()
         return self
 
@@ -1310,8 +1304,8 @@ class Mobject(object):
         recurse: bool = False
     ) -> Self:
         for mob in self.get_family(recurse):
-            mob.data.rows_or_defaults[name] = rgba_array
-            mob.data.note_change()
+            with mob.data.being_written() as data:
+                data[name] = rgba_array
         return self
 
     def set_color_by_rgba_func(
@@ -1349,18 +1343,16 @@ class Mobject(object):
         recurse: bool = True
     ) -> Self:
         for mob in self.get_family(recurse):
-            data = mob.data.rows_or_defaults
-            if color is not None:
-                rgbs = np.array(list(map(color_to_rgb, listify(color))))
-                if 1 < len(rgbs):
-                    rgbs = resize_with_interpolation(rgbs, len(data))
-                data[name][:, :3] = rgbs
-            if opacity is not None:
-                if not isinstance(opacity, (float, int, np.floating)):
-                    opacity = resize_with_interpolation(np.array(opacity), len(data))
-                data[name][:, 3] = opacity
-            # Those columns are written into rather than replaced
-            mob.data.note_change()
+            with mob.data.being_written() as data:
+                if color is not None:
+                    rgbs = np.array(list(map(color_to_rgb, listify(color))))
+                    if 1 < len(rgbs):
+                        rgbs = resize_with_interpolation(rgbs, len(data))
+                    data[name][:, :3] = rgbs
+                if opacity is not None:
+                    if not isinstance(opacity, (float, int, np.floating)):
+                        opacity = resize_with_interpolation(np.array(opacity), len(data))
+                    data[name][:, 3] = opacity
         return self
 
     def set_color(
@@ -1799,18 +1791,30 @@ class Mobject(object):
         alpha: float,
         path_func: Callable[[np.ndarray, np.ndarray, float], np.ndarray] = straight_path
     ) -> Self:
-        if not self.data_is_static:
-            # Blending the whole array at once costs less than picking out the fields
-            # wanting something other than a blend, so those are simply written over
-            # afterwards, see StructuredArray.interpolate
-            self.data.interpolate(mobject1.data, mobject2.data, alpha)
-            if path_func is not straight_path:
-                for key in self.pointlike_data_keys:
-                    self.data[key] = path_func(mobject1.data[key], mobject2.data[key], alpha)
-            for key in self.structural_data_keys:
-                self.data[key] = np.maximum(mobject1.data[key], mobject2.data[key])
+        # Maps from keys to what to write over a blend of them with, none where a plain
+        # blend is right for every field, which for most mobjects going straight it is
+        data_keys_to_alt_func = None
+        uniform_keys_to_alt_func = None
+        along_a_path = path_func is not straight_path
+        if along_a_path or self.structural_data_keys:
+            data_keys_to_alt_func = {
+                key: keep_larger
+                for key in self.structural_data_keys
+            }
+        if along_a_path:
+            data_keys_to_alt_func.update({
+                key: path_func
+                for key in self.pointlike_data_keys
+            })
+            uniform_keys_to_alt_func = {
+                key: path_func
+                for key in self.pointlike_uniform_keys
+            }
 
-        self.uniforms.interpolate(mobject1.uniforms, mobject2.uniforms, alpha)
+        self.data.interpolate(mobject1.data, mobject2.data, alpha, data_keys_to_alt_func)
+        self.uniforms.interpolate(
+            mobject1.uniforms, mobject2.uniforms, alpha, uniform_keys_to_alt_func,
+        )
         self.bounding_box[:] = path_func(mobject1.bounding_box, mobject2.bounding_box, alpha)
         return self
 
@@ -1824,33 +1828,29 @@ class Mobject(object):
         # To be implemented in subclass
         return self
 
-    # Static data
+    # Settling what an interpolation comes to before it is made
 
-    def note_static_data(self, mobject1: Mobject, mobject2: Mobject) -> Self:
+    def prepare_interpolation(self, mobject1: Mobject, mobject2: Mobject) -> Self:
         """
-        Marks each submobject holding the same data at both ends of an animation, which
-        interpolate then leaves alone. Blending it would only write back what is already
-        there, at the cost of sending the array to the gpu again for nothing.
+        Tells every submobject's arrays what a blend between the two ends of an animation
+        comes to, before any of it is made, see StructuredArray.prepare_interpolation.
 
-        A submobject with updaters is never counted as static, since what it holds partway
-        through is not fixed by its two ends.
+        A submobject holding the same values at both ends is left alone for the length of the
+        animation: blending would only write back what is already there, at the cost of
+        sending the array to the gpu again for nothing. One whose ends are laid out
+        differently, as two kinds of mobject are, is blended a field at a time instead.
         """
-        tuples = zip(
-            self.get_family(),
-            mobject1.get_family(),
-            mobject2.get_family(),
-        )
-        for sm, sm1, sm2 in tuples:
-            sm.data_is_static = (
-                not sm.has_updaters()
-                and sm.data.dtype == sm1.data.dtype == sm2.data.dtype
-                and arrays_match(sm1.data.floats, sm2.data.floats)
-            )
+        fam1 = mobject1.get_family()
+        fam2 = mobject2.get_family()
+        for sm, sm1, sm2 in zip(self.get_family(), fam1, fam2):
+            sm.data.prepare_interpolation(sm1.data, sm2.data)
+            sm.uniforms.prepare_interpolation(sm1.uniforms, sm2.uniforms)
         return self
 
-    def clear_static_data(self) -> Self:
+    def turn_off_interpolation_skip(self) -> Self:
         for mob in self.get_family():
-            mob.data_is_static = False
+            for arr in [mob.data, mob.uniforms]:
+                arr.turn_off_interpolation_skip()
         return self
 
     # Operations touching shader uniforms
@@ -1918,7 +1918,7 @@ class Mobject(object):
     def replace_shader_code(self, old: str, new: str) -> Self:
         for mob in self.get_family():
             # A new dict rather than a write into the old one, so that whatever is drawing
-            # this mobject can see that its program has changed, see DrawList.resolve
+            # this mobject can see that its shaders have changed, see Renderer.resolve
             mob.shader_code_replacements = {**mob.shader_code_replacements, old: new}
         return self
 
