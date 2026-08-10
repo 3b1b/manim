@@ -188,6 +188,13 @@ class VMobject(Mobject):
                 mob.fill_group = None
         return self
 
+    def get_grid(self, *args, **kwargs) -> Self:
+        """
+        Copies laid out apart from one another, so unless the layout crowds them their
+        fills may share a draw.
+        """
+        return super().get_grid(*args, **kwargs).draw_fills_together_if_disjoint()
+
     def copy(self, deep: bool = False) -> Self:
         """
         A copy is a group of its own. Left pointing at what it was copied from, its fills
