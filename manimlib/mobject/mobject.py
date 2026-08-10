@@ -32,6 +32,7 @@ from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
 from manimlib.utils.color import rgb_to_hex
+from manimlib.utils.iterables import arrays_match
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import resize_array
@@ -116,6 +117,9 @@ class Mobject(object):
         self.saved_state = None
         self.target = None
         self.bounding_box: Vect3Array = np.zeros((3, 3))
+        # Whether the box is the same at both ends of an animation, and so wants no blending,
+        # see prepare_interpolation
+        self.skip_box_interpolation: bool = False
         self._is_animating: bool = False
         self._needs_new_bounding_box: bool = True
         self.shader_code_replacements: dict[str, str] = dict()
@@ -1815,7 +1819,10 @@ class Mobject(object):
         self.uniforms.interpolate(
             mobject1.uniforms, mobject2.uniforms, alpha, uniform_keys_to_alt_func,
         )
-        self.bounding_box[:] = path_func(mobject1.bounding_box, mobject2.bounding_box, alpha)
+        if not self.skip_box_interpolation:
+            self.bounding_box[:] = path_func(
+                mobject1.bounding_box, mobject2.bounding_box, alpha,
+            )
         return self
 
     def pointwise_become_partial(self, mobject, a, b) -> Self:
@@ -1839,18 +1846,25 @@ class Mobject(object):
         animation: blending would only write back what is already there, at the cost of
         sending the array to the gpu again for nothing. One whose ends are laid out
         differently, as two kinds of mobject are, is blended a field at a time instead.
+
+        The bounding box goes the same way, kept apart from the arrays only because it is no
+        part of what a shader reads.
         """
         fam1 = mobject1.get_family()
         fam2 = mobject2.get_family()
         for sm, sm1, sm2 in zip(self.get_family(), fam1, fam2):
             sm.data.prepare_interpolation(sm1.data, sm2.data)
             sm.uniforms.prepare_interpolation(sm1.uniforms, sm2.uniforms)
+            sm.skip_box_interpolation = arrays_match(
+                sm1.get_bounding_box(), sm2.get_bounding_box(),
+            )
         return self
 
     def turn_off_interpolation_skip(self) -> Self:
         for mob in self.get_family():
             for arr in [mob.data, mob.uniforms]:
                 arr.turn_off_interpolation_skip()
+            mob.skip_box_interpolation = False
         return self
 
     # Operations touching shader uniforms

@@ -72,9 +72,9 @@ class StringMobject(SVGMobject, ABC):
         self.set_fill(fill_color, border_width=fill_border_width)
         self.labels = [submob.label for submob in self.submobjects]
         # Glyphs are placed by the typesetter, which does not lay one over another, so they
-        # may share a draw. Take it back with set_fills_disjoint(False) for the rare string
+        # may share a draw. Take it back with draw_fills_together(False) for the rare string
         # whose glyphs do overlap and whose fill is partly transparent.
-        self.set_fills_disjoint()
+        self.draw_fills_together()
 
     def get_svg_string(self, is_labelled: bool = False) -> str:
         content = self.get_content(is_labelled or self.use_labelled_svg)

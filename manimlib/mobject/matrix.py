@@ -70,6 +70,9 @@ class Matrix(VMobject):
             ellipses_col,
         )
 
+        # Draw fills together
+        self.draw_fills_together_if_disjoint()
+
     def copy(self, deep: bool = False):
         result = super().copy(deep)
         self_family = self.get_family()

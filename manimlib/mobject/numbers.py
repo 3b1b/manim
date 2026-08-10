@@ -76,6 +76,7 @@ class DecimalNumber(VMobject):
 
         self.set_submobjects_from_number(number)
         self.init_colors()
+        self.draw_fills_together_if_disjoint()
 
     def set_submobjects_from_number(self, number: float | complex) -> None:
         # Create the submobject list
@@ -212,6 +213,8 @@ class DecimalNumber(VMobject):
         self.set_style(**style)
         for submob in self.get_family():
             submob.uniforms.update(self.uniforms)
+        # Digits are laid out in a row a buff apart, so they usually share a draw
+        self.draw_fills_together_if_disjoint()
         return self
 
     def _handle_scale_side_effects(self, scale_factor: float) -> Self:

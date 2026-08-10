@@ -216,6 +216,8 @@ class NumberLine(Line):
             if excluding is not None and x in excluding:
                 continue
             numbers.add(self.get_number_mobject(x, **kwargs))
+        # Labels typically don't overlap, and hence can be drawn together
+        numbers.draw_fills_together_if_disjoint()
         self.add(numbers)
         self.numbers = numbers
         return numbers

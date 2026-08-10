@@ -113,6 +113,9 @@ class FadeTransform(Transform):
         start, end = self.starting_mobject, self.ending_mobject
         for m0, m1 in ((start[1], start[0]), (end[0], end[1])):
             self.ghost_to(m0, m1)
+        # The two ends only became what they are here, so what a blend between them comes to
+        # has to be settled again, having been settled over what they held a moment ago
+        self.prepare_interpolation()
 
     def ghost_to(self, source: Mobject, target: Mobject) -> None:
         source.replace(target, stretch=self.stretch, dim_to_match=self.dim_to_match)
@@ -128,6 +131,10 @@ class FadeTransform(Transform):
 
     def get_all_families_zipped(self) -> zip[tuple[Mobject]]:
         return Animation.get_all_families_zipped(self)
+
+    def get_interpolation_ends(self) -> tuple[Mobject, Mobject]:
+        # Its own pair rather than Transform's, this one never having made a target_copy
+        return self.starting_mobject, self.ending_mobject
 
     def clean_up_from_scene(self, scene: Scene) -> None:
         Animation.clean_up_from_scene(self, scene)

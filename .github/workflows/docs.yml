@@ -15,20 +15,21 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@master
-    
-    - name: Install sphinx and manim env
-      run: |
-        pip3 install --upgrade pip
-        sudo apt install python3-setuptools libpango1.0-dev
-        pip3 install -r docs/requirements.txt
-        pip3 install -r requirements.txt
-    
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    # The docs are hand-written rst with no autodoc directives, so building
+    # them does not require manimlib or any of its runtime dependencies.
+    - name: Install sphinx
+      run: pip install -r docs/requirements.txt
+
     - name: Build document with Sphinx
       run: |
         cd docs
-        export PATH="$PATH:/home/runner/.local/bin"
-        export SPHINXBUILD="python3 -m sphinx"
         make html
         
     - name: Deploy to GitHub pages

@@ -392,7 +392,7 @@ class VDrawing(Drawing):
         self.has_fill = False
         self.stroke_behind = False
         # Which mobjects this one's fill has been promised not to overlap, see
-        # VMobject.set_fills_disjoint
+        # VMobject.draw_fills_together
         self.fill_group: Any = None
 
     def write_uniforms(self) -> bool:
@@ -418,7 +418,7 @@ class VDrawing(Drawing):
         """
         A fill counts its winding across the whole of a draw, so two filled mobjects may share
         one only where they do not overlap. Telling whether they do costs more than sharing
-        saves, so it is left to the mobjects to say, see VMobject.set_fills_disjoint, and only
+        saves, so it is left to the mobjects to say, see VMobject.draw_fills_together, and only
         those which have said so about the same group are gathered.
 
         Unfilled strokes are gathered whatever they promise, a stroke being drawn along its own
