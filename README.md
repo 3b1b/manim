@@ -21,7 +21,7 @@ Note, there are two versions of manim.  This repository began as a personal proj
 > [!Note]
 > **Note**: To install manim directly through pip, please pay attention to the name of the installed package. This repository is ManimGL of 3b1b. The package name is `manimgl` instead of `manim` or `manimlib`. Please use `pip install manimgl` to install the version in this repository.
 
-Manim runs on Python 3.7 or higher.
+Manim runs on Python 3.10 or higher.
 
 System requirements are [FFmpeg](https://ffmpeg.org/), [OpenGL](https://www.opengl.org/) and [LaTeX](https://www.latex-project.org) (optional, if you want to use LaTeX).
 For Linux, [Pango](https://pango.org) along with its development headers are required. See instruction [here](https://github.com/ManimCommunity/ManimPango#building).
@@ -149,7 +149,7 @@ sudo apt install python3.12-venv
 ## Anaconda Install
 
 1. Install LaTeX as above.
-2. Create a conda environment using `conda create -n manim python=3.9`.
+2. Create a conda environment using `conda create -n manim python=3.10`.
 3. Activate the environment using `conda activate manim`.
 4. Install manimgl using `pip install -e .`.
 
