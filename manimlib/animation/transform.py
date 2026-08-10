@@ -56,6 +56,7 @@ class Transform(Animation):
         self.check_target_mobject_validity()
 
         if self.mobject.is_aligned_with(self.target_mobject):
+            # Nothing to align, so nothing is done to the target and it can stand as it is
             self.target_copy = self.target_mobject
         else:
             # Use a copy of target_mobject for the align_data_and_family
@@ -63,7 +64,7 @@ class Transform(Animation):
             # preserved, since calling align_data will potentially
             # change the structure of both arguments
             self.target_copy = self.target_mobject.copy()
-        self.mobject.align_data_and_family(self.target_copy)
+            self.mobject.align_data_and_family(self.target_copy)
         super().begin()
 
     def create_target(self) -> Mobject:
