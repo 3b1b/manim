@@ -1,51 +1,62 @@
 <!doctype html>
-<html class="no-js">
-  <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Manim’s structure" href="structure.html" /><link rel="prev" title="CLI flags and configuration" href="configuration.html" />
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Manim’s structure" href="structure.html"><link rel="prev" title="CLI flags and configuration" href="configuration.html">
+        <link rel="prefetch" href="../_static/transparent_graph.png" as="image">
 
-    <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.0.3, furo 2020.10.05.beta9"/>
-        <title>Example Scenes - manim  documentation</title>
-      <link rel="stylesheet" href="../_static/copybutton.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?ad1f99843cdf5d6b80cfb319">
-    <link rel="stylesheet" href="../_static/pygments.css?ad1f99843cdf5d6b80cfb319">
+    <link rel="shortcut icon" href="../_static/icon.png"><!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Example Scenes - manim documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
     
+    
+
+
 <style>
-  :root {
+  body {
     --color-code-background: #f8f8f8;
-    --color-code-foreground: #000000;
+  --color-code-foreground: black;
   
   }
-</style>
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script><script src="../_static/jquery.js"></script>
-      <script src="../_static/underscore.js"></script>
-      
-        <script src="../_static/doctools.js" defer></script>
-      
-        <script src="../_static/language_data.js" defer></script>
-      
-        <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?ad1f99843cdf5d6b80cfb319"></script></head>
-  <body dir="">
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
     
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
   <symbol id="svg-toc" viewBox="0 0 24 24">
     <title>Contents</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-      stroke-width="1.5" stroke="#101010" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z"/>
-      <line x1="4" y1="6" x2="20" y2="6" />
-      <line x1="10" y1="12" x2="20" y2="12" />
-      <line x1="6" y1="18" x2="20" y2="18" />
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
     </svg>
   </symbol>
   <symbol id="svg-menu" viewBox="0 0 24 24">
     <title>Menu</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      class="feather feather-menu">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
       <line x1="3" y1="12" x2="21" y2="12"></line>
       <line x1="3" y1="6" x2="21" y2="6"></line>
       <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -53,42 +64,139 @@
   </symbol>
   <symbol id="svg-arrow-right" viewBox="0 0 24 24">
     <title>Expand</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      class="feather feather-chevron-right">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
       <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
 
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
-<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
 <label class="overlay sidebar-overlay" for="__navigation"></label>
 <label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
 
 
 <div class="page">
   <header class="mobile-header">
-    <label class="header-left nav-overlay-icon" for="__navigation">
-      <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
-    </label>
-    <div class="header-center"><div class="brand">manim  documentation</div></div>
-    <div class="header-right"></div>
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">manim  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
   </header>
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../index.html">
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   <div class="sidebar-logo-container">
     <img class="sidebar-logo" src="../_static/transparent_graph.png" alt="Logo"/>
   </div>
   
-</a><form class="sidebar-search-container" method="get" action="../search.html">
-  <input class="sidebar-search" placeholder="Search" name="q">
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
-</form><div class="sidebar-tree sidebar-scroll">
-  <p><span class="caption-text">Getting Started</span></p>
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
@@ -97,12 +205,12 @@
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Manim’s structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s new</a></li>
 </ul>
-<p><span class="caption-text">Documentation</span></p>
+<p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../documentation/constants.html">constants</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../documentation/custom_config.html">custom_config</a></li>
 </ul>
-<p><span class="caption-text">Development</span></p>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../development/changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing</a></li>
@@ -110,27 +218,52 @@
 </ul>
 
 </div>
+</div>
+
       </div>
       
     </div>
   </aside>
-  <main class="main">
+  <div class="main">
     <div class="content">
-      <article role="main">
-        <label class="toc-overlay-icon" for="__toc">
-          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
-        </label>
-        <section id="example-scenes">
-<h1>Example Scenes<a class="headerlink" href="#example-scenes" title="Permalink to this headline">¶</a></h1>
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/getting_started/example_scenes.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="example-scenes">
+<h1>Example Scenes<a class="headerlink" href="#example-scenes" title="Link to this heading">¶</a></h1>
 <p>After understanding the previous knowledge, we can understand more scenes.
 Many example scenes are given in <code class="docutils literal notranslate"><span class="pre">example_scenes.py</span></code>, let’s start with
 the simplest and one by one.</p>
 <section id="interactivedevlopment">
-<h2>InteractiveDevlopment<a class="headerlink" href="#interactivedevlopment" title="Permalink to this headline">¶</a></h2>
-<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="interactivedevelopment" loop="" src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/InteractiveDevelopment.mp4"></video><h5 class="example-header">InteractiveDevelopment<a class="headerlink" href="#interactivedevelopment">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib</span> <span class="kn">import</span> <span class="o">*</span>
+<h2>InteractiveDevlopment<a class="headerlink" href="#interactivedevlopment" title="Link to this heading">¶</a></h2>
+<div class="manim-example"><video id="interactivedevelopment" class="manim-video" controls loop autoplay src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/InteractiveDevelopment.mp4"></video><h5 class="example-header">InteractiveDevelopment<a class="headerlink" href="#interactivedevelopment">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">manimlib</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 
-<span class="k">class</span> <span class="nc">InteractiveDevelopment</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InteractiveDevelopment</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">circle</span> <span class="o">=</span> <span class="n">Circle</span><span class="p">()</span>
         <span class="n">circle</span><span class="o">.</span><span class="n">set_fill</span><span class="p">(</span><span class="n">BLUE</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
         <span class="n">circle</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLUE_E</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
@@ -141,7 +274,7 @@ the simplest and one by one.</p>
 
         <span class="c1"># This opens an iPython terminal where you can keep writing</span>
         <span class="c1"># lines as if they were part of this construct method.</span>
-        <span class="c1"># In particular, 'square', 'circle' and 'self' will all be</span>
+        <span class="c1"># In particular, &#39;square&#39;, &#39;circle&#39; and &#39;self&#39; will all be</span>
         <span class="c1"># part of the local namespace in that terminal.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">embed</span><span class="p">()</span>
 
@@ -150,13 +283,13 @@ the simplest and one by one.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">ReplacementTransform</span><span class="p">(</span><span class="n">square</span><span class="p">,</span> <span class="n">circle</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">circle</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">stretch</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">Rotate</span><span class="p">(</span><span class="n">circle</span><span class="p">,</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">DEGREES</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">Rotate</span><span class="p">(</span><span class="n">circle</span><span class="p">,</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">DEG</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">circle</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">RIGHT</span><span class="p">)</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">0.25</span><span class="p">))</span>
 
-        <span class="n">text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"""</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            In general, using the interactive shell</span>
 <span class="s2">            is very helpful when developing new scenes</span>
-<span class="s2">        """</span><span class="p">)</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">Write</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
 
         <span class="c1"># In the interactive shell, you can just type</span>
@@ -164,10 +297,10 @@ the simplest and one by one.</p>
         <span class="c1"># instead of self.play, self.add, self.remove, etc.</span>
 
         <span class="c1"># To interact with the window, type touch().  You can then</span>
-        <span class="c1"># scroll in the window, or zoom by holding down 'z' while scrolling,</span>
-        <span class="c1"># and change camera perspective by holding down 'd' while moving</span>
-        <span class="c1"># the mouse.  Press 'r' to reset to the standard camera position.</span>
-        <span class="c1"># Press 'q' to stop interacting with the window and go back to</span>
+        <span class="c1"># scroll in the window, or zoom by holding down &#39;z&#39; while scrolling,</span>
+        <span class="c1"># and change camera perspective by holding down &#39;d&#39; while moving</span>
+        <span class="c1"># the mouse.  Press &#39;r&#39; to reset to the standard camera position.</span>
+        <span class="c1"># Press &#39;q&#39; to stop interacting with the window and go back to</span>
         <span class="c1"># typing new commands into the shell.</span>
 
         <span class="c1"># In principle you can customize a scene to be responsive to</span>
@@ -180,25 +313,25 @@ And how to interact has been written in the comments.
 No more explanation here.</p>
 </section>
 <section id="animatingmethods">
-<h2>AnimatingMethods<a class="headerlink" href="#animatingmethods" title="Permalink to this headline">¶</a></h2>
-<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="animatingmethods" loop="" src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/AnimatingMethods.mp4"></video><h5 class="example-header">AnimatingMethods<a class="headerlink" href="#animatingmethods">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">AnimatingMethods</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">grid</span> <span class="o">=</span> <span class="n">OldTex</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\pi"</span><span class="p">)</span><span class="o">.</span><span class="n">get_grid</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<h2>AnimatingMethods<a class="headerlink" href="#animatingmethods" title="Link to this heading">¶</a></h2>
+<div class="manim-example"><video id="animatingmethods" class="manim-video" controls loop autoplay src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/AnimatingMethods.mp4"></video><h5 class="example-header">AnimatingMethods<a class="headerlink" href="#animatingmethods">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">AnimatingMethods</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">OldTex</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\pi&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get_grid</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
 
         <span class="c1"># You can animate the application of mobject methods with the</span>
-        <span class="c1"># ".animate" syntax:</span>
+        <span class="c1"># &quot;.animate&quot; syntax:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">LEFT</span><span class="p">))</span>
 
         <span class="c1"># Alternatively, you can use the older syntax by passing the</span>
-        <span class="c1"># method and then the arguments to the scene's "play" function:</span>
+        <span class="c1"># method and then the arguments to the scene&#39;s &quot;play&quot; function:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">shift</span><span class="p">,</span> <span class="n">LEFT</span><span class="p">)</span>
 
-        <span class="c1"># Both of those will interpolate between the mobject's initial</span>
+        <span class="c1"># Both of those will interpolate between the mobject&#39;s initial</span>
         <span class="c1"># state and whatever happens when you apply that method.</span>
         <span class="c1"># For this example, calling grid.shift(LEFT) would shift the</span>
         <span class="c1"># grid one unit to the left, but both of the previous calls to</span>
-        <span class="c1"># "self.play" animate that motion.</span>
+        <span class="c1"># &quot;self.play&quot; animate that motion.</span>
 
         <span class="c1"># The same applies for any method, including those setting colors.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="n">YELLOW</span><span class="p">))</span>
@@ -236,20 +369,20 @@ No more explanation here.</p>
 </ul>
 </section>
 <section id="textexample">
-<h2>TextExample<a class="headerlink" href="#textexample" title="Permalink to this headline">¶</a></h2>
-<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="textexample" loop="" src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/TextExample.mp4"></video><h5 class="example-header">TextExample<a class="headerlink" href="#textexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TextExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># To run this scene properly, you should have "Consolas" font in your computer</span>
+<h2>TextExample<a class="headerlink" href="#textexample" title="Link to this heading">¶</a></h2>
+<div class="manim-example"><video id="textexample" class="manim-video" controls loop autoplay src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/TextExample.mp4"></video><h5 class="example-header">TextExample<a class="headerlink" href="#textexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TextExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># To run this scene properly, you should have &quot;Consolas&quot; font in your computer</span>
         <span class="c1"># for full usage, you can see https://github.com/3b1b/manim/pull/680</span>
-        <span class="n">text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"Here is a text"</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="s2">"Consolas"</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;Here is a text&quot;</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="s2">&quot;Consolas&quot;</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
         <span class="n">difference</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span>
-<span class="w">            </span><span class="sd">"""</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            The most important difference between Text and TexText is that\n</span>
-<span class="sd">            you can change the font more easily, but can't use the LaTeX grammar</span>
-<span class="sd">            """</span><span class="p">,</span>
-            <span class="n">font</span><span class="o">=</span><span class="s2">"Arial"</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+<span class="sd">            you can change the font more easily, but can&#39;t use the LaTeX grammar</span>
+<span class="sd">            &quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="n">font</span><span class="o">=</span><span class="s2">&quot;Arial&quot;</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
             <span class="c1"># t2c is a dict that you can choose color for different text</span>
-            <span class="n">t2c</span><span class="o">=</span><span class="p">{</span><span class="s2">"Text"</span><span class="p">:</span> <span class="n">BLUE</span><span class="p">,</span> <span class="s2">"TexText"</span><span class="p">:</span> <span class="n">BLUE</span><span class="p">,</span> <span class="s2">"LaTeX"</span><span class="p">:</span> <span class="n">ORANGE</span><span class="p">}</span>
+            <span class="n">t2c</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Text&quot;</span><span class="p">:</span> <span class="n">BLUE</span><span class="p">,</span> <span class="s2">&quot;TexText&quot;</span><span class="p">:</span> <span class="n">BLUE</span><span class="p">,</span> <span class="s2">&quot;LaTeX&quot;</span><span class="p">:</span> <span class="n">ORANGE</span><span class="p">}</span>
         <span class="p">)</span>
         <span class="n">VGroup</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">difference</span><span class="p">)</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">DOWN</span><span class="p">,</span> <span class="n">buff</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">Write</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
@@ -257,18 +390,18 @@ No more explanation here.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 
         <span class="n">fonts</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span>
-            <span class="s2">"And you can also set the font according to different words"</span><span class="p">,</span>
-            <span class="n">font</span><span class="o">=</span><span class="s2">"Arial"</span><span class="p">,</span>
-            <span class="n">t2f</span><span class="o">=</span><span class="p">{</span><span class="s2">"font"</span><span class="p">:</span> <span class="s2">"Consolas"</span><span class="p">,</span> <span class="s2">"words"</span><span class="p">:</span> <span class="s2">"Consolas"</span><span class="p">},</span>
-            <span class="n">t2c</span><span class="o">=</span><span class="p">{</span><span class="s2">"font"</span><span class="p">:</span> <span class="n">BLUE</span><span class="p">,</span> <span class="s2">"words"</span><span class="p">:</span> <span class="n">GREEN</span><span class="p">}</span>
+            <span class="s2">&quot;And you can also set the font according to different words&quot;</span><span class="p">,</span>
+            <span class="n">font</span><span class="o">=</span><span class="s2">&quot;Arial&quot;</span><span class="p">,</span>
+            <span class="n">t2f</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;font&quot;</span><span class="p">:</span> <span class="s2">&quot;Consolas&quot;</span><span class="p">,</span> <span class="s2">&quot;words&quot;</span><span class="p">:</span> <span class="s2">&quot;Consolas&quot;</span><span class="p">},</span>
+            <span class="n">t2c</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;font&quot;</span><span class="p">:</span> <span class="n">BLUE</span><span class="p">,</span> <span class="s2">&quot;words&quot;</span><span class="p">:</span> <span class="n">GREEN</span><span class="p">}</span>
         <span class="p">)</span>
         <span class="n">fonts</span><span class="o">.</span><span class="n">set_width</span><span class="p">(</span><span class="n">FRAME_WIDTH</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">slant</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span>
-            <span class="s2">"And the same as slant and weight"</span><span class="p">,</span>
-            <span class="n">font</span><span class="o">=</span><span class="s2">"Consolas"</span><span class="p">,</span>
-            <span class="n">t2s</span><span class="o">=</span><span class="p">{</span><span class="s2">"slant"</span><span class="p">:</span> <span class="n">ITALIC</span><span class="p">},</span>
-            <span class="n">t2w</span><span class="o">=</span><span class="p">{</span><span class="s2">"weight"</span><span class="p">:</span> <span class="n">BOLD</span><span class="p">},</span>
-            <span class="n">t2c</span><span class="o">=</span><span class="p">{</span><span class="s2">"slant"</span><span class="p">:</span> <span class="n">ORANGE</span><span class="p">,</span> <span class="s2">"weight"</span><span class="p">:</span> <span class="n">RED</span><span class="p">}</span>
+            <span class="s2">&quot;And the same as slant and weight&quot;</span><span class="p">,</span>
+            <span class="n">font</span><span class="o">=</span><span class="s2">&quot;Consolas&quot;</span><span class="p">,</span>
+            <span class="n">t2s</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;slant&quot;</span><span class="p">:</span> <span class="n">ITALIC</span><span class="p">},</span>
+            <span class="n">t2w</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="n">BOLD</span><span class="p">},</span>
+            <span class="n">t2c</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;slant&quot;</span><span class="p">:</span> <span class="n">ORANGE</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="n">RED</span><span class="p">}</span>
         <span class="p">)</span>
         <span class="n">VGroup</span><span class="p">(</span><span class="n">fonts</span><span class="p">,</span> <span class="n">slant</span><span class="p">)</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">DOWN</span><span class="p">,</span> <span class="n">buff</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">FadeOut</span><span class="p">(</span><span class="n">text</span><span class="p">),</span> <span class="n">FadeOut</span><span class="p">(</span><span class="n">difference</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">DOWN</span><span class="p">))</span>
@@ -288,10 +421,10 @@ No more explanation here.</p>
 </ul>
 </section>
 <section id="textransformexample">
-<h2>TexTransformExample<a class="headerlink" href="#textransformexample" title="Permalink to this headline">¶</a></h2>
-<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="textransformexample" loop="" src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/TexTransformExample.mp4"></video><h5 class="example-header">TexTransformExample<a class="headerlink" href="#textransformexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TexTransformExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">to_isolate</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"B"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="s2">"="</span><span class="p">,</span> <span class="s2">"("</span><span class="p">,</span> <span class="s2">")"</span><span class="p">]</span>
+<h2>TexTransformExample<a class="headerlink" href="#textransformexample" title="Link to this heading">¶</a></h2>
+<div class="manim-example"><video id="textransformexample" class="manim-video" controls loop autoplay src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/TexTransformExample.mp4"></video><h5 class="example-header">TexTransformExample<a class="headerlink" href="#textransformexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TexTransformExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">to_isolate</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;(&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">]</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="n">VGroup</span><span class="p">(</span>
             <span class="c1"># Passing in muliple arguments to Tex will result</span>
             <span class="c1"># in the same expression as if those arguments had</span>
@@ -301,26 +434,26 @@ No more explanation here.</p>
             <span class="c1"># each of these strings.  For example, the Tex mobject</span>
             <span class="c1"># below will have 5 subjects, corresponding to the</span>
             <span class="c1"># expressions [A^2, +, B^2, =, C^2]</span>
-            <span class="n">OldTex</span><span class="p">(</span><span class="s2">"A^2"</span><span class="p">,</span> <span class="s2">"+"</span><span class="p">,</span> <span class="s2">"B^2"</span><span class="p">,</span> <span class="s2">"="</span><span class="p">,</span> <span class="s2">"C^2"</span><span class="p">),</span>
+            <span class="n">OldTex</span><span class="p">(</span><span class="s2">&quot;A^2&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="s2">&quot;B^2&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;C^2&quot;</span><span class="p">),</span>
             <span class="c1"># Likewise here</span>
-            <span class="n">OldTex</span><span class="p">(</span><span class="s2">"A^2"</span><span class="p">,</span> <span class="s2">"="</span><span class="p">,</span> <span class="s2">"C^2"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">,</span> <span class="s2">"B^2"</span><span class="p">),</span>
+            <span class="n">OldTex</span><span class="p">(</span><span class="s2">&quot;A^2&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;C^2&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;B^2&quot;</span><span class="p">),</span>
             <span class="c1"># Alternatively, you can pass in the keyword argument</span>
-            <span class="c1"># "isolate" with a list of strings that should be out as</span>
+            <span class="c1"># &quot;isolate&quot; with a list of strings that should be out as</span>
             <span class="c1"># their own submobject.  So the line below is equivalent</span>
             <span class="c1"># to the commented out line below it.</span>
-            <span class="n">OldTex</span><span class="p">(</span><span class="s2">"A^2 = (C + B)(C - B)"</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="p">[</span><span class="s2">"A^2"</span><span class="p">,</span> <span class="o">*</span><span class="n">to_isolate</span><span class="p">]),</span>
-            <span class="c1"># OldTex("A^2", "=", "(", "C", "+", "B", ")", "(", "C", "-", "B", ")"),</span>
-            <span class="n">OldTex</span><span class="p">(</span><span class="s2">"A = </span><span class="se">\\</span><span class="s2">sqrt{(C + B)(C - B)}"</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="p">[</span><span class="s2">"A"</span><span class="p">,</span> <span class="o">*</span><span class="n">to_isolate</span><span class="p">])</span>
+            <span class="n">OldTex</span><span class="p">(</span><span class="s2">&quot;A^2 = (C + B)(C - B)&quot;</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;A^2&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">to_isolate</span><span class="p">]),</span>
+            <span class="c1"># OldTex(&quot;A^2&quot;, &quot;=&quot;, &quot;(&quot;, &quot;C&quot;, &quot;+&quot;, &quot;B&quot;, &quot;)&quot;, &quot;(&quot;, &quot;C&quot;, &quot;-&quot;, &quot;B&quot;, &quot;)&quot;),</span>
+            <span class="n">OldTex</span><span class="p">(</span><span class="s2">&quot;A = </span><span class="se">\\</span><span class="s2">sqrt{(C + B)(C - B)}&quot;</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">to_isolate</span><span class="p">])</span>
         <span class="p">)</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">DOWN</span><span class="p">,</span> <span class="n">buff</span><span class="o">=</span><span class="n">LARGE_BUFF</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
             <span class="n">line</span><span class="o">.</span><span class="n">set_color_by_tex_to_color_map</span><span class="p">({</span>
-                <span class="s2">"A"</span><span class="p">:</span> <span class="n">BLUE</span><span class="p">,</span>
-                <span class="s2">"B"</span><span class="p">:</span> <span class="n">TEAL</span><span class="p">,</span>
-                <span class="s2">"C"</span><span class="p">:</span> <span class="n">GREEN</span><span class="p">,</span>
+                <span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="n">BLUE</span><span class="p">,</span>
+                <span class="s2">&quot;B&quot;</span><span class="p">:</span> <span class="n">TEAL</span><span class="p">,</span>
+                <span class="s2">&quot;C&quot;</span><span class="p">:</span> <span class="n">GREEN</span><span class="p">,</span>
             <span class="p">})</span>
 
-        <span class="n">play_kw</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"run_time"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+        <span class="n">play_kw</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;run_time&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="c1"># The animation TransformMatchingTex will line up parts</span>
         <span class="c1"># of the source and target which have matching tex strings.</span>
@@ -330,7 +463,7 @@ No more explanation here.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
             <span class="n">TransformMatchingTex</span><span class="p">(</span>
                 <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                <span class="n">path_arc</span><span class="o">=</span><span class="mi">90</span> <span class="o">*</span> <span class="n">DEGREES</span><span class="p">,</span>
+                <span class="n">path_arc</span><span class="o">=</span><span class="mi">90</span> <span class="o">*</span> <span class="n">DEG</span><span class="p">,</span>
             <span class="p">),</span>
             <span class="o">**</span><span class="n">play_kw</span>
         <span class="p">)</span>
@@ -342,8 +475,8 @@ No more explanation here.</p>
             <span class="o">**</span><span class="n">play_kw</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-        <span class="c1"># ...and this looks nice enough, but since there's no tex</span>
-        <span class="c1"># in lines[2] which matches "C^2" or "B^2", those terms fade</span>
+        <span class="c1"># ...and this looks nice enough, but since there&#39;s no tex</span>
+        <span class="c1"># in lines[2] which matches &quot;C^2&quot; or &quot;B^2&quot;, those terms fade</span>
         <span class="c1"># out to nothing while the C and B terms fade in from nothing.</span>
         <span class="c1"># If, however, we want the C^2 to go to C, and B^2 to go to B,</span>
         <span class="c1"># we can specify that with a key map.</span>
@@ -352,8 +485,8 @@ No more explanation here.</p>
             <span class="n">TransformMatchingTex</span><span class="p">(</span>
                 <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
                 <span class="n">key_map</span><span class="o">=</span><span class="p">{</span>
-                    <span class="s2">"C^2"</span><span class="p">:</span> <span class="s2">"C"</span><span class="p">,</span>
-                    <span class="s2">"B^2"</span><span class="p">:</span> <span class="s2">"B"</span><span class="p">,</span>
+                    <span class="s2">&quot;C^2&quot;</span><span class="p">:</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;B^2&quot;</span><span class="p">:</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span>
                 <span class="p">}</span>
             <span class="p">),</span>
             <span class="o">**</span><span class="n">play_kw</span>
@@ -365,11 +498,11 @@ No more explanation here.</p>
         <span class="c1"># the square root symbol.  At the moment, lines[2] treats the expression</span>
         <span class="c1"># A^2 as a unit, so we might create a new version of the same line which</span>
         <span class="c1"># separates out just the A.  This way, when TransformMatchingTex lines up</span>
-        <span class="c1"># all matching parts, the only mismatch will be between the "^2" from</span>
-        <span class="c1"># new_line2 and the "\sqrt" from the final line.  By passing in,</span>
-        <span class="c1"># transform_mismatches=True, it will transform this "^2" part into</span>
-        <span class="c1"># the "\sqrt" part.</span>
-        <span class="n">new_line2</span> <span class="o">=</span> <span class="n">OldTex</span><span class="p">(</span><span class="s2">"A^2 = (C + B)(C - B)"</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="p">[</span><span class="s2">"A"</span><span class="p">,</span> <span class="o">*</span><span class="n">to_isolate</span><span class="p">])</span>
+        <span class="c1"># all matching parts, the only mismatch will be between the &quot;^2&quot; from</span>
+        <span class="c1"># new_line2 and the &quot;\sqrt&quot; from the final line.  By passing in,</span>
+        <span class="c1"># transform_mismatches=True, it will transform this &quot;^2&quot; part into</span>
+        <span class="c1"># the &quot;\sqrt&quot; part.</span>
+        <span class="n">new_line2</span> <span class="o">=</span> <span class="n">OldTex</span><span class="p">(</span><span class="s2">&quot;A^2 = (C + B)(C - B)&quot;</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">to_isolate</span><span class="p">])</span>
         <span class="n">new_line2</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
         <span class="n">new_line2</span><span class="o">.</span><span class="n">match_style</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
 
@@ -383,18 +516,18 @@ No more explanation here.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">FadeOut</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">RIGHT</span><span class="p">))</span>
 
-        <span class="c1"># Alternatively, if you don't want to think about breaking up</span>
+        <span class="c1"># Alternatively, if you don&#39;t want to think about breaking up</span>
         <span class="c1"># the tex strings deliberately, you can TransformMatchingShapes,</span>
         <span class="c1"># which will try to line up all pieces of a source mobject with</span>
         <span class="c1"># those of a target, regardless of the submobject hierarchy in</span>
         <span class="c1"># each one, according to whether those pieces have the same</span>
         <span class="c1"># shape (as best it can).</span>
-        <span class="n">source</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"the morse code"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"here come dots"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;the morse code&quot;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;here come dots&quot;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">Write</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-        <span class="n">kw</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"run_time"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"path_arc"</span><span class="p">:</span> <span class="n">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">}</span>
+        <span class="n">kw</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;run_time&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;path_arc&quot;</span><span class="p">:</span> <span class="n">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">TransformMatchingShapes</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">TransformMatchingShapes</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">))</span>
@@ -411,9 +544,9 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
 </ul>
 </section>
 <section id="updatersexample">
-<h2>UpdatersExample<a class="headerlink" href="#updatersexample" title="Permalink to this headline">¶</a></h2>
-<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="updatersexample" loop="" src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/UpdatersExample.mp4"></video><h5 class="example-header">UpdatersExample<a class="headerlink" href="#updatersexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">UpdatersExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<h2>UpdatersExample<a class="headerlink" href="#updatersexample" title="Link to this heading">¶</a></h2>
+<div class="manim-example"><video id="updatersexample" class="manim-video" controls loop autoplay src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/UpdatersExample.mp4"></video><h5 class="example-header">UpdatersExample<a class="headerlink" href="#updatersexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">UpdatersExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">square</span> <span class="o">=</span> <span class="n">Square</span><span class="p">()</span>
         <span class="n">square</span><span class="o">.</span><span class="n">set_fill</span><span class="p">(</span><span class="n">BLUE_E</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
@@ -423,7 +556,7 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
         <span class="n">brace</span> <span class="o">=</span> <span class="n">always_redraw</span><span class="p">(</span><span class="n">Brace</span><span class="p">,</span> <span class="n">square</span><span class="p">,</span> <span class="n">UP</span><span class="p">)</span>
 
         <span class="n">text</span><span class="p">,</span> <span class="n">number</span> <span class="o">=</span> <span class="n">label</span> <span class="o">=</span> <span class="n">VGroup</span><span class="p">(</span>
-            <span class="n">Text</span><span class="p">(</span><span class="s2">"Width = "</span><span class="p">),</span>
+            <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;Width = &quot;</span><span class="p">),</span>
             <span class="n">DecimalNumber</span><span class="p">(</span>
                 <span class="mi">0</span><span class="p">,</span>
                 <span class="n">show_ellipsis</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -494,9 +627,9 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
 </ul>
 </section>
 <section id="coordinatesystemexample">
-<h2>CoordinateSystemExample<a class="headerlink" href="#coordinatesystemexample" title="Permalink to this headline">¶</a></h2>
-<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="coordinatesystemexample" loop="" src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/CoordinateSystemExample.mp4"></video><h5 class="example-header">CoordinateSystemExample<a class="headerlink" href="#coordinatesystemexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CoordinateSystemExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<h2>CoordinateSystemExample<a class="headerlink" href="#coordinatesystemexample" title="Link to this heading">¶</a></h2>
+<div class="manim-example"><video id="coordinatesystemexample" class="manim-video" controls loop autoplay src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/CoordinateSystemExample.mp4"></video><h5 class="example-header">CoordinateSystemExample<a class="headerlink" href="#coordinatesystemexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">CoordinateSystemExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">axes</span> <span class="o">=</span> <span class="n">Axes</span><span class="p">(</span>
             <span class="c1"># x-axis ranges from -1 to 10, with a default step size of 1</span>
             <span class="n">x_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
@@ -509,13 +642,13 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
             <span class="c1"># Axes is made of two NumberLine mobjects.  You can specify</span>
             <span class="c1"># their configuration with axis_config</span>
             <span class="n">axis_config</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"stroke_color"</span><span class="p">:</span> <span class="n">GREY_A</span><span class="p">,</span>
-                <span class="s2">"stroke_width"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;stroke_color&quot;</span><span class="p">:</span> <span class="n">GREY_A</span><span class="p">,</span>
+                <span class="s2">&quot;stroke_width&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="c1"># Alternatively, you can specify configuration for just one</span>
             <span class="c1"># of them, like this.</span>
             <span class="n">y_axis_config</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"include_tip"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;include_tip&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
         <span class="c1"># Keyword arguments of add_coordinate_labels can be used to</span>
@@ -531,7 +664,7 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
         <span class="c1"># you can call call axes.coords_to_point, abbreviated to</span>
         <span class="c1"># axes.c2p, to associate a set of coordinates with a point,</span>
         <span class="c1"># like so:</span>
-        <span class="n">dot</span> <span class="o">=</span> <span class="n">Dot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">RED</span><span class="p">)</span>
+        <span class="n">dot</span> <span class="o">=</span> <span class="n">Dot</span><span class="p">(</span><span class="n">fill_color</span><span class="o">=</span><span class="n">RED</span><span class="p">)</span>
         <span class="n">dot</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">c2p</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">FadeIn</span><span class="p">(</span><span class="n">dot</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">dot</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">c2p</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
@@ -575,9 +708,9 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
 </div>
 </div></section>
 <section id="graphexample">
-<h2>GraphExample<a class="headerlink" href="#graphexample" title="Permalink to this headline">¶</a></h2>
-<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="graphexample" loop="" src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/GraphExample.mp4"></video><h5 class="example-header">GraphExample<a class="headerlink" href="#graphexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GraphExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<h2>GraphExample<a class="headerlink" href="#graphexample" title="Link to this heading">¶</a></h2>
+<div class="manim-example"><video id="graphexample" class="manim-video" controls loop autoplay src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/GraphExample.mp4"></video><h5 class="example-header">GraphExample<a class="headerlink" href="#graphexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GraphExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">axes</span> <span class="o">=</span> <span class="n">Axes</span><span class="p">((</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
         <span class="n">axes</span><span class="o">.</span><span class="n">add_coordinate_labels</span><span class="p">()</span>
 
@@ -605,12 +738,12 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
         <span class="p">)</span>
 
         <span class="c1"># Axes.get_graph_label takes in either a string or a mobject.</span>
-        <span class="c1"># If it's a string, it treats it as a LaTeX expression.  By default</span>
+        <span class="c1"># If it&#39;s a string, it treats it as a LaTeX expression.  By default</span>
         <span class="c1"># it places the label next to the graph near the right side, and</span>
         <span class="c1"># has it match the color of the graph</span>
-        <span class="n">sin_label</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph_label</span><span class="p">(</span><span class="n">sin_graph</span><span class="p">,</span> <span class="s2">"</span><span class="se">\\</span><span class="s2">sin(x)"</span><span class="p">)</span>
-        <span class="n">relu_label</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph_label</span><span class="p">(</span><span class="n">relu_graph</span><span class="p">,</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"ReLU"</span><span class="p">))</span>
-        <span class="n">step_label</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph_label</span><span class="p">(</span><span class="n">step_graph</span><span class="p">,</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"Step"</span><span class="p">),</span> <span class="n">x</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">sin_label</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph_label</span><span class="p">(</span><span class="n">sin_graph</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">sin(x)&quot;</span><span class="p">)</span>
+        <span class="n">relu_label</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph_label</span><span class="p">(</span><span class="n">relu_graph</span><span class="p">,</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;ReLU&quot;</span><span class="p">))</span>
+        <span class="n">step_label</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph_label</span><span class="p">(</span><span class="n">step_graph</span><span class="p">,</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;Step&quot;</span><span class="p">),</span> <span class="n">x</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
             <span class="n">ShowCreation</span><span class="p">(</span><span class="n">sin_graph</span><span class="p">),</span>
@@ -639,7 +772,7 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
 
         <span class="c1"># You can use axes.input_to_graph_point, abbreviated</span>
         <span class="c1"># to axes.i2gp, to find a particular point on a graph</span>
-        <span class="n">dot</span> <span class="o">=</span> <span class="n">Dot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">RED</span><span class="p">)</span>
+        <span class="n">dot</span> <span class="o">=</span> <span class="n">Dot</span><span class="p">(</span><span class="n">fill_color</span><span class="o">=</span><span class="n">RED</span><span class="p">)</span>
         <span class="n">dot</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">i2gp</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">parabola</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">FadeIn</span><span class="p">(</span><span class="n">dot</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
 
@@ -659,14 +792,14 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
 </div>
 </div></section>
 <section id="surfaceexample">
-<h2>SurfaceExample<a class="headerlink" href="#surfaceexample" title="Permalink to this headline">¶</a></h2>
-<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="surfaceexample" loop="" src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/SurfaceExample.mp4"></video><h5 class="example-header">SurfaceExample<a class="headerlink" href="#surfaceexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SurfaceExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+<h2>SurfaceExample<a class="headerlink" href="#surfaceexample" title="Link to this heading">¶</a></h2>
+<div class="manim-example"><video id="surfaceexample" class="manim-video" controls loop autoplay src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/SurfaceExample.mp4"></video><h5 class="example-header">SurfaceExample<a class="headerlink" href="#surfaceexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SurfaceExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
     <span class="n">CONFIG</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">"camera_class"</span><span class="p">:</span> <span class="n">ThreeDCamera</span><span class="p">,</span>
+        <span class="s2">&quot;camera_class&quot;</span><span class="p">:</span> <span class="n">ThreeDCamera</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">surface_text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"For 3d scenes, try using surfaces"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">surface_text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;For 3d scenes, try using surfaces&quot;</span><span class="p">)</span>
         <span class="n">surface_text</span><span class="o">.</span><span class="n">fix_in_frame</span><span class="p">()</span>
         <span class="n">surface_text</span><span class="o">.</span><span class="n">to_edge</span><span class="p">(</span><span class="n">UP</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">surface_text</span><span class="p">)</span>
@@ -678,13 +811,13 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
         <span class="c1"># You can texture a surface with up to two images, which will</span>
         <span class="c1"># be interpreted as the side towards the light, and away from</span>
         <span class="c1"># the light.  These can be either urls, or paths to a local file</span>
-        <span class="c1"># in whatever you've set as the image directory in</span>
+        <span class="c1"># in whatever you&#39;ve set as the image directory in</span>
         <span class="c1"># the custom_config.yml file</span>
 
-        <span class="c1"># day_texture = "EarthTextureMap"</span>
-        <span class="c1"># night_texture = "NightEarthTextureMap"</span>
-        <span class="n">day_texture</span> <span class="o">=</span> <span class="s2">"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Whole_world_-_land_and_oceans.jpg/1280px-Whole_world_-_land_and_oceans.jpg"</span>
-        <span class="n">night_texture</span> <span class="o">=</span> <span class="s2">"https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/The_earth_at_night.jpg/1280px-The_earth_at_night.jpg"</span>
+        <span class="c1"># day_texture = &quot;EarthTextureMap&quot;</span>
+        <span class="c1"># night_texture = &quot;NightEarthTextureMap&quot;</span>
+        <span class="n">day_texture</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Whole_world_-_land_and_oceans.jpg/1280px-Whole_world_-_land_and_oceans.jpg&quot;</span>
+        <span class="n">night_texture</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/The_earth_at_night.jpg/1280px-The_earth_at_night.jpg&quot;</span>
 
         <span class="n">surfaces</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">TexturedSurface</span><span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="n">day_texture</span><span class="p">,</span> <span class="n">night_texture</span><span class="p">)</span>
@@ -699,8 +832,8 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
         <span class="c1"># Set perspective</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">frame</span>
         <span class="n">frame</span><span class="o">.</span><span class="n">set_euler_angles</span><span class="p">(</span>
-            <span class="n">theta</span><span class="o">=-</span><span class="mi">30</span> <span class="o">*</span> <span class="n">DEGREES</span><span class="p">,</span>
-            <span class="n">phi</span><span class="o">=</span><span class="mi">70</span> <span class="o">*</span> <span class="n">DEGREES</span><span class="p">,</span>
+            <span class="n">theta</span><span class="o">=-</span><span class="mi">30</span> <span class="o">*</span> <span class="n">DEG</span><span class="p">,</span>
+            <span class="n">phi</span><span class="o">=</span><span class="mi">70</span> <span class="o">*</span> <span class="n">DEG</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">surface</span> <span class="o">=</span> <span class="n">surfaces</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -724,15 +857,15 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
             <span class="n">Transform</span><span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="n">surfaces</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span>
             <span class="c1"># Move camera frame during the transition</span>
-            <span class="n">frame</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">increment_phi</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span> <span class="o">*</span> <span class="n">DEGREES</span><span class="p">),</span>
-            <span class="n">frame</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">increment_theta</span><span class="p">(</span><span class="o">-</span><span class="mi">20</span> <span class="o">*</span> <span class="n">DEGREES</span><span class="p">),</span>
+            <span class="n">frame</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">increment_phi</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span> <span class="o">*</span> <span class="n">DEG</span><span class="p">),</span>
+            <span class="n">frame</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">increment_theta</span><span class="p">(</span><span class="o">-</span><span class="mi">20</span> <span class="o">*</span> <span class="n">DEG</span><span class="p">),</span>
             <span class="n">run_time</span><span class="o">=</span><span class="mi">3</span>
         <span class="p">)</span>
         <span class="c1"># Add ambient rotation</span>
         <span class="n">frame</span><span class="o">.</span><span class="n">add_updater</span><span class="p">(</span><span class="k">lambda</span> <span class="n">m</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">increment_theta</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">dt</span><span class="p">))</span>
 
         <span class="c1"># Play around with where the light is</span>
-        <span class="n">light_text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"You can move around the light source"</span><span class="p">)</span>
+        <span class="n">light_text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;You can move around the light source&quot;</span><span class="p">)</span>
         <span class="n">light_text</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">surface_text</span><span class="p">)</span>
         <span class="n">light_text</span><span class="o">.</span><span class="n">fix_in_frame</span><span class="p">()</span>
 
@@ -743,7 +876,7 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">light</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">IN</span><span class="p">),</span> <span class="n">run_time</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">light</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">OUT</span><span class="p">),</span> <span class="n">run_time</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
-        <span class="n">drag_text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"Try moving the mouse while pressing d or s"</span><span class="p">)</span>
+        <span class="n">drag_text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;Try moving the mouse while pressing d or s&quot;</span><span class="p">)</span>
         <span class="n">drag_text</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">light_text</span><span class="p">)</span>
         <span class="n">drag_text</span><span class="o">.</span><span class="n">fix_in_frame</span><span class="p">()</span>
 
@@ -758,14 +891,14 @@ the related usage has been briefly described in the notes.</p>
 </ul>
 </section>
 <section id="openingmanimexample">
-<h2>OpeningManimExample<a class="headerlink" href="#openingmanimexample" title="Permalink to this headline">¶</a></h2>
-<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="openingmanimexample" loop="" src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/OpeningManimExample.mp4"></video><h5 class="example-header">OpeningManimExample<a class="headerlink" href="#openingmanimexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">OpeningManimExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">intro_words</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"""</span>
+<h2>OpeningManimExample<a class="headerlink" href="#openingmanimexample" title="Link to this heading">¶</a></h2>
+<div class="manim-example"><video id="openingmanimexample" class="manim-video" controls loop autoplay src="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/example_scenes/OpeningManimExample.mp4"></video><h5 class="example-header">OpeningManimExample<a class="headerlink" href="#openingmanimexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">OpeningManimExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">intro_words</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            The original motivation for manim was to</span>
 <span class="s2">            better illustrate mathematical functions</span>
 <span class="s2">            as transformations.</span>
-<span class="s2">        """</span><span class="p">)</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
         <span class="n">intro_words</span><span class="o">.</span><span class="n">to_edge</span><span class="p">(</span><span class="n">UP</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">Write</span><span class="p">(</span><span class="n">intro_words</span><span class="p">))</span>
@@ -775,9 +908,9 @@ the related usage has been briefly described in the notes.</p>
         <span class="n">grid</span> <span class="o">=</span> <span class="n">NumberPlane</span><span class="p">((</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
         <span class="n">matrix</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
         <span class="n">linear_transform_words</span> <span class="o">=</span> <span class="n">VGroup</span><span class="p">(</span>
-            <span class="n">Text</span><span class="p">(</span><span class="s2">"This is what the matrix"</span><span class="p">),</span>
+            <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;This is what the matrix&quot;</span><span class="p">),</span>
             <span class="n">IntegerMatrix</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">include_background_rectangle</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="n">Text</span><span class="p">(</span><span class="s2">"looks like"</span><span class="p">)</span>
+            <span class="n">Text</span><span class="p">(</span><span class="s2">&quot;looks like&quot;</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="n">linear_transform_words</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">RIGHT</span><span class="p">)</span>
         <span class="n">linear_transform_words</span><span class="o">.</span><span class="n">to_edge</span><span class="p">(</span><span class="n">UP</span><span class="p">)</span>
@@ -797,10 +930,10 @@ the related usage has been briefly described in the notes.</p>
         <span class="n">moving_c_grid</span><span class="o">.</span><span class="n">prepare_for_nonlinear_transform</span><span class="p">()</span>
         <span class="n">c_grid</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLUE_E</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">c_grid</span><span class="o">.</span><span class="n">add_coordinate_labels</span><span class="p">(</span><span class="n">font_size</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
-        <span class="n">complex_map_words</span> <span class="o">=</span> <span class="n">TexText</span><span class="p">(</span><span class="s2">"""</span>
+        <span class="n">complex_map_words</span> <span class="o">=</span> <span class="n">TexText</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            Or thinking of the plane as $</span><span class="se">\\</span><span class="s2">mathds</span><span class="si">{C}</span><span class="s2">$,</span><span class="se">\\\\</span>
 <span class="s2">            this is the map $z </span><span class="se">\\</span><span class="s2">rightarrow z^2$</span>
-<span class="s2">        """</span><span class="p">)</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
         <span class="n">complex_map_words</span><span class="o">.</span><span class="n">to_corner</span><span class="p">(</span><span class="n">UR</span><span class="p">)</span>
         <span class="n">complex_map_words</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLACK</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -824,7 +957,8 @@ usage of manim. For more examples, see <a class="reference external" href="https
 </section>
 </section>
 
-      </article>
+        </article>
+      </div>
       <footer>
         
         <div class="related-pages">
@@ -835,10 +969,10 @@ usage of manim. For more examples, see <a class="reference external" href="https
                 </div>
                 <div class="title">Manim’s structure</div>
               </div>
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
           <a class="prev-page" href="configuration.html">
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
@@ -849,12 +983,19 @@ usage of manim. For more examples, see <a class="reference external" href="https
               </div>
             </a>
         </div>
-
-        <div class="related-information">
-          <span class="copyright">Copyright &copy; - This document has been placed in the public domain.</span> |
-          Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using
-          <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
-          <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; - This document has been placed in the public domain.
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
         </div>
         
       </footer>
@@ -865,11 +1006,12 @@ usage of manim. For more examples, see <a class="reference external" href="https
       <div class="toc-sticky toc-scroll">
         <div class="toc-title-container">
           <span class="toc-title">
-            Contents
+            On this page
           </span>
         </div>
-        <div class="toc-tree">
-          <ul>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
 <li><a class="reference internal" href="#">Example Scenes</a><ul>
 <li><a class="reference internal" href="#interactivedevlopment">InteractiveDevlopment</a></li>
 <li><a class="reference internal" href="#animatingmethods">AnimatingMethods</a></li>
@@ -884,12 +1026,18 @@ usage of manim. For more examples, see <a class="reference external" href="https
 </li>
 </ul>
 
+          </div>
         </div>
       </div>
       
       
     </aside>
-  </main>
-</div>
-  </body>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    </body>
 </html>

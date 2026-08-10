@@ -3,6 +3,20 @@ Contributing
 
 Accept any contribution you make :)
 
+Choose the right Manim project first
+------------------------------------
+
+This repository is the ManimGL version used by 3Blue1Brown. It focuses on
+OpenGL rendering, interactive workflows, and the needs of the videos in
+`3b1b/videos <https://github.com/3b1b/videos>`_. Pull requests are welcome here,
+but reviews can take some time.
+
+For broad community features, packaging changes, or beginner-oriented
+documentation, also consider
+`ManimCommunity/manim <https://github.com/ManimCommunity/manim>`_, which has a
+larger contributor workflow and more active community review. If your change is
+specific to ManimGL, keep it in this repository.
+
 - **Contribute to the manim source code**: 
 
 Please fork to your own repository and make changes, submit a pull request, and fill in 

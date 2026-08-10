@@ -34,7 +34,7 @@ InteractiveDevlopment
             self.play(ReplacementTransform(square, circle))
             self.wait()
             self.play(circle.animate.stretch(4, 0))
-            self.play(Rotate(circle, 90 * DEGREES))
+            self.play(Rotate(circle, 90 * DEG))
             self.play(circle.animate.shift(2 * RIGHT).scale(0.25))
 
             text = Text("""
@@ -221,7 +221,7 @@ TexTransformExample
             self.play(
                 TransformMatchingTex(
                     lines[0].copy(), lines[1],
-                    path_arc=90 * DEGREES,
+                    path_arc=90 * DEG,
                 ),
                 **play_kw
             )
@@ -426,7 +426,7 @@ CoordinateSystemExample
             # you can call call axes.coords_to_point, abbreviated to
             # axes.c2p, to associate a set of coordinates with a point,
             # like so:
-            dot = Dot(color=RED)
+            dot = Dot(fill_color=RED)
             dot.move_to(axes.c2p(0, 0))
             self.play(FadeIn(dot, scale=0.5))
             self.play(dot.animate.move_to(axes.c2p(3, 2)))
@@ -537,7 +537,7 @@ GraphExample
 
             # You can use axes.input_to_graph_point, abbreviated
             # to axes.i2gp, to find a particular point on a graph
-            dot = Dot(color=RED)
+            dot = Dot(fill_color=RED)
             dot.move_to(axes.i2gp(2, parabola))
             self.play(FadeIn(dot, scale=0.5))
 
@@ -599,8 +599,8 @@ SurfaceExample
             # Set perspective
             frame = self.camera.frame
             frame.set_euler_angles(
-                theta=-30 * DEGREES,
-                phi=70 * DEGREES,
+                theta=-30 * DEG,
+                phi=70 * DEG,
             )
 
             surface = surfaces[0]
@@ -624,8 +624,8 @@ SurfaceExample
             self.play(
                 Transform(surface, surfaces[2]),
                 # Move camera frame during the transition
-                frame.animate.increment_phi(-10 * DEGREES),
-                frame.animate.increment_theta(-20 * DEGREES),
+                frame.animate.increment_phi(-10 * DEG),
+                frame.animate.increment_theta(-20 * DEG),
                 run_time=3
             )
             # Add ambient rotation

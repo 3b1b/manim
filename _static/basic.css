@@ -1,18 +1,17 @@
 /*
- * basic.css
- * ~~~~~~~~~
- *
  * Sphinx stylesheet -- basic theme.
- *
- * :copyright: Copyright 2007-2020 by the Sphinx team, see AUTHORS.
- * :license: BSD, see LICENSE for details.
- *
  */
 
 /* -- main layout ----------------------------------------------------------- */
 
 div.clearer {
     clear: both;
+}
+
+div.section::after {
+    display: block;
+    content: '';
+    clear: left;
 }
 
 /* -- relbar ---------------------------------------------------------------- */
@@ -109,22 +108,18 @@ img {
 /* -- search page ----------------------------------------------------------- */
 
 ul.search {
-    margin: 10px 0 0 20px;
-    padding: 0;
+    margin-top: 10px;
 }
 
 ul.search li {
-    padding: 5px 0 5px 20px;
-    background-image: url(file.png);
-    background-repeat: no-repeat;
-    background-position: 0 7px;
+    padding: 5px 0;
 }
 
 ul.search li a {
     font-weight: bold;
 }
 
-ul.search li div.context {
+ul.search li p.context {
     color: #888;
     margin: 2px 0 0 30px;
     text-align: left;
@@ -216,7 +211,7 @@ table.modindextable td {
 /* -- general body styles --------------------------------------------------- */
 
 div.body {
-    min-width: 450px;
+    min-width: 360px;
     max-width: 800px;
 }
 
@@ -231,14 +226,8 @@ a.headerlink {
     visibility: hidden;
 }
 
-a.brackets:before,
-span.brackets > a:before{
-    content: "[";
-}
-
-a.brackets:after,
-span.brackets > a:after {
-    content: "]";
+a:visited {
+    color: #551A8B;
 }
 
 h1:hover > a.headerlink,
@@ -271,25 +260,25 @@ p.rubric {
     font-weight: bold;
 }
 
-img.align-left, .figure.align-left, object.align-left {
+img.align-left, figure.align-left, .figure.align-left, object.align-left {
     clear: left;
     float: left;
     margin-right: 1em;
 }
 
-img.align-right, .figure.align-right, object.align-right {
+img.align-right, figure.align-right, .figure.align-right, object.align-right {
     clear: right;
     float: right;
     margin-left: 1em;
 }
 
-img.align-center, .figure.align-center, object.align-center {
+img.align-center, figure.align-center, .figure.align-center, object.align-center {
   display: block;
   margin-left: auto;
   margin-right: auto;
 }
 
-img.align-default, .figure.align-default {
+img.align-default, figure.align-default, .figure.align-default {
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -313,24 +302,35 @@ img.align-default, .figure.align-default {
 
 /* -- sidebars -------------------------------------------------------------- */
 
-div.sidebar {
+div.sidebar,
+aside.sidebar {
     margin: 0 0 0.5em 1em;
     border: 1px solid #ddb;
-    padding: 7px 7px 0 7px;
+    padding: 7px;
     background-color: #ffe;
     width: 40%;
     float: right;
+    clear: right;
+    overflow-x: auto;
 }
 
 p.sidebar-title {
     font-weight: bold;
 }
 
+nav.contents,
+aside.topic,
+div.admonition, div.topic, blockquote {
+    clear: left;
+}
+
 /* -- topics ---------------------------------------------------------------- */
 
+nav.contents,
+aside.topic,
 div.topic {
     border: 1px solid #ccc;
-    padding: 7px 7px 0 7px;
+    padding: 7px;
     margin: 10px 0 10px 0;
 }
 
@@ -352,10 +352,6 @@ div.admonition dt {
     font-weight: bold;
 }
 
-div.admonition dl {
-    margin-bottom: 0;
-}
-
 p.admonition-title {
     margin: 0px 10px 5px 0px;
     font-weight: bold;
@@ -366,9 +362,34 @@ div.body p.centered {
     margin-top: 25px;
 }
 
+/* -- content of sidebars/topics/admonitions -------------------------------- */
+
+div.sidebar > :last-child,
+aside.sidebar > :last-child,
+nav.contents > :last-child,
+aside.topic > :last-child,
+div.topic > :last-child,
+div.admonition > :last-child {
+    margin-bottom: 0;
+}
+
+div.sidebar::after,
+aside.sidebar::after,
+nav.contents::after,
+aside.topic::after,
+div.topic::after,
+div.admonition::after,
+blockquote::after {
+    display: block;
+    content: '';
+    clear: both;
+}
+
 /* -- tables ---------------------------------------------------------------- */
 
 table.docutils {
+    margin-top: 10px;
+    margin-bottom: 10px;
     border: 0;
     border-collapse: collapse;
 }
@@ -398,10 +419,6 @@ table.docutils td, table.docutils th {
     border-bottom: 1px solid #aaa;
 }
 
-table.footnote td, table.footnote th {
-    border: 0 !important;
-}
-
 th {
     text-align: left;
     padding-right: 5px;
@@ -416,32 +433,34 @@ table.citation td {
     border-bottom: none;
 }
 
-th > p:first-child,
-td > p:first-child {
+th > :first-child,
+td > :first-child {
     margin-top: 0px;
 }
 
-th > p:last-child,
-td > p:last-child {
+th > :last-child,
+td > :last-child {
     margin-bottom: 0px;
 }
 
 /* -- figures --------------------------------------------------------------- */
 
-div.figure {
+div.figure, figure {
     margin: 0.5em;
     padding: 0.5em;
 }
 
-div.figure p.caption {
+div.figure p.caption, figcaption {
     padding: 0.3em;
 }
 
-div.figure p.caption span.caption-number {
+div.figure p.caption span.caption-number,
+figcaption span.caption-number {
     font-style: italic;
 }
 
-div.figure p.caption span.caption-text {
+div.figure p.caption span.caption-text,
+figcaption span.caption-text {
 }
 
 /* -- field list styles ----------------------------------------------------- */
@@ -468,8 +487,69 @@ table.field-list td, table.field-list th {
 
 /* -- hlist styles ---------------------------------------------------------- */
 
+table.hlist {
+    margin: 1em 0;
+}
+
 table.hlist td {
     vertical-align: top;
+}
+
+/* -- object description styles --------------------------------------------- */
+
+.sig {
+	font-family: 'Consolas', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+}
+
+.sig-name, code.descname {
+    background-color: transparent;
+    font-weight: bold;
+}
+
+.sig-name {
+	font-size: 1.1em;
+}
+
+code.descname {
+    font-size: 1.2em;
+}
+
+.sig-prename, code.descclassname {
+    background-color: transparent;
+}
+
+.optional {
+    font-size: 1.3em;
+}
+
+.sig-paren {
+    font-size: larger;
+}
+
+.sig-param.n {
+	font-style: italic;
+}
+
+/* C++ specific styling */
+
+.sig-inline.c-texpr,
+.sig-inline.cpp-texpr {
+	font-family: unset;
+}
+
+.sig.c   .k, .sig.c   .kt,
+.sig.cpp .k, .sig.cpp .kt {
+	color: #0033B3;
+}
+
+.sig.c   .m,
+.sig.cpp .m {
+	color: #1750EB;
+}
+
+.sig.c   .s, .sig.c   .sc,
+.sig.cpp .s, .sig.cpp .sc {
+	color: #067D17;
 }
 
 
@@ -495,26 +575,53 @@ ol.upperroman {
     list-style: upper-roman;
 }
 
-li > p:first-child {
+:not(li) > ol > li:first-child > :first-child,
+:not(li) > ul > li:first-child > :first-child {
     margin-top: 0px;
 }
 
-li > p:last-child {
+:not(li) > ol > li:last-child > :last-child,
+:not(li) > ul > li:last-child > :last-child {
     margin-bottom: 0px;
 }
 
-dl.footnote > dt,
-dl.citation > dt {
+ol.simple ol p,
+ol.simple ul p,
+ul.simple ol p,
+ul.simple ul p {
+    margin-top: 0;
+}
+
+ol.simple > li:not(:first-child) > p,
+ul.simple > li:not(:first-child) > p {
+    margin-top: 0;
+}
+
+ol.simple p,
+ul.simple p {
+    margin-bottom: 0;
+}
+
+aside.footnote > span,
+div.citation > span {
     float: left;
 }
-
-dl.footnote > dd,
-dl.citation > dd {
+aside.footnote > span:last-of-type,
+div.citation > span:last-of-type {
+  padding-right: 0.5em;
+}
+aside.footnote > p {
+  margin-left: 2em;
+}
+div.citation > p {
+  margin-left: 4em;
+}
+aside.footnote > p:last-of-type,
+div.citation > p:last-of-type {
     margin-bottom: 0em;
 }
-
-dl.footnote > dd:after,
-dl.citation > dd:after {
+aside.footnote > p:last-of-type:after,
+div.citation > p:last-of-type:after {
     content: "";
     clear: both;
 }
@@ -531,10 +638,6 @@ dl.field-list > dt {
     padding-right: 5px;
 }
 
-dl.field-list > dt:after {
-    content: ":";
-}
-
 dl.field-list > dd {
     padding-left: 0.5em;
     margin-top: 0em;
@@ -546,7 +649,7 @@ dl {
     margin-bottom: 15px;
 }
 
-dd > p:first-child {
+dd > :first-child {
     margin-top: 0px;
 }
 
@@ -560,6 +663,21 @@ dd {
     margin-left: 30px;
 }
 
+.sig dd {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.sig dl {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+dl > dd:last-child,
+dl > dd:last-child > :last-child {
+    margin-bottom: 0;
+}
+
 dt:target, span.highlighted {
     background-color: #fbe54e;
 }
@@ -571,14 +689,6 @@ rect.highlighted {
 dl.glossary dt {
     font-weight: bold;
     font-size: 1.1em;
-}
-
-.optional {
-    font-size: 1.3em;
-}
-
-.sig-paren {
-    font-size: larger;
 }
 
 .versionmodified {
@@ -621,8 +731,9 @@ dl.glossary dt {
 
 .classifier:before {
     font-style: normal;
-    margin: 0.5em;
+    margin: 0 0.5em;
     content: ":";
+    display: inline-block;
 }
 
 abbr, acronym {
@@ -637,29 +748,69 @@ pre {
     overflow-y: hidden;  /* fixes display issues on Chrome browsers */
 }
 
+pre, div[class*="highlight-"] {
+    clear: both;
+}
+
 span.pre {
     -moz-hyphens: none;
     -ms-hyphens: none;
     -webkit-hyphens: none;
     hyphens: none;
+    white-space: nowrap;
+}
+
+div[class*="highlight-"] {
+    margin: 1em 0;
 }
 
 td.linenos pre {
-    padding: 5px 0px;
     border: 0;
     background-color: transparent;
     color: #aaa;
 }
 
 table.highlighttable {
-    margin-left: 0.5em;
+    display: block;
+}
+
+table.highlighttable tbody {
+    display: block;
+}
+
+table.highlighttable tr {
+    display: flex;
 }
 
 table.highlighttable td {
-    padding: 0 0.5em 0 0.5em;
+    margin: 0;
+    padding: 0;
+}
+
+table.highlighttable td.linenos {
+    padding-right: 0.5em;
+}
+
+table.highlighttable td.code {
+    flex: 1;
+    overflow: hidden;
+}
+
+.highlight .hll {
+    display: block;
+}
+
+div.highlight pre,
+table.highlighttable pre {
+    margin: 0;
+}
+
+div.code-block-caption + div {
+    margin-top: 0;
 }
 
 div.code-block-caption {
+    margin-top: 1em;
     padding: 2px 5px;
     font-size: small;
 }
@@ -668,12 +819,14 @@ div.code-block-caption code {
     background-color: transparent;
 }
 
-div.code-block-caption + div > div.highlight > pre {
-    margin-top: 0;
-}
-
-div.doctest > div.highlight span.gp {  /* gp: Generic.Prompt */
-    user-select: none;
+table.highlighttable td.linenos,
+span.linenos,
+div.highlight span.gp {  /* gp: Generic.Prompt */
+  user-select: none;
+  -webkit-user-select: text; /* Safari fallback only */
+  -webkit-user-select: none; /* Chrome/Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+ */
 }
 
 div.code-block-caption span.caption-number {
@@ -685,21 +838,7 @@ div.code-block-caption span.caption-text {
 }
 
 div.literal-block-wrapper {
-    padding: 1em 1em 0;
-}
-
-div.literal-block-wrapper div.highlight {
-    margin: 0;
-}
-
-code.descname {
-    background-color: transparent;
-    font-weight: bold;
-    font-size: 1.2em;
-}
-
-code.descclassname {
-    background-color: transparent;
+    margin: 1em 0;
 }
 
 code.xref, a code {
@@ -740,8 +879,7 @@ span.eqno {
 }
 
 span.eqno a.headerlink {
-    position: relative;
-    left: 0px;
+    position: absolute;
     z-index: 1;
 }
 

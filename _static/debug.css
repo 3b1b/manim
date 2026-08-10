@@ -1,0 +1,69 @@
+/*
+  This CSS file should be overridden by the theme authors. It's
+  meant for debugging and developing the skeleton that this theme provides.
+*/
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji";
+  background: lavender;
+}
+.sb-announcement {
+  background: rgb(131, 131, 131);
+}
+.sb-announcement__inner {
+  background: black;
+  color: white;
+}
+.sb-header {
+  background: lightskyblue;
+}
+.sb-header__inner {
+  background: royalblue;
+  color: white;
+}
+.sb-header-secondary {
+  background: lightcyan;
+}
+.sb-header-secondary__inner {
+  background: cornflowerblue;
+  color: white;
+}
+.sb-sidebar-primary {
+  background: lightgreen;
+}
+.sb-main {
+  background: blanchedalmond;
+}
+.sb-main__inner {
+  background: antiquewhite;
+}
+.sb-header-article {
+  background: lightsteelblue;
+}
+.sb-article-container {
+  background: snow;
+}
+.sb-article-main {
+  background: white;
+}
+.sb-footer-article {
+  background: lightpink;
+}
+.sb-sidebar-secondary {
+  background: lightgoldenrodyellow;
+}
+.sb-footer-content {
+  background: plum;
+}
+.sb-footer-content__inner {
+  background: palevioletred;
+}
+.sb-footer {
+  background: pink;
+}
+.sb-footer__inner {
+  background: salmon;
+}
+.sb-article {
+  background: white;
+}

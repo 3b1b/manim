@@ -1,6 +1,13 @@
 Quick Start
 ===========
 
+This quick start is for ManimGL, the OpenGL-based version maintained in
+`3b1b/manim <https://github.com/3b1b/manim>`_. If you are looking for the
+Community Edition, install and follow the docs from
+`ManimCommunity/manim <https://github.com/ManimCommunity/manim>`_ instead.
+The two projects use different package names and setup instructions, so choose
+the version you want before installing dependencies or copying examples.
+
 After installing the manim environment according to the instructions on the
 :doc:`installation` page, you can try to make a scene yourself from scratch.
 
@@ -253,4 +260,3 @@ You succeeded!
 After reading the above content, you already know how to use manim.
 Below you can see some examples, in the :doc:`example_scenes` page.
 But before that, you'd better have a look at the :doc:`configuration` of manim.
-

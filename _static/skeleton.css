@@ -1,0 +1,296 @@
+/* Some sane resets. */
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+/* All the flexbox magic! */
+body,
+.sb-announcement,
+.sb-content,
+.sb-main,
+.sb-container,
+.sb-container__inner,
+.sb-article-container,
+.sb-footer-content,
+.sb-header,
+.sb-header-secondary,
+.sb-footer {
+  display: flex;
+}
+
+/* These order things vertically */
+body,
+.sb-main,
+.sb-article-container {
+  flex-direction: column;
+}
+
+/* Put elements in the center */
+.sb-header,
+.sb-header-secondary,
+.sb-container,
+.sb-content,
+.sb-footer,
+.sb-footer-content {
+  justify-content: center;
+}
+/* Put elements at the ends */
+.sb-article-container {
+  justify-content: space-between;
+}
+
+/* These elements grow. */
+.sb-main,
+.sb-content,
+.sb-container,
+article {
+  flex-grow: 1;
+}
+
+/* Because padding making this wider is not fun */
+article {
+  box-sizing: border-box;
+}
+
+/* The announcements element should never be wider than the page. */
+.sb-announcement {
+  max-width: 100%;
+}
+
+.sb-sidebar-primary,
+.sb-sidebar-secondary {
+  flex-shrink: 0;
+  width: 17rem;
+}
+
+.sb-announcement__inner {
+  justify-content: center;
+
+  box-sizing: border-box;
+  height: 3rem;
+
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* Sidebars, with checkbox-based toggle */
+.sb-sidebar-primary,
+.sb-sidebar-secondary {
+  position: fixed;
+  height: 100%;
+  top: 0;
+}
+
+.sb-sidebar-primary {
+  left: -17rem;
+  transition: left 250ms ease-in-out;
+}
+.sb-sidebar-secondary {
+  right: -17rem;
+  transition: right 250ms ease-in-out;
+}
+
+.sb-sidebar-toggle {
+  display: none;
+}
+.sb-sidebar-overlay {
+  position: fixed;
+  top: 0;
+  width: 0;
+  height: 0;
+
+  transition: width 0ms ease 250ms, height 0ms ease 250ms, opacity 250ms ease;
+
+  opacity: 0;
+  background-color: rgba(0, 0, 0, 0.54);
+}
+
+#sb-sidebar-toggle--primary:checked
+  ~ .sb-sidebar-overlay[for="sb-sidebar-toggle--primary"],
+#sb-sidebar-toggle--secondary:checked
+  ~ .sb-sidebar-overlay[for="sb-sidebar-toggle--secondary"] {
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  transition: width 0ms ease, height 0ms ease, opacity 250ms ease;
+}
+
+#sb-sidebar-toggle--primary:checked ~ .sb-container .sb-sidebar-primary {
+  left: 0;
+}
+#sb-sidebar-toggle--secondary:checked ~ .sb-container .sb-sidebar-secondary {
+  right: 0;
+}
+
+/* Full-width mode */
+.drop-secondary-sidebar-for-full-width-content
+  .hide-when-secondary-sidebar-shown {
+  display: none !important;
+}
+.drop-secondary-sidebar-for-full-width-content .sb-sidebar-secondary {
+  display: none !important;
+}
+
+/* Mobile views */
+.sb-page-width {
+  width: 100%;
+}
+
+.sb-article-container,
+.sb-footer-content__inner,
+.drop-secondary-sidebar-for-full-width-content .sb-article,
+.drop-secondary-sidebar-for-full-width-content .match-content-width {
+  width: 100vw;
+}
+
+.sb-article,
+.match-content-width {
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+@media (min-width: 32rem) {
+  .sb-article,
+  .match-content-width {
+    padding: 0 2rem;
+  }
+}
+
+/* Tablet views */
+@media (min-width: 42rem) {
+  .sb-article-container {
+    width: auto;
+  }
+  .sb-footer-content__inner,
+  .drop-secondary-sidebar-for-full-width-content .sb-article,
+  .drop-secondary-sidebar-for-full-width-content .match-content-width {
+    width: 42rem;
+  }
+  .sb-article,
+  .match-content-width {
+    width: 42rem;
+  }
+}
+@media (min-width: 46rem) {
+  .sb-footer-content__inner,
+  .drop-secondary-sidebar-for-full-width-content .sb-article,
+  .drop-secondary-sidebar-for-full-width-content .match-content-width {
+    width: 46rem;
+  }
+  .sb-article,
+  .match-content-width {
+    width: 46rem;
+  }
+}
+@media (min-width: 50rem) {
+  .sb-footer-content__inner,
+  .drop-secondary-sidebar-for-full-width-content .sb-article,
+  .drop-secondary-sidebar-for-full-width-content .match-content-width {
+    width: 50rem;
+  }
+  .sb-article,
+  .match-content-width {
+    width: 50rem;
+  }
+}
+
+/* Tablet views */
+@media (min-width: 59rem) {
+  .sb-sidebar-secondary {
+    position: static;
+  }
+  .hide-when-secondary-sidebar-shown {
+    display: none !important;
+  }
+  .sb-footer-content__inner,
+  .drop-secondary-sidebar-for-full-width-content .sb-article,
+  .drop-secondary-sidebar-for-full-width-content .match-content-width {
+    width: 59rem;
+  }
+  .sb-article,
+  .match-content-width {
+    width: 42rem;
+  }
+}
+@media (min-width: 63rem) {
+  .sb-footer-content__inner,
+  .drop-secondary-sidebar-for-full-width-content .sb-article,
+  .drop-secondary-sidebar-for-full-width-content .match-content-width {
+    width: 63rem;
+  }
+  .sb-article,
+  .match-content-width {
+    width: 46rem;
+  }
+}
+@media (min-width: 67rem) {
+  .sb-footer-content__inner,
+  .drop-secondary-sidebar-for-full-width-content .sb-article,
+  .drop-secondary-sidebar-for-full-width-content .match-content-width {
+    width: 67rem;
+  }
+  .sb-article,
+  .match-content-width {
+    width: 50rem;
+  }
+}
+
+/* Desktop views */
+@media (min-width: 76rem) {
+  .sb-sidebar-primary {
+    position: static;
+  }
+  .hide-when-primary-sidebar-shown {
+    display: none !important;
+  }
+  .sb-footer-content__inner,
+  .drop-secondary-sidebar-for-full-width-content .sb-article,
+  .drop-secondary-sidebar-for-full-width-content .match-content-width {
+    width: 59rem;
+  }
+  .sb-article,
+  .match-content-width {
+    width: 42rem;
+  }
+}
+
+/* Full desktop views */
+@media (min-width: 80rem) {
+  .sb-article,
+  .match-content-width {
+    width: 46rem;
+  }
+  .sb-footer-content__inner,
+  .drop-secondary-sidebar-for-full-width-content .sb-article,
+  .drop-secondary-sidebar-for-full-width-content .match-content-width {
+    width: 63rem;
+  }
+}
+
+@media (min-width: 84rem) {
+  .sb-article,
+  .match-content-width {
+    width: 50rem;
+  }
+  .sb-footer-content__inner,
+  .drop-secondary-sidebar-for-full-width-content .sb-article,
+  .drop-secondary-sidebar-for-full-width-content .match-content-width {
+    width: 67rem;
+  }
+}
+
+@media (min-width: 88rem) {
+  .sb-footer-content__inner,
+  .drop-secondary-sidebar-for-full-width-content .sb-article,
+  .drop-secondary-sidebar-for-full-width-content .match-content-width {
+    width: 67rem;
+  }
+  .sb-page-width {
+    width: 88rem;
+  }
+}
