@@ -79,6 +79,9 @@ class Surface(Mobject):
         self.initial_resolution = resolution
         self.preferred_creation_axis = preferred_creation_axis
         self.sort_to_camera = sort_to_camera
+        # Which version of the data the answer below was worked out from, none having been,
+        # see is_opaque
+        self.opaque_version = 0
 
         super().__init__(
             **kwargs,
@@ -225,7 +228,9 @@ class Surface(Mobject):
         ask. It cannot be settled in set_opacity instead: a surface fading in or transforming
         has its alpha interpolated straight into the array, passing no setter.
         """
-        if self.data.has_changed(observer=self):
+        version = self.data.version
+        if version != self.opaque_version:
+            self.opaque_version = version
             self.opaque = self.min_opacity() >= 1
         return self.opaque
 

@@ -72,6 +72,10 @@ class Drawing(object):
         # Where in the shared buffers this mobject's values went, no stretch yet being none
         self.uniform_offset = -1
         self.data_offset = -1
+        # Which version of each array was last written into those stretches, none having been
+        # written yet, see StructuredArray.version
+        self.uniform_version = 0
+        self.data_version = 0
         # Whether the mobject drawn before this one holds the same uniforms, which is not
         # asked here but told, see Renderer.compare_uniforms
         self.repeats_uniforms = False
@@ -97,10 +101,11 @@ class Drawing(object):
         to know besides where its records went. Settled first, since which mobjects may be
         drawn together depends on it, see Renderer.group.
 
-        Says whether the uniforms had changed since the last frame asked. That answer is
-        returned rather than left to be asked again, since asking counts as having looked, see
-        StructuredArray.has_changed. Noting on the way whether any of it moved, which every
-        comparison here was making anyway, so that a bundled draw knows to be made again.
+        Says whether the uniforms had changed since the last frame wrote them, which is what
+        decides whether the runs have to be gathered afresh, see Renderer.draw. That answer is
+        returned rather than left to be worked out again, this having already taken note of the
+        version it wrote. Noting on the way whether any of it moved, which every comparison here
+        was making anyway, so that a bundled draw knows to be made again.
         """
         depth_test = self.mobject.depth_test
         self.invalidated = depth_test != self.depth_test
@@ -108,7 +113,9 @@ class Drawing(object):
 
         # Every frame takes a stretch, one lasting only as long as the frame
         buffer = self.material.uniform_buffer
-        changed = self.uniforms.has_changed(observer=self)
+        version = self.uniforms.version
+        changed = version != self.uniform_version
+        self.uniform_version = version
         offset = buffer.claim(self.uniforms.array.nbytes)
         moved = offset != self.uniform_offset
         # A scene which is not changing hands its stretches out in the same order every frame,
@@ -134,10 +141,11 @@ class Drawing(object):
         if run is None:
             records = len(self.data)
             offset = buffer.claim(self.data.array.nbytes)
-            changed = self.data.has_changed(observer=self)
+            version = self.data.version
             moved = offset != self.data_offset or records != self.records
-            if changed or moved:
+            if version != self.data_version or moved:
                 buffer.put(offset, self.data.bytes)
+            self.data_version = version
             self.data_offset = offset
             self.records = records
             self.invalidated = self.invalidated or moved
@@ -157,11 +165,12 @@ class Drawing(object):
         last = len(run) - 1
         for index, (drawing, size) in enumerate(zip(run, sizes)):
             data = drawing.data
-            changed = data.has_changed(observer=drawing)
-            if changed or at != drawing.data_offset:
+            version = data.version
+            if version != drawing.data_version or at != drawing.data_offset:
                 buffer.put(
                     at, data.bytes, record_size, between if index != last else 0,
                 )
+            drawing.data_version = version
             drawing.data_offset = at
             at += (size + between) * record_size
         self.data_offset = offset

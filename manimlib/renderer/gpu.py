@@ -111,6 +111,8 @@ class Gpu(object):
         self.queue = self.device.queue
 
         self.frame_uniforms = Uniforms(FRAME_DTYPE)
+        # Which version of them was last sent, none having been, see StructuredArray.version
+        self.frame_version = 0
         self.frame_buffer = self.device.create_buffer(
             size=self.frame_uniforms.array.nbytes,
             usage=wgpu.BufferUsage.UNIFORM | wgpu.BufferUsage.COPY_DST,
@@ -275,7 +277,9 @@ class Gpu(object):
 
     def send_frame_uniforms(self) -> None:
         """The frame's uniforms, if they have been written to since they were last sent"""
-        if self.frame_uniforms.has_changed(observer=self):
+        version = self.frame_uniforms.version
+        if version != self.frame_version:
+            self.frame_version = version
             self.queue.write_buffer(self.frame_buffer, 0, self.frame_uniforms.array)
 
     # Drawing

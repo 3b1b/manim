@@ -25,8 +25,9 @@ class StructuredArray(object):
     see Mobject.data_dtype and uniform_dtype.
 
     Three things come with holding it here rather than as a bare array. Every write is counted,
-    so whatever has sent the array somewhere can ask whether what it sent is still what the
-    array holds, see has_changed. Emptying the array remembers what was in it, so a mobject
+    so whatever has sent the array somewhere can tell whether what it sent is still what the
+    array holds by keeping the count it saw, see version. Emptying the array remembers what was
+    in it, so a mobject
     stripped of its points and given new ones keeps its style, see resize. And fields are read
     and written by name, rows by index.
 
@@ -49,10 +50,10 @@ class StructuredArray(object):
         # What to fill in with when growing from nothing, see resize
         self.defaults: np.ndarray = np.ones(1, dtype=dtype)
         # Counted up by every write, rather than a yes or no, since each of several watchers
-        # needs to know what it has missed
+        # needs to know what it has missed. A watcher keeps the count it last saw and compares,
+        # so an array is watched by however many without hearing of any of them, and two
+        # watchers wanting the same answer do not take it from one another.
         self.version: int = 1
-        # Which version each of those things last saw, see has_changed
-        self.seen_by: dict[Any, int] = dict()
 
     def __getitem__(self, key: str | int | slice | np.ndarray) -> np.ndarray:
         return self.array[key]
@@ -104,23 +105,6 @@ class StructuredArray(object):
             yield self.rows_or_defaults
         finally:
             self.version += 1
-
-    def has_changed(self, observer: Any) -> bool:
-        """
-        Whether the array has been written to since this observer last asked. A note of the
-        version each has seen is kept here, so that watching an array takes nothing but asking
-        it.
-
-        Asking counts as having looked. So two things wanting the same answer have to be two
-        observers, or ask once between them, see Program.write_uniforms.
-
-        An observer is remembered for as long as the array is. Nothing here is replaced often
-        enough for that to be worth weak references, which cost four times as much to look up.
-        """
-        if self.seen_by.get(observer) == self.version:
-            return False
-        self.seen_by[observer] = self.version
-        return True
 
     @property
     def dtype(self) -> np.dtype:
@@ -217,7 +201,7 @@ class StructuredArray(object):
         result = copy.copy(self)
         result.set_array(self.array.copy())
         result.defaults = self.defaults.copy()
+        # Counted on, so that a watcher carried over from what this was copied from finds it
+        # different rather than taking its own array to be the one it has already seen
         result.version += 1
-        # A copy has been looked at by nobody, whatever has looked at what it was copied from
-        result.seen_by = dict()
         return result
