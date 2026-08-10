@@ -1,7 +1,7 @@
 Installation
 ============
 
-Manim runs on Python 3.7 or higher.
+Manim runs on Python 3.10 or higher.
 
 System requirements are：
 
@@ -90,6 +90,6 @@ For Anaconda
    
    git clone https://github.com/3b1b/manim.git
    cd manim 
-   conda create -n manim python=3.8
+   conda create -n manim python=3.10
    conda activate manim
    pip install -e .
