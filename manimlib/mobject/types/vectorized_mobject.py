@@ -137,7 +137,7 @@ class VMobject(Mobject):
 
         super().__init__(**kwargs)
 
-    def set_fills_disjoint(self, disjoint: bool = True, recurse: bool = True) -> Self:
+    def draw_fills_together(self, draw_together: bool = True) -> Self:
         """
         Promises that these mobjects' filled regions do not overlap one another, which lets
         one draw cover the lot of them rather than three passes each, see VDrawing.can_follow.
@@ -151,8 +151,8 @@ class VMobject(Mobject):
         in turn. For opaque fills that is the same picture, and for partly transparent ones it
         is a lighter one.
         """
-        group = self if disjoint else None
-        for mob in self.get_family(recurse):
+        group = self if draw_together else None
+        for mob in self.get_family():
             mob.fill_group = group
         return self
 
