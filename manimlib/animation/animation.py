@@ -82,14 +82,23 @@ class Animation(object):
         Whatever holds of the two ends for the whole of the animation, settled here rather
         than found again in every blend, see Mobject.prepare_interpolation.
 
-        The ends are whichever mobjects interpolate_submobject is handed alongside each one,
-        so an animation blending between two states has nothing to say here. One which changes
-        its ends after they have been made says so by calling this again, see FadeTransform.
+        One which changes its ends after they have been made says so by calling this again,
+        see FadeTransform.
         """
-        first = self.families[0] if self.families else ()
-        if len(first) == 3:
-            mobject, *ends = first
-            mobject.prepare_interpolation(*ends)
+        ends = self.get_interpolation_ends()
+        if ends is not None:
+            self.mobject.prepare_interpolation(*ends)
+
+    def get_interpolation_ends(self) -> tuple[Mobject, Mobject] | None:
+        """
+        The two states every blend this animation makes runs between, in the order it blends
+        them, or none where it makes no such blend and so has nothing to settle in advance.
+
+        Saying so is the animation's to do rather than something read off the mobjects it
+        gathers: those same three may be two ends with the mobject between them, or a mobject
+        and two others put to some other use entirely.
+        """
+        return None
 
     def finish(self) -> None:
         self.interpolate(self.final_alpha_value)
