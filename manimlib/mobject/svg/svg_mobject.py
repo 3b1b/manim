@@ -27,6 +27,10 @@ if TYPE_CHECKING:
     from manimlib.typing import ManimColor, Vect3Array
 
 
+# A stroke_width of 100 spans one unit of a default scale frame, see
+# STROKE_WIDTH_CONVERSION in shaders/stroke.wgsl
+STROKE_WIDTHS_PER_UNIT: float = 100.0
+
 SVG_HASH_TO_MOB_MAP: dict[int, list[VMobject]] = {}
 PATH_TO_POINTS: dict[str, Vect3Array] = {}
 
@@ -66,7 +70,7 @@ class SVGMobject(VMobject):
         color: ManimColor = None,
         fill_color: ManimColor = None,
         fill_opacity: float | None = None,
-        stroke_width: float | None = 0.0,
+        stroke_width: float | None = None,
         stroke_color: ManimColor = None,
         stroke_opacity: float | None = None,
         # Style that fills only when not specified
@@ -99,8 +103,30 @@ class SVGMobject(VMobject):
         self.init_svg_mobject()
         self.ensure_positive_orientation()
 
+        # Initialize position
+        height = height or self.height
+        width = width or self.width
+
+        initial_height = self.get_height()
+
+        if should_center:
+            self.center()
+        if height is not None:
+            self.set_height(height)
+        if width is not None:
+            self.set_width(width)
+
+        # Widths read from the file are in the svg's own user units, while the geometry
+        # above has just been resized to the requested height or width. Converting them
+        # keeps a stroke the thickness it looks in the file, whatever units that file
+        # happens to be drawn in.
+        if initial_height > 0:
+            units_per_user_unit = self.get_height() / initial_height
+            self.scale_stroke_widths(STROKE_WIDTHS_PER_UNIT * units_per_user_unit)
+
         # Rather than passing style into super().__init__
-        # do it after svg has been taken in
+        # do it after svg has been taken in. Left until last so that a width asked for
+        # here is the width drawn, rather than something the resizing above has scaled.
         self.set_style(
             fill_color=color or fill_color,
             fill_opacity=fill_opacity,
@@ -109,16 +135,14 @@ class SVGMobject(VMobject):
             stroke_opacity=stroke_opacity,
         )
 
-        # Initialize position
-        height = height or self.height
-        width = width or self.width
-
-        if should_center:
-            self.center()
-        if height is not None:
-            self.set_height(height)
-        if width is not None:
-            self.set_width(width)
+    def scale_stroke_widths(self, factor: float) -> None:
+        if factor == 1:
+            return
+        for mob in self.get_family():
+            # The group holding the shapes carries no points of its own, so no widths either
+            if len(mob.data) == 0:
+                continue
+            mob.set_stroke(width=factor * mob.get_stroke_widths(), recurse=False)
 
     def init_svg_mobject(self) -> None:
         hash_val = hash_obj(self.hash_seed)
@@ -249,10 +273,14 @@ class SVGMobject(VMobject):
         mob: VMobject,
         shape: se.GraphicObject
     ) -> VMobject:
+        # svgelements hands back a stroke width of 1.0 even for a shape painted with
+        # `stroke: none`, so the width is only taken when a stroke color came with it.
+        # Otherwise it is zeroed, which is what an unstroked shape should draw as.
+        has_stroke = shape.stroke is not None and shape.stroke.hexrgb is not None
         mob.set_style(
-            stroke_width=shape.stroke_width,
-            stroke_color=shape.stroke.hexrgb,
-            stroke_opacity=shape.stroke.opacity,
+            stroke_width=shape.stroke_width if has_stroke else 0.0,
+            stroke_color=shape.stroke.hexrgb if has_stroke else None,
+            stroke_opacity=shape.stroke.opacity if has_stroke else None,
             fill_color=shape.fill.hexrgb,
             fill_opacity=shape.fill.opacity
         )
