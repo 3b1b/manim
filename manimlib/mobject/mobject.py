@@ -272,7 +272,10 @@ class Mobject(object):
             for key in mob.pointlike_uniform_keys:
                 mob.uniforms.apply(key, moved)
             if box is not None:
-                box[:] = moved(box)
+                # Re-derive the corners, since a negative factor swaps which is which
+                corners = moved(box[::2].copy())
+                box[0], box[2] = corners.min(0), corners.max(0)
+                box[1] = (box[0] + box[2]) / 2
 
         if not works_on_bounding_box:
             self.refresh_bounding_box(recurse_down=True)
