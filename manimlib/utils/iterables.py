@@ -164,6 +164,14 @@ def array_is_constant(arr: np.ndarray) -> bool:
     return len(arr) > 0 and (arr == arr[0]).all()
 
 
+def index_within_group(counts: np.ndarray) -> np.ndarray:
+    """
+    Where each member of a run of groups sits within its own group, given how many members
+    each holds, e.g. [3, 2] -> [0, 1, 2, 0, 1]
+    """
+    return np.arange(counts.sum()) - np.repeat(np.cumsum(counts) - counts, counts)
+
+
 def keep_larger(start: np.ndarray, end: np.ndarray, alpha: float) -> np.ndarray:
     """
     Takes in both rather than blending between them, for a field which counts something and

@@ -29,6 +29,7 @@ from manimlib.utils.bezier import quadratic_bezier_points_for_arc
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import rgb_to_hex
+from manimlib.utils.iterables import index_within_group
 from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
@@ -1218,31 +1219,53 @@ class VMobject(Mobject):
         return self
 
     def insert_n_curves_to_point_list(self, n: int, points: Vect3Array) -> Vect3Array:
+        """
+        The same path traced by n more curves than it was, cut so as to leave the longest of
+        them as short as it can be, which is what keeps the anchors evenly spread.
+        """
         if len(points) == 1:
             return np.repeat(points, 2 * n + 1, 0)
+        if n == 0:
+            return points.copy()
 
-        bezier_tuples = list(self.get_bezier_tuples_from_points(points))
-        atol = self.tolerance_for_point_equality
-        norms = [
-            0 if get_norm(tup[1] - tup[0]) < atol else get_norm(tup[2] - tup[0])
-            for tup in bezier_tuples
-        ]
-        # Calculate insertions per curve (ipc)
-        ipc = np.zeros(len(bezier_tuples), dtype=int)
-        for _ in range(n):
-            index = np.argmax(norms)
-            ipc[index] += 1
-            norms[index] *= ipc[index] / (ipc[index] + 1)
+        a0, h, a1 = points[0:-1:2], points[1::2], points[2::2]
+        # Straight line distance stands in for how long a curve is
+        lengths = np.linalg.norm(a1 - a0, axis=1)
+        # A curve whose handle sits on its first anchor is what marks the end of a subpath,
+        # and is left whole: the pieces of a cut one no longer sit on their handles, so the
+        # mark would be lost and the hop between two subpaths would get drawn
+        lengths[np.linalg.norm(h - a0, axis=1) < self.tolerance_for_point_equality] = 0
+        if lengths.sum() == 0:
+            # Nothing to even out, so pad with more of the null curves it is made of, which
+            # draw nothing wherever they sit
+            return np.vstack([np.repeat(points[:1], 2 * n, 0), points])
 
-        new_points = [points[0]]
-        for tup, n_inserts in zip(bezier_tuples, ipc):
-            # What was once a single quadratic curve defined
-            # by "tup" will now be broken into n_inserts + 1
-            # smaller quadratic curves
-            alphas = np.linspace(0, 1, n_inserts + 2)
-            for a1, a2 in zip(alphas, alphas[1:]):
-                new_points.extend(partial_quadratic_bezier_points(tup, a1, a2)[1:])
-        return np.vstack(new_points)
+        # Cutting a curve of length L into j pieces leaves the longest of them L / j, so the
+        # n cuts to make are those with the n largest such values. No curve takes more than
+        # its share of the pieces there are to go around, which caps how many to weigh up
+        caps = ((len(lengths) + n) * lengths / lengths.sum()).astype(int)
+        candidates = np.repeat(np.arange(len(lengths)), caps)
+        piece_lengths = lengths[candidates] / (index_within_group(caps) + 1)
+        best = np.argpartition(piece_lengths, -n)[-n:]
+        counts = 1 + np.bincount(candidates[best], minlength=len(lengths))
+
+        # Which curve each piece comes from, and the stretch of it the piece is to cover
+        curve = np.repeat(np.arange(len(counts)), counts)
+        width = (1.0 / counts[curve])[:, np.newaxis]
+        lower = width * index_within_group(counts)[:, np.newaxis]
+        # One step of de Casteljau, which leaves two points lying half a tangent apart. So
+        # the piece covering [t, t + width] has its anchor where the curve is at t, and its
+        # handle a step of that width along the tangent there
+        first = a0[curve] + lower * (h[curve] - a0[curve])
+        second = h[curve] + lower * (a1[curve] - h[curve])
+        anchors = first + lower * (second - first)
+
+        new_points = np.empty((2 * len(curve) + 1, points.shape[1]))
+        new_points[0:-1:2] = anchors
+        new_points[1::2] = anchors + width * (second - first)
+        # Taken over rather than worked out, so that the path still ends where it did
+        new_points[-1] = points[-1]
+        return new_points
 
     def pointwise_become_partial(self, vmobject: VMobject, a: float, b: float) -> Self:
         assert isinstance(vmobject, VMobject)
