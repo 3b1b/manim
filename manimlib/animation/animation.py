@@ -127,23 +127,26 @@ class Animation(object):
             for mob in self.get_all_mobjects()
         ])
 
-    def update_mobjects(self, dt: float) -> None:
+    def update_reference_mobjects(self, dt: float, frame_rate: float | None = None) -> None:
         """
         Updates things like starting_mobject, and (for
         Transforms) target_mobject.
         """
-        for mob in self.get_all_mobjects_to_update():
-            mob.update(dt)
+        for mob in self.get_reference_mobjects():
+            mob.update(dt, frame_rate=frame_rate)
 
-    def get_all_mobjects_to_update(self) -> list[Mobject]:
-        # The surrounding scene typically handles
-        # updating of self.mobject.
-        items = list(filter(
-            lambda m: m is not self.mobject,
-            self.get_all_mobjects()
-        ))
-        items = remove_list_redundancies(items)
-        return items
+    def get_reference_mobjects(self) -> list[Mobject]:
+        """
+        Returns mobjects the Animation tracks other than
+        self.mobject, e.g. the start and end points of
+        interpolation.
+        """
+        # Remove redundancies for cases like Transform where target and target_copy
+        # are the same, which happens when the already align.
+        return remove_list_redundancies([
+            mob for mob in self.get_all_mobjects()
+            if mob is not self.mobject
+        ])
 
     def copy(self):
         return deepcopy(self)

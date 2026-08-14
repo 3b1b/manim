@@ -234,6 +234,9 @@ class Scene(object):
     def update_frame(self, dt: float = 0, force_draw: bool = False) -> None:
         self.increment_time(dt)
         self.update_mobjects(dt)
+        self.draw_frame(dt, force_draw)
+
+    def draw_frame(self, dt: float = 0, force_draw: bool = False) -> None:
         if self.skip_animations and not force_draw:
             return
 
@@ -539,11 +542,17 @@ class Scene(object):
         for t in self.get_animation_time_progression(animations):
             dt = t - last_t
             last_t = t
+            # The clock moves before anything else in the frame, so that time
+            # based updaters are evaluated at the moment the frame stands for.
+            self.increment_time(dt)
             for animation in animations:
-                animation.update_mobjects(dt)
+                animation.update_reference_mobjects(dt, frame_rate=self.camera.fps)
                 alpha = t / animation.run_time
                 animation.interpolate(alpha)
-            self.update_frame(dt)
+            # Updaters on the mobjects themselves have the last word, applied
+            # on top of whatever the animations just interpolated
+            self.update_mobjects(dt)
+            self.draw_frame(dt)
             self.emit_frame()
 
     def finish_animations(self, animations: Iterable[Animation]) -> None:
@@ -551,7 +560,8 @@ class Scene(object):
             animation.finish()
             animation.clean_up_from_scene(self)
         # Note that the passage of time during the animation, including
-        # for the case of skipped animations, is handled by update_frame
+        # for the case of skipped animations, is handled by
+        # progress_through_animations
         self.update_mobjects(0)
 
     @affects_mobject_list
