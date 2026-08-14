@@ -110,7 +110,7 @@ def turn_animation_into_updater(
                 m.remove_updater(update)
                 return
         animation.interpolate(alpha)
-        animation.update_mobjects(dt)
+        animation.update_reference_mobjects(dt)
         animation.total_time += dt
 
     mobject.add_updater(update)

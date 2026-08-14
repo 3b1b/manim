@@ -546,9 +546,7 @@ class Scene(object):
             # based updaters are evaluated at the moment the frame stands for.
             self.increment_time(dt)
             for animation in animations:
-                # This reaches only the mobjects an animation holds privately, its
-                # starting_mobject and target.
-                animation.update_mobjects(dt, frame_rate=self.camera.fps)
+                animation.update_reference_mobjects(dt, frame_rate=self.camera.fps)
                 alpha = t / animation.run_time
                 animation.interpolate(alpha)
             # Updaters on the mobjects themselves have the last word, applied
