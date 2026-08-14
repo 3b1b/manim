@@ -74,7 +74,8 @@ class Scene(object):
         leave_progress_bars: bool = False,
         preview_while_skipping: bool = True,
         presenter_mode: bool = False,
-        default_wait_time: float = 1.0
+        default_wait_time: float = 1.0,
+        invert_zoom_scroll: bool = False,
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
@@ -85,6 +86,7 @@ class Scene(object):
         self.preview_while_skipping = preview_while_skipping
         self.presenter_mode = presenter_mode
         self.default_wait_time = default_wait_time
+        self.invert_zoom_scroll = invert_zoom_scroll
 
         self.camera_config = merge_dicts_recursively(
             manim_config.camera,         # Global default
@@ -798,11 +800,13 @@ class Scene(object):
         if propagate_event is not None and propagate_event is False:
             return
 
-        rel_offset = y_pixel_offset / self.camera.get_pixel_height()
-        scale_factor = 1 / (1 - self.scroll_sensitivity * rel_offset)
-        if self.window.invert_zoom_scroll:
-            scale_factor = 1 / scale_factor
-        self.frame.scale(scale_factor, about_point=point)
+        rel_offset = -y_pixel_offset / self.camera.get_pixel_height()
+        if self.invert_zoom_scroll:
+            rel_offset *= -1
+        self.frame.scale(
+            1 - self.scroll_sensitivity * rel_offset,
+            about_point=point
+        )
 
     def on_key_release(
         self,
