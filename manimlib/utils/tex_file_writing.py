@@ -147,6 +147,10 @@ def full_tex_to_svg(full_tex: str, compiler: str = "latex", message: str = ""):
         capture_output=True,
     )
 
+    if process.returncode != 0:
+        error_str = process.stderr.decode("utf-8", errors="replace").strip()
+        raise LatexError(error_str or "dvisvgm failed to convert DVI to SVG")
+
     # Return SVG string
     result = process.stdout.decode("utf-8")
 
