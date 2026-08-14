@@ -14,6 +14,7 @@ from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import hex_to_int
 from manimlib.utils.tex_file_writing import latex_to_svg
 from manimlib.utils.tex import num_tex_symbols
+from manimlib.utils.tex import num_pending_fraction_rules
 from manimlib.logger import log
 
 from typing import TYPE_CHECKING
@@ -221,6 +222,14 @@ class Tex(StringMobject):
         if len(self) != num_tex_symbols(tex):
             log.warning(f"Estimated size of {tex} does not match true size")
         return num_tex_symbols(substr)
+
+    def count_paths_before_index(self, index: int) -> int:
+        # A \frac draws its rule between its two arguments rather than where the
+        # command appears, so a \frac whose numerator is still open at `index` has
+        # not drawn its rule yet and must not be counted. Without this, selecting
+        # the numerator of \frac{1}{2} lands on the fraction rule instead.
+        return super().count_paths_before_index(index) - \
+            num_pending_fraction_rules(self.string, index)
 
     def get_symbol_substrings(self):
         pattern = "|".join((

@@ -561,6 +561,14 @@ class StringMobject(SVGMobject, ABC):
     def substr_to_path_count(self, substr: str) -> int:
         return len(re.sub(r"\s", "", substr))
 
+    def count_paths_before_index(self, index: int) -> int:
+        """
+        How many paths are drawn before the character at `index` in the string.
+
+        Subclasses whose glyphs are not drawn in source order override this.
+        """
+        return self.substr_to_path_count(self.string[:index])
+
     def get_symbol_substrings(self):
         return list(re.sub(r"\s", "", self.string))
 
@@ -570,7 +578,7 @@ class StringMobject(SVGMobject, ABC):
         result = []
         for match in re.finditer(pattern, self.string):
             index = match.start()
-            start = self.substr_to_path_count(self.string[:index])
+            start = self.count_paths_before_index(index)
             substr = match.group()
             end = start + self.substr_to_path_count(substr)
             result.append(self[start:end])
