@@ -127,13 +127,13 @@ class Animation(object):
             for mob in self.get_all_mobjects()
         ])
 
-    def update_mobjects(self, dt: float) -> None:
+    def update_mobjects(self, dt: float, frame_rate: float | None = None) -> None:
         """
         Updates things like starting_mobject, and (for
         Transforms) target_mobject.
         """
         for mob in self.get_all_mobjects_to_update():
-            mob.update(dt)
+            mob.update(dt, frame_rate=frame_rate)
 
     def get_all_mobjects_to_update(self) -> list[Mobject]:
         # The surrounding scene typically handles

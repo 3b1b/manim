@@ -75,9 +75,9 @@ class AnimationGroup(Animation):
         for anim in self.animations:
             anim.clean_up_from_scene(scene)
 
-    def update_mobjects(self, dt: float) -> None:
+    def update_mobjects(self, dt: float, frame_rate: float | None = None) -> None:
         for anim in self.animations:
-            anim.update_mobjects(dt)
+            anim.update_mobjects(dt, frame_rate)
 
     def calculate_max_end_time(self) -> None:
         self.max_end_time = max(
@@ -138,8 +138,8 @@ class Succession(AnimationGroup):
     def finish(self) -> None:
         self.active_animation.finish()
 
-    def update_mobjects(self, dt: float) -> None:
-        self.active_animation.update_mobjects(dt)
+    def update_mobjects(self, dt: float, frame_rate: float | None = None) -> None:
+        self.active_animation.update_mobjects(dt, frame_rate)
 
     def interpolate(self, alpha: float) -> None:
         index, subalpha = integer_interpolate(
