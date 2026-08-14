@@ -88,6 +88,7 @@ class Window(object):
         full_screen: bool = False,
         size: Optional[tuple[int, int]] = None,
         position: Optional[tuple[int, int]] = None,
+        invert_zoom_scroll: bool = False
     ):
         self.scene: Optional[Scene] = None
         self.frame_view = None
@@ -112,6 +113,8 @@ class Window(object):
         glfw.set_window_pos(self.glfw_window, *(
             position or self.get_position(monitor, position_string)
         ))
+
+        self.invert_zoom_scroll = invert_zoom_scroll
 
         for event_type, handler in [
             ("pointer_move", self.on_pointer_move),

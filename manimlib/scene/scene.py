@@ -74,7 +74,7 @@ class Scene(object):
         leave_progress_bars: bool = False,
         preview_while_skipping: bool = True,
         presenter_mode: bool = False,
-        default_wait_time: float = 1.0,
+        default_wait_time: float = 1.0
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
@@ -799,10 +799,10 @@ class Scene(object):
             return
 
         rel_offset = y_pixel_offset / self.camera.get_pixel_height()
-        self.frame.scale(
-            1 - self.scroll_sensitivity * rel_offset,
-            about_point=point
-        )
+        scale_factor = 1 / (1 - self.scroll_sensitivity * rel_offset)
+        if self.window.invert_zoom_scroll:
+            scale_factor = 1 / scale_factor
+        self.frame.scale(scale_factor, about_point=point)
 
     def on_key_release(
         self,
