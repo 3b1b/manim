@@ -175,13 +175,18 @@ class Camera(object):
         """
         Draws at the resolution frames are written at rather than at the window's size, for
         as long as the block lasts. Without a window the two are already the same.
+
+        The target is resized here rather than at the next capture, since whatever the block
+        does may well ask how big a frame is before drawing one, as opening a movie pipe does.
         """
         was_at_window_size = self.draw_at_window_size
         self.draw_at_window_size = False
+        self.resize_target()
         try:
             yield
         finally:
             self.draw_at_window_size = was_at_window_size
+            self.resize_target()
 
     def init_target(self) -> None:
         """
