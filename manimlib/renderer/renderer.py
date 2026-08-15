@@ -182,10 +182,14 @@ class Renderer(object):
         A drawing for every member of every family which has anything to draw, in drawing
         order, keeping the one it had where it has one. A member holding no points, a group
         say, is passed over, as is one whose kind has no shader to be drawn by.
+
+        Mobjects asking to be drawn out of that order say so with a z_index.
         """
         held = self.drawings
         self.drawings = dict()
         drawn = []
+        ascending = True
+        prev_z = 0
         for mobject in mobjects:
             for mob in mobject.get_family():
                 drawing_class = mob.drawing_class
@@ -196,6 +200,12 @@ class Renderer(object):
                     drawing = drawing_class(self.material_for(mob, drawing_class), mob)
                 self.drawings[mob] = drawing
                 drawn.append(drawing)
+                z = mob.z_index
+                if z < prev_z:
+                    ascending = False
+                prev_z = z
+        if not ascending:
+            drawn.sort(key=lambda drawing: drawing.mobject.z_index)
         return drawn
 
     def material_for(self, mobject: Mobject, drawing_class: type) -> Material:

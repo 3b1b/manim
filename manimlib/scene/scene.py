@@ -319,11 +319,9 @@ class Scene(object):
         """
         self.remove(*new_mobjects)
         self.mobjects += new_mobjects
-
-        # Reorder based on z_index
-        id_to_scene_order = {id(m): idx for idx, m in enumerate(self.mobjects)}
-        self.mobjects.sort(key=lambda m: (m.z_index, id_to_scene_order[id(m)]))
-
+        # No reordering by z_index here: this list stays in the order things were added, and
+        # the renderer settles what a z_index has to say about drawing order, see
+        # Renderer.resolve
         self.id_to_mobject_map.update({
             id(sm): sm
             for m in new_mobjects
