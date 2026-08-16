@@ -1616,11 +1616,6 @@ class Mobject(object):
             for a1, a2 in zip(alphas[:-1], alphas[1:])
         ])
 
-    def get_z_index_reference_point(self) -> Vect3:
-        # TODO, better place to define default z_index_group?
-        z_index_group = getattr(self, "z_index_group", self)
-        return z_index_group.get_center()
-
     # Match other mobject properties
 
     def match_color(self, mobject: Mobject) -> Self:
