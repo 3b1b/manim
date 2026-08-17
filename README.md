@@ -143,8 +143,9 @@ sudo apt install python3.12-venv
     git clone https://github.com/3b1b/manim.git
     cd manim
     pip install -e .
-    manimgl example_scenes.py OpeningManimExample (make sure to add manimgl to path first.)
+    manimgl example_scenes.py OpeningManimExample
     ```
+    If the last command is not found, make sure the directory pip installed `manimgl` into is on your `PATH`.
 
 ## Anaconda Install
 
