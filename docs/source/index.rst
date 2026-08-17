@@ -16,7 +16,6 @@ And here is a Chinese version of this documentation: https://docs.manim.org.cn/
    getting_started/quickstart
    getting_started/configuration
    getting_started/example_scenes
-   getting_started/config
    getting_started/structure
    getting_started/whatsnew
 
