@@ -38,7 +38,7 @@ flag                                                       abbr   function
 ``--help``                                                 ``-h`` Show the help message and exit
 ``--version``                                              ``-v`` Display the version of manimgl
 ``--write_file``                                           ``-w`` Render the scene as a movie file
-``--skip_animations``                                      ``-s`` Save the last frame
+``--skip_animations``                                      ``-s`` Skip to the last frame
 ``--low_quality``                                          ``-l`` Render at a low quality (for faster rendering)
 ``--medium_quality``                                       ``-m`` Render at a medium quality
 ``--hd``                                                          Render at a 1080p quality
