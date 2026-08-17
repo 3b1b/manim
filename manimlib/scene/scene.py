@@ -533,9 +533,16 @@ class Scene(object):
             # animated mobjects that are in the family of
             # those on screen, this can result in a restructuring
             # of the scene.mobjects list, which is usually desired.
-            if animation.mobject not in all_mobjects:
+            # A group holding nothing but mobjects already on screen is
+            # itself already on screen, though, and restructuring for its
+            # sake would cost its ancestors whatever points they draw
+            # themselves, so leave the scene as it is.
+            family = animation.mobject.get_family()
+            drawn = [mob for mob in family if mob.has_points()]
+            shown_already = len(drawn) > 0 and all(mob in all_mobjects for mob in drawn)
+            if animation.mobject not in all_mobjects and not shown_already:
                 self.add(animation.mobject)
-                all_mobjects = all_mobjects.union(animation.mobject.get_family())
+                all_mobjects = all_mobjects.union(family)
 
     def progress_through_animations(self, animations: Iterable[Animation]) -> None:
         last_t = 0
