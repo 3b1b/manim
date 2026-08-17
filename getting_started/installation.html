@@ -256,35 +256,36 @@
           <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
 <p>Manim runs on Python 3.10 or higher.</p>
-<p>System requirements are：</p>
+<p>System requirements are:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://ffmpeg.org/">FFmpeg</a></p></li>
-<li><p><a class="reference external" href="https://www.opengl.org//">OpenGL</a> (included in python package <code class="docutils literal notranslate"><span class="pre">PyOpenGL</span></code>)</p></li>
+<li><p><a class="reference external" href="https://www.opengl.org/">OpenGL</a> (included in python package <code class="docutils literal notranslate"><span class="pre">PyOpenGL</span></code>)</p></li>
 <li><p><a class="reference external" href="https://www.latex-project.org">LaTeX</a> (optional, if you want to use LaTeX)</p></li>
 <li><p><a class="reference external" href="https://pango.org">Pango</a> (only for Linux)</p></li>
 </ul>
 <section id="install-ffmpeg">
 <h2>Install FFmpeg<a class="headerlink" href="#install-ffmpeg" title="Link to this heading">¶</a></h2>
-</section>
-<section id="install-ffmpeg-windows">
-<h2>Install FFmpeg Windows<a class="headerlink" href="#install-ffmpeg-windows" title="Link to this heading">¶</a></h2>
-<div class="highlight-cmd notranslate"><div class="highlight"><pre><span></span>choco install ffmpeg
+<p>Follow the instructions for your platform, then run <code class="docutils literal notranslate"><span class="pre">ffmpeg</span> <span class="pre">-version</span></code> to check
+that the installation succeeded.</p>
+<section id="windows">
+<h3>Windows<a class="headerlink" href="#windows" title="Link to this heading">¶</a></h3>
+<div class="highlight-bat notranslate"><div class="highlight"><pre><span></span>choco install ffmpeg
 </pre></div>
 </div>
 </section>
-<section id="install-ffmepeg-linux">
-<h2># Install FFmepeg Linux<a class="headerlink" href="#install-ffmepeg-linux" title="Link to this heading">¶</a></h2>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>update
-$<span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ffmpeg
-$<span class="w"> </span>ffmpeg<span class="w"> </span>-version
+<section id="linux">
+<h3>Linux<a class="headerlink" href="#linux" title="Link to this heading">¶</a></h3>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ffmpeg
 </pre></div>
 </div>
 </section>
-<section id="install-ffmpeg-macos">
-<h2># Install FFmpeg MacOS<a class="headerlink" href="#install-ffmpeg-macos" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>Download This ZIP file <a href="#id1"><span class="problematic" id="id2">`</span></a><a class="reference external" href="https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full">https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full</a>.7z`(if the link is not working download this zip file from there original website)</p></li>
-</ul>
+<section id="macos">
+<h3>macOS<a class="headerlink" href="#macos" title="Link to this heading">¶</a></h3>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>ffmpeg
+</pre></div>
+</div>
+</section>
 </section>
 <section id="directly">
 <h2>Directly<a class="headerlink" href="#directly" title="Link to this heading">¶</a></h2>
@@ -329,7 +330,7 @@ manimgl<span class="w"> </span>example_scenes.py<span class="w"> </span>OpeningM
 <h2>For Anaconda<a class="headerlink" href="#for-anaconda" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Install FFmpeg and LaTeX as above.</p></li>
-<li><p>Create a conda environment using</p></li>
+<li><p>Clone the repository and set up the environment using</p></li>
 </ul>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/3b1b/manim.git
 <span class="nb">cd</span><span class="w"> </span>manim
@@ -397,10 +398,12 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
-<li><a class="reference internal" href="#install-ffmpeg">Install FFmpeg</a></li>
-<li><a class="reference internal" href="#install-ffmpeg-windows">Install FFmpeg Windows</a></li>
-<li><a class="reference internal" href="#install-ffmepeg-linux"># Install FFmepeg Linux</a></li>
-<li><a class="reference internal" href="#install-ffmpeg-macos"># Install FFmpeg MacOS</a></li>
+<li><a class="reference internal" href="#install-ffmpeg">Install FFmpeg</a><ul>
+<li><a class="reference internal" href="#windows">Windows</a></li>
+<li><a class="reference internal" href="#linux">Linux</a></li>
+<li><a class="reference internal" href="#macos">macOS</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#directly">Directly</a></li>
 <li><a class="reference internal" href="#directly-windows">Directly (Windows)</a></li>
 <li><a class="reference internal" href="#for-anaconda">For Anaconda</a></li>
