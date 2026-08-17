@@ -28,17 +28,21 @@ class AnimationGroup(Animation):
     def __init__(
         self,
         *args: AnimationType | Iterable[AnimationType],
-        run_time: float = -1,  # If negative, default to sum of inputed animation runtimes
+        run_time: Optional[float] = None,  # If None, default to sum of inputed animation runtimes
         lag_ratio: float = 0.0,
         group: Optional[Mobject] = None,
         group_type: Optional[type] = None,
+        time_span: Optional[Tuple[float, float]] = None,
         **kwargs
     ):
         animations = args[0] if isinstance(args[0], Iterable) else args
         self.animations = [prepare_animation(anim) for anim in animations]
+        self.time_span = time_span
+        if time_span is not None:
+            run_time = time_span[1]
         self.build_animations_with_timings(lag_ratio)
         self.max_end_time = max((awt[2] for awt in self.anims_with_timings), default=0)
-        self.run_time = self.max_end_time if run_time < 0 else run_time
+        self.run_time = self.max_end_time if run_time is None else run_time
         self.lag_ratio = lag_ratio
         mobs = remove_list_redundancies([a.mobject for a in self.animations])
         if group is not None:
@@ -94,6 +98,8 @@ class AnimationGroup(Animation):
         """
         self.anims_with_timings = []
         curr_time = 0
+        if self.time_span is not None:
+            curr_time = self.time_span[0]
         for anim in self.animations:
             start_time = curr_time
             end_time = start_time + anim.get_run_time()
@@ -172,6 +178,7 @@ class LaggedStartMap(LaggedStart):
         group: Mobject,
         run_time: float = 2.0,
         lag_ratio: float = DEFAULT_LAGGED_START_LAG_RATIO,
+        time_span: Optional[Tuple[float, float]] = None,
         **kwargs
     ):
         anim_kwargs = dict(kwargs)
@@ -180,5 +187,6 @@ class LaggedStartMap(LaggedStart):
             *(anim_func(submob, **anim_kwargs) for submob in group),
             run_time=run_time,
             lag_ratio=lag_ratio,
-            group=group
+            group=group,
+            time_span=time_span,
         )
