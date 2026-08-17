@@ -110,10 +110,19 @@ def quaternion_conjugate(quaternion: Vect4) -> Vect4:
 
 
 def rotate_vector(
-    vector: Vect3,
+    vector: Vect2 | Vect3 | Vect2Array | Vect3Array,
     angle: float,
     axis: Vect3 = OUT
-) -> Vect3:
+) -> Vect2 | Vect3 | Vect2Array | Vect3Array:
+    if np.shape(vector)[-1] == 2:
+        cos_angle = math.cos(angle)
+        sin_angle = math.sin(angle)
+        matrix = np.array([
+            [cos_angle, -sin_angle],
+            [sin_angle, cos_angle],
+        ])
+        return np.dot(vector, matrix.T)
+
     rot = Rotation.from_rotvec(angle * normalize(axis))
     return np.dot(vector, rot.as_matrix().T)
 
