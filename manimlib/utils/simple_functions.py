@@ -79,9 +79,9 @@ def binary_search(
     while abs(rh - lh) > tolerance:
         lx, mx, rx = [function(h) for h in (lh, mh, rh)]
         if lx == target:
-            return lx
+            return lh
         if rx == target:
-            return rx
+            return rh
 
         if lx <= target and rx >= target:
             if mx > target:
