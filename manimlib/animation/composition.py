@@ -32,17 +32,19 @@ class AnimationGroup(Animation):
         lag_ratio: float = 0.0,
         group: Optional[Mobject] = None,
         group_type: Optional[type] = None,
-        time_span: Optional[Tuple[float, float]] = None,
+        time_span: tuple[float, float] | None = None,
         **kwargs
     ):
         animations = args[0] if isinstance(args[0], Iterable) else args
         self.animations = [prepare_animation(anim) for anim in animations]
-        self.time_span = time_span
-        if time_span is not None:
-            run_time = time_span[1]
         self.build_animations_with_timings(lag_ratio)
         self.max_end_time = max((awt[2] for awt in self.anims_with_timings), default=0)
         self.run_time = self.max_end_time if run_time is None else run_time
+        if time_span is not None:
+            # The contents are laid out over their own natural stretch of time, and it is
+            # time_spanned_alpha which fits that stretch into the span, see interpolate. So
+            # the run_time here is what the scene plays for, which has to reach the span's end.
+            self.run_time = max(self.run_time, time_span[1])
         self.lag_ratio = lag_ratio
         mobs = remove_list_redundancies([a.mobject for a in self.animations])
         if group is not None:
@@ -58,6 +60,7 @@ class AnimationGroup(Animation):
             self.group,
             run_time=self.run_time,
             lag_ratio=lag_ratio,
+            time_span=time_span,
             **kwargs
         )
 
@@ -83,14 +86,6 @@ class AnimationGroup(Animation):
         for anim in self.animations:
             anim.update_reference_mobjects(dt, frame_rate)
 
-    def calculate_max_end_time(self) -> None:
-        self.max_end_time = max(
-            (awt[2] for awt in self.anims_with_timings),
-            default=0,
-        )
-        if self.run_time < 0:
-            self.run_time = self.max_end_time
-
     def build_animations_with_timings(self, lag_ratio: float) -> None:
         """
         Creates a list of triplets of the form
@@ -98,8 +93,6 @@ class AnimationGroup(Animation):
         """
         self.anims_with_timings = []
         curr_time = 0
-        if self.time_span is not None:
-            curr_time = self.time_span[0]
         for anim in self.animations:
             start_time = curr_time
             end_time = start_time + anim.get_run_time()
@@ -117,7 +110,7 @@ class AnimationGroup(Animation):
         # times might not correspond to actual times,
         # e.g. of the surrounding scene.  Instead they'd
         # be a rescaled version.  But that's okay!
-        time = alpha * self.max_end_time
+        time = self.time_spanned_alpha(alpha) * self.max_end_time
         for anim, start_time, end_time in self.anims_with_timings:
             anim_time = end_time - start_time
             if anim_time == 0:
@@ -151,7 +144,7 @@ class Succession(AnimationGroup):
 
     def interpolate(self, alpha: float) -> None:
         index, subalpha = integer_interpolate(
-            0, len(self.animations), alpha
+            0, len(self.animations), self.time_spanned_alpha(alpha)
         )
         animation = self.animations[index]
         if animation is not self.active_animation:
@@ -178,9 +171,11 @@ class LaggedStartMap(LaggedStart):
         group: Mobject,
         run_time: float = 2.0,
         lag_ratio: float = DEFAULT_LAGGED_START_LAG_RATIO,
-        time_span: Optional[Tuple[float, float]] = None,
+        time_span: tuple[float, float] | None = None,
         **kwargs
     ):
+        # Named rather than left in kwargs, which are handed to each member rather than
+        # to the group, and a span belongs to the group
         anim_kwargs = dict(kwargs)
         anim_kwargs.pop("lag_ratio", None)
         super().__init__(
