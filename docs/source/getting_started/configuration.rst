@@ -45,24 +45,28 @@ flag                                                       abbr   function
 ``--uhd``                                                         Render at a 4k quality
 ``--full_screen``                                          ``-f`` Show window in full screen
 ``--presenter_mode``                                       ``-p`` Scene will stay paused during wait calls until space bar or right arrow is hit, like a slide show
-``--save_pngs``                                            ``-g`` Save each frame as a png
 ``--gif``                                                  ``-i`` Save the video as gif
 ``--transparent``                                          ``-t`` Render to a movie file with an alpha channel
-``--quiet``                                                ``-q``
+``--vcodec VCODEC``                                               Set the FFmpeg video codec
+``--pix_fmt PIX_FMT``                                             Set the FFmpeg pixel format; defaults to ``yuv420p``
+``--quiet``                                                ``-q`` Suppress rendering progress and file-ready messages
 ``--write_all``                                            ``-a`` Write all the scenes from a file
 ``--open``                                                 ``-o`` Automatically open the saved file once its done
 ``--finder``                                                      Show the output file in finder
-``--config``                                                      Guide for automatic configuration
+``--subdivide``                                                   Write an individual movie file for each animation
 ``--file_name FILE_NAME``                                         Name for the movie or image file
-``--start_at_animation_number START_AT_ANIMATION_NUMBER``  ``-n`` Start rendering not from the first animation, but from another, specified by its index. If you passing two comma separated values, e.g. "3,6", it will end the rendering at the second value.
-``--embed [EMBED]``                                        ``-e`` Creates a new file where the line ``self.embed`` is inserted into the Scenes construct method. If a string is passed in, the line will be inserted below the last line of code including that string.
+``--start_at_animation_number START[,END]``                ``-n`` Start at one animation index, or stop before a second index such as ``3,6``
+``--embed LINE_NUMBER``                                    ``-e`` Enter an interactive IPython session at the given source line
 ``--resolution RESOLUTION``                                ``-r`` Resolution, passed as "WxH", e.g. "1920x1080"
 ``--fps FPS``                                                     Frame rate, as an integer
 ``--color COLOR``                                          ``-c`` Background color
 ``--leave_progress_bars``                                         Leave progress bars displayed in terminal
+``--show_animation_progress``                                     Show a progress bar for each animation
+``--prerun``                                                      Calculate the frame count with an initial animation-free run
 ``--video_dir VIDEO_DIR``                                         Directory to write video
 ``--config_file CONFIG_FILE``                                     Path to the custom configuration file
 ``--log-level LOG_LEVEL``                                         Level of messages to Display, can be DEBUG / INFO / WARNING / ERROR / CRITICAL
+``--clear-cache``                                                 Erase the cache used for Tex and Text mobjects
 ``--autoreload``                                                  Automatically reload Python modules to pick up code changes across during an interactive embedding
 ========================================================== ====== =====================================================================================================================================================================================================
 
