@@ -22,11 +22,8 @@ def play_sound(sound_file):
     system = platform.system()
 
     if system == "Windows":
-        # Windows
-        subprocess.Popen(
-            ["powershell", "-c", f"(New-Object Media.SoundPlayer '{full_path}').PlaySync()"],
-            shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-    )
+        import winsound
+        winsound.PlaySound(full_path, winsound.SND_FILENAME)
     elif system == "Darwin":
         # macOS
         subprocess.Popen(
