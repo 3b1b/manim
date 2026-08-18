@@ -76,6 +76,8 @@ class Drawing(object):
         # written yet, see StructuredArray.version
         self.uniform_version = 0
         self.data_version = 0
+        # How many separating records were written after this mobject's own, see write_records
+        self.data_repeats = 0
         # Whether the mobject drawn before this one holds the same uniforms, which is not
         # asked here but told, see Renderer.compare_uniforms
         self.repeats_uniforms = False
@@ -147,6 +149,7 @@ class Drawing(object):
                 buffer.put(offset, self.data.bytes)
             self.data_version = version
             self.data_offset = offset
+            self.data_repeats = 0
             self.records = records
             self.invalidated = self.invalidated or moved
             return
@@ -166,12 +169,18 @@ class Drawing(object):
         for index, (drawing, size) in enumerate(zip(run, sizes)):
             data = drawing.data
             version = data.version
-            if version != drawing.data_version or at != drawing.data_offset:
-                buffer.put(
-                    at, data.bytes, record_size, between if index != last else 0,
-                )
+            # Separators sit outside the stretch a mobject keeps, so one which has come to
+            # need them writes again even where its own records are already in place
+            repeats = between if index != last else 0
+            if (
+                version != drawing.data_version
+                or at != drawing.data_offset
+                or repeats != drawing.data_repeats
+            ):
+                buffer.put(at, data.bytes, record_size, repeats)
             drawing.data_version = version
             drawing.data_offset = at
+            drawing.data_repeats = repeats
             at += (size + between) * record_size
         self.data_offset = offset
         self.records = records
