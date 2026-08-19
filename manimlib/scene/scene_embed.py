@@ -90,9 +90,10 @@ class InteractiveSceneEmbed:
             while not context.input_is_ready():
                 if self.scene.is_window_closing():
                     break
-                start_time = time.time()
+                # A wall-clock adjustment must not turn the frame delay into a busy loop.
+                start_time = time.perf_counter()
                 self.scene.update_frame(dt=0)
-                time.sleep(max(frame_duration - (time.time() - start_time), 0))
+                time.sleep(max(frame_duration - (time.perf_counter() - start_time), 0))
             if self.scene.is_window_closing():
                 self.shell.ask_exit()
 
