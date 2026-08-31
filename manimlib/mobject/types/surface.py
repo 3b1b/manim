@@ -494,8 +494,8 @@ class TexturedSurface(Surface):
         if a <= 0 and b >= 1:
             return self
         nu, nv = tsmobject.get_resolution()
-        im_coords[:] = self.get_partial_points_array(
-            im_coords, a, b, (nu, nv, 2), axis
+        self.data["im_coords"] = self.get_partial_points_array(
+            tsmobject.data["im_coords"], a, b, (nu, nv, 2), axis=axis
         )
         return self
 
