@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from fractions import Fraction
+import sys
 
 import av
 import numpy as np
@@ -58,13 +59,35 @@ class VideoSource(object):
 
     def __init__(self, path: str, preload: bool | None = None):
         self.path = path
-        self.container = av.open(path)
+        self.is_live = path.startswith("/dev/video") or path.isdigit()
+        kw = {}
+        if path.isdigit():
+            kw["format"] = "avfoundation"
+        elif path.startswith("/dev/video"):
+            kw["format"] = "v4l2"
+
+        if self.is_live:
+            kw["options"] = {
+                "fflags": "nobuffer",
+                "flags": "low_delay",
+                "framedrop": "strict"
+            }
+        self.container = av.open(path, **kw)
         self.stream = self.container.streams.video[0]
         self.stream.thread_type = "AUTO"
 
         self.width = self.stream.codec_context.width
         self.height = self.stream.codec_context.height
         self.frame_rate = Fraction(self.stream.average_rate or self.stream.guessed_rate or 30)
+
+        if self.is_live:
+            self.num_frames = sys.maxsize
+            self.duration = float("inf")
+            preload = False
+        else:
+            self.num_frames = self.get_num_frames()
+            self.duration = float(self.num_frames / self.frame_rate)
+
         self.num_frames = self.get_num_frames()
         self.duration = float(self.num_frames / self.frame_rate)
 
@@ -88,6 +111,8 @@ class VideoSource(object):
         How many frames the video holds: what the container says, else the duration times
         the frame rate, else a count from reading through.
         """
+        if self.is_live:
+            return sys.maxsize
         if self.stream.frames:
             return self.stream.frames
         if self.stream.duration and self.stream.time_base:
@@ -134,11 +159,29 @@ class VideoSource(object):
 
     def seek(self, index: int) -> None:
         """Put the read at the last keyframe at or before this frame."""
+        if self.is_live:
+            if self.decoder is None:
+                self.decoder = self.container.decode(self.stream)
+            return
         time_base = self.stream.time_base or Fraction(1, int(self.frame_rate))
         offset = int(index / self.frame_rate / time_base)
         self.container.seek(offset, stream=self.stream, backward=True, any_frame=False)
         self.decoder = self.container.decode(self.stream)
         self.next_index = None
+
+    def get_live_frame(self) -> np.ndarray:
+        """Gets the next frame for a video streaming device."""
+        if self.decoder is None:
+            self.decoder = self.container.decode(self.stream)
+
+        try:
+            frame = next(self.decoder)
+            self.current_live_frame = self.to_rgba(frame)
+        except (StopIteration, av.AVError):
+            if self.current_live_frame is None:
+                return self.blank_frame()
+
+        return self.current_live_frame
 
     def get_frame(self, index: int) -> np.ndarray:
         """
@@ -148,6 +191,8 @@ class VideoSource(object):
         Where the read runs off the end, the frame count having only been an estimate, what
         was decodable is taken to be the whole video and its last frame stands in.
         """
+        if self.is_live:
+            return self.get_live_frame()
         if self.preloaded:
             return self.get_all_frames()[int(np.clip(index, 0, self.num_frames - 1))]
         while True:

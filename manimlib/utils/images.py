@@ -23,6 +23,8 @@ def get_full_raster_image_path(image_file_name: str) -> str:
 
 
 def get_full_video_path(video_file_name: str) -> str:
+    if video_file_name.isdigit():  # It's a video device source, don't look for files
+        return video_file_name
     return find_file(
         video_file_name,
         directories=[get_raster_image_dir()],
