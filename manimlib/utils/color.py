@@ -43,8 +43,19 @@ def rgba_to_color(rgba: Vect4) -> Color:
     return rgb_to_color(rgba[:3])
 
 
+def clip_rgb(rgb: Vect3 | Sequence[float]) -> Vect3:
+    """Bring an rgb triple back inside [0, 1].
+
+    A rate function that leaves the unit interval on purpose -- `overshoot`,
+    `running_start`, `wiggle` -- hands `interpolate_color` an alpha outside it,
+    and the result is a colour just outside the gamut, which `rgb2hex` then
+    writes as text: `#132-197F`, which `hex_to_rgb` refuses to read back.
+    """
+    return np.clip(rgb, 0.0, 1.0)
+
+
 def rgb_to_hex(rgb: Vect3 | Sequence[float]) -> str:
-    return rgb2hex(rgb, force_long=True).upper()
+    return rgb2hex(clip_rgb(rgb), force_long=True).upper()
 
 
 def hex_to_rgb(hex_code: str) -> Vect3:
@@ -112,8 +123,12 @@ def interpolate_color(
         hsl2 = np.array(Color(color2).get_hsl())
         return Color(hsl=interpolate(hsl1, hsl2, alpha))
     else:
-        rgb = np.sqrt(interpolate(color_to_rgb(color1)**2, color_to_rgb(color2)**2, alpha))
-        return rgb_to_color(rgb)
+        # Clip before the root: an alpha outside [0, 1] extrapolates past one
+        # of the endpoints, and a negative square root is nan, which reads
+        # back as white — so an overshooting rate function turned an
+        # interpolated colour white rather than saturating it.
+        squared = clip_rgb(interpolate(color_to_rgb(color1)**2, color_to_rgb(color2)**2, alpha))
+        return rgb_to_color(np.sqrt(squared))
 
 
 def interpolate_color_by_hsl(
