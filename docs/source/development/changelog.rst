@@ -18,6 +18,7 @@ Fixed bugs
 
 New Features
 ^^^^^^^^^^^^
+- Added a native MCP server at ``manimlib.mcp`` (see :doc:`../documentation/mcp`), an optional ``pip install -e ".[mcp]"`` extra
 - Added specific euler angle getters (`#1794 <https://github.com/3b1b/manim/commit/df2d465140e25fee265f602608aebbbaa2898c7e>`__)
 - Added start angle option to ``Circle`` (`#1794 <https://github.com/3b1b/manim/commit/217c1d7bb02f23a61722bf7275c40802be808563>`__)
 - Added ``Mobject.is_touching`` (`#1794 <https://github.com/3b1b/manim/commit/c1716895c0d9f36e23487322a18963991100bb95>`__)
