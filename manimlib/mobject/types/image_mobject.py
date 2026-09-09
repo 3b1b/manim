@@ -80,7 +80,7 @@ class ImageMobject(Mobject):
         x1, y1 = self.get_corner(DR)[:2]
         x_alpha = inverse_interpolate(x0, x1, point[0])
         y_alpha = inverse_interpolate(y0, y1, point[1])
-        if not (0 <= x_alpha <= 1) and (0 <= y_alpha <= 1):
+        if not (0 <= x_alpha <= 1 and 0 <= y_alpha <= 1):
             # TODO, raise smarter exception
             raise Exception("Cannot sample color from outside an image")
 
