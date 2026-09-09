@@ -120,18 +120,18 @@ Configuration specifying how files are written, e.g. what ffmpeg parameters to u
 
 
 ``scene``
--------
+---------
 Some default configuration for the Scene class
 
 
 ``text``
--------
+--------
 
 - ``font`` 
     Default font of Text
 
-- ``text_alignment``
-    Default text alignment for LaTeX
+- ``alignment``
+    Default alignment of Text, one of ``"LEFT"``, ``"CENTER"`` or ``"RIGHT"``
 
 ``tex``
 -------
@@ -145,17 +145,17 @@ Some default configuration for the Scene class
 ``sizes``
 ---------
 
-Valuess for various constants used in manimm to specify distances, like the height
+Values for various constants used in manim to specify distances, like the height
 of the frame, the value of SMALL_BUFF, LARGE_BUFF, etc.
 
 
 ``colors``
 ----------
 
-Color pallete to use, determining values of color constants like RED, BLUE_E, TEAL, etc.
+Color palette to use, determining values of color constants like RED, BLUE_E, TEAL, etc.
 
-``loglevel``
-------------
+``log_level``
+-------------
 
 Can be DEBUG / INFO / WARNING / ERROR / CRITICAL
 
@@ -163,7 +163,7 @@ Can be DEBUG / INFO / WARNING / ERROR / CRITICAL
 ``universal_import_line``
 -------------------------
 
-Import line that need to execute when entering interactive mode directly.
+Import line that is executed when entering interactive mode directly.
 
 
 ``ignore_manimlib_modules_on_reload``
@@ -171,6 +171,6 @@ Import line that need to execute when entering interactive mode directly.
 
 When calling ``reload`` during the interactive mode, imported modules are
 by default reloaded, in case the user writing a scene which pulls from various
-other files they have written. By default, modules withinn the manim library will
+other files they have written. By default, modules within the manim library will
 be ignored, but one developing manim may want to set this to be False so that 
 edits to the library are reloaded as well.
