@@ -11,7 +11,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["py37", "py38", "py39", "py310"]
+        include:
+          - python: "3.10"
+            python_tag: py310
+          - python: "3.11"
+            python_tag: py311
+          - python: "3.12"
+            python_tag: py312
+          - python: "3.13"
+            python_tag: py313
 
     steps:
     - uses: actions/checkout@v6
@@ -19,7 +27,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: '3.8'
+        python-version: ${{ matrix.python }}
 
     - name: Install dependencies
       run: |
@@ -27,7 +35,7 @@ jobs:
         pip install setuptools wheel twine build
 
     - name: Build wheels
-      run: python setup.py bdist_wheel --python-tag ${{ matrix.python }}
+      run: python setup.py bdist_wheel --python-tag ${{ matrix.python_tag }}
 
     - name: Upload wheels
       env:
