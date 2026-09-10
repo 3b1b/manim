@@ -26,6 +26,7 @@ And here is a Chinese version of this documentation: https://docs.manim.org.cn/
 
    documentation/constants
    documentation/custom_config
+   documentation/mcp
 
 .. toctree::
    :maxdepth: 2

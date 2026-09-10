@@ -1,0 +1,88 @@
+name: tests
+
+# No test workflow existed in this repository before manimlib/mcp/ was
+# added. tests/conftest.py truncates sys.argv before any test module is
+# imported -- without it, importing manimlib (which every test here
+# eventually does, even test_mcp_validate.py transitively via pytest's
+# own collection) parses pytest's own CLI flags through manimlib's
+# argparse and raises SystemExit during collection.
+on:
+  push:
+    paths:
+      - 'manimlib/**'
+      - 'tests/**'
+      - 'setup.cfg'
+      - 'requirements.txt'
+      - '.github/workflows/tests.yml'
+  pull_request:
+    paths:
+      - 'manimlib/**'
+      - 'tests/**'
+      - 'setup.cfg'
+      - 'requirements.txt'
+      - '.github/workflows/tests.yml'
+
+jobs:
+  unit:
+    # Tier 0: pure ast/symtable/text analysis in manimlib/mcp/{examples,validate}.py
+    # and the argv/path-construction functions in render.py. No manimlib
+    # import, no GPU -- so this runs on both platforms with nothing but
+    # pytest installed, and is the fast signal on every PR.
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    name: unit (${{ matrix.os }})
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - run: pip install pytest
+
+    - run: pytest tests/test_mcp_examples.py tests/test_mcp_validate.py tests/test_mcp_render.py -v
+
+  full:
+    # Tier 1 + protocol: the full manimgl install, so introspection over
+    # the real class hierarchy and an actual stdio round-trip with
+    # `python -m manimlib.mcp` can run. Still no GPU -- render_scene's
+    # own execution is Tier 2, opt-in, below.
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - run: pip install -e ".[mcp]" -r requirements.txt pytest
+
+    - run: pytest tests/ -v
+
+  gpu:
+    # Tier 2: actual renders. Needs a software Vulkan implementation
+    # (lavapipe) since GitHub-hosted runners have no real GPU.
+    # continue-on-error, since this is exercising infrastructure this
+    # repository doesn't otherwise depend on in CI.
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install mesa/lavapipe for a software Vulkan device
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y mesa-vulkan-drivers ffmpeg
+
+    - run: pip install -e ".[mcp]" -r requirements.txt pytest
+
+    - run: MANIMGL_MCP_GPU_TESTS=1 VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json pytest tests/test_mcp_render.py -v
