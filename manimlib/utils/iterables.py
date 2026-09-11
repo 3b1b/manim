@@ -119,7 +119,7 @@ def resize_array(nparray: np.ndarray, length: int) -> np.ndarray:
 
 def resize_preserving_order(nparray: np.ndarray, length: int) -> np.ndarray:
     if len(nparray) == 0:
-        return np.resize(nparray, length)
+        return np.resize(nparray, (length, *nparray.shape[1:]))
     if len(nparray) == length:
         return nparray
     indices = np.arange(length) * len(nparray) // length
@@ -129,6 +129,10 @@ def resize_preserving_order(nparray: np.ndarray, length: int) -> np.ndarray:
 def resize_with_interpolation(nparray: np.ndarray, length: int) -> np.ndarray:
     if len(nparray) == length:
         return nparray
+    if len(nparray) == 0:
+        # Nothing to interpolate between. Match resize_array and hand back
+        # zeros of the requested length rather than indexing an empty array.
+        return np.resize(nparray, (length, *nparray.shape[1:]))
     if len(nparray) == 1 or array_is_constant(nparray):
         return nparray[:1].repeat(length, axis=0)
     if length == 0:
