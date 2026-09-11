@@ -149,7 +149,9 @@ class Scene(object):
 
     def run(self) -> None:
         self.virtual_animation_start_time: float = 0
-        self.real_animation_start_time: float = time.time()
+        # Frame pacing measures elapsed time, so it must not be affected by system-clock
+        # adjustments while an animation is playing.
+        self.real_animation_start_time: float = time.perf_counter()
         self.file_writer.begin()
 
         self.setup()
@@ -255,7 +257,7 @@ class Scene(object):
 
         if self.window and not self.skip_animations:
             vt = self.time - self.virtual_animation_start_time
-            rt = time.time() - self.real_animation_start_time
+            rt = time.perf_counter() - self.real_animation_start_time
             time.sleep(max(vt - rt, 0))
 
     def emit_frame(self) -> None:
@@ -444,7 +446,7 @@ class Scene(object):
 
     def stop_skipping(self) -> None:
         self.virtual_animation_start_time = self.time
-        self.real_animation_start_time = time.time()
+        self.real_animation_start_time = time.perf_counter()
         self.skip_animations = False
 
     # Methods associated with running animations
@@ -512,7 +514,7 @@ class Scene(object):
 
         if self.window:
             self.virtual_animation_start_time = self.time
-            self.real_animation_start_time = time.time()
+            self.real_animation_start_time = time.perf_counter()
 
     def post_play(self):
         if not self.skip_animations:
