@@ -37,7 +37,17 @@ class ModuleLoader:
         if file_name is None:
             return None
 
-        module_name = file_name.replace(os.sep, ".").replace(".py", "")
+        module_path = os.path.abspath(file_name)
+        try:
+            rel_file_name = os.path.relpath(module_path, os.getcwd())
+            if rel_file_name == os.pardir or rel_file_name.startswith(
+                os.pardir + os.sep
+            ):
+                rel_file_name = os.path.basename(file_name)
+        except ValueError:
+            rel_file_name = os.path.basename(file_name)
+
+        module_name = os.path.splitext(rel_file_name)[0].replace(os.sep, ".")
         spec = importlib.util.spec_from_file_location(module_name, file_name)
         module = importlib.util.module_from_spec(spec)
 
