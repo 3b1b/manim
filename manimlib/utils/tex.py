@@ -37,5 +37,9 @@ def remove_tex_environments(tex: str) -> str:
     # Handle \phantom{...} with any content
     tex = re.sub(r"\\phantom\{[^}]*\}", "", tex)
     # Handle other environment commands
-    tex = re.sub(r"\\(begin|end)(\{\w+\})?(\{\w+\})?(\[\w+\])?", "", tex)
+    # `\w` cannot match the star of a starred environment, nor the column
+    # spec of an aligned one, so `\begin{align*}` and `\begin{array}{|c|c|}`
+    # lost only the command and left the brace group behind -- which
+    # num_tex_symbols then counted as rendered glyphs.
+    tex = re.sub(r"\\(begin|end)(\{[^}]*\})?(\{[^}]*\})?(\[[^\]]*\])?", "", tex)
     return tex
