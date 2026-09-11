@@ -84,12 +84,25 @@ def color_gradient(
     if length_of_output == 0:
         return []
     n_ref_colors = len(reference_colors)
+    if n_ref_colors == 1:
+        # Nothing to interpolate towards. The edge-case fixup below would set
+        # floors[-1] to -1 while the earlier entries stay 0, so
+        # reference_colors[i + 1] indexed past the end and raised IndexError.
+        color = reference_colors[0]
+        return [
+            interpolate_color(color, color, 0, interp_by_hsl=interp_by_hsl)
+            for _ in range(length_of_output)
+        ]
     alphas = np.linspace(0, (n_ref_colors - 1), length_of_output)
     floors = alphas.astype('int')
     alphas_mod1 = alphas % 1
-    # End edge case
-    alphas_mod1[-1] = 1
-    floors[-1] = n_ref_colors - 2
+    # End edge case: the final sample lands exactly on the last reference
+    # color, where floor() would index past the end. Only meaningful with
+    # more than one sample -- for a single one linspace yields alpha 0, the
+    # FIRST color, and forcing the end here returned the last one instead.
+    if length_of_output > 1:
+        alphas_mod1[-1] = 1
+        floors[-1] = n_ref_colors - 2
     return [
         interpolate_color(
             reference_colors[i],
