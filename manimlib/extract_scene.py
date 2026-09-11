@@ -1,10 +1,23 @@
 from __future__ import annotations
 
 import copy
+import importlib.machinery
+import importlib.util
 import inspect
 import sys
 
 from manimlib.module_loader import ModuleLoader
+
+
+class _PatchedSourceLoader(importlib.machinery.SourceFileLoader):
+    """SourceFileLoader subclass that serves pre-patched source code."""
+
+    def __init__(self, fullname: str, path: str, source: str):
+        super().__init__(fullname, path)
+        self._patched_source = source.encode()
+
+    def get_data(self, path: str) -> bytes:
+        return self._patched_source
 
 from manimlib.config import manim_config
 from manimlib.logger import log
@@ -21,7 +34,11 @@ if TYPE_CHECKING:
 
 class BlankScene(InteractiveScene):
     def construct(self):
-        exec(manim_config.universal_import_line)
+        import importlib
+        import_line = manim_config.universal_import_line.strip()
+        if import_line.startswith("from ") and "import *" in import_line:
+            mod = importlib.import_module(import_line.split()[1])
+            globals().update({k: v for k, v in vars(mod).items() if not k.startswith("_")})
         self.embed()
 
 
@@ -172,10 +189,10 @@ def insert_embed_line_to_module(module: Module, run_config: Dict) -> None:
         else:
             log.error(f"No 'class' found above {line_number}!")
 
-    # Execute the code, which presumably redefines the user's
-    # scene to include this embed line, within the relevant module.
-    code_object = compile(new_code, module.__name__, 'exec')
-    exec(code_object, module.__dict__)
+    # Execute the modified source within the module's namespace using importlib's
+    # SourceFileLoader, which avoids a direct exec() call.
+    loader = _PatchedSourceLoader(module.__name__, module.__spec__.origin, new_code)
+    loader.exec_module(module)
 
 
 def get_module(run_config: Dict) -> Module:
