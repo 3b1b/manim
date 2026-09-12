@@ -47,6 +47,32 @@ class CoordinateSystemTests(unittest.TestCase):
             axes.input_to_graph_point(6.0, graph), [6.0, 3.0, 0.0]
         )
 
+    def test_riemann_rectangles_honor_the_step_in_x_range(self):
+        from manimlib.mobject.coordinate_systems import Axes
+
+        axes = Axes()
+        graph = axes.get_graph(lambda x: x)
+        # The axis default step (1.0) differs from the requested one, which is
+        # what separates a nudge by dx from a nudge by x_range[2].
+        self.assertEqual(axes.x_range[2], 1.0)
+
+        rects = axes.get_riemann_rectangles(graph, x_range=[0, 2, 0.5])
+
+        self.assertEqual(len(rects), 4)
+        right_edge = axes.x_axis.p2n(rects[-1].get_right())
+        self.assertAlmostEqual(right_edge, 2.0)
+
+    def test_riemann_rectangles_do_not_mutate_the_given_x_range(self):
+        from manimlib.mobject.coordinate_systems import Axes
+
+        axes = Axes()
+        graph = axes.get_graph(lambda x: x)
+
+        x_range = [0, 2, 0.5]
+        axes.get_riemann_rectangles(graph, x_range=x_range)
+
+        self.assertEqual(x_range, [0, 2, 0.5])
+
 
 if __name__ == "__main__":
     unittest.main()
