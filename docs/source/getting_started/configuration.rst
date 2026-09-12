@@ -26,7 +26,20 @@ Some useful flags
 
   - ``-so`` will save the final frame to an image and show it.
 
-- ``-n <number>`` to skip ahead to the ``n``\ ’th animation of a scene. 
+- ``-n <number>`` to skip ahead to the animation at that zero-based index.
+  Negative indices count backward from the end: ``-n -1`` renders only the
+  final ``play()`` or ``wait()`` call, and ``-n -3`` renders the last three.
+  Ranges keep an exclusive end bound: ``-n=0,-1`` omits the final animation,
+  and ``-n=-3,-1`` renders the third- and second-to-last animations.
+  Use the equals sign for a comma-separated range beginning with a negative
+  index so the argument parser treats it as a value.
+
+  Negative indices require an initial animation-free run to count the scene's
+  animations, even without ``--prerun``. This executes scene code an extra
+  time, so external side effects also occur again; the animation sequence
+  must be reproducible between runs. With ``--prerun``, the selected range
+  is then pre-run to calculate its frame count. An index before the beginning
+  of the scene raises an error.
 - ``-f`` to make the playback window fullscreen.
 
 All supported flags

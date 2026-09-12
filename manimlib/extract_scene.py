@@ -60,6 +60,23 @@ def prompt_user_for_choice(scene_classes):
         sys.exit(1)
 
 
+def prerun_scene(scene_class, scene_config):
+    pre_config = copy.deepcopy({
+        key: value for key, value in scene_config.items() if key != "window"
+    })
+    pre_config["window"] = None
+    pre_config["file_writer_config"].update(
+        write_to_movie=False,
+        save_last_frame=False,
+        quiet=True,
+    )
+    pre_config["skip_animations"] = True
+    pre_config["presenter_mode"] = False
+    pre_scene = scene_class(**pre_config)
+    pre_scene.run()
+    return pre_scene
+
+
 def compute_total_frames(scene_class, scene_config):
     """
     When a scene is being written to file, a copy of the scene is run with
@@ -67,18 +84,28 @@ def compute_total_frames(scene_class, scene_config):
     This allows for a total progress bar on rendering, and also allows runtime
     errors to be exposed preemptively for long running scenes.
     """
-    pre_config = copy.deepcopy(scene_config)
-    pre_config["file_writer_config"]["write_to_movie"] = False
-    pre_config["file_writer_config"]["save_last_frame"] = False
-    pre_config["file_writer_config"]["quiet"] = True
-    pre_config["skip_animations"] = True
-    pre_scene = scene_class(**pre_config)
-    pre_scene.run()
+    pre_scene = prerun_scene(scene_class, scene_config)
     total_time = pre_scene.time - pre_scene.skip_time
     return int(total_time * manim_config.camera.fps)
 
 
 def scene_from_class(scene_class, scene_config: Dict, run_config: Dict):
+    scene_config = scene_config.copy()
+    scene_config.file_writer_config = scene_config.file_writer_config.copy()
+    bounds = ("start_at_animation_number", "end_at_animation_number")
+    if any(scene_config.get(key) is not None and scene_config[key] < 0 for key in bounds):
+        count_config = scene_config.copy()
+        count_config.update({key: None for key in bounds})
+        num_plays = prerun_scene(scene_class, count_config).num_plays
+        for key in bounds:
+            index = scene_config.get(key)
+            if index is not None and index < 0:
+                if index < -num_plays:
+                    raise ValueError(
+                        f"Animation index {index} is out of range for "
+                        f"{scene_class.__name__} ({num_plays} animations)"
+                    )
+                scene_config[key] = num_plays + index
     fw_config = manim_config.file_writer
     if fw_config.write_to_movie and run_config.prerun:
         scene_config.file_writer_config.total_frames = compute_total_frames(scene_class, scene_config)

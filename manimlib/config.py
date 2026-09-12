@@ -159,7 +159,10 @@ def parse_cli():
             help="Start rendering not from the first animation, but " + \
                  "from another, specified by its index.  If you pass " + \
                  "in two comma separated values, e.g. \"3,6\", it will end " + \
-                 "the rendering at the second value",
+                 "the rendering before the second value. Negative indices " + \
+                 "count from the end: -1 is the last play or wait. " + \
+                 "Use -n=-3,-1 for a range starting with a negative index. " + \
+                 "Negative indices require an initial animation-free run",
         )
         parser.add_argument(
             "-e", "--embed",
