@@ -378,11 +378,17 @@ class CoordinateSystem(ABC):
             x_range = self.x_range[:2]
         if dx is None:
             dx = self.x_range[2]
+        # Copy before writing to the upper bound below, so a caller's own
+        # sequence is not modified.
+        x_range = list(x_range)
         if len(x_range) < 3:
-            x_range = [*x_range, dx]
+            x_range.append(dx)
 
         rects = []
-        x_range[1] = x_range[1] + dx
+        # np.arange steps by x_range[2], so reaching the requested right
+        # endpoint takes exactly one of those steps, not dx -- the two differ
+        # whenever the caller passes a step of its own.
+        x_range[1] = x_range[1] + x_range[2]
         xs = np.arange(*x_range)
         for x0, x1 in zip(xs, xs[1:]):
             if input_sample_type == "left":
