@@ -171,13 +171,112 @@ class SceneFileWriter(object):
         sound_file: str,
         time: float | None = None,
         gain: float | None = None,
-        gain_to_background: float | None = None
+        gain_to_background: float | None = None,
+        start_time: float | None = None,
+        end_time: float | None = None,
+        repeat: int = 1,
+        fade_in: float = 0.0,
+        fade_out: float = 0.0,
+        pan: float | None = None,
+        pan_start: float | None = None,
+        pan_end: float | None = None
     ) -> None:
+
+        # Validation call
+        self._validate_add_sound(start_time, end_time, repeat, fade_in, fade_out, pan, pan_start, pan_end)
+
         file_path = get_full_sound_file_path(sound_file)
         new_segment = AudioSegment.from_file(file_path)
+        # need? original duration in second.
+        original_duration = len(new_segment)/1000.0
+      
+        # Slice (trim) the audio segment if start_time or end_time is provided.
+        # Note: Slicing is intentionally performed BEFORE applying gain and fades 
+        # to ensure the effects apply exactly to the boundaries of the trimmed segment.
+        if start_time is not None or end_time is not None:
+            start_ms = int(start_time * 1000) if start_time is not None else 0
+            if end_time is not None:
+                end_ms = len(new_segment) - int(end_time * 1000)
+            else:
+                end_ms = len(new_segment)
+            new_segment = new_segment[start_ms:end_ms]
+            if len(new_segment) <= 0:
+                log.warning(
+                    f"\n[Audio Error] '{sound_file}' was trimmed to 0 seconds and skipped.\n"
+                    f"-> HINT: The original audio is only {original_duration:.2f} seconds long, "
+                    f"but you sliced it with start_time={start_time} and end_time={end_time}."
+                )
+                return
         if gain:
             new_segment = new_segment.apply_gain(gain)
+
+        # Allows looping short effects (e.g., ticking) natively, avoiding redundant add_sound() calls.
+        if repeat > 1:
+            new_segment = new_segment * int(repeat)
+
+        # Dynamic or Static Stereo Panning (FPS-Synced)
+        if pan_start is not None and pan_end is not None:
+            # Sync audio chunks perfectly with visual frames using the scene's camera FPS
+            fps = self.scene.camera.fps
+            chunk_size = max(1, int(1000 / fps))
+            
+            total_ms = len(new_segment)
+            panned_chunks = []
+            
+            for i in range(0, total_ms, chunk_size):
+                chunk = new_segment[i:i + chunk_size]
+                # BUG FIX: Ensure the VERY LAST chunk hits exactly 1.0 progress
+                if i + chunk_size >= total_ms:
+                    progress = 1.0
+                else:
+                    progress = i / total_ms                 
+                current_pan = pan_start + (pan_end - pan_start) * progress
+                panned_chunks.append(chunk.pan(current_pan))
+                
+            new_segment = panned_chunks[0]
+            for chunk in panned_chunks[1:]:
+                new_segment += chunk
+                
+        elif pan is not None:
+            new_segment = new_segment.pan(pan)
+
+        # Adding fade-in and fade-out effect smoothly
+        # Normalized: User inputs time in seconds, we convert it to milliseconds internally for pydub
+        if fade_in > 0.0:
+            new_segment = new_segment.fade_in(int(fade_in * 1000))
+        if fade_out > 0.0:
+            new_segment = new_segment.fade_out(int(fade_out * 1000))
         self.add_audio_segment(new_segment, time, gain_to_background)
+
+    def _validate_add_sound(
+        self,
+        start_time: float | None,
+        end_time: float | None,
+        repeat: int,
+        fade_in: float,
+        fade_out: float,
+        pan: float | None,
+        pan_start: float | None,
+        pan_end: float | None
+    ) -> None:
+        # Validate panning parameters
+        if pan is not None and (pan_start is not None or pan_end is not None):
+            raise ValueError("Cannot use 'pan' and 'pan_start'/'pan_end' simultaneously.")
+        
+        if (pan_start is not None and pan_end is None) or (pan_start is None and pan_end is not None):
+            raise ValueError("Both 'pan_start' and 'pan_end' must be provided for dynamic panning.")
+
+        for val, name in [(pan, 'pan'), (pan_start, 'pan_start'), (pan_end, 'pan_end')]:
+            if val is not None and not (-1.0 <= val <= 1.0):
+                raise ValueError(f"'{name}' expects a value between -1.0 and 1.0. Got {val}")
+
+        # Validate basic parameters
+        if repeat < 1:
+            raise ValueError("'repeat' must be at least 1.")
+        if fade_in < 0.0 or fade_out < 0.0:
+            raise ValueError("Fade durations cannot be negative.")
+        if (start_time is not None and start_time < 0) or (end_time is not None and end_time < 0):
+            raise ValueError("'start_time' and 'end_time' cannot be negative.")
 
     # Writers
     def begin(self) -> None:
