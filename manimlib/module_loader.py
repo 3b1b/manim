@@ -41,6 +41,10 @@ class ModuleLoader:
         spec = importlib.util.spec_from_file_location(module_name, file_name)
         module = importlib.util.module_from_spec(spec)
 
+        # Add module to sys.modules before exec_module to ensure decorators
+        # and relative imports work correctly
+        sys.modules[module_name] = module
+
         if is_during_reload:
             imported_modules = ModuleLoader._exec_module_and_track_imports(spec, module)
             reloaded_modules_tracker = set()

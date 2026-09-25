@@ -174,8 +174,19 @@ def insert_embed_line_to_module(module: Module, run_config: Dict) -> None:
 
     # Execute the code, which presumably redefines the user's
     # scene to include this embed line, within the relevant module.
-    code_object = compile(new_code, module.__name__, 'exec')
-    exec(code_object, module.__dict__)
+    # Ensure module is registered in sys.modules before exec, so that
+    # decorators like @dataclass that need to look up the module work.
+    module_name = module.__name__
+    previous_module = sys.modules.get(module_name)
+    sys.modules[module_name] = module
+    try:
+        code_object = compile(new_code, module_name, 'exec')
+        exec(code_object, module.__dict__)
+    finally:
+        if previous_module is None:
+            del sys.modules[module_name]
+        else:
+            sys.modules[module_name] = previous_module
 
 
 def get_module(run_config: Dict) -> Module:
