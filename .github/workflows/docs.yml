@@ -15,10 +15,10 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: '3.12'
 
@@ -34,7 +34,7 @@ jobs:
         
     - name: Deploy to GitHub pages
       if: ${{ github.event_name == 'push' }}
-      uses: JamesIves/github-pages-deploy-action@3.7.1
+      uses: JamesIves/github-pages-deploy-action@4
       with:
         ACCESS_TOKEN: ${{ secrets.DOC_DEPLOY_TOKEN }}
         BRANCH: gh-pages
