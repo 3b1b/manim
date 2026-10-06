@@ -58,7 +58,7 @@ camera:
   # Turning this off draws each on its own, which says the same thing more slowly.
   draw_together: True
   resolution: (1920, 1080)
-  background_color: "#333333"
+  background_color: "#000000"
   fps: 30
   background_opacity: 1.0
 file_writer:
