@@ -2747,6 +2747,153 @@ class TurnInsideOut(Transform):
 
 
 class FlashyFadeIn(AnimationGroup):
+    """
+    Fade in a VMobject while a bright outline flash travels along its path.
+
+    FlashyFadeIn is a subclass of AnimationGroup. It combines two animations:
+    FadeIn gradually reveals the original VMobject, while VShowPassingFlash
+    animates a temporary stroke along a copied outline of that object.
+
+    The result is a reveal effect accompanied by a moving outline highlight.
+    It is useful for introducing mathematical curves, diagrams, geometric
+    shapes, and other vector objects.
+
+    Parameters
+    ----------
+    vmobject : VMobject
+        The vector object to fade into the scene. A copy is also used to
+        create the outline for the passing flash.
+
+    stroke_width : float, default=2.0
+        Width of the stroke used for the outline flash.
+
+    fade_lag : float, default=0.0
+        Starting point of the adjusted fade-in rate function, expressed as
+        a normalized animation time. A value of 0 starts the fade-in using
+        the full rate function. A larger value delays the effective start
+        of the fade-in within the rate-function interval.
+
+    time_width : float, default=1.0
+        Width of the moving flash along the outline path. Larger values
+        produce a broader flash.
+
+    **kwargs
+        Additional keyword arguments forwarded to AnimationGroup, such as
+        run_time, lag_ratio, and rate_func. The rate_func keyword is also
+        used to configure the FadeIn animation.
+
+    Implementation Details
+    ----------------------
+    1. Copies vmobject to create a separate outline object.
+    2. Sets the outline's fill opacity to zero, leaving only its stroke
+       visible during the flash.
+    3. Sets the outline stroke width to stroke_width and its opacity to 1.
+    4. Retrieves rate_func from kwargs, defaulting to smooth.
+    5. Uses squish_rate_func(rate_func, fade_lag, 1) to adjust the timing
+       of the FadeIn animation.
+    6. Creates a FadeIn animation for the original VMobject.
+    7. Creates a VShowPassingFlash animation for the outline copy.
+    8. Groups both animations in AnimationGroup.
+
+    Examples
+    --------
+    Example 1: Fade in a circle with a passing outline flash.
+
+        circle = Circle()
+        self.play(
+            FlashyFadeIn(circle)
+        )
+
+    The circle fades into view while a temporary stroke travels along
+    its copied outline.
+
+    Example 2: Use a thicker outline.
+
+        square = Square()
+        self.play(
+            FlashyFadeIn(
+                square,
+                stroke_width=5
+            )
+        )
+
+    The passing flash uses a thicker stroke.
+
+    Example 3: Delay the fade-in effect.
+
+        triangle = Triangle()
+        self.play(
+            FlashyFadeIn(
+                triangle,
+                fade_lag=0.3,
+                time_width=0.5
+            )
+        )
+
+    The fade-in uses an adjusted rate function, while the outline flash
+    uses a narrower moving highlight.
+
+    Example 4: Customize the animation duration.
+
+        curve = Circle()
+        self.play(
+            FlashyFadeIn(
+                curve,
+                stroke_width=3,
+                time_width=0.8,
+                run_time=2
+            )
+        )
+
+    The animation group runs over two seconds, subject to the timing
+    behavior of its child animations.
+
+    Example 5: Reveal a mathematical curve.
+
+        curve = FunctionGraph(
+            lambda x: np.sin(x),
+            x_range=[-PI, PI]
+        )
+        self.play(
+            FlashyFadeIn(
+                curve,
+                stroke_width=4,
+                time_width=0.7
+            )
+        )
+
+    The curve fades in while a moving outline highlight travels along it.
+
+    Notes
+    -----
+    - The outline is a copy, so its stroke styling does not directly change
+      the original VMobject's styling.
+    - The outline fill is made transparent, and its stroke is made fully
+      opaque before the flash animation begins.
+    - The FadeIn rate function is adjusted using squish_rate_func.
+    - fade_lag is passed as the lower bound of squish_rate_func; it should
+      be chosen within the valid normalized timing interval.
+    - The two child animations are grouped, not explicitly placed in a
+      Succession. Their timing is managed by AnimationGroup.
+    - The rate_func supplied through kwargs is used for the FadeIn child
+      and is also forwarded to AnimationGroup.
+    - The final appearance depends on the VMobject's geometry, its existing
+      styling, and the animation timing settings.
+
+    See Also
+    --------
+    AnimationGroup
+        Runs multiple animations as a coordinated group.
+    FadeIn
+        Fades a Mobject into the scene.
+    VShowPassingFlash
+        Animates a passing stroke with variable width.
+    squish_rate_func
+        Restricts a rate function to a specified interval.
+    smooth
+        A smooth animation rate function.
+    """
+
     def __init__(self,
         vmobject: VMobject,
         stroke_width: float = 2.0,
