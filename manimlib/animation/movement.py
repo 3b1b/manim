@@ -746,6 +746,191 @@ class PhaseFlow(Animation):
 
 
 class MoveAlongPath(Animation):
+    """
+    Animate a Mobject moving along a specified VMobject path.
+
+    MoveAlongPath is an Animation subclass that moves a Mobject along the
+    geometry of another VMobject. At each interpolation step, it calculates
+    a point on the path using the animation's rate function and moves the
+    animated Mobject to that position.
+
+    The position is determined by the proportion of the path traversed,
+    rather than by directly calculating a velocity or applying a
+    transformation to each individual point of the animated Mobject.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object that will move along the path. Its position is updated
+        during interpolation using the move_to method.
+
+    path : VMobject
+        The vectorized Mobject defining the trajectory. The path's geometry
+        determines the positions through which the animated Mobject moves.
+
+    suspend_mobject_updating : bool, optional
+        Whether to suspend the animated Mobject's regular updating during
+        the animation. Defaults to False.
+
+    **kwargs
+        Additional keyword arguments passed to the parent Animation
+        constructor. These may include run_time, rate_func, and other
+        supported animation configuration options.
+
+    Attributes
+    ----------
+    path : VMobject
+        The path along which the animated Mobject moves.
+
+    Inherited Attributes
+    --------------------
+    rate_func
+        The rate function inherited from Animation. It maps the animation's
+        interpolation alpha to the proportion used to sample the path.
+
+    run_time
+        The animation duration in seconds, configured through the parent
+        Animation constructor.
+
+    How It Works
+    ------------
+    1. The constructor stores the supplied path in self.path.
+    2. It initializes the parent Animation with the animated Mobject and
+       the suspend_mobject_updating setting.
+    3. During interpolation, the current alpha is passed through rate_func.
+    4. The resulting proportion is passed to
+       path.quick_point_from_proportion().
+    5. The returned point is supplied to mobject.move_to(), positioning
+       the animated Mobject at that location.
+
+    Mathematically, the target position can be represented as:
+
+        position(alpha) = path.point(rate_func(alpha))
+
+    Here, the path's point-sampling method determines the actual location
+    for the requested proportion.
+
+    Examples
+    --------
+    Example 1: Move a Dot Along a Circle
+    -----------------------------------
+    A Dot can follow the trajectory defined by a Circle.
+
+        from manimlib import *
+
+        path = Circle(radius=2)
+        dot = Dot(path.get_start())
+
+        self.add(path, dot)
+        self.play(
+            MoveAlongPath(
+                dot,
+                path,
+                run_time=3
+            )
+        )
+
+    The Dot moves along the circle's path over the animation duration.
+
+    Example 2: Follow a Curved Path
+    -------------------------------
+    A custom VMobject can define a curved trajectory.
+
+        from manimlib import *
+
+        path = VMobject()
+        path.set_points_as_corners([
+            LEFT * 3,
+            UP * 2,
+            RIGHT * 3
+        ])
+
+        dot = Dot(path.get_start())
+
+        self.add(path, dot)
+        self.play(
+            MoveAlongPath(
+                dot,
+                path,
+                run_time=2
+            )
+        )
+
+    The Dot follows the path through the positions defined by the VMobject.
+
+    Example 3: Use a Nonlinear Rate Function
+    ----------------------------------------
+    A rate function changes how quickly the object progresses through
+    the path's proportions.
+
+        from manimlib import *
+
+        path = Arc(
+            angle=PI,
+            radius=2
+        )
+        dot = Dot(path.get_start())
+
+        self.add(path, dot)
+        self.play(
+            MoveAlongPath(
+                dot,
+                path,
+                rate_func=smooth,
+                run_time=3
+            )
+        )
+
+    The smooth rate function changes the progression through the path:
+    movement is slower near the beginning and end and faster around the
+    middle.
+
+    Example 4: Move a Label Along a Line
+    ------------------------------------
+    The animated Mobject does not have to be a Dot.
+
+        from manimlib import *
+
+        path = Line(LEFT * 3, RIGHT * 3)
+        label = Text("Moving label")
+        label.move_to(path.get_start())
+
+        self.add(path, label)
+        self.play(
+            MoveAlongPath(
+                label,
+                path,
+                run_time=2
+            )
+        )
+
+    Notes
+    -----
+    - The path is used to determine the animated object's target position.
+      The path itself is not transformed by this class.
+    - The animated Mobject is repositioned using move_to(). Its internal
+      geometry is translated rather than reshaped to match the path.
+    - The animated Mobject does not automatically rotate to align with
+      the direction of travel.
+    - The rate function controls the proportion passed to the path
+      sampling method, so nonlinear rate functions alter the timing
+      of movement.
+    - The path should provide a valid implementation of
+      quick_point_from_proportion().
+    - The path's own visibility is independent of its use as a trajectory.
+      Add it to the scene separately if it should be visible.
+    - The final position depends on the path's sampling behavior and the
+      value returned by rate_func at the end of the animation.
+
+    See Also
+    --------
+    Animation
+    VMobject
+    Mobject.move_to
+    Homotopy
+    PhaseFlow
+    """
+
     def __init__(
         self,
         mobject: Mobject,
