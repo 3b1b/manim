@@ -712,6 +712,135 @@ class CircleIndicate(Transform):
 
 
 class ShowPassingFlash(ShowPartial):
+    """
+    Animate a short segment of a mobject passing along its geometry.
+
+    ShowPassingFlash is a subclass of ShowPartial that displays only a moving
+    portion of a mobject during the animation. Instead of revealing the entire
+    object at once, it computes a lower and upper bound for the visible
+    portion based on the current animation progress and ``time_width``.
+
+    As the animation progresses, the visible segment travels from the beginning
+    of the mobject's geometry toward its end. When the animation finishes,
+    the ``finish()`` method restores every submobject to its complete starting
+    geometry using ``pointwise_become_partial(start, 0, 1)``.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object whose geometry is used for the passing flash. The visible
+        portion is determined by the partial-geometry behavior supported by
+        the mobject and its submobjects.
+
+    time_width : float, optional
+        The width of the moving visible segment, expressed in normalized
+        animation-progress units. Defaults to 0.1. A smaller value produces
+        a shorter visible segment, while a larger value produces a wider one.
+
+    remover : bool, optional
+        Whether the animated mobject should be removed during animation
+        cleanup. Defaults to True.
+
+    **kwargs
+        Additional keyword arguments forwarded to ShowPartial, including
+        other supported animation settings such as ``run_time``.
+
+    Methods
+    -------
+    get_bounds(alpha: float) -> tuple[float, float]
+        Calculate the lower and upper normalized bounds of the visible
+        portion at the given animation progress.
+
+        The method first computes the upper bound as
+        ``interpolate(0, 1 + time_width, alpha)`` and the lower bound as
+        ``upper - time_width``. It then clamps the upper bound to at most 1
+        and the lower bound to at least 0.
+
+    finish() -> None
+        Complete the parent animation and restore each submobject to its full
+        starting geometry by calling
+        ``pointwise_become_partial(start, 0, 1)``.
+
+    Notes
+    -----
+    - ``alpha`` represents normalized animation progress, typically from 0
+      to 1.
+    - The bounds returned by ``get_bounds()`` determine which portion of the
+      object's geometry is displayed by the inherited ShowPartial behavior.
+    - At the beginning, the visible interval starts at the beginning of the
+      geometry. As progress increases, the interval moves toward the end.
+    - Near the end of the animation, the upper bound is clamped to 1, allowing
+      the visible segment to leave the geometry's endpoint.
+    - ``time_width`` is a normalized width, not a duration in seconds.
+    - ``finish()`` explicitly restores the full geometry of the starting
+      submobjects. Whether the object remains in the scene also depends on
+      the inherited animation cleanup behavior and the ``remover`` setting.
+    - The visual result depends on the geometry and partial-rendering support
+      of the mobject being animated.
+
+    Examples
+    --------
+    Example 1: Create a passing flash along a line.
+
+    >>> line = Line(LEFT * 3, RIGHT * 3)
+    >>> scene.add(line)
+    >>> scene.play(ShowPassingFlash(line))
+
+    A short portion of the line moves from one end to the other. At the end,
+    the animation's finish method restores the full starting geometry.
+
+    Example 2: Make the visible segment wider.
+
+    >>> line = Line(LEFT * 3, RIGHT * 3)
+    >>> scene.add(line)
+    >>> scene.play(
+    ...     ShowPassingFlash(
+    ...         line,
+    ...         time_width=0.3,
+    ...     )
+    ... )
+
+    The visible segment spans a larger portion of the normalized geometry
+    than it does with the default width of 0.1.
+
+    Example 3: Use a shorter animation duration.
+
+    >>> circle = Circle()
+    >>> scene.add(circle)
+    >>> scene.play(
+    ...     ShowPassingFlash(
+    ...         circle,
+    ...         time_width=0.1,
+    ...         run_time=0.5,
+    ...     )
+    ... )
+
+    The flash travels along the circle's geometry over half a second.
+    The time width remains a normalized progress interval rather than
+    changing into a duration in seconds.
+
+    Example 4: Inspect the bounds at an intermediate progress value.
+
+    >>> flash = ShowPassingFlash(
+    ...     Line(LEFT, RIGHT),
+    ...     time_width=0.1,
+    ... )
+    >>> print(flash.get_bounds(0.5))
+    (0.45, 0.55)
+
+    At alpha = 0.5, the visible interval spans from 0.45 to 0.55 of the
+    normalized geometry. This example assumes the default time width of 0.1.
+
+    See Also
+    --------
+    ShowPartial
+    ShowCreation
+    ShowCreationThenDestruction
+    Uncreate
+    Animation
+    Mobject.pointwise_become_partial
+    """
+
     def __init__(
         self,
         mobject: Mobject,
