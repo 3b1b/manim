@@ -39,6 +39,128 @@ if TYPE_CHECKING:
 
 
 class FocusOn(Transform):
+    """
+    Create a focus effect that visually draws attention to a specific point.
+
+    FocusOn is a subclass of Transform that animates a large, transparent Dot
+    into a small Dot with a configurable fill opacity. The starting Dot covers
+    a large area, while the target Dot has a radius of zero and follows the
+    specified focus point through an updater.
+
+    The animation creates a visual focus effect by transforming the large,
+    transparent starting Dot into the small target Dot. The target Dot's fill
+    color and opacity control the appearance of the focus point.
+
+    Parameters
+    ----------
+    focus_point : np.ndarray | Mobject
+        The location to focus on. This can be a coordinate array or a Mobject.
+        The target Dot receives an updater that calls ``move_to(focus_point)``,
+        allowing it to follow the specified point or object's position.
+
+    opacity : float, optional
+        The fill opacity assigned to the target Dot. Defaults to 0.2.
+
+    color : ManimColor, optional
+        The fill color used for both the starting and target Dots.
+        Defaults to GREY.
+
+    run_time : float, optional
+        The duration of the animation. Defaults to 2 seconds.
+
+    remover : bool, optional
+        Whether the animated mobject should be removed during animation
+        cleanup. Defaults to True.
+
+    **kwargs
+        Additional keyword arguments forwarded to Transform, apart from
+        ``run_time`` and ``remover``, which are passed explicitly.
+
+    Methods
+    -------
+    create_target() -> Dot
+        Create a zero-radius Dot with the configured fill color and opacity.
+        Attach an updater that moves the Dot to ``self.focus_point``.
+
+    create_starting_mobject() -> Dot
+        Create a large Dot whose radius is the sum of FRAME_X_RADIUS and
+        FRAME_Y_RADIUS. Its stroke width is zero, and its fill uses the
+        configured color with zero opacity.
+
+    Notes
+    -----
+    - The constructor initializes Transform with an empty VMobject. The
+      overridden ``create_target()`` and ``create_starting_mobject()``
+      methods provide the actual target and starting mobjects.
+    - The starting Dot has a radius of
+      ``FRAME_X_RADIUS + FRAME_Y_RADIUS``. Its fill is initially transparent.
+    - The target Dot has radius zero, so the target itself does not represent
+      a large visible disk.
+    - The target Dot's updater continuously calls ``move_to(self.focus_point)``.
+      If ``focus_point`` is a Mobject, this allows the target to follow that
+      object's position as its center changes.
+    - The animation's exact visual appearance depends on Transform's
+      interpolation behavior and the configured color and opacity.
+    - The ``remover`` argument controls the inherited animation's cleanup
+      behavior.
+    - The implementation does not explicitly remove the updater in this
+      class; updater cleanup depends on the surrounding animation lifecycle.
+
+    Examples
+    --------
+    Example 1: Focus on the origin.
+
+    >>> scene.play(FocusOn(ORIGIN))
+
+    A focus effect is animated toward the origin using the default grey
+    color, opacity 0.2, and two-second duration.
+
+    Example 2: Focus on a specific coordinate.
+
+    >>> point = np.array([2.0, 1.0, 0.0])
+    >>> scene.play(
+    ...     FocusOn(
+    ...         point,
+    ...         color=YELLOW,
+    ...         opacity=0.4,
+    ...     )
+    ... )
+
+    The focus target is placed at the specified coordinate, with yellow
+    fill and opacity 0.4.
+
+    Example 3: Focus on a Mobject.
+
+    >>> circle = Circle().shift(RIGHT * 2)
+    >>> scene.add(circle)
+    >>> scene.play(FocusOn(circle, color=BLUE))
+
+    The target Dot's updater moves it to the circle's current position.
+    If the circle moves while the updater is active, the target follows it.
+
+    Example 4: Change the animation duration.
+
+    >>> square = Square()
+    >>> scene.add(square)
+    >>> scene.play(
+    ...     FocusOn(
+    ...         square,
+    ...         run_time=3,
+    ...         remover=False,
+    ...     )
+    ... )
+
+    The focus animation runs for three seconds and is configured not to
+    remove the animated mobject during cleanup.
+
+    See Also
+    --------
+    Transform
+    Dot
+    Mobject.move_to
+    Mobject.add_updater
+    """
+
     def __init__(
         self,
         focus_point: np.ndarray | Mobject,
