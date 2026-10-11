@@ -2230,6 +2230,145 @@ class ShrinkToCenter(ScaleInPlace):
 
 
 class Restore(Transform):
+    """
+    Restore
+    =======
+
+    Animate a Mobject back to a previously saved state.
+
+    Restore is a subclass of Transform that uses a Mobject's ``saved_state``
+    as the destination of an animation. It is useful when a Mobject has been
+    modified and should return to its earlier appearance, position, scale,
+    orientation, or other properties captured when its state was saved.
+
+    Before using Restore, the Mobject must have a valid ``saved_state``.
+    In typical ManimGL workflows, this state is created by calling
+    ``mobject.save_state()`` before making changes.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The Mobject to restore. It must have a ``saved_state`` attribute whose
+        value is not None. The saved state is used as the transformation
+        target.
+
+    **kwargs
+        Additional keyword arguments forwarded to the parent Transform
+        constructor. These may include animation options such as ``run_time``
+        and ``rate_func``.
+
+    Attributes
+    ----------
+    saved_state : Mobject
+        An attribute expected to exist on the supplied Mobject. It represents
+        the state to which the object should return. Restore does not create
+        this attribute; it checks that it already exists and is not None.
+
+    Inheritance
+    -----------
+    Restore inherits from Transform, so it uses Transform's interpolation
+    and animation configuration behavior.
+
+    Initialization proceeds as follows:
+
+    1. Check whether the Mobject has a ``saved_state`` attribute.
+    2. Check whether ``mobject.saved_state`` is not None.
+    3. If either condition fails, raise an Exception with the message:
+
+           Trying to restore without having saved
+
+    4. Otherwise, initialize Transform with the original Mobject and its
+       saved state as the destination.
+
+    The parent constructor receives:
+
+        super().__init__(mobject, mobject.saved_state, **kwargs)
+
+    Example
+    -------
+    Example 1: Restore a circle to its saved position.
+
+        from manimlib import *
+
+        class RestoreExample(Scene):
+            def construct(self):
+                circle = Circle(color=BLUE)
+                self.add(circle)
+
+                circle.save_state()
+
+                self.play(
+                    circle.animate.shift(RIGHT * 3).scale(1.5)
+                )
+
+                self.play(Restore(circle))
+                self.wait()
+
+    The circle first moves and scales. Restore then animates it toward the
+    state captured by ``save_state()``.
+
+    Example 2: Restore a rotated square.
+
+        from manimlib import *
+
+        class RestoreRotationExample(Scene):
+            def construct(self):
+                square = Square(color=YELLOW)
+                self.add(square)
+
+                square.save_state()
+                self.play(square.animate.rotate(PI / 4))
+                self.play(Restore(square, run_time=2))
+                self.wait()
+
+    The square returns toward its saved orientation over two seconds.
+
+    Example 3: Restore after multiple modifications.
+
+        from manimlib import *
+
+        class RestoreMultipleChangesExample(Scene):
+            def construct(self):
+                dot = Dot(color=RED)
+                self.add(dot)
+
+                dot.save_state()
+
+                self.play(dot.animate.shift(UP * 2))
+                self.play(dot.animate.scale(2))
+                self.play(Restore(dot))
+                self.wait()
+
+    The final animation returns the dot toward the state captured before
+    either modification.
+
+    Notes
+    -----
+    - Call ``save_state()`` before using Restore unless a valid ``saved_state``
+      has already been assigned.
+    - Restore checks only that the attribute exists and is not None. It does
+      not validate that the saved state is a compatible Mobject.
+    - The saved state represents the state captured earlier; changes made
+      afterward do not automatically update that snapshot.
+    - Restore uses Transform interpolation, so the return to the saved state
+      is animated rather than necessarily instantaneous.
+    - The exact visual behavior depends on the saved state and the inherited
+      Transform implementation.
+    - If the saved state is missing, the constructor raises an Exception
+      immediately instead of creating an animation.
+    - Restore does not itself call ``save_state()`` or create a new snapshot.
+    - Animation timing and interpolation can be customized through **kwargs.
+
+    See Also
+    --------
+    Transform
+        Animates a Mobject toward a target Mobject.
+    MoveToTarget
+        Animates a Mobject toward its prepared target state.
+    TransformFromCopy
+        Animates a copy of a Mobject toward a target.
+    """
+
     def __init__(self, mobject: Mobject, **kwargs):
         if not hasattr(mobject, "saved_state") or mobject.saved_state is None:
             raise Exception("Trying to restore without having saved")
