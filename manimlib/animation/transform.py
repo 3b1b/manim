@@ -1816,6 +1816,137 @@ class ApplyPointwiseFunctionToCenter(Transform):
 
 
 class FadeToColor(ApplyMethod):
+    """
+    FadeToColor
+    ===========
+
+    Animate a Mobject's color from its current appearance to a specified
+    target color.
+
+    FadeToColor is a subclass of ApplyMethod that uses the Mobject's
+    ``set_color()`` method to prepare a target copy with the requested color.
+    The inherited ApplyMethod behavior then animates the original Mobject
+    toward that target using Transform.
+
+    Despite its name, FadeToColor does not simply fade a Mobject's opacity
+    to transparent or make it disappear. It animates a color change, allowing
+    the object to transition from its existing color toward the specified
+    color.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The Mobject whose color should be changed. Its ``set_color()`` method
+        is used to prepare the target appearance.
+
+    color : ManimColor
+        The destination color for the Mobject. This should be a color value
+        accepted by the Mobject's ``set_color()`` method, such as ``RED``,
+        ``BLUE``, or a supported ManimColor instance.
+
+    **kwargs
+        Additional keyword arguments forwarded to ApplyMethod and ultimately
+        to Transform. These can include animation configuration options such
+        as ``run_time`` and ``rate_func``.
+
+    Inheritance
+    -----------
+    FadeToColor inherits from ApplyMethod, which inherits from Transform.
+
+    Its constructor delegates to the parent using:
+
+        super().__init__(mobject.set_color, color, **kwargs)
+
+    Here, ``mobject.set_color`` is passed as a bound method, and ``color`` is
+    passed as the method argument. ApplyMethod creates a copy of the original
+    Mobject, applies ``set_color(color)`` to that copy, and uses the modified
+    copy as the transformation target.
+
+    The original Mobject is then animated toward the target appearance.
+
+    Examples
+    --------
+    Example 1: Change a circle from blue to red.
+
+        from manimlib import *
+
+        class FadeToColorExample(Scene):
+            def construct(self):
+                circle = Circle(color=BLUE)
+                self.add(circle)
+
+                self.play(FadeToColor(circle, RED))
+                self.wait()
+
+    The circle animates toward the red target appearance.
+
+    Example 2: Animate a color change with custom timing.
+
+        from manimlib import *
+
+        class TimedColorChangeExample(Scene):
+            def construct(self):
+                square = Square(color=YELLOW)
+                self.add(square)
+
+                self.play(
+                    FadeToColor(
+                        square,
+                        PURPLE,
+                        run_time=2,
+                        rate_func=smooth,
+                    )
+                )
+                self.wait()
+
+    The square transitions toward purple over two seconds using the smooth
+    rate function.
+
+    Example 3: Change the color of text.
+
+        from manimlib import *
+
+        class TextColorChangeExample(Scene):
+            def construct(self):
+                text = Text("Hello, ManimGL!", color=WHITE)
+                self.add(text)
+
+                self.play(FadeToColor(text, GREEN))
+                self.wait()
+
+    The text animates toward the target color.
+
+    Notes
+    -----
+    - FadeToColor changes color rather than directly animating opacity.
+    - The destination appearance is prepared by calling ``set_color()`` on
+      a copy of the original Mobject through ApplyMethod.
+    - The color transition is performed through Transform's interpolation
+      behavior; it is not implemented as a direct per-frame call to
+      ``set_color()`` by FadeToColor itself.
+    - The actual visual result depends on the Mobject's structure and how
+      its ``set_color()`` method applies color to its points and submobjects.
+    - For Mobjects with multiple submobjects or independently styled parts,
+      the resulting appearance depends on the behavior of ``set_color()``.
+    - The supplied color must be compatible with the color system used by
+      the installed ManimGL version.
+    - Use ``FadeIn`` or ``FadeOut`` when the intended effect is to make an
+      object appear or disappear rather than change its color.
+    - Animation duration and interpolation can be customized through the
+      inherited Transform options.
+
+    See Also
+    --------
+    ApplyMethod
+        Animates the application of a Mobject method.
+    Transform
+        Animates a Mobject toward a target Mobject.
+    FadeIn
+        Animates a Mobject into view.
+    FadeOut
+        Animates a Mobject out of view.
+    """
+
     def __init__(
         self,
         mobject: Mobject,
