@@ -999,6 +999,120 @@ class MoveToTarget(Transform):
 
 
 class _MethodAnimation(MoveToTarget):
+    """
+    _MethodAnimation
+    ================
+
+    Internal animation class that applies a sequence of callable methods to a
+    Mobject's prepared target state and animates the original Mobject toward
+    that state.
+
+    _MethodAnimation is a subclass of MoveToTarget. It stores a list of
+    callable methods and delegates target validation and transformation setup
+    to MoveToTarget.
+
+    The class is intended as an internal building block for method-based
+    animations. It relies on the source Mobject having a valid ``target``
+    attribute, typically created using ``generate_target()``. The supplied
+    methods are stored for use by the surrounding animation implementation;
+    the constructor shown here does not execute them directly.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The Mobject to animate. It must have a ``target`` attribute because
+        MoveToTarget validates this attribute during initialization.
+
+    methods : list[Callable]
+        A list of callable objects representing methods associated with the
+        animation. The constructor stores this list in ``self.methods``.
+        The exact arguments, execution order, and effects of these callables
+        depend on the code that uses this class and are not defined by this
+        constructor alone.
+
+    **kwargs
+        Additional keyword arguments forwarded to MoveToTarget and ultimately
+        to the parent Transform constructor. These may include animation
+        settings such as ``run_time`` and ``rate_func``.
+
+    Attributes
+    ----------
+    methods : list[Callable]
+        The list of callable methods passed to the constructor. The original
+        list is assigned directly; this constructor does not copy it.
+
+    Inherited Behavior
+    ------------------
+    _MethodAnimation inherits from MoveToTarget, which in turn inherits from
+    Transform. Consequently, it uses the Mobject's ``target`` attribute as
+    the destination of the transformation.
+
+    During initialization, the following operations occur:
+
+    1. The supplied methods list is assigned to ``self.methods``.
+    2. The constructor calls ``MoveToTarget.__init__`` with the Mobject and
+       any additional keyword arguments.
+    3. MoveToTarget checks that the Mobject has a ``target`` attribute.
+    4. If the check succeeds, MoveToTarget initializes Transform using the
+       original Mobject and its target.
+
+    The constructor does not explicitly invoke any callable in ``methods``.
+    Any method application must occur elsewhere in the surrounding framework
+    or in code that consumes this class.
+
+    Example
+    -------
+    The following example demonstrates the constructor's required inputs.
+    The methods are stored, while the target state is prepared separately.
+
+        from manimlib import *
+
+        class MethodAnimationExample(Scene):
+            def construct(self):
+                square = Square(color=BLUE)
+                square.generate_target()
+                square.target.shift(RIGHT * 2)
+
+                methods = [
+                    lambda mob: mob.shift(RIGHT),
+                    lambda mob: mob.scale(1.5),
+                ]
+
+                animation = _MethodAnimation(square, methods)
+                self.play(animation)
+                self.wait()
+
+    In this example, the target is shifted to the right before the animation
+    is constructed. The callables are passed to the constructor and stored.
+    However, this constructor alone does not execute those callables, so their
+    presence does not automatically apply the listed operations.
+
+    Notes
+    -----
+    - The leading underscore in ``_MethodAnimation`` indicates that the class
+      is intended for internal use rather than as a primary public API.
+    - The ``methods`` parameter is stored directly without being copied,
+      validated, or executed by the shown constructor.
+    - The constructor assumes that MoveToTarget's requirements are satisfied,
+      including the existence of the Mobject's ``target`` attribute.
+    - The target state must be prepared before initialization; this class does
+      not call ``generate_target()`` itself.
+    - The exact role of the stored methods cannot be determined from this
+      constructor alone. Consult the surrounding implementation to establish
+      where and how the callables are applied.
+    - Transformation behavior, interpolation, and animation configuration
+      are inherited from MoveToTarget and Transform.
+
+    See Also
+    --------
+    MoveToTarget
+        Animates a Mobject toward its prepared target state.
+    Transform
+        Animates a Mobject into another Mobject.
+    TransformFromCopy
+        Animates a copy of a Mobject toward a target.
+    """
+
     def __init__(self, mobject: Mobject, methods: list[Callable], **kwargs):
         self.methods = methods
         super().__init__(mobject, **kwargs)
