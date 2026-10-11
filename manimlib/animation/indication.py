@@ -329,6 +329,174 @@ class Indicate(Transform):
 
 
 class Flash(AnimationGroup):
+    """
+    Create a brief radial flash effect around a specified point.
+
+    Flash is a subclass of AnimationGroup that creates multiple short lines
+    arranged radially around a center point. Each line is animated using
+    ShowCreationThenDestruction, making it appear briefly and then disappear.
+
+    The lines are initially constructed along the positive x-axis, shifted
+    outward by the difference between the flash radius and the line length,
+    and rotated around the origin at evenly spaced angles. The resulting
+    VGroup receives the configured stroke color and width.
+
+    An updater moves the entire line group to the specified point, allowing
+    the flash to follow a Mobject when that object's position changes while
+    the updater is active.
+
+    Parameters
+    ----------
+    point : np.ndarray | Mobject
+        The location around which the flash appears. This can be a coordinate
+        array or a Mobject whose position is used by the line group's updater.
+
+    color : ManimColor, optional
+        The stroke color of all flash lines. Defaults to YELLOW.
+
+    line_length : float, optional
+        The length of each radial line. Defaults to 0.2.
+
+    num_lines : int, optional
+        The number of radial lines used to construct the flash. Defaults to 12.
+        The lines are distributed at evenly spaced angles around a full circle.
+
+    flash_radius : float, optional
+        The radial distance used when positioning the lines before animation.
+        Each line is shifted outward by ``flash_radius - line_length``.
+        Defaults to 0.3.
+
+    line_stroke_width : float, optional
+        The stroke width applied to all lines. Defaults to 3.0.
+
+    run_time : float, optional
+        The total duration of the animation group. Defaults to 1.0 second.
+
+    **kwargs
+        Additional keyword arguments forwarded to AnimationGroup, such as
+        other supported animation-group configuration options.
+
+    Attributes
+    ----------
+    point
+        The location or Mobject around which the flash is positioned.
+
+    color
+        The configured stroke color of the flash lines.
+
+    line_length
+        The length of each line.
+
+    num_lines
+        The number of radial lines.
+
+    flash_radius
+        The radial positioning parameter used when constructing the lines.
+
+    line_stroke_width
+        The stroke width applied to the lines.
+
+    lines : VGroup
+        The group containing all radial flash lines. It is also supplied as
+        the AnimationGroup's ``group``.
+
+    Methods
+    -------
+    create_lines() -> VGroup
+        Construct and return the radial line group. The method creates lines
+        at evenly spaced angles, applies the configured stroke style, and
+        adds an updater that moves the group to ``self.point``.
+
+    create_line_anims() -> list[Animation]
+        Return one ShowCreationThenDestruction animation for each line in
+        ``self.lines``.
+
+    Notes
+    -----
+    - The angular positions are generated with
+      ``np.arange(0, TAU, TAU / self.num_lines)``.
+    - Each line starts as a segment from ORIGIN to
+      ``self.line_length * RIGHT``.
+    - The line is shifted by
+      ``(self.flash_radius - self.line_length) * RIGHT`` before rotation.
+    - The stroke color and width are applied to the complete VGroup.
+    - Each line has its own ShowCreationThenDestruction animation.
+    - The animation group runs all of these line animations together.
+    - The line group has an updater that calls ``move_to(self.point)``.
+      If ``point`` is a Mobject, the flash can follow its position while
+      the updater is active.
+    - ``num_lines`` should be a positive, nonzero value because it is used
+      to calculate the angular step. A value of zero would make the angular
+      step undefined.
+    - The exact appearance depends on the chosen radius, line length, stroke
+      width, animation duration, and inherited animation behavior.
+
+    Examples
+    --------
+    Example 1: Create a default yellow flash at the origin.
+
+    >>> scene.play(Flash(ORIGIN))
+
+    A ring-like arrangement of 12 short yellow lines appears around the
+    origin. Each line is drawn and then removed during the animation.
+
+    Example 2: Flash at a specific coordinate.
+
+    >>> point = np.array([2.0, 1.0, 0.0])
+    >>> scene.play(Flash(point, color=BLUE))
+
+    The radial flash is positioned at the specified coordinate and uses
+    blue strokes instead of the default yellow.
+
+    Example 3: Create a larger flash with more lines.
+
+    >>> scene.play(
+    ...     Flash(
+    ...         ORIGIN,
+    ...         num_lines=20,
+    ...         flash_radius=0.5,
+    ...         line_length=0.25,
+    ...     )
+    ... )
+
+    The flash contains 20 evenly distributed lines, with a larger radial
+    positioning parameter and longer line segments.
+
+    Example 4: Emphasize a moving Mobject.
+
+    >>> dot = Dot()
+    >>> scene.add(dot)
+    >>> scene.play(
+    ...     dot.animate.shift(RIGHT * 2),
+    ...     Flash(dot, color=YELLOW),
+    ... )
+
+    The line group uses an updater that moves it to the Dot's position.
+    The visible result depends on the updater and animation lifecycle while
+    the Dot moves.
+
+    Example 5: Customize stroke width and duration.
+
+    >>> scene.play(
+    ...     Flash(
+    ...         ORIGIN,
+    ...         line_stroke_width=6,
+    ...         run_time=0.5,
+    ...     )
+    ... )
+
+    The flash uses thicker lines and a half-second animation duration.
+
+    See Also
+    --------
+    AnimationGroup
+    ShowCreationThenDestruction
+    Line
+    VGroup
+    Indicate
+    FocusOn
+    """
+
     def __init__(
         self,
         point: np.ndarray | Mobject,
