@@ -347,6 +347,153 @@ class SmoothedVectorizedHomotopy(Homotopy):
 
 
 class ComplexHomotopy(Homotopy):
+    """
+    Animate a Mobject using a time-dependent complex-valued function.
+
+    ComplexHomotopy is a subclass of Homotopy that represents a geometric
+    transformation using complex numbers. Instead of directly defining a
+    transformation from three-dimensional coordinates (x, y, z) and time t
+    to new coordinates, the user supplies a function that maps a complex
+    number and time to another complex number.
+
+    The real and imaginary parts of the resulting complex number determine
+    the transformed x and y coordinates, respectively. The original z
+    coordinate is preserved.
+
+    Parameters
+    ----------
+    complex_homotopy : Callable[[complex, float], complex]
+        A function that accepts a complex number and a time parameter and
+        returns a complex number representing the transformed position.
+
+        Conceptually:
+
+            (complex_number, time) -> transformed_complex_number
+
+    mobject : Mobject
+        The ManimGL object whose points will be transformed.
+
+    **kwargs
+        Additional keyword arguments passed to the parent Homotopy
+        constructor, such as run_time and other animation configuration
+        options.
+
+    Implementation Details
+    ----------------------
+    1. The constructor defines an internal function named homotopy.
+    2. For each point, its x and y coordinates are combined into a complex
+       number using complex(x, y).
+    3. The supplied complex_homotopy function transforms that complex
+       number at time t.
+    4. The real part of the result becomes the new x coordinate.
+    5. The imaginary part of the result becomes the new y coordinate.
+    6. The original z coordinate is returned unchanged.
+    7. The resulting three-dimensional homotopy function is passed to the
+       parent Homotopy constructor.
+
+    This allows transformations from complex analysis to be expressed
+    naturally as animations of vectorized ManimGL objects.
+
+    Examples
+    --------
+    Example 1: Rotation in the Complex Plane
+    ----------------------------------------
+    Multiplication by a complex exponential rotates each point around the
+    origin.
+
+        import numpy as np
+        from manimlib import *
+
+        def rotate_complex(z, t):
+            return z * np.exp(1j * np.pi * t)
+
+        circle = Circle()
+
+        self.play(
+            ComplexHomotopy(
+                rotate_complex,
+                circle,
+                run_time=2
+            )
+        )
+
+    The transformation rotates points through an angle of pi radians
+    over the course of the animation.
+
+    Example 2: Scaling
+    ------------------
+    Multiplying a complex number by a time-dependent real factor changes
+    its distance from the origin.
+
+        def scale_complex(z, t):
+            return z * (1 + t)
+
+        square = Square()
+
+        self.play(
+            ComplexHomotopy(
+                scale_complex,
+                square,
+                run_time=2
+            )
+        )
+
+    Example 3: Translation in the Complex Plane
+    -------------------------------------------
+    Adding a complex constant translates points horizontally and vertically.
+
+        def translate_complex(z, t):
+            return z + t * (2 + 1j)
+
+        dot = Dot()
+
+        self.play(
+            ComplexHomotopy(
+                translate_complex,
+                dot,
+                run_time=2
+            )
+        )
+
+    Example 4: Complex Conjugation Interpolation
+    --------------------------------------------
+    A time-dependent function can interpolate between the identity mapping
+    and complex conjugation.
+
+        def conjugate_interpolation(z, t):
+            return (1 - t) * z + t * np.conjugate(z)
+
+        circle = Circle()
+
+        self.play(
+            ComplexHomotopy(
+                conjugate_interpolation,
+                circle,
+                run_time=3
+            )
+        )
+
+    Notes
+    -----
+    - The complex plane corresponds to the x-y plane of the Mobject.
+    - The z coordinate of every transformed point is preserved.
+    - The complex_homotopy function receives the animation's time parameter,
+      generally ranging from 0 to 1 during interpolation.
+    - The supplied function should return a complex number.
+    - This class inherits Homotopy's interpolation behavior and animation
+      configuration.
+    - The transformation is applied to the object's points, so the
+      resulting visual effect depends on the geometry of the Mobject.
+    - This class does not automatically guarantee that the transformation
+      is invertible or that it preserves distances, angles, or shape.
+
+    See Also
+    --------
+    Homotopy
+    SmoothedVectorizedHomotopy
+    Animation
+    """
+
     def __init__(
         self,
         complex_homotopy: Callable[[complex, float], complex],
