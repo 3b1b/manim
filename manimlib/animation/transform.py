@@ -2597,6 +2597,223 @@ class ApplyFunction(Transform):
 
 
 class ApplyMatrix(ApplyPointwiseFunction):
+    """
+    ApplyMatrix
+    ===========
+
+    Animate a Mobject by applying a matrix transformation to its points.
+
+    ApplyMatrix is a subclass of ApplyPointwiseFunction that provides a
+    matrix-based interface for transforming Mobject geometry. Instead of
+    writing a custom pointwise function, the caller supplies a 2 × 2 or
+    3 × 3 matrix. The class converts the matrix into a compatible 3 × 3
+    matrix when necessary and uses it to transform the coordinates of the
+    Mobject's points.
+
+    This animation is useful for visualizing linear transformations such as
+    rotations, reflections, shears, and scalings. It can also be used to
+    demonstrate how a matrix changes the geometry of a shape or coordinate
+    grid.
+
+    Parameters
+    ----------
+    matrix : npt.ArrayLike
+        A two-dimensional array-like object representing the transformation
+        matrix. The implementation accepts matrices with shape ``(2, 2)``
+        or ``(3, 3)``.
+
+        A 2 × 2 matrix is extended to a 3 × 3 identity matrix, with the
+        supplied matrix placed in the upper-left 2 × 2 block. A 3 × 3 matrix
+        is used directly after conversion to a NumPy array.
+
+    mobject : Mobject
+        The Mobject whose points will be transformed by the matrix.
+
+    **kwargs
+        Additional keyword arguments forwarded to ApplyPointwiseFunction and
+        ultimately to the inherited animation implementation. These can
+        include options such as ``run_time`` and ``rate_func``.
+
+    Attributes
+    ----------
+    matrix : np.ndarray
+        The constructor uses the validated NumPy matrix to define the
+        pointwise transformation function. The matrix is captured by the
+        function created during initialization; this class does not explicitly
+        assign it to ``self.matrix``.
+
+    Inherited Behavior
+    ------------------
+    ApplyMatrix inherits from ApplyPointwiseFunction, which inherits from
+    ApplyMethod and Transform.
+
+    The constructor performs these operations:
+
+    1. Passes the supplied matrix to ``initialize_matrix()``.
+    2. Defines a pointwise function that multiplies each point by the
+       transpose of the matrix.
+    3. Passes that function and the Mobject to ApplyPointwiseFunction.
+
+    The pointwise transformation is defined as:
+
+        def func(p):
+            return np.dot(p, matrix.T)
+
+    The transpose is important because points are represented as coordinate
+    vectors in the implementation's row-vector convention. Multiplying a
+    point array by the transposed matrix applies the intended linear mapping.
+
+    Matrix Initialization
+    ---------------------
+    The ``initialize_matrix()`` method converts the input into a NumPy array
+    using ``np.array(matrix)``.
+
+    It then checks the matrix dimensions:
+
+    - If the shape is ``(2, 2)``, a 3 × 3 identity matrix is created and
+      the supplied matrix is inserted into its upper-left 2 × 2 block.
+    - If the shape is ``(3, 3)``, the converted matrix is accepted directly.
+    - Any other shape raises an Exception with the message:
+
+          Matrix has bad dimensions
+
+    For a 2 × 2 matrix, the resulting matrix has the form:
+
+        [[a, b, 0],
+         [c, d, 0],
+         [0, 0, 1]]
+
+    This embeds a two-dimensional linear transformation into three-dimensional
+    coordinate space while leaving the z-coordinate unchanged.
+
+    Examples
+    --------
+    Example 1: Apply a scaling matrix.
+
+        from manimlib import *
+        import numpy as np
+
+        class ApplyMatrixScaleExample(Scene):
+            def construct(self):
+                square = Square(color=BLUE)
+                self.add(square)
+
+                matrix = [
+                    [2, 0],
+                    [0, 2],
+                ]
+
+                self.play(ApplyMatrix(matrix, square))
+                self.wait()
+
+    The 2 × 2 matrix is extended to 3 × 3 form and doubles the x- and
+    y-coordinates of the square's points.
+
+    Example 2: Reflect a shape across the y-axis.
+
+        from manimlib import *
+        import numpy as np
+
+        class ApplyMatrixReflectionExample(Scene):
+            def construct(self):
+                square = Square(color=YELLOW)
+                self.add(square)
+
+                matrix = [
+                    [-1, 0],
+                    [ 0, 1],
+                ]
+
+                self.play(ApplyMatrix(matrix, square))
+                self.wait()
+
+    The x-coordinate of each point changes sign while its y-coordinate
+    remains unchanged, producing a reflection across the y-axis.
+
+    Example 3: Apply a shear transformation.
+
+        from manimlib import *
+        import numpy as np
+
+        class ApplyMatrixShearExample(Scene):
+            def construct(self):
+                square = Square(color=GREEN)
+                self.add(square)
+
+                matrix = [
+                    [1, 1],
+                    [0, 1],
+                ]
+
+                self.play(
+                    ApplyMatrix(
+                        matrix,
+                        square,
+                        run_time=2,
+                        rate_func=smooth,
+                    )
+                )
+                self.wait()
+
+    The matrix transforms the coordinates according to the supplied linear
+    mapping. The square becomes sheared as the animation progresses.
+
+    Example 4: Supply a 3 × 3 matrix.
+
+        from manimlib import *
+
+        class ApplyMatrix3DExample(Scene):
+            def construct(self):
+                square = Square(color=RED)
+                self.add(square)
+
+                matrix = [
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 1],
+                ]
+
+                self.play(ApplyMatrix(matrix, square))
+                self.wait()
+
+    The identity matrix leaves the coordinates unchanged, so the target
+    geometry is equivalent to the original geometry.
+
+    Notes
+    -----
+    - The implementation accepts only matrices whose shapes are exactly
+      ``(2, 2)`` or ``(3, 3)``.
+    - A 2 × 2 matrix is embedded into three-dimensional space with the z-axis
+      left unchanged.
+    - The pointwise mapping uses ``np.dot(p, matrix.T)`` rather than
+      ``np.dot(matrix, p)``. This matches the row-vector representation of
+      point coordinates used by the implementation.
+    - The transformation is linear with respect to the supplied coordinates.
+      Translation is not represented by a standard 2 × 2 or 3 × 3 linear
+      transformation matrix in this implementation.
+    - A 3 × 3 matrix can mix the x, y, and z coordinates, depending on its
+      entries.
+    - The implementation checks matrix shape but does not explicitly check
+      that all entries are finite or that the matrix is invertible.
+    - Singular matrices are accepted if their dimensions are valid, although
+      they may collapse some or all geometric dimensions.
+    - The constructor does not explicitly store the matrix as an instance
+      attribute; it is captured by the local pointwise function.
+    - The final visual interpolation and scene behavior are inherited from
+      ApplyPointwiseFunction and Transform.
+
+    See Also
+    --------
+    ApplyPointwiseFunction
+        Applies a custom function to the points of a Mobject.
+    ApplyPointwiseFunctionToCenter
+        Applies a function to a Mobject's center position.
+    ApplyFunction
+        Constructs a target Mobject by applying a function to a copy.
+    Transform
+        Animates a Mobject toward a target Mobject.
+    """
+
     def __init__(
         self,
         matrix: npt.ArrayLike,
