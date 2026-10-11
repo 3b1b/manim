@@ -1410,6 +1410,128 @@ class FlashUnder(FlashAround):
 
 
 class ShowCreationThenDestruction(ShowPassingFlash):
+    """
+    Animate a VMobject with a passing stroke that creates and then destroys
+    the visible highlight along its path.
+
+    ShowCreationThenDestruction is a subclass of ShowPassingFlash. It uses
+    the parent animation's moving stroke effect to make a portion of a
+    VMobject appear progressively and then disappear as the highlight moves
+    along the object's path.
+
+    This animation is useful for tracing curves, highlighting mathematical
+    graphs, emphasizing geometric boundaries, and creating temporary
+    visual effects without permanently drawing the entire path.
+
+    Parameters
+    ----------
+    vmobject : VMobject
+        The vector object whose path will be highlighted by the passing flash.
+
+    time_width : float, default=2.0
+        Controls the width of the moving visible portion along the path.
+        Larger values produce a wider highlight, while smaller values produce
+        a narrower highlight.
+
+    **kwargs
+        Additional keyword arguments forwarded to ShowPassingFlash, such as
+        run_time, rate_func, and other supported animation settings.
+
+    Implementation Details
+    ----------------------
+    1. The constructor receives a VMobject and the desired time_width.
+    2. It forwards both arguments to ShowPassingFlash.
+    3. ShowPassingFlash handles the animation of the moving stroke along
+       the VMobject's path.
+    4. As the stroke progresses, the highlighted portion appears temporarily
+       and then disappears, creating a creation-and-destruction effect.
+
+    Examples
+    --------
+    Example 1: Trace a circle temporarily.
+
+        circle = Circle()
+        self.add(circle)
+        self.play(
+            ShowCreationThenDestruction(circle)
+        )
+
+    A moving highlight travels around the circle and disappears as it moves.
+
+    Example 2: Highlight a mathematical curve.
+
+        curve = FunctionGraph(
+            lambda x: np.sin(x),
+            x_range=[-PI, PI]
+        )
+        self.add(curve)
+        self.play(
+            ShowCreationThenDestruction(
+                curve,
+                time_width=1.0,
+                run_time=2
+            )
+        )
+
+    A temporary highlight travels along the sine curve.
+
+    Example 3: Use a broader passing highlight.
+
+        square = Square()
+        self.add(square)
+        self.play(
+            ShowCreationThenDestruction(
+                square,
+                time_width=3.0,
+                run_time=2
+            )
+        )
+
+    The larger time_width produces a broader moving highlight.
+
+    Example 4: Emphasize a portion of a parametric curve.
+
+        curve = ParametricCurve(
+            lambda t: np.array([
+                np.cos(t),
+                np.sin(2 * t),
+                0
+            ]),
+            t_range=[0, TAU]
+        )
+        self.add(curve)
+        self.play(
+            ShowCreationThenDestruction(
+                curve,
+                time_width=1.5
+            )
+        )
+
+    The animation temporarily highlights the curve as the stroke moves along it.
+
+    Notes
+    -----
+    - This class inherits its animation behavior from ShowPassingFlash.
+    - It does not permanently create a complete new path; it produces a
+      moving, temporary highlight along an existing VMobject.
+    - The target must be a VMobject or a compatible vector object.
+    - The actual visual effect depends on the object's path, stroke style,
+      time_width, and inherited animation settings.
+    - time_width controls the moving highlight's width; run_time controls
+      how long the animation takes to play.
+
+    See Also
+    --------
+    ShowPassingFlash
+        Animates a temporary stroke moving along a VMobject.
+    VShowPassingFlash
+        Animates a passing flash using variable stroke widths.
+    ShowCreation
+        Progressively reveals an object's path.
+    Uncreate
+        Animates the disappearance of an object's path.
+    """
+
     def __init__(self, vmobject: VMobject, time_width: float = 2.0, **kwargs):
         super().__init__(vmobject, time_width=time_width, **kwargs)
 
