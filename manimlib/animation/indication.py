@@ -546,6 +546,149 @@ class Flash(AnimationGroup):
 
 
 class CircleIndicate(Transform):
+    """
+    Temporarily highlight a mobject by animating a circle around it.
+
+    CircleIndicate is a subclass of Transform that creates a circle surrounding
+    the specified mobject and animates that circle from a smaller, initially
+    invisible-stroke version to the full surrounding circle.
+
+    The target circle is created with a configurable stroke color and width.
+    It is positioned around the mobject using ``circle.surround(mobject)``.
+    A copy of this circle is then made, its stroke width is set to zero, and
+    it is scaled down by the reciprocal of ``scale_factor``. Transform
+    animates from this smaller circle to the full circle.
+
+    By default, the ``there_and_back`` rate function makes the circle expand
+    around the object and then return to its starting state, creating a
+    temporary highlighting effect.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object to highlight. The circle is positioned to surround this
+        object when the animation is initialized.
+
+    scale_factor : float, optional
+        The factor used to determine the initial circle size. The starting
+        circle is scaled by ``1 / scale_factor`` relative to the surrounding
+        circle. Defaults to 1.2.
+
+    rate_func : Callable[[float], float], optional
+        The rate function controlling the transformation progress.
+        Defaults to ``there_and_back``, which typically moves toward the
+        target state and then returns to the starting state.
+
+    stroke_color : ManimColor, optional
+        The stroke color of the surrounding circle. Defaults to YELLOW.
+
+    stroke_width : float, optional
+        The stroke width of the surrounding circle. Defaults to 3.0.
+
+    remover : bool, optional
+        Whether the animated mobject should be removed during animation
+        cleanup. Defaults to True.
+
+    **kwargs
+        Additional keyword arguments forwarded to Transform.
+
+    Notes
+    -----
+    - The circle is created independently of the highlighted mobject.
+    - ``circle.surround(mobject)`` positions the target circle around the
+      supplied object.
+    - The starting circle is a copy of the target circle with stroke width
+      set to zero, then scaled by ``1 / scale_factor``.
+    - The target circle retains the configured stroke color and stroke width.
+    - The animation uses Transform with the starting circle and target circle.
+    - The default ``there_and_back`` rate function creates a temporary
+      indication effect. A different rate function changes how the
+      transformation progresses.
+    - ``scale_factor`` should be nonzero because the constructor calculates
+      its reciprocal. A value greater than 1 makes the starting circle
+      smaller than the target circle.
+    - The ``remover`` setting is forwarded to Transform and controls inherited
+      cleanup behavior.
+    - This implementation creates and transforms the circle; it does not
+      explicitly animate the highlighted mobject itself.
+
+    Examples
+    --------
+    Example 1: Indicate a circle with a surrounding outline.
+
+    >>> dot = Dot()
+    >>> scene.add(dot)
+    >>> scene.play(CircleIndicate(dot))
+
+    A circle expands from its smaller starting version to surround the Dot,
+    then returns toward the starting state using the default rate function.
+
+    Example 2: Highlight a square in blue.
+
+    >>> square = Square()
+    >>> scene.add(square)
+    >>> scene.play(
+    ...     CircleIndicate(
+    ...         square,
+    ...         stroke_color=BLUE,
+    ...     )
+    ... )
+
+    A blue circle is animated around the square.
+
+    Example 3: Make the surrounding circle larger.
+
+    >>> triangle = Triangle()
+    >>> scene.add(triangle)
+    >>> scene.play(
+    ...     CircleIndicate(
+    ...         triangle,
+    ...         scale_factor=1.5,
+    ...     )
+    ... )
+
+    The starting circle is scaled by 1 / 1.5 relative to the surrounding
+    circle, so the transformation begins with a smaller circle.
+
+    Example 4: Customize stroke width and duration.
+
+    >>> square = Square()
+    >>> scene.add(square)
+    >>> scene.play(
+    ...     CircleIndicate(
+    ...         square,
+    ...         stroke_width=6,
+    ...         run_time=2,
+    ...     )
+    ... )
+
+    The surrounding circle uses a thicker stroke and the transformation
+    runs over two seconds.
+
+    Example 5: Use a different rate function.
+
+    >>> dot = Dot()
+    >>> scene.add(dot)
+    >>> scene.play(
+    ...     CircleIndicate(
+    ...         dot,
+    ...         rate_func=there_and_back,
+    ...     )
+    ... )
+
+    The explicitly supplied rate function produces the usual expand-and-return
+    progression.
+
+    See Also
+    --------
+    Transform
+    Circle
+    Indicate
+    Circumscribe
+    FocusOn
+    Mobject.surround
+    """
+
     def __init__(
         self,
         mobject: Mobject,
