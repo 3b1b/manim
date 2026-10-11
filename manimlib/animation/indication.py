@@ -2615,6 +2615,130 @@ class WiggleOutThenIn(Animation):
 
 
 class TurnInsideOut(Transform):
+    """
+    Transform a Mobject by reversing the order of its points.
+
+    TurnInsideOut is a subclass of Transform. It creates a copy of the
+    original Mobject, reverses the order of its points, and uses that copy
+    as the transformation target.
+
+    The transformation can create an inside-out or flipped-through-itself
+    visual effect as the original object morphs into the reversed version.
+    The exact appearance depends on the geometry and point ordering of the
+    Mobject.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object to transform. Its points are animated toward the points
+        of a reversed copy.
+
+    path_arc : float, default=90 * DEG
+        Angular curvature of the transformation path, specified in radians.
+        The default is 90 degrees, producing a curved transformation path.
+
+    **kwargs
+        Additional keyword arguments forwarded to the Transform constructor,
+        such as run_time, rate_func, and other supported transformation settings.
+
+    Methods
+    -------
+    create_target()
+        Creates a copy of the original Mobject, reverses its point ordering
+        using reverse_points(), and returns the resulting Mobject as the
+        transformation target.
+
+    Implementation Details
+    ----------------------
+    1. The constructor passes the original Mobject and path_arc to Transform.
+    2. Transform uses create_target() to obtain the target geometry.
+    3. create_target() copies the original Mobject so that the original
+       geometry is not directly reversed in place.
+    4. reverse_points() reverses the order of the points in the copied object.
+    5. Transform interpolates the original object toward this reversed target.
+    6. The path_arc parameter controls the curvature of the interpolation path.
+
+    Examples
+    --------
+    Example 1: Turn a square inside out.
+
+        square = Square()
+        self.add(square)
+
+        self.play(
+            TurnInsideOut(square)
+        )
+
+    The square transforms toward a copy whose point order has been reversed.
+
+    Example 2: Transform a triangle with a longer duration.
+
+        triangle = Triangle()
+        self.add(triangle)
+
+        self.play(
+            TurnInsideOut(
+                triangle,
+                run_time=2
+            )
+        )
+
+    The transformation takes two seconds to complete.
+
+    Example 3: Change the transformation arc.
+
+        circle = Circle()
+        self.add(circle)
+
+        self.play(
+            TurnInsideOut(
+                circle,
+                path_arc=180 * DEG,
+                run_time=2
+            )
+        )
+
+    The transformation uses a 180-degree path arc.
+
+    Example 4: Apply the transformation to text.
+
+        word = Text("MANIM")
+        self.add(word)
+
+        self.play(
+            TurnInsideOut(
+                word,
+                path_arc=90 * DEG
+            )
+        )
+
+    The text transforms toward a copy with reversed point ordering. The
+    visual effect depends on how the text's individual vector paths are
+    represented.
+
+    Notes
+    -----
+    - reverse_points() reverses point ordering; it does not simply rotate
+      the object by 180 degrees.
+    - The target is created from a copy, so the original Mobject is not
+      directly modified by create_target().
+    - The resulting visual effect depends on the object's geometry,
+      submobject structure, and point ordering.
+    - path_arc controls the curvature of the transformation path, not the
+      amount by which the points are reversed.
+    - This class does not implement custom interpolation; it inherits the
+      transformation behavior from Transform.
+
+    See Also
+    --------
+    Transform
+        Animates a Mobject toward a target Mobject.
+    reverse_points
+        Reverses the point ordering of a Mobject.
+    TransformMatchingShapes
+        Transforms objects by matching their shapes.
+    """
+
     def __init__(self, mobject: Mobject, path_arc: float = 90 * DEG, **kwargs):
         super().__init__(mobject, path_arc=path_arc, **kwargs)
 
