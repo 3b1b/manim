@@ -229,6 +229,120 @@ class Homotopy(Animation):
 
 
 class SmoothedVectorizedHomotopy(Homotopy):
+    """
+    Apply a smoothed vectorized homotopy transformation to a Mobject.
+
+    SmoothedVectorizedHomotopy is a subclass of Homotopy that applies a
+    time-dependent geometric transformation to a Mobject while smoothing
+    its vectorized point geometry.
+
+    The class inherits the homotopy function and animation behavior from
+    Homotopy, but overrides the apply_function_config dictionary to enable
+    point smoothing during the transformation.
+
+    This is useful when a homotopy modifies the geometry of vectorized
+    objects and a smoother appearance is desired throughout the animation.
+
+    Attributes
+    ----------
+    apply_function_config : dict
+        Configuration passed to Mobject.apply_function during interpolation.
+        The default configuration is:
+
+            {"make_smooth": True}
+
+        The make_smooth option requests that the transformed vectorized
+        geometry be smoothed when the underlying Mobject supports it.
+
+    Inherited Parameters
+    --------------------
+    homotopy : Callable[[float, float, float, float], Sequence[float]]
+        A time-dependent function that maps a point (x, y, z) and animation
+        time t to a transformed point (x', y', z').
+
+    mobject : Mobject
+        The object whose geometry is transformed by the homotopy.
+
+    run_time : float, optional
+        Duration of the animation in seconds. The default inherited from
+        Homotopy is 3.0 seconds.
+
+    **kwargs
+        Additional keyword arguments forwarded through the parent Animation
+        initialization.
+
+    How It Works
+    ------------
+    1. The class inherits Homotopy's constructor and interpolation logic.
+    2. During interpolation, Homotopy restores each submobject's original
+       points and applies the homotopy function at the current animation
+       time.
+    3. The inherited implementation passes apply_function_config to
+       Mobject.apply_function.
+    4. Because make_smooth=True is configured here, the transformation
+       requests smoothing of the resulting vectorized geometry.
+
+    Example
+    -------
+    A simple homotopy that gradually shifts points upward:
+
+        import numpy as np
+        from manimlib import *
+
+        def upward_homotopy(x, y, z, t):
+            return np.array([x, y + t, z])
+
+        square = Square()
+
+        animation = SmoothedVectorizedHomotopy(
+            upward_homotopy,
+            square,
+            run_time=2
+        )
+
+        self.play(animation)
+
+    Example: Time-Dependent Horizontal Wave
+    ---------------------------------------
+    A homotopy can also displace points according to their horizontal
+    position and the animation time:
+
+        def wave_homotopy(x, y, z, t):
+            return np.array([
+                x,
+                y + 0.3 * np.sin(2 * x + 2 * np.pi * t),
+                z
+            ])
+
+        curve = Circle()
+
+        self.play(
+            SmoothedVectorizedHomotopy(
+                wave_homotopy,
+                curve,
+                run_time=3
+            )
+        )
+
+    Notes
+    -----
+    - This class does not define a new constructor; it inherits the
+      constructor from Homotopy.
+    - The homotopy function receives four scalar arguments: x, y, z, and t.
+    - The time parameter supplied to the homotopy is the animation's
+      interpolation alpha, which normally ranges from 0 to 1.
+    - Smoothing depends on the behavior of Mobject.apply_function and
+      whether the affected object supports vectorized point geometry.
+    - The default configuration is defined at the class level. Subclasses
+      can override it to customize how the transformation is applied.
+
+    See Also
+    --------
+    Homotopy
+    Mobject.apply_function
+    Animation
+    """
+
     apply_function_config: dict = dict(make_smooth=True)
 
 
