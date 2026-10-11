@@ -1653,6 +1653,149 @@ class ShowCreationThenFadeOut(Succession):
 
 
 class AnimationOnSurroundingRectangle(AnimationGroup):
+    """
+    Apply an animation to a rectangle that surrounds a Mobject.
+
+    AnimationOnSurroundingRectangle is a subclass of AnimationGroup. It creates
+    a SurroundingRectangle around a target object, attaches an updater that
+    keeps the rectangle centered on the target, and applies a specified
+    animation to that rectangle.
+
+    The animation type is controlled by the class attribute RectAnimationType,
+    which defaults to Animation. Subclasses can override this attribute to
+    choose a particular animation, such as ShowCreation or FadeIn.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object around which the surrounding rectangle is created.
+        The rectangle follows the object's position through an updater.
+
+    stroke_width : float, default=2.0
+        Thickness of the rectangle's outline.
+
+    stroke_color : ManimColor, default=YELLOW
+        Color of the rectangle's outline.
+
+    buff : float, default=SMALL_BUFF
+        Spacing between the target object and the surrounding rectangle.
+
+    **kwargs
+        Additional keyword arguments forwarded to the animation constructed
+        through RectAnimationType. Supported arguments depend on the selected
+        animation class.
+
+    Attributes
+    ----------
+    RectAnimationType : type, default=Animation
+        Class-level attribute specifying which animation is applied to the
+        surrounding rectangle. Subclasses can override it to customize the
+        animation behavior.
+
+    Implementation Details
+    ----------------------
+    1. Creates a SurroundingRectangle around the target Mobject.
+    2. Sets the rectangle's stroke width, stroke color, and buffer distance.
+    3. Adds an updater that moves the rectangle to the target object's position.
+    4. Constructs an animation using RectAnimationType(rect, **kwargs).
+    5. Passes that animation to AnimationGroup.
+
+    Examples
+    --------
+    Example 1: Animate a surrounding rectangle.
+
+        circle = Circle()
+        self.add(circle)
+
+        self.play(
+            AnimationOnSurroundingRectangle(circle)
+        )
+
+    The rectangle receives the default Animation type. Since Animation itself
+    does not define a specific visual effect, a subclass or a more specific
+    RectAnimationType is generally needed for a visible result.
+
+    Example 2: Use ShowCreation for the rectangle.
+
+        class DrawAround(AnimationOnSurroundingRectangle):
+            RectAnimationType = ShowCreation
+
+        equation = MathTex(r"E = mc^2")
+        self.add(equation)
+
+        self.play(
+            DrawAround(
+                equation,
+                stroke_color=YELLOW,
+                stroke_width=3,
+                buff=0.2
+            )
+        )
+
+    The rectangle is drawn around the equation.
+
+    Example 3: Fade in a surrounding rectangle.
+
+        class FadeAround(AnimationOnSurroundingRectangle):
+            RectAnimationType = FadeIn
+
+        square = Square()
+        self.add(square)
+
+        self.play(
+            FadeAround(
+                square,
+                stroke_color=BLUE,
+                buff=0.3
+            )
+        )
+
+    The surrounding rectangle fades in around the square.
+
+    Example 4: Follow a moving object.
+
+        class DrawAround(AnimationOnSurroundingRectangle):
+            RectAnimationType = ShowCreation
+
+        dot = Dot(LEFT)
+        self.add(dot)
+
+        self.play(
+            dot.animate.shift(RIGHT * 2),
+            DrawAround(dot)
+        )
+
+    The rectangle's updater moves it toward the target object's current
+    position as the object moves. Exact behavior depends on the timing of
+    the updater and the animation being played.
+
+    Notes
+    -----
+    - The rectangle is a separate Mobject; it does not replace or transform
+      the target object.
+    - The updater calls move_to(mobject), keeping the rectangle centered
+      on the target's current position.
+    - The updater centers the rectangle but does not explicitly resize it
+      when the target object's dimensions change.
+    - RectAnimationType is a class attribute, making it possible to define
+      specialized subclasses without rewriting the constructor.
+    - The default Animation class may not create a visible effect by itself.
+      Choose an appropriate animation type for the intended result.
+    - The rectangle's appearance depends on the target object's geometry,
+      buff, stroke_width, and stroke_color.
+
+    See Also
+    --------
+    AnimationGroup
+        Runs multiple animations as a group.
+    SurroundingRectangle
+        Creates a rectangle around a Mobject.
+    ShowCreation
+        Progressively reveals a Mobject.
+    FadeIn
+        Fades a Mobject into the scene.
+    """
+
     RectAnimationType: type = Animation
 
     def __init__(
