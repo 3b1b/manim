@@ -1119,6 +1119,241 @@ class _MethodAnimation(MoveToTarget):
 
 
 class ApplyMethod(Transform):
+    """
+    ApplyMethod
+    ===========
+
+    Animate the application of a Mobject method by transforming the original
+    Mobject into a copy modified by that method.
+
+    ApplyMethod is a subclass of Transform designed to animate method calls
+    on Mobjects. Instead of manually creating a target Mobject, the caller
+    provides a bound method and the arguments that should be passed to it.
+    ApplyMethod creates a copy of the original Mobject, applies the method
+    to that copy, and uses the modified copy as the transformation target.
+
+    This allows operations such as shifting, scaling, rotating, and changing
+    other Mobject properties to be animated through a method-call interface.
+
+    Parameters
+    ----------
+    method : Callable
+        A bound method belonging to a Mobject instance. The instance is
+        available through ``method.__self__``, and the underlying function
+        is available through ``method.__func__``.
+
+        Pass the method itself without calling it. For example, use
+        ``square.shift`` rather than ``square.shift(RIGHT)``.
+
+    *args
+        Positional arguments to pass to the method when it is applied to the
+        copied target Mobject. If the final positional argument is a dictionary,
+        that dictionary is removed from the positional arguments and expanded
+        into keyword arguments for the method call.
+
+    **kwargs
+        Keyword arguments forwarded to the parent Transform constructor.
+        These configure the animation itself, rather than the method being
+        animated. Examples include ``run_time`` and ``rate_func``.
+
+    Attributes
+    ----------
+    method : Callable
+        The bound method supplied by the caller.
+
+    method_args : tuple
+        The positional arguments supplied to the constructor. These are stored
+        as a tuple and converted to a list when the target is created.
+
+    Inherited Attributes
+    --------------------
+    ApplyMethod inherits animation configuration and transformation behavior
+    from Transform. The original Mobject is obtained from ``method.__self__``
+    and passed to the parent constructor.
+
+    Input Validation
+    ----------------
+    The constructor calls ``check_validity_of_input(method)`` before
+    initializing Transform.
+
+    The validation performs two checks:
+
+    1. ``inspect.ismethod(method)`` must return True. Otherwise, an Exception
+       is raised with the message:
+
+           Whoops, looks like you accidentally invoked the method you want to animate
+
+       This commonly catches cases where a method was called immediately
+       instead of being passed as a bound method.
+
+    2. The assertion verifies that ``method.__self__`` is an instance of
+       Mobject. This ensures that the bound method belongs to a Mobject.
+
+    These checks do not guarantee that the method arguments are valid or that
+    the method will successfully execute on the copied Mobject.
+
+    Target Creation
+    ---------------
+    The ``create_target()`` method constructs the destination Mobject.
+
+    Its procedure is:
+
+    1. Retrieve the stored bound method.
+    2. Convert the stored arguments into a mutable list.
+    3. If the last argument is a dictionary, remove it and use its entries as
+       keyword arguments for the method call.
+    4. Copy the original Mobject using ``method.__self__.copy()``.
+    5. Call the underlying method function on the copy, passing the remaining
+       positional arguments and any extracted keyword arguments.
+    6. Return the modified copy as the target Mobject.
+
+    The underlying function is invoked as:
+
+        method.__func__(target, *args, **method_kwargs)
+
+    Using ``method.__func__`` allows the method to operate on the copied
+    Mobject rather than on the original instance.
+
+    The implementation therefore depends on the method modifying the supplied
+    Mobject appropriately. Although the class's original documentation notes
+    that Mobject methods return the Mobject, the shown ``create_target()``
+    implementation does not use the method's return value; it returns the
+    modified copy directly.
+
+    Examples
+    --------
+    Example 1: Animate a shift.
+
+        from manimlib import *
+
+        class ApplyMethodShiftExample(Scene):
+            def construct(self):
+                square = Square(color=BLUE)
+                self.add(square)
+
+                self.play(ApplyMethod(square.shift, RIGHT * 2))
+                self.wait()
+
+    The square is copied, the shift method is applied to the copy, and the
+    original square is transformed toward the resulting target position.
+
+    Example 2: Animate scaling.
+
+        from manimlib import *
+
+        class ApplyMethodScaleExample(Scene):
+            def construct(self):
+                circle = Circle(color=GREEN)
+                self.add(circle)
+
+                self.play(ApplyMethod(circle.scale, 2))
+                self.wait()
+
+    The target is created by scaling a copy of the circle by a factor of two.
+
+    Example 3: Animate rotation with timing options.
+
+        from manimlib import *
+
+        class ApplyMethodRotateExample(Scene):
+            def construct(self):
+                square = Square(color=YELLOW)
+                self.add(square)
+
+                self.play(
+                    ApplyMethod(
+                        square.rotate,
+                        PI / 4,
+                        run_time=2,
+                        rate_func=smooth,
+                    )
+                )
+                self.wait()
+
+    Here, ``PI / 4`` is passed to the rotation method, while ``run_time`` and
+    ``rate_func`` configure the animation.
+
+    Example 4: Pass keyword arguments to the Mobject method.
+
+        from manimlib import *
+
+        class ApplyMethodKeywordExample(Scene):
+            def construct(self):
+                square = Square(color=BLUE)
+                self.add(square)
+
+                self.play(
+                    ApplyMethod(
+                        square.set_color,
+                        {"color": RED},
+                        run_time=2,
+                    )
+                )
+                self.wait()
+
+    The final positional dictionary is interpreted as keyword arguments for
+    ``set_color``. The ``run_time`` keyword is passed to Transform instead.
+
+    Argument Handling
+    -----------------
+    ApplyMethod distinguishes between method arguments and animation options.
+
+    Positional arguments following the method are stored in ``method_args``.
+    If the final positional argument is a dictionary, its contents are
+    expanded into keyword arguments when the method is applied to the target.
+
+    For example:
+
+        ApplyMethod(
+            square.shift,
+            RIGHT,
+            {"something": value},
+            run_time=2,
+        )
+
+    The dictionary is treated as method keyword arguments, whereas
+    ``run_time=2`` is treated as an animation configuration option.
+
+    A dictionary intended as the final positional argument cannot be passed
+    through unchanged as an ordinary positional argument using this interface:
+    the implementation specifically interprets it as keyword arguments.
+
+    Notes
+    -----
+    - Pass a bound Mobject method without invoking it.
+    - ``square.shift`` is appropriate; ``square.shift(RIGHT)`` invokes the
+      method immediately and usually does not provide the required bound
+      method object.
+    - The method is applied to a copy of the original Mobject when the target
+      is created, helping preserve the original state while preparing the
+      transformation destination.
+    - The method must be compatible with the copied Mobject and the supplied
+      arguments.
+    - The final dictionary in ``*args``, if present, is unpacked as keyword
+      arguments for the method.
+    - Animation configuration keywords must be passed directly to
+      ApplyMethod, not placed in the method-argument dictionary.
+    - The implementation shown uses ``inspect.ismethod`` and assumes that
+      ``inspect`` is available in the module.
+    - The precise animation interpolation and final scene behavior depend on
+      the inherited Transform implementation.
+    - ApplyMethod is useful for animating one method call. For more complex
+      sequences of method operations, inspect the related method-animation
+      classes available in the codebase.
+
+    See Also
+    --------
+    Transform
+        Animates a Mobject into a target Mobject.
+    _MethodAnimation
+        Internal method-related animation class.
+    MoveToTarget
+        Animates a Mobject toward its prepared target state.
+    ApplyFunction
+        Related animation interface for applying a function to a Mobject,
+        if available in the codebase.
+    """
+
     def __init__(self, method: Callable, *args, **kwargs):
         """
         method is a method of Mobject, *args are arguments for
