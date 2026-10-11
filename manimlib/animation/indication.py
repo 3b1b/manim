@@ -1071,6 +1071,181 @@ class VShowPassingFlash(Animation):
 
 
 class FlashAround(VShowPassingFlash):
+    """
+    Animate a bright flash traveling around the boundary of a Mobject.
+
+    FlashAround is a subclass of VShowPassingFlash that creates a temporary
+    highlight around an object by animating a moving stroke along a path that
+    surrounds it. By default, the path is a SurroundingRectangle, so the flash
+    travels around the object's outer boundary.
+
+    This animation is useful for drawing attention to equations, text, shapes,
+    diagrams, or other visual elements without permanently changing their
+    appearance.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object to highlight. A surrounding path is created around this
+        object, and the flash travels along that path.
+
+    time_width : float, default=1.0
+        Controls the width of the moving flash along the path, relative to the
+        path's normalized parameter range. Larger values create a broader flash;
+        smaller values create a narrower flash.
+
+    taper_width : float, default=0.0
+        Controls the tapering near the ends of the flash. The default value of
+        0.0 disables additional endpoint tapering in the inherited animation.
+
+    stroke_width : float, default=4.0
+        Thickness of the stroke used to draw the flash around the object.
+
+    color : ManimColor, default=YELLOW
+        Color of the animated highlight.
+
+    buff : float, default=SMALL_BUFF
+        Distance between the target object and its surrounding rectangular path.
+        Increase this value to move the flash farther away from the object.
+
+    n_inserted_curves : int, default=100
+        Number of additional curves inserted into the surrounding path to
+        provide a smoother and more finely sampled animation path.
+
+    **kwargs
+        Additional keyword arguments forwarded to VShowPassingFlash and its
+        parent Animation class. These can include supported animation settings
+        such as run_time, rate_func, and remover.
+
+    Methods
+    -------
+    get_path(mobject, buff)
+        Creates and returns a SurroundingRectangle around the supplied object
+        using the specified buffer distance.
+
+    Implementation Details
+    ----------------------
+    1. The constructor creates a surrounding rectangle using get_path().
+    2. If the target object is fixed in the camera frame, the path is also
+       fixed in the frame.
+    3. The path receives additional curves using insert_n_curves() to improve
+       the smoothness of the traveling flash.
+    4. Null curves are removed using get_points_without_null_curves().
+    5. The path's stroke color and width are set using color and stroke_width.
+    6. The resulting path is passed to VShowPassingFlash, which animates the
+       visible stroke along the path.
+    7. The inherited animation controls the moving highlight and its timing.
+
+    Examples
+    --------
+    Example 1: Highlight a circle.
+
+        circle = Circle()
+        self.add(circle)
+
+        self.play(FlashAround(circle))
+
+    A yellow flash travels around the circle's surrounding rectangle.
+
+    Example 2: Highlight a mathematical equation.
+
+        equation = Tex(r"E = mc^2")
+        self.play(Write(equation))
+        self.play(
+            FlashAround(
+                equation,
+                color=YELLOW,
+                stroke_width=5,
+                run_time=1.5
+            )
+        )
+
+    The flash draws attention to the equation after it appears.
+
+    Example 3: Use a different color and spacing.
+
+        square = Square()
+        self.add(square)
+
+        self.play(
+            FlashAround(
+                square,
+                color=BLUE,
+                stroke_width=6,
+                buff=0.3,
+                run_time=2
+            )
+        )
+
+    The flash uses a blue stroke, a thicker line, and a larger gap around
+    the square.
+
+    Example 4: Highlight a group of objects.
+
+        dot = Dot(LEFT)
+        circle = Circle().shift(RIGHT)
+        group = VGroup(dot, circle)
+
+        self.add(group)
+        self.play(
+            FlashAround(
+                group,
+                color=GREEN,
+                buff=0.2,
+                run_time=1.5
+            )
+        )
+
+    The surrounding rectangle is created around the group as a whole.
+
+    Example 5: Make the flash broader.
+
+        triangle = Triangle()
+        self.add(triangle)
+
+        self.play(
+            FlashAround(
+                triangle,
+                time_width=1.5,
+                stroke_width=8,
+                n_inserted_curves=150
+            )
+        )
+
+    A larger time_width produces a broader moving highlight. The exact visual
+    result also depends on the path and animation duration.
+
+    Notes
+    -----
+    - Despite the name, FlashAround does not necessarily trace the exact
+      outline of the target object. Its default path is a SurroundingRectangle.
+    - The animation highlights the object's surrounding area rather than
+      filling the object itself.
+    - The default color is YELLOW, making it suitable for emphasis.
+    - A larger buff creates more space between the object and the path.
+    - Increasing n_inserted_curves can provide denser path sampling, though
+      it may add processing overhead.
+    - The path is the object animated by VShowPassingFlash; the target object
+      itself is not directly transformed by this class.
+    - The fixed-in-frame check helps keep the path consistent with objects
+      anchored to the camera frame.
+    - The animation's final behavior also depends on inherited settings,
+      including remover and run_time.
+
+    See Also
+    --------
+    VShowPassingFlash
+        Animates a moving stroke along a VMobject path.
+    ShowPassingFlash
+        Displays a passing highlight along an object's path.
+    SurroundingRectangle
+        Creates a rectangular boundary around an object.
+    Indicate
+        Briefly emphasizes an object through a visual change.
+    Circumscribe
+        Draws a surrounding outline around an object.
+    """
+
     def __init__(
         self,
         mobject: Mobject,
