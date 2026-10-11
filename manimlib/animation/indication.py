@@ -870,6 +870,146 @@ class ShowPassingFlash(ShowPartial):
 
 
 class VShowPassingFlash(Animation):
+
+    """
+    Animate a moving stroke flash along a VMobject using a Gaussian profile.
+
+    VShowPassingFlash is an Animation subclass that creates a short, bright
+    segment of a VMobject's stroke and moves it along the object's geometry.
+    The visible segment is shaped by a Gaussian function, while the stroke
+    widths are tapered near the beginning and end of the geometry.
+
+    At the beginning of the animation, the original stroke widths of every
+    mobject in the family are recorded. A tapering kernel reduces widths near
+    the two ends. During interpolation, a Gaussian profile determines the
+    stroke width at each sampled position, producing a passing flash effect.
+
+    Parameters
+    ----------
+    vmobject : VMobject
+        The vector mobject whose stroke will display the moving flash.
+
+    time_width : float, optional
+        Controls the width of the Gaussian flash in normalized geometry
+        coordinates. Defaults to 0.3. Larger values produce a wider flash.
+
+    taper_width : float, optional
+        Controls the width of the tapering regions near both ends of the
+        stroke. Defaults to 0.05.
+
+    remover : bool, optional
+        Whether the animated mobject should be removed during animation
+        cleanup. Defaults to True.
+
+    **kwargs
+        Additional keyword arguments forwarded to Animation.
+
+    Attributes
+    ----------
+    submob_to_widths : dict
+        Maps the hash of each family member to its precomputed tapered stroke
+        widths. This data is created in begin() and used during interpolation.
+
+    Methods
+    -------
+    taper_kernel(x)
+        Return a taper multiplier for a normalized position x. The multiplier
+        increases from the start, remains 1 in the middle, and decreases
+        toward the end.
+
+    begin() -> None
+        Record the stroke widths for each family member and apply the taper
+        kernel to each sampled width before initializing the parent animation.
+
+    interpolate_submobject(
+        submobject: VMobject,
+        starting_sumobject: None,
+        alpha: float
+    ) -> None
+        Calculate a Gaussian profile centered at the current animation
+        position and multiply it by the precomputed tapered stroke widths.
+
+    finish() -> None
+        Finish the parent animation and restore the starting style to each
+        submobject using match_style().
+
+    Notes
+    -----
+    - The Gaussian center moves from approximately -time_width / 2 to
+      1 + time_width / 2 as alpha progresses from 0 to 1.
+    - The Gaussian standard deviation is calculated as time_width / 6, so
+      the region three standard deviations from the center spans time_width.
+    - Values farther than three standard deviations from the center are
+      explicitly set to zero.
+    - Stroke widths are sampled from 0 to 1 using np.linspace().
+    - The taper kernel reduces widths near both ends of the sampled stroke.
+    - The animation changes stroke width rather than explicitly changing
+      the object's geometry.
+    - finish() restores the starting style after the parent finish method.
+    - The exact visual appearance depends on the VMobject's stroke data and
+      the values of time_width and taper_width.
+
+    Examples
+    --------
+    Example 1: Create a passing flash along a line.
+
+    >>> line = Line(LEFT * 3, RIGHT * 3)
+    >>> scene.add(line)
+    >>> scene.play(VShowPassingFlash(line))
+
+    A bright stroke segment travels along the line using the default Gaussian
+    width and taper settings.
+
+    Example 2: Create a wider flash.
+
+    >>> line = Line(LEFT * 3, RIGHT * 3)
+    >>> scene.add(line)
+    >>> scene.play(
+    ...     VShowPassingFlash(
+    ...         line,
+    ...         time_width=0.5,
+    ...     )
+    ... )
+
+    The larger time_width produces a wider Gaussian flash.
+
+    Example 3: Increase the tapering region.
+
+    >>> circle = Circle()
+    >>> scene.add(circle)
+    >>> scene.play(
+    ...     VShowPassingFlash(
+    ...         circle,
+    ...         taper_width=0.15,
+    ...     )
+    ... )
+
+    The stroke widths are reduced across a wider region near the beginning
+    and end of the sampled geometry.
+
+    Example 4: Customize the animation duration.
+
+    >>> square = Square()
+    >>> scene.add(square)
+    >>> scene.play(
+    ...     VShowPassingFlash(
+    ...         square,
+    ...         time_width=0.2,
+    ...         run_time=2,
+    ...     )
+    ... )
+
+    The flash travels around the square's geometry over two seconds.
+
+    See Also
+    --------
+    ShowPassingFlash
+    ShowPartial
+    Animation
+    VMobject
+    VMobject.get_stroke_widths
+    VMobject.set_stroke
+    """
     def __init__(
         self,
         vmobject: VMobject,
