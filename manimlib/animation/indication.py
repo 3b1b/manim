@@ -1270,6 +1270,141 @@ class FlashAround(VShowPassingFlash):
 
 
 class FlashUnder(FlashAround):
+    """
+    Animate a moving flash beneath an object.
+
+    FlashUnder is a subclass of FlashAround that highlights an object by
+    animating a colored stroke along an underline beneath it. Instead of
+    creating a surrounding rectangle, it overrides get_path() to return an
+    Underline object.
+
+    This animation is useful for emphasizing words, mathematical equations,
+    headings, or specific labels without drawing attention to the entire
+    boundary of the object.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object to emphasize. An underline is created beneath this object,
+        and the animated flash travels along that underline.
+
+    time_width : float, default=1.0
+        Controls the width of the moving flash along the underline path.
+
+    taper_width : float, default=0.0
+        Controls the tapering near the ends of the flash.
+
+    stroke_width : float, default=4.0
+        Thickness of the animated underline stroke.
+
+    color : ManimColor, default=YELLOW
+        Color of the moving highlight.
+
+    buff : float, default=SMALL_BUFF
+        Distance between the target object and its underline.
+
+    n_inserted_curves : int, default=100
+        Number of additional curves inserted into the underline path to
+        improve the smoothness of the animation.
+
+    **kwargs
+        Additional animation arguments forwarded through FlashAround to
+        VShowPassingFlash and its parent Animation class.
+
+    Methods
+    -------
+    get_path(mobject, buff)
+        Returns an Underline beneath the target object, using the specified
+        buffer distance and a stretch_factor of 1.0.
+
+    Implementation Details
+    ----------------------
+    1. FlashUnder inherits the animation setup from FlashAround.
+    2. When the inherited constructor calls get_path(), this class's
+       overridden method creates an Underline instead of a SurroundingRectangle.
+    3. The underline is created with stretch_factor=1.0.
+    4. FlashAround's constructor processes the resulting path, including
+       handling fixed-in-frame objects, inserting additional curves,
+       removing null curves, and setting the stroke appearance.
+    5. VShowPassingFlash animates the visible stroke along the underline.
+
+    Examples
+    --------
+    Example 1: Underline a word with a moving flash.
+
+        word = Text("Important")
+        self.add(word)
+        self.play(FlashUnder(word))
+
+    A yellow flash travels beneath the word.
+
+    Example 2: Highlight a mathematical equation.
+
+        equation = Tex(r"E = mc^2")
+        self.add(equation)
+        self.play(
+            FlashUnder(
+                equation,
+                color=BLUE,
+                stroke_width=5
+            )
+        )
+
+    A blue flash travels beneath the equation.
+
+    Example 3: Increase the distance below the object.
+
+        title = Text("Pythagorean Theorem")
+        self.add(title)
+        self.play(
+            FlashUnder(
+                title,
+                buff=0.2,
+                color=GREEN,
+                run_time=2
+            )
+        )
+
+    The underline is placed farther from the title, and the flash uses
+    a green stroke.
+
+    Example 4: Emphasize a particular mathematical expression.
+
+        expression = MathTex(r"a^2 + b^2 = c^2")
+        self.add(expression)
+        self.play(
+            FlashUnder(
+                expression,
+                color=YELLOW,
+                stroke_width=6,
+                time_width=0.5
+            )
+        )
+
+    The expression is emphasized by a relatively narrow moving flash.
+
+    Notes
+    -----
+    - Unlike FlashAround, which normally uses a SurroundingRectangle,
+      FlashUnder uses an Underline.
+    - The target object itself is not directly transformed by the animation.
+    - The underline's position and geometry depend on the target object and
+      the buff parameter.
+    - Animation timing and other supported settings are inherited from
+      FlashAround and its parent classes.
+
+    See Also
+    --------
+    FlashAround
+        Animates a flash around an object's surrounding rectangle.
+    VShowPassingFlash
+        Animates a moving stroke along a VMobject path.
+    Underline
+        Creates an underline beneath a Mobject.
+    Indicate
+        Briefly emphasizes an object through a visual change.
+    """
+
     def get_path(self, mobject: Mobject, buff: float) -> Underline:
         return Underline(mobject, buff=buff, stretch_factor=1.0)
 
