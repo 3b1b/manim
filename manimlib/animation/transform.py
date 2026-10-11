@@ -449,6 +449,248 @@ class Transform(Animation):
 
 
 class ReplacementTransform(Transform):
+    """
+    ReplacementTransform
+    ====================
+
+    A specialized subclass of Transform that replaces the original Mobject
+    with the target Mobject in the scene when the animation finishes.
+
+    ReplacementTransform performs the same state-to-state interpolation as
+    Transform. Its defining difference is that the class-level attribute
+    replace_mobject_with_target_in_scene is set to True. During cleanup, the
+    original animated Mobject is removed from the scene and target_mobject
+    is added in its place.
+
+    This behavior is useful when an object should become a distinct target
+    object rather than simply adopt the target's appearance while retaining
+    its original scene identity.
+
+    For example, a circle can transform into a square, one mathematical
+    expression can be replaced by another, or one geometric construction
+    can be replaced by a different construction.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The original object that will be animated toward the target's state.
+        It is removed from the scene during cleanup when the replacement
+        behavior is applied.
+
+    target_mobject : Mobject or None, default=None
+        The destination object whose state is used for interpolation and
+        which is added to the scene during cleanup.
+
+        The base Transform implementation requires a valid target. If None
+        is supplied, a subclass must provide one through create_target().
+
+    path_arc : float or tuple[float, float], default=0.0
+        Controls the curvature of the interpolation path when the default
+        path function is used. A floating-point value of 0.0 selects a
+        straight path; other supported values are passed to
+        path_along_arc().
+
+    path_arc_axis : np.ndarray, default=OUT
+        Axis used to construct the default curved interpolation path.
+
+    path_func : Callable or None, default=None
+        Optional custom interpolation-path function. When supplied, it
+        takes precedence over the default path selection.
+
+    **kwargs
+        Additional keyword arguments forwarded to Transform and ultimately
+        to Animation.__init__. These may include run_time, rate_func,
+        remover, and other supported animation settings.
+
+    Class Attributes
+    ----------------
+    replace_mobject_with_target_in_scene : bool, default=True
+        Enables scene replacement during cleanup. After the animation's
+        parent cleanup runs, the original Mobject is removed from the scene
+        and target_mobject is added.
+
+    Inherited Attributes
+    --------------------
+    target_mobject : Mobject or None
+        The target state and the object added to the scene during cleanup.
+
+    path_arc : float or tuple[float, float]
+        Angular configuration for the default curved interpolation path.
+
+    path_arc_axis : np.ndarray
+        Axis used by the default curved path helper.
+
+    path_func : Callable
+        Function used to interpolate corresponding points during the
+        transformation.
+
+    target_copy : Mobject
+        Target representation used during interpolation. Depending on
+        whether the source and target are already aligned, this can refer
+        directly to the target or to an aligned copy.
+
+    starting_mobject : Mobject
+        Captured starting state inherited from Animation.
+
+    Implementation
+    --------------
+    ReplacementTransform does not define its own constructor or interpolation
+    methods. It inherits these behaviors from Transform and changes the
+    class-level replacement flag.
+
+    The inherited lifecycle works as follows:
+
+    1. Transform initializes the target and interpolation-path configuration.
+    2. At begin(), it obtains and validates target_mobject.
+    3. If necessary, it copies and aligns the target's family structure with
+       the source so corresponding components can be interpolated.
+    4. During the animation, the source is interpolated toward the target
+       using Transform's interpolation machinery.
+    5. During cleanup, Transform.clean_up_from_scene() invokes the parent
+       cleanup and checks replace_mobject_with_target_in_scene.
+    6. Because the flag is True for ReplacementTransform, the source
+       Mobject is removed from the scene and target_mobject is added.
+
+    Examples
+    --------
+    1. Replace a circle with a square
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class CircleToSquareReplacement(Scene):
+        def construct(self):
+            circle = Circle(color=BLUE)
+            square = Square(color=YELLOW)
+
+            self.add(circle)
+
+            self.play(
+                ReplacementTransform(circle, square),
+                run_time=3,
+            )
+
+            self.wait()
+
+    The circle transforms into the square, and the target square becomes
+    the object present in the scene after cleanup.
+
+    2. Replace one mathematical expression with another
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class ExpressionReplacement(Scene):
+        def construct(self):
+            expression = Tex("x^2 + 2x + 1")
+            simplified = Tex("(x + 1)^2")
+
+            self.add(expression)
+
+            self.play(
+                ReplacementTransform(
+                    expression,
+                    simplified,
+                    run_time=3,
+                )
+            )
+
+            self.wait()
+
+    The original expression transforms toward the factored expression.
+    After cleanup, the target expression is added to the scene.
+
+    3. Replace a geometric construction
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class GeometryReplacement(Scene):
+        def construct(self):
+            triangle = Triangle(color=BLUE)
+            square = Square(color=GREEN)
+
+            self.add(triangle)
+
+            self.play(
+                ReplacementTransform(
+                    triangle,
+                    square,
+                    path_arc=PI / 3,
+                    run_time=2,
+                )
+            )
+
+            self.wait()
+
+    The transformation uses a curved interpolation path. Once it finishes,
+    the target square replaces the original triangle in the scene.
+
+    4. Replace a dot with a labeled point
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class DotToLabelReplacement(Scene):
+        def construct(self):
+            dot = Dot(ORIGIN, color=BLUE)
+            labeled_point = VGroup(
+                Dot(ORIGIN, color=RED),
+                Text("A").scale(0.5).next_to(ORIGIN, UP),
+            )
+
+            self.add(dot)
+
+            self.play(
+                ReplacementTransform(
+                    dot,
+                    labeled_point,
+                    run_time=2,
+                )
+            )
+
+            self.wait()
+
+    The dot transforms toward the grouped target. The target VGroup is added
+    to the scene during cleanup.
+
+    Notes
+    -----
+    - ReplacementTransform inherits the interpolation behavior of Transform.
+      Its distinguishing feature is the replacement behavior during cleanup.
+    - The target object is added to the scene after the original object is
+      removed. The target is not necessarily the same Python object as the
+      animated source.
+    - If the target is already present in the scene, adding it again may
+      produce scene-management behavior that depends on the Scene
+      implementation. Avoid unnecessary duplicate additions.
+    - The replacement flag is a class attribute, so instances inherit True
+      unless it is overridden on the instance or by a subclass.
+    - Setting replace_mobject_with_target_in_scene to False on an instance
+      disables the replacement branch inherited from Transform.
+    - The remover option inherited from Animation is separate from the
+      replacement flag. The actual cleanup sequence depends on the parent
+      Animation implementation.
+    - Use Transform when you want to animate one object toward another
+      without explicitly replacing the source with the target during
+      cleanup.
+    - Use ReplacementTransform when the target should become the scene's
+      final object.
+
+    See Also
+    --------
+    Transform
+        Base class that implements target alignment and interpolation.
+
+    TransformMatchingParts
+        Transforms matched components of compound Mobjects.
+
+    TransformMatchingStrings
+        Matches substrings when transforming StringMobject instances.
+
+    FadeTransform
+        Combines fading behavior with a transformation.
+
+    Animation
+        Base class defining the animation lifecycle.
+    """
+
     replace_mobject_with_target_in_scene: bool = True
 
 
