@@ -461,7 +461,7 @@ class FadeInFromPoint(FadeIn):
             **kwargs,
         )
 
-
+class FadeOutToPoint(FadeOut):
     """
     Animates a Mobject out of view toward a specified point.
 
@@ -534,8 +534,7 @@ class FadeInFromPoint(FadeIn):
     Fade
     Transform
     Mobject
-    """class FadeOutToPoint(FadeOut):
-
+    """
 
     def __init__(self, mobject: Mobject, point: Vect3, **kwargs):
         super().__init__(
