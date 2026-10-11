@@ -695,6 +695,147 @@ class ReplacementTransform(Transform):
 
 
 class TransformFromCopy(Transform):
+    """
+    TransformFromCopy
+    =================
+
+    Animate a copy of one Mobject into a target Mobject while preserving the
+    original Mobject in the scene.
+
+    TransformFromCopy is a specialized Transform animation that creates a copy
+    of the source Mobject and animates that copy toward the target Mobject's
+    appearance and geometry. Unlike a standard Transform, the original source
+    Mobject is not directly transformed because the constructor passes
+    mobject.copy() to the parent Transform constructor.
+
+    This animation is useful when an object should appear to produce another
+    object without losing or changing its original appearance. For example, a
+    mathematical symbol can visually move toward a new expression while the
+    original symbol remains visible.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The original source Mobject. Its copy is used as the starting object
+        for the animation, leaving the original object itself unchanged by the
+        transformation.
+
+    target_mobject : Mobject
+        The destination Mobject whose appearance and geometry the copied source
+        approaches during the animation.
+
+    **kwargs
+        Additional keyword arguments forwarded to Transform through the parent
+        constructor. These can include supported animation settings such as
+        run_time, rate_func, and other Transform options.
+
+    Attributes
+    ----------
+    replace_mobject_with_target_in_scene : bool
+        Class-level setting inherited or defined for scene replacement behavior.
+        It is set to True. At the end of the animation, the target Mobject
+        replaces the animated copy in the scene. The original source Mobject
+        remains separate from this replacement.
+
+    Implementation Details
+    ----------------------
+    The constructor calls:
+
+        super().__init__(mobject.copy(), target_mobject, **kwargs)
+
+    The call to mobject.copy() is the key distinction from a regular Transform.
+    The parent Transform receives a copy of the source object rather than the
+    original source object.
+
+    Consequently:
+    - The original source Mobject is not the object being transformed.
+    - The copied source is animated toward the target Mobject.
+    - The target replaces the animated copy in the scene when the animation
+      finishes, according to the replacement setting.
+    - The original source can remain visible alongside the target.
+
+    The source object should normally be present in the scene before the
+    animation starts. The target is used as the destination and is typically
+    added to the scene through the animation's replacement behavior.
+
+    Examples
+    --------
+    Example 1: Transform a copy of a circle into a square.
+
+        from manimlib import *
+
+        class CopyTransformExample(Scene):
+            def construct(self):
+                circle = Circle(color=BLUE)
+                square = Square(color=YELLOW).shift(RIGHT * 2)
+
+                self.add(circle)
+                self.play(TransformFromCopy(circle, square))
+                self.wait()
+
+    After the animation, the original circle remains on the left and the
+    square appears on the right.
+
+    Example 2: Copy a mathematical symbol into an expression.
+
+        from manimlib import *
+
+        class SymbolCopyExample(Scene):
+            def construct(self):
+                x = Tex("x").scale(1.5)
+                expression = Tex("x^2").scale(1.5).shift(RIGHT * 3)
+
+                self.add(x)
+                self.play(TransformFromCopy(x, expression))
+                self.wait()
+
+    The animation uses a copy of x to form the destination expression while
+    the original x remains in the scene.
+
+    Example 3: Specify animation timing.
+
+        self.play(
+            TransformFromCopy(
+                source,
+                target,
+                run_time=2,
+                rate_func=smooth,
+            )
+        )
+
+    The copied source animates for two seconds using the smooth rate function.
+
+    Notes
+    -----
+    - TransformFromCopy does not mean that the target is copied. The source
+      Mobject is copied, and that copy is animated toward the supplied target.
+    - The original source is not directly modified by this animation's
+      transformation because the parent receives a separate copy.
+    - The copy operation follows the source Mobject's own copy behavior.
+    - If the source contains submobjects, its copy generally includes the
+      corresponding submobject structure.
+    - The target should be configured with the intended final position,
+      geometry, and appearance before the animation begins.
+    - The class-level replacement setting is True, so the animated copy is
+      replaced by the target in the scene at the end. This does not imply that
+      the original source is removed.
+    - If the original source should disappear or transform directly, consider
+      using Transform or ReplacementTransform instead.
+    - Exact visual interpolation depends on Transform's implementation and
+      the structure of the source and target Mobjects.
+
+    See Also
+    --------
+    Transform
+        Animates a Mobject into another Mobject.
+    ReplacementTransform
+        Transforms a source Mobject and replaces it with the target.
+    FadeTransform
+        Uses a fading transformation between Mobjects.
+    TransformMatchingParts
+        Matches corresponding parts of two Mobjects during transformation.
+    """
+
     replace_mobject_with_target_in_scene: bool = True
 
     def __init__(self, mobject: Mobject, target_mobject: Mobject, **kwargs):
