@@ -529,6 +529,213 @@ class UpdateFromAlphaFunc(Animation):
 
 
 class MaintainPositionRelativeTo(Animation):
+    """
+    MaintainPositionRelativeTo
+    =========================
+
+    An animation that maintains a Mobject's initial positional offset relative
+    to another tracked Mobject while that tracked object moves.
+
+    MaintainPositionRelativeTo is useful when one object should remain at a
+    fixed relative displacement from another object during a simultaneous
+    animation. For example, a label can remain beside a moving dot, a marker
+    can follow a moving shape, or a small object can preserve its offset from
+    a moving reference object.
+
+    At initialization, the animation calculates the difference between the
+    centers of the animated Mobject and the tracked Mobject. During
+    interpolation, it moves the animated Mobject according to the tracked
+    Mobject's current center and the stored difference.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The Mobject whose position is adjusted to maintain its relative
+        offset from tracked_mobject.
+
+    tracked_mobject : Mobject
+        The reference Mobject whose center is tracked. As this object's
+        position changes, the animated Mobject is shifted to preserve the
+        stored center-to-center displacement.
+
+    **kwargs
+        Additional keyword arguments forwarded to Animation.__init__.
+        These can include standard animation settings such as run_time,
+        rate_func, and remover, depending on the installed ManimGL version.
+
+    Attributes
+    ----------
+    tracked_mobject : Mobject
+        The reference object whose center determines the animated object's
+        position.
+
+    diff : np.ndarray
+        The initial difference between the centers of mobject and
+        tracked_mobject, calculated as:
+
+            mobject.get_center() - tracked_mobject.get_center()
+
+        This offset is stored during initialization and remains fixed
+        throughout the animation unless modified externally.
+
+    mobject : Mobject
+        Inherited from Animation. The object whose position is adjusted.
+
+    Implementation
+    --------------
+    1. The constructor stores tracked_mobject.
+    2. It calculates and stores the initial center-to-center displacement
+       in diff.
+    3. During each interpolation step, interpolate_mobject obtains the
+       tracked object's current center and the animated object's current
+       center.
+    4. It shifts the animated Mobject by:
+
+           target - location + diff
+
+       This moves its center to the tracked object's current center plus
+       the original offset.
+
+    The alpha parameter is accepted to satisfy the Animation interpolation
+    interface, but it is not used directly. The object's position is
+    determined by the tracked Mobject's current position and the stored
+    offset, rather than by interpolating between two endpoint states.
+
+    Examples
+    --------
+    1. Keep a label beside a moving dot
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class LabelFollowExample(Scene):
+        def construct(self):
+            dot = Dot(LEFT * 3)
+            label = Text("Point").scale(0.5)
+            label.next_to(dot, UP)
+
+            self.add(dot, label)
+
+            self.play(
+                dot.animate.shift(RIGHT * 6),
+                MaintainPositionRelativeTo(label, dot),
+                run_time=3,
+            )
+
+            self.wait()
+
+    The label maintains its initial center-to-center offset from the dot.
+    Because the stored offset is calculated from the centers, the label's
+    center is not necessarily positioned directly above the dot's center.
+
+    2. Keep a marker at a fixed offset from a moving square
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class MarkerFollowExample(Scene):
+        def construct(self):
+            square = Square()
+            marker = Dot(square.get_center() + RIGHT * 2)
+
+            self.add(square, marker)
+
+            self.play(
+                square.animate.shift(UP * 2 + LEFT),
+                MaintainPositionRelativeTo(marker, square),
+                run_time=3,
+            )
+
+            self.wait()
+
+    The marker preserves its initial offset of two scene units to the
+    right of the square's center while the square moves.
+
+    3. Track a moving object with a fixed displacement
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class RelativePositionExample(Scene):
+        def construct(self):
+            reference = Dot(LEFT * 2)
+            follower = Dot(RIGHT * 2 + UP)
+
+            self.add(reference, follower)
+
+            self.play(
+                reference.animate.move_to(RIGHT * 2 + DOWN),
+                MaintainPositionRelativeTo(follower, reference),
+                run_time=3,
+            )
+
+            self.wait()
+
+    The follower retains the displacement it had relative to the reference
+    object when MaintainPositionRelativeTo was initialized.
+
+    4. Maintain an offset during a more complex animation
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class ComplexMovementExample(Scene):
+        def construct(self):
+            circle = Circle(color=BLUE)
+            label = Text("Circle").scale(0.5)
+            label.next_to(circle, RIGHT)
+
+            self.add(circle, label)
+
+            self.play(
+                circle.animate.shift(UP * 2).scale(1.5),
+                MaintainPositionRelativeTo(label, circle),
+                run_time=3,
+            )
+
+            self.wait()
+
+    The label follows the circle's changing center position. The animation
+    preserves a fixed center-to-center displacement; it does not dynamically
+    recalculate the offset from the circle's changing boundary.
+
+    Notes
+    -----
+    - The initial offset is calculated once, in the constructor. It is not
+      recomputed on every frame.
+    - The stored diff represents a displacement between object centers,
+      not necessarily a gap between their edges.
+    - The alpha parameter is unused. This class does not use alpha to
+      determine the follower's position.
+    - The tracked Mobject must be updated or animated independently if its
+      movement is expected to affect the follower.
+    - When used alongside another animation, the resulting behavior depends
+      on the order in which animations and object updates are processed.
+    - The class adjusts position only. It does not automatically rotate,
+      scale, or otherwise transform the animated Mobject to match the
+      tracked Mobject.
+    - Because the stored offset is fixed in scene coordinates, rotating or
+      scaling the tracked Mobject does not rotate or scale the offset itself.
+    - If the animated Mobject is also moved by another animation or updater,
+      the interactions between those changes can affect the final result.
+    - This implementation shifts the current animated Mobject by a
+      correction based on its current center. Under the usual interpolation
+      pattern, this brings the center to the tracked center plus diff.
+
+    See Also
+    --------
+    Animation
+        Base class for animations.
+
+    UpdateFromFunc
+        Updates a Mobject through a custom callback.
+
+    UpdateFromAlphaFunc
+        Updates a Mobject using a callback that receives animation progress.
+
+    MoveAlongPath
+        Animates a Mobject along a specified path.
+
+    Mobject.add_updater
+        Attaches a persistent updater to a Mobject.
+    """
+
     def __init__(
         self,
         mobject: Mobject,
