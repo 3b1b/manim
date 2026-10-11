@@ -260,6 +260,259 @@ class UpdateFromFunc(Animation):
 
 
 class UpdateFromAlphaFunc(Animation):
+    """
+    UpdateFromAlphaFunc
+    ===================
+
+    An animation that updates a Mobject by repeatedly calling a custom
+    function with both the Mobject and its normalized animation progress.
+
+    UpdateFromAlphaFunc is useful when the appearance or geometry of an
+    object must be calculated procedurally throughout an animation. Unlike
+    UpdateFromFunc, which passes only the Mobject to its callback, this
+    class also supplies an alpha value representing the animation's progress
+    after applying the animation's timing configuration.
+
+    The callback can use this progress value to calculate positions, sizes,
+    colors, rotations, or other properties. This allows the animation to
+    follow a custom mathematical rule rather than simply interpolating
+    between a starting state and a target state.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The Mobject that will be modified by update_function throughout
+        the animation.
+
+    update_function : Callable[[Mobject, float], Mobject | None]
+        A callable receiving two arguments:
+
+        - mobject: the object being animated.
+        - alpha: the adjusted animation progress, generally ranging from
+          0 to 1 when the rate function and timing configuration follow
+          their usual conventions.
+
+        The function should modify the supplied Mobject directly. Although
+        the type annotation permits returning a Mobject or None, the return
+        value is ignored by this implementation.
+
+    suspend_mobject_updating : bool, default=False
+        Determines whether the animated Mobject's ordinary updaters are
+        suspended while the animation runs. By default, they are not
+        suspended.
+
+    **kwargs
+        Additional keyword arguments forwarded to Animation.__init__.
+        Depending on the installed ManimGL version, these can include
+        options such as run_time, rate_func, and remover.
+
+    Attributes
+    ----------
+    update_function : Callable
+        The custom callback invoked on every interpolation step.
+
+    mobject : Mobject
+        Inherited from Animation. The object passed to update_function.
+
+    Implementation
+    --------------
+    1. The constructor stores update_function on the instance.
+    2. The parent Animation constructor initializes the animation and
+       its timing-related configuration.
+    3. When interpolation occurs, interpolate_mobject(alpha) transforms
+       the incoming interpolation value using time_spanned_alpha and
+       rate_func.
+    4. The resulting true_alpha is passed to update_function alongside
+       self.mobject.
+
+    The callback receives the adjusted progress value, not necessarily
+    the raw alpha supplied to interpolate_mobject. Consequently, the
+    animation's rate function can influence how quickly the callback's
+    calculated changes progress.
+
+    Examples
+    --------
+    1. Move a dot along a straight path
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class MoveDotExample(Scene):
+        def construct(self):
+            dot = Dot(LEFT * 3)
+            start = LEFT * 3
+            end = RIGHT * 3
+
+            self.add(dot)
+
+            self.play(
+                UpdateFromAlphaFunc(
+                    dot,
+                    lambda mob, alpha: mob.move_to(
+                        interpolate(start, end, alpha)
+                    ),
+                    run_time=3,
+                )
+            )
+
+            self.wait()
+
+    The callback calculates the dot's position from the supplied progress
+    value. The interpolation function blends the starting and ending
+    coordinates.
+
+    2. Animate a circle's radius
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class RadiusExample(Scene):
+        def construct(self):
+            circle = Circle(radius=0.5)
+            self.add(circle)
+
+            self.play(
+                UpdateFromAlphaFunc(
+                    circle,
+                    lambda mob, alpha: mob.become(
+                        Circle(
+                            radius=0.5 + 1.5 * alpha,
+                            color=BLUE,
+                        )
+                    ),
+                    run_time=3,
+                )
+            )
+
+            self.wait()
+
+    The circle is repeatedly replaced with a circle whose radius depends
+    on alpha. Because become copies the target object's appearance and
+    geometry, properties not explicitly preserved by the replacement may
+    change as well.
+
+    3. Animate a dot along a semicircle
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class SemicirclePathExample(Scene):
+        def construct(self):
+            dot = Dot()
+            radius = 2
+
+            self.add(dot)
+
+            self.play(
+                UpdateFromAlphaFunc(
+                    dot,
+                    lambda mob, alpha: mob.move_to(
+                        radius * np.array([
+                            np.cos(PI * alpha),
+                            np.sin(PI * alpha),
+                            0,
+                        ])
+                    ),
+                    run_time=3,
+                )
+            )
+
+            self.wait()
+
+    The dot follows the upper semicircle from the rightmost point to the
+    leftmost point. The path is calculated directly from the angle PI *
+    alpha.
+
+    4. Change color progressively
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class ColorProgressExample(Scene):
+        def construct(self):
+            square = Square(color=BLUE)
+            self.add(square)
+
+            self.play(
+                UpdateFromAlphaFunc(
+                    square,
+                    lambda mob, alpha: mob.set_color(
+                        interpolate_color(BLUE, RED, alpha)
+                    ),
+                    run_time=3,
+                )
+            )
+
+            self.wait()
+
+    The square's color is recalculated on each interpolation step using
+    the current adjusted alpha.
+
+    5. Animate a point with a nonlinear trajectory
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class NonlinearPathExample(Scene):
+        def construct(self):
+            dot = Dot()
+            self.add(dot)
+
+            self.play(
+                UpdateFromAlphaFunc(
+                    dot,
+                    lambda mob, alpha: mob.move_to(
+                        np.array([
+                            4 * (alpha - 0.5),
+                            2 * np.sin(2 * PI * alpha),
+                            0,
+                        ])
+                    ),
+                    run_time=4,
+                    rate_func=smooth,
+                )
+            )
+
+            self.wait()
+
+    The horizontal and vertical coordinates are calculated from alpha.
+    The smooth rate function changes the relationship between elapsed
+    animation time and the progress value supplied to the callback.
+
+    Notes
+    -----
+    - The callback is invoked during interpolation, so it should be
+      efficient enough to execute repeatedly.
+    - The callback receives the adjusted progress value produced by
+      rate_func(time_spanned_alpha(alpha)).
+    - A rate function may produce values outside the interval [0, 1].
+      Callbacks should account for this if they require strictly bounded
+      progress.
+    - The callback's return value is ignored. Modify the supplied Mobject
+      directly rather than expecting a returned object to replace it.
+    - When using become() or reconstructing an object, ensure that the
+      replacement preserves any styling or structure that should remain.
+    - suspend_mobject_updating defaults to False. Existing updaters may
+      therefore interact with changes made by update_function.
+    - This class is useful for custom procedural animations. For simple
+      transformations between known states, Mobject.animate or Transform
+      may be more convenient.
+    - If the callback needs only the Mobject and not animation progress,
+      UpdateFromFunc is a simpler alternative.
+
+    See Also
+    --------
+    Animation
+        Base class providing animation timing and interpolation behavior.
+
+    UpdateFromFunc
+        Calls a custom function with the animated Mobject only.
+
+    Transform
+        Animates a Mobject toward a target Mobject.
+
+    MoveAlongPath
+        Animates a Mobject along a path.
+
+    Mobject.add_updater
+        Adds a persistent updater to a Mobject.
+    """
+
     def __init__(
         self,
         mobject: Mobject,
