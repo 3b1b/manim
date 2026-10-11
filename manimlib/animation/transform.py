@@ -22,6 +22,330 @@ if TYPE_CHECKING:
 
 
 class Transform(Animation):
+    """
+    Transform
+    =========
+
+    An animation that transforms a Mobject from its starting state into the
+    state of a target Mobject. Transform interpolates the geometry and visual
+    properties of the source object toward those of the target over the
+    animation's duration.
+
+    It is one of the fundamental animation classes in ManimGL and serves as
+    the basis for many specialized transformations. It can be used to morph
+    geometric shapes, modify mathematical expressions, change object colors,
+    and animate objects along straight or curved interpolation paths.
+
+    By default, the original Mobject remains the object managed by the scene.
+    At cleanup, the target replaces the original in the scene only when
+    replace_mobject_with_target_in_scene is enabled by a subclass or
+    otherwise configured appropriately.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The original object to animate. Its starting state is captured by
+        the parent Animation lifecycle, and its family members are
+        interpolated toward the corresponding members of the target copy.
+
+    target_mobject : Mobject or None, default=None
+        The destination object describing the desired final state.
+
+        If None is supplied, create_target() must provide a valid target.
+        The base implementation simply returns self.target_mobject, so the
+        base Transform class requires a target_mobject to be supplied.
+
+    path_arc : float or tuple[float, float], default=0.0
+        Controls the angular curvature of the interpolation path when the
+        default path function is selected.
+
+        A floating-point value of 0.0 selects straight_path. Other supported
+        values are passed to path_along_arc() to construct a curved path.
+        A tuple can represent the angular parameters supported by that
+        helper in the installed ManimGL version.
+
+    path_arc_axis : np.ndarray, default=OUT
+        The axis used by path_along_arc() when constructing the default
+        curved interpolation path. OUT is the default direction, typically
+        corresponding to the positive z-axis in the standard 3D coordinate
+        system.
+
+    path_func : Callable or None, default=None
+        An optional custom interpolation-path function.
+
+        When supplied, this function is used directly and the default path
+        selection is skipped. When omitted, init_path_func() chooses either
+        straight_path or path_along_arc(), depending on path_arc.
+
+    **kwargs
+        Additional keyword arguments forwarded to Animation.__init__.
+        Depending on the installed ManimGL version, these can include
+        run_time, rate_func, remover, and other standard animation options.
+
+    Class Attributes
+    ----------------
+    replace_mobject_with_target_in_scene : bool, default=False
+        Controls whether cleanup removes the original Mobject from the scene
+        and adds target_mobject in its place.
+
+        The base Transform class sets this to False. Subclasses can override
+        it to change the replacement behavior.
+
+    Instance Attributes
+    -------------------
+    target_mobject : Mobject or None
+        The destination object supplied to the constructor or returned by
+        create_target().
+
+    path_arc : float or tuple[float, float]
+        Angular configuration used to construct the default curved path.
+
+    path_arc_axis : np.ndarray
+        Axis passed to path_along_arc() when the default curved path is used.
+
+    path_func : Callable
+        Function used to interpolate the points of corresponding Mobject
+        components along the chosen path.
+
+    target_copy : Mobject
+        A target representation used for interpolation. If the source is
+        already aligned with the target, this may refer directly to the
+        target object. Otherwise, it is created as a copy so that alignment
+        does not modify the actual target.
+
+    starting_mobject : Mobject
+        Inherited from Animation. Represents the captured starting state
+        used during interpolation.
+
+    Implementation
+    --------------
+    1. The constructor stores the target and path configuration.
+    2. init_path_func() selects the interpolation path unless a custom
+       path_func has already been supplied.
+    3. At begin(), create_target() obtains the target and
+       check_target_mobject_validity() ensures that it is not None.
+    4. If the source and target are already aligned, target_copy refers to
+       the target directly. Otherwise, the target is copied and
+       align_data_and_family() is used to make the source and target copy
+       structurally compatible for interpolation.
+    5. The parent Animation begin() process captures the starting state.
+    6. During interpolation, get_all_families_zipped() supplies corresponding
+       family members of the source, starting state, and target copy.
+    7. interpolate_submobject() calls the source component's interpolate()
+       method with the starting component, target component, alpha, and
+       path_func.
+    8. During cleanup, the parent cleanup runs. If
+       replace_mobject_with_target_in_scene is True, the original object is
+       removed and target_mobject is added to the scene.
+
+    The alignment process is important because two Mobjects can contain
+    different numbers or arrangements of points and submobjects. The class
+    uses aligned family structures so corresponding components can be
+    interpolated consistently.
+
+    Methods
+    -------
+    init_path_func()
+        Selects straight_path or path_along_arc() when no custom path_func
+        has been supplied.
+
+    begin()
+        Creates and validates the target, prepares an aligned target copy
+        when necessary, and begins the parent animation lifecycle.
+
+    create_target()
+        Returns target_mobject in this base implementation. Subclasses can
+        override this method to construct a target automatically.
+
+    check_target_mobject_validity()
+        Raises an exception if create_target() has not supplied a target.
+
+    clean_up_from_scene(scene)
+        Performs parent cleanup and optionally replaces the original object
+        with target_mobject in the scene.
+
+    update_config(**kwargs)
+        Updates animation configuration and recalculates the path function
+        when path_arc is included in the supplied configuration.
+
+    get_all_mobjects()
+        Returns the source, starting state, target, and target copy.
+
+    get_all_families_zipped()
+        Returns an iterator that groups corresponding family members from
+        the source, starting state, and target copy.
+
+    get_interpolation_ends()
+        Returns the starting Mobject and target copy.
+
+    interpolate_submobject(submob, start, target_copy, alpha)
+        Interpolates an individual subobject between its starting and target
+        states using path_func.
+
+    Examples
+    --------
+    1. Transform a circle into a square
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class CircleToSquareExample(Scene):
+        def construct(self):
+            circle = Circle(color=BLUE)
+            square = Square(color=YELLOW)
+
+            self.add(circle)
+            self.play(Transform(circle, square), run_time=3)
+            self.wait()
+
+    The circle gradually changes its geometry and visual properties toward
+    those of the square. The original circle remains the animated object;
+    the target is not automatically substituted into the scene by the base
+    Transform cleanup behavior.
+
+    2. Transform one mathematical expression into another
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class ExpressionTransformExample(Scene):
+        def construct(self):
+            source = Tex("x^2 + 2x + 1")
+            target = Tex("(x + 1)^2")
+
+            self.add(source)
+            self.play(
+                Transform(source, target),
+                run_time=3,
+            )
+            self.wait()
+
+    The source expression is transformed toward the target expression.
+    For transformations that explicitly match corresponding text pieces,
+    consider TransformMatchingStrings instead.
+
+    3. Move a square along a curved path
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class CurvedTransformExample(Scene):
+        def construct(self):
+            square = Square(color=BLUE)
+            target = square.copy().shift(RIGHT * 3 + UP)
+
+            self.add(square)
+            self.play(
+                Transform(
+                    square,
+                    target,
+                    path_arc=PI / 2,
+                    run_time=3,
+                )
+            )
+            self.wait()
+
+    The nonzero path_arc selects a curved interpolation path. The exact
+    trajectory depends on path_along_arc() and the selected path axis.
+
+    4. Use a custom interpolation path
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class CustomPathExample(Scene):
+        def construct(self):
+            dot = Dot(LEFT * 2)
+            target = Dot(RIGHT * 2 + UP)
+
+            def custom_path(start, end, alpha):
+                return interpolate(start, end, alpha) + (
+                    0.5 * np.sin(PI * alpha) * UP
+                )
+
+            self.add(dot)
+            self.play(
+                Transform(
+                    dot,
+                    target,
+                    path_func=custom_path,
+                    run_time=3,
+                )
+            )
+            self.wait()
+
+    The supplied path function takes precedence over the default path
+    selection. Its arguments and expected output must match the path
+    function interface used by the installed ManimGL implementation.
+
+    5. Replace the original object with the target
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    from manimlib import *
+
+    class ReplaceTargetExample(Scene):
+        def construct(self):
+            source = Circle(color=BLUE)
+            target = Square(color=GREEN)
+
+            self.add(source)
+
+            transform = Transform(source, target)
+            transform.replace_mobject_with_target_in_scene = True
+
+            self.play(transform, run_time=2)
+            self.wait()
+
+    Setting the replacement flag makes cleanup remove the original source
+    and add the target object to the scene. This behavior is not enabled
+    by default in the base Transform class.
+
+    Notes
+    -----
+    - The target describes the desired final state; it is not necessarily
+      the same Python object as the animated source.
+    - When the source and target are not aligned, the implementation copies
+      the target before aligning it. This protects the original target from
+      structural changes caused by alignment.
+    - The interpolation path affects how corresponding points move between
+      their starting and target states. It does not necessarily imply that
+      the entire Mobject follows one rigid-body trajectory.
+    - The path_arc == 0.0 check specifically uses isinstance(path_arc,
+      float). Other numeric types, such as some integer or NumPy scalar
+      values, may follow the curved-path branch depending on their type.
+    - A custom path_func bypasses the default path initialization.
+    - update_config() recalculates the path function when path_arc is
+      supplied. In this implementation, that branch constructs
+      path_along_arc() directly, even when the supplied path_arc is zero.
+    - get_all_families_zipped() aligns family members from the source,
+      starting state, and target copy. The begin() alignment step helps
+      ensure that these families can be interpolated consistently.
+    - replace_mobject_with_target_in_scene defaults to False. Transform
+      therefore does not automatically replace the original object with
+      target_mobject during cleanup unless the flag is enabled.
+    - If a subclass overrides create_target(), it should ensure that the
+      returned target is valid before interpolation begins.
+    - Use Transform for general state-to-state interpolation. Use specialized
+      subclasses when you need a particular behavior, such as fading,
+      matching text components, or moving along a predefined path.
+
+    See Also
+    --------
+    Animation
+        Base class providing timing, interpolation, and cleanup behavior.
+
+    ReplacementTransform
+        A specialized transformation that replaces the source with the
+        target in the scene, when available in the installed version.
+
+    TransformMatchingParts
+        Matches and transforms individual components of compound Mobjects.
+
+    TransformMatchingStrings
+        Matches text substrings between StringMobject instances.
+
+    MoveAlongPath
+        Animates an object along a path.
+
+    Mobject.interpolate
+        Interpolates a Mobject between two states.
+    """
+
     replace_mobject_with_target_in_scene: bool = False
 
     def __init__(
