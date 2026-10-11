@@ -1391,6 +1391,216 @@ class ApplyMethod(Transform):
 
 
 class ApplyPointwiseFunction(ApplyMethod):
+    """
+    ApplyPointwiseFunction
+    ======================
+
+    Animate a Mobject by applying a pointwise function to its points and
+    transforming its geometry toward the resulting shape.
+
+    ApplyPointwiseFunction is a subclass of ApplyMethod. It provides a
+    convenient interface for animating geometric transformations defined by
+    a function that maps one NumPy coordinate array to another.
+
+    Instead of manually constructing a target Mobject, the caller supplies
+    a pointwise function and the Mobject to transform. The class delegates
+    the transformation to the Mobject's ``apply_function`` method through
+    ApplyMethod, which prepares a transformed copy and animates the original
+    Mobject toward it.
+
+    This class is useful for visualizing geometric mappings, coordinate
+    transformations, deformations, and other operations in which each point
+    of a Mobject is mapped to a new position.
+
+    Parameters
+    ----------
+    function : Callable[[np.ndarray], np.ndarray]
+        A callable that accepts a NumPy coordinate array representing a point
+        and returns a NumPy coordinate array representing its transformed
+        position.
+
+        For a typical three-dimensional Mobject, the input and output arrays
+        contain x, y, and z coordinates. The function should return a
+        coordinate array compatible with the Mobject's point representation.
+
+    mobject : Mobject
+        The Mobject whose geometry will be transformed by the pointwise
+        function. Its ``apply_function`` method is used to construct the
+        transformed target.
+
+    run_time : float, default=3.0
+        Duration of the animation in seconds. The default duration is
+        3 seconds.
+
+    **kwargs
+        Additional keyword arguments forwarded to ApplyMethod and ultimately
+        to Transform. These can configure the animation, for example through
+        ``rate_func`` or other supported Transform options.
+
+    Inheritance
+    -----------
+    ApplyPointwiseFunction inherits from ApplyMethod, which inherits from
+    Transform. The constructor delegates the work using:
+
+        super().__init__(
+            mobject.apply_function,
+            function,
+            run_time=run_time,
+            **kwargs,
+        )
+
+    Here, ``mobject.apply_function`` is the bound method being animated, and
+    ``function`` is passed as its argument.
+
+    ApplyMethod creates a copy of the source Mobject and applies the method
+    to that copy to produce the target. The original Mobject is then animated
+    toward the target using Transform's behavior.
+
+    How the Pointwise Mapping Works
+    -------------------------------
+    A pointwise function describes how individual coordinates change.
+
+    For example, a function might map each point
+
+        (x, y, z)
+
+    to
+
+        (x, y + 0.5 * sin(x), z)
+
+    This leaves the x and z coordinates unchanged while shifting the y
+    coordinate according to the point's x-coordinate. Applying this mapping
+    to a Mobject can produce a wave-like deformation.
+
+    The function is supplied to ``mobject.apply_function``. The exact
+    sampling, point handling, and interpolation behavior are determined by
+    the Mobject implementation and the inherited animation classes.
+
+    Examples
+    --------
+    Example 1: Apply a simple coordinate transformation.
+
+        from manimlib import *
+        import numpy as np
+
+        class PointwiseShiftExample(Scene):
+            def construct(self):
+                grid = NumberPlane()
+                self.add(grid)
+
+                def shift_points(point):
+                    return point + np.array([1, 0, 0])
+
+                self.play(
+                    ApplyPointwiseFunction(
+                        shift_points,
+                        grid,
+                        run_time=2,
+                    )
+                )
+                self.wait()
+
+    This maps every point one unit to the right. The transformation is
+    applied to a copy of the grid to prepare the target, and the original
+    grid animates toward that target.
+
+    Example 2: Create a wave-like deformation.
+
+        from manimlib import *
+        import numpy as np
+
+        class PointwiseWaveExample(Scene):
+            def construct(self):
+                grid = NumberPlane()
+                self.add(grid)
+
+                def wave(point):
+                    x, y, z = point
+                    return np.array([
+                        x,
+                        y + 0.5 * np.sin(x),
+                        z,
+                    ])
+
+                self.play(
+                    ApplyPointwiseFunction(
+                        wave,
+                        grid,
+                        run_time=3,
+                    )
+                )
+                self.wait()
+
+    Each point's y-coordinate is adjusted according to its x-coordinate,
+    producing a wave-like geometric deformation.
+
+    Example 3: Apply a rotation in the xy-plane.
+
+        from manimlib import *
+        import numpy as np
+
+        class PointwiseRotationExample(Scene):
+            def construct(self):
+                square = Square()
+                self.add(square)
+
+                angle = PI / 4
+
+                def rotate_point(point):
+                    x, y, z = point
+                    return np.array([
+                        x * np.cos(angle) - y * np.sin(angle),
+                        x * np.sin(angle) + y * np.cos(angle),
+                        z,
+                    ])
+
+                self.play(
+                    ApplyPointwiseFunction(
+                        rotate_point,
+                        square,
+                        run_time=2,
+                    )
+                )
+                self.wait()
+
+    This rotates each point around the origin in the xy-plane while leaving
+    its z-coordinate unchanged.
+
+    Notes
+    -----
+    - The function should return a valid NumPy coordinate array compatible
+      with the input point.
+    - The mapping is applied through ``mobject.apply_function`` rather than
+      by directly modifying the source Mobject in the constructor.
+    - The function defines the destination geometry; Transform controls the
+      animation from the original geometry to that destination.
+    - The default animation duration is 3 seconds, unless overridden.
+    - Pointwise transformations can distort shapes significantly. For a
+      continuous-looking deformation, the Mobject may need enough points or
+      sufficiently dense geometry.
+    - The function may be called many times, once for different points of
+      the Mobject. Avoid relying on it being called only once.
+    - The examples assume that NumPy is available as ``np`` and that the
+      relevant ManimGL classes are imported.
+    - The constructor shown does not validate the mathematical properties of
+      the supplied function, such as continuity, invertibility, or whether
+      it preserves distances.
+    - Exact rendering and interpolation details depend on the implementations
+      of ``apply_function``, ApplyMethod, and Transform.
+
+    See Also
+    --------
+    ApplyMethod
+        Animates the application of a method to a Mobject.
+    Transform
+        Animates a Mobject toward a target Mobject.
+    MoveToTarget
+        Animates a Mobject toward a previously prepared target state.
+    ComplexHomotopy
+        Related animation for point transformations expressed through complex
+        coordinates, if available in the codebase.
+    """
+
     def __init__(
         self,
         function: Callable[[np.ndarray], np.ndarray],
