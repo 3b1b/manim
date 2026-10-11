@@ -193,6 +193,122 @@ class FocusOn(Transform):
 
 
 class Indicate(Transform):
+    """
+    Temporarily emphasize a mobject by enlarging it and changing its color.
+
+    Indicate is a subclass of Transform that creates a modified copy of the
+    input mobject as its transformation target. The target is scaled by a
+    specified factor and assigned a highlight color.
+
+    By default, the animation uses ``there_and_back`` as its rate function.
+    This makes the transformation progress toward the enlarged, highlighted
+    target and then return toward the starting state, producing a temporary
+    visual emphasis effect.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object to emphasize. The animation transforms it toward a
+        modified copy and, with the default rate function, back toward its
+        original appearance.
+
+    scale_factor : float, optional
+        The factor by which the target copy is scaled. A value greater than
+        1 enlarges the target, while a value between 0 and 1 makes it smaller.
+        Defaults to 1.2.
+
+    color : ManimColor, optional
+        The color assigned to the target copy. Defaults to YELLOW.
+
+    rate_func : Callable[[float], float], optional
+        The rate function controlling the animation's interpolation progress.
+        Defaults to ``there_and_back``, which typically progresses from the
+        starting state toward the target and then returns.
+
+    **kwargs
+        Additional keyword arguments forwarded to Transform, such as
+        ``run_time`` and other supported transformation settings.
+
+    Methods
+    -------
+    create_target() -> Mobject
+        Create a copy of the original mobject, scale it by ``self.scale_factor``,
+        set its color to ``self.color``, and return it as the transformation
+        target.
+
+    Notes
+    -----
+    - The original mobject is copied before scaling and recoloring, so these
+      target modifications are applied to the copy.
+    - ``scale_factor`` controls the target's size relative to the original.
+    - ``color`` is applied to the target using ``set_color()``.
+    - The default ``there_and_back`` rate function makes the emphasis
+      temporary. A different rate function can produce different behavior.
+    - The class does not explicitly restore the mobject in its own methods;
+      the resulting animation behavior depends on Transform and the selected
+      rate function.
+    - The exact visual effect depends on the input mobject and its geometry.
+
+    Examples
+    --------
+    Example 1: Highlight a circle.
+
+    >>> circle = Circle()
+    >>> scene.play(Indicate(circle))
+
+    The circle briefly grows to 1.2 times its original scale and changes
+    toward yellow before returning through the default rate function.
+
+    Example 2: Emphasize a specific object with a custom color.
+
+    >>> square = Square()
+    >>> scene.play(
+    ...     Indicate(
+    ...         square,
+    ...         color=BLUE,
+    ...     )
+    ... )
+
+    The target copy is enlarged and assigned blue, producing a temporary
+    blue emphasis effect.
+
+    Example 3: Use a stronger scale change.
+
+    >>> triangle = Triangle()
+    >>> scene.play(
+    ...     Indicate(
+    ...         triangle,
+    ...         scale_factor=1.5,
+    ...     )
+    ... )
+
+    The target copy is scaled to 1.5 times its original size, creating a
+    more pronounced size change during the transformation.
+
+    Example 4: Customize the duration.
+
+    >>> dot = Dot()
+    >>> scene.play(
+    ...     Indicate(
+    ...         dot,
+    ...         run_time=2,
+    ...     )
+    ... )
+
+    The emphasis animation runs over two seconds. The default rate function
+    still controls the progression toward and back from the target.
+
+    See Also
+    --------
+    Transform
+    Flash
+    Circumscribe
+    FocusOn
+    Mobject.scale
+    Mobject.set_color
+    there_and_back
+    """
+
     def __init__(
         self,
         mobject: Mobject,
