@@ -2397,6 +2397,182 @@ class ApplyWave(Homotopy):
 
 
 class WiggleOutThenIn(Animation):
+    """
+    Animate a Mobject by repeatedly scaling and rotating it, then returning
+    it toward its original size and orientation.
+
+    WiggleOutThenIn is a subclass of Animation. It combines a temporary
+    scaling effect with an oscillating rotation to create a playful wiggle.
+    The object grows and shrinks while rotating back and forth, producing
+    a motion useful for emphasizing text, equations, icons, and geometric
+    objects.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object to animate.
+
+    scale_value : float, default=1.1
+        Maximum scale factor reached during the animation. A value of 1.1
+        means the object can grow to 110% of its original size before
+        returning toward its original size.
+
+    rotation_angle : float, default=0.01 * TAU
+        Maximum angular multiplier for the oscillating rotation, expressed
+        in radians. The actual angle at each moment is determined by the
+        wiggle rate function.
+
+    n_wiggles : int, default=6
+        Number of oscillations used by the wiggle function. Higher values
+        produce more rapid back-and-forth rotation during the animation.
+
+    scale_about_point : np.ndarray | None, default=None
+        Point around which the object scales. If None, the object's center
+        is used.
+
+    rotate_about_point : np.ndarray | None, default=None
+        Point around which the object rotates. If None, the object's center
+        is used.
+
+    run_time : float, default=2
+        Duration of the animation in seconds.
+
+    **kwargs
+        Additional keyword arguments forwarded to the Animation constructor,
+        such as rate_func and other supported animation settings.
+
+    Methods
+    -------
+    get_scale_about_point()
+        Returns the point used as the scaling origin. If scale_about_point
+        is None, returns the current center of the animated Mobject.
+
+    get_rotate_about_point()
+        Returns the point used as the rotation origin. If rotate_about_point
+        is None, returns the current center of the animated Mobject.
+
+    interpolate_submobject(submobject, starting_sumobject, alpha)
+        Restores the submobject's points from the starting state, applies
+        temporary scaling using there_and_back(alpha), and applies the
+        oscillating rotation produced by wiggle().
+
+    Implementation Details
+    ----------------------
+    1. The constructor stores the scale factor, rotation angle, wiggle count,
+       and optional transformation origins.
+    2. The Animation constructor initializes the animation with the target
+       Mobject and run_time.
+    3. During interpolation, match_points() resets the animated submobject
+       to its starting geometry before each frame's transformations.
+    4. The scale factor is calculated by interpolating between 1 and
+       scale_value using there_and_back(alpha).
+    5. The rotation angle is calculated using wiggle(alpha, n_wiggles)
+       multiplied by rotation_angle.
+    6. Scaling and rotation are applied around their respective pivot points.
+
+    Examples
+    --------
+    Example 1: Wiggle a circle.
+
+        circle = Circle()
+        self.add(circle)
+
+        self.play(
+            WiggleOutThenIn(circle)
+        )
+
+    The circle grows slightly and rotates back and forth before returning
+    toward its original appearance.
+
+    Example 2: Emphasize a mathematical equation.
+
+        equation = MathTex(r"E = mc^2")
+        self.add(equation)
+
+        self.play(
+            WiggleOutThenIn(
+                equation,
+                scale_value=1.2,
+                rotation_angle=0.05,
+                n_wiggles=8
+            )
+        )
+
+    The equation becomes slightly larger while performing several small
+    rotations.
+
+    Example 3: Use a custom scaling origin.
+
+        square = Square()
+        self.add(square)
+
+        self.play(
+            WiggleOutThenIn(
+                square,
+                scale_value=1.3,
+                scale_about_point=ORIGIN
+            )
+        )
+
+    The square scales around the origin rather than its center.
+
+    Example 4: Rotate around a different point.
+
+        triangle = Triangle()
+        self.add(triangle)
+
+        self.play(
+            WiggleOutThenIn(
+                triangle,
+                rotate_about_point=LEFT,
+                rotation_angle=0.08
+            )
+        )
+
+    The triangle's oscillating rotation uses LEFT as its pivot point.
+
+    Example 5: Change the animation duration.
+
+        dot = Dot()
+        self.add(dot)
+
+        self.play(
+            WiggleOutThenIn(
+                dot,
+                run_time=3,
+                n_wiggles=10
+            )
+        )
+
+    The wiggle lasts three seconds and uses more oscillations.
+
+    Notes
+    -----
+    - The default scale_value of 1.1 produces a modest size change.
+    - rotation_angle is multiplied by the output of wiggle(); it is not
+      necessarily the maximum angle reached in every configuration.
+    - The default pivot points are obtained from the Mobject's center.
+    - match_points() restores the starting geometry before each interpolation
+      step, preventing transformations from accumulating frame after frame.
+    - The final appearance depends on the interpolation functions and the
+      animation's rate_func.
+    - The optional pivot points should be NumPy-compatible coordinate arrays
+      when supplied explicitly.
+
+    See Also
+    --------
+    Animation
+        Base class for time-dependent Mobject animations.
+    ApplyWave
+        Applies a traveling wave-like deformation to a Mobject.
+    there_and_back
+        Rate function that moves forward and then returns.
+    wiggle
+        Produces an oscillating interpolation value.
+    interpolate
+        Interpolates between two values.
+    """
+
     def __init__(
         self,
         mobject: Mobject,
