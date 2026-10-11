@@ -1537,6 +1537,112 @@ class ShowCreationThenDestruction(ShowPassingFlash):
 
 
 class ShowCreationThenFadeOut(Succession):
+    """
+    Animate the creation of a Mobject followed immediately by its fade-out.
+
+    ShowCreationThenFadeOut is a subclass of Succession. It combines two
+    animations in sequence: first, ShowCreation progressively reveals the
+    object; then, FadeOut gradually makes the object disappear.
+
+    This animation is useful when an object needs to appear temporarily,
+    such as when tracing a mathematical construction, presenting an equation,
+    or demonstrating a geometric shape before moving to the next step.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object to animate. It is first progressively revealed and then
+        faded out.
+
+    remover : bool, default=True
+        Determines whether the object is removed from the scene after the
+        animation sequence finishes. When True, the object is removed
+        according to the inherited Succession animation behavior.
+
+    **kwargs
+        Additional keyword arguments passed to Succession, such as run_time
+        and rate_func, when supported by the parent animation.
+
+    Animation Sequence
+    ------------------
+    1. ShowCreation(mobject)
+       Progressively reveals the object, making it appear as though it is
+       being drawn.
+
+    2. FadeOut(mobject)
+       Fades the object out after the creation animation finishes.
+
+    3. Succession
+       Runs the two animations one after another rather than simultaneously.
+
+    Methods
+    -------
+    __init__(mobject, remover=True, **kwargs)
+        Initializes the sequential animation using ShowCreation followed
+        by FadeOut.
+
+    Examples
+    --------
+    Example 1: Draw and remove a circle.
+
+        circle = Circle()
+        self.play(ShowCreationThenFadeOut(circle))
+
+    The circle is drawn progressively and then fades away.
+
+    Example 2: Animate a mathematical equation.
+
+        equation = MathTex(r"a^2 + b^2 = c^2")
+        self.play(ShowCreationThenFadeOut(equation))
+
+    The equation appears progressively and then disappears.
+
+    Example 3: Draw and fade out a square with a custom duration.
+
+        square = Square()
+        self.play(
+            ShowCreationThenFadeOut(
+                square,
+                run_time=3
+            )
+        )
+
+    The complete sequence runs within the specified overall duration,
+    subject to Succession's timing behavior.
+
+    Example 4: Use the animation in a geometric construction.
+
+        triangle = Triangle()
+        self.play(ShowCreationThenFadeOut(triangle))
+
+    The triangle is drawn and then faded out, leaving the scene ready
+    for the next construction.
+
+    Notes
+    -----
+    - The animations run sequentially: ShowCreation completes before
+      FadeOut begins.
+    - This class does not define a custom interpolation method; it relies
+      on Succession, ShowCreation, and FadeOut.
+    - remover defaults to True, so the object is removed after the sequence
+      according to the inherited animation behavior.
+    - The visual result depends on the object type and the implementations
+      of ShowCreation and FadeOut.
+    - For an animation that leaves the object visible after being drawn,
+      use ShowCreation directly instead.
+
+    See Also
+    --------
+    Succession
+        Runs multiple animations one after another.
+    ShowCreation
+        Progressively reveals a Mobject.
+    FadeOut
+        Fades a Mobject out of the scene.
+    ShowCreationThenDestruction
+        Creates a temporary moving highlight along a vector path.
+    """
+
     def __init__(self, mobject: Mobject, remover: bool = True, **kwargs):
         super().__init__(
             ShowCreation(mobject),
