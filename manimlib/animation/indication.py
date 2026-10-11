@@ -2087,6 +2087,136 @@ class ShowCreationThenDestructionAround(AnimationOnSurroundingRectangle):
 
 
 class ShowCreationThenFadeAround(AnimationOnSurroundingRectangle):
+    """
+    Draw a surrounding rectangle around a Mobject and then fade it out.
+
+    ShowCreationThenFadeAround is a subclass of AnimationOnSurroundingRectangle.
+    It creates a SurroundingRectangle around the target object and applies
+    ShowCreationThenFadeOut to that rectangle.
+
+    The animation first progressively draws the rectangle and then fades it
+    out. This provides a temporary highlighting effect that draws attention
+    to an object without leaving a permanent outline on the screen.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object around which the surrounding rectangle is created.
+
+    stroke_width : float, default=2.0
+        Thickness of the surrounding rectangle's outline.
+
+    stroke_color : ManimColor, default=YELLOW
+        Color of the rectangle's outline.
+
+    buff : float, default=SMALL_BUFF
+        Distance between the target object and its surrounding rectangle.
+
+    **kwargs
+        Additional keyword arguments forwarded to ShowCreationThenFadeOut,
+        such as run_time and other supported animation settings.
+
+    Class Attributes
+    ----------------
+    RectAnimationType : type
+        Set to ShowCreationThenFadeOut. This specifies the animation applied
+        to the surrounding rectangle.
+
+    Implementation Details
+    ----------------------
+    1. Inherits the rectangle creation logic from
+       AnimationOnSurroundingRectangle.
+    2. Creates a SurroundingRectangle around the target Mobject.
+    3. Adds an updater that keeps the rectangle centered on the target.
+    4. Applies ShowCreationThenFadeOut to the rectangle.
+    5. ShowCreation progressively draws the rectangle.
+    6. FadeOut then fades the rectangle away.
+
+    Examples
+    --------
+    Example 1: Draw and fade a rectangle around a circle.
+
+        circle = Circle()
+        self.add(circle)
+
+        self.play(
+            ShowCreationThenFadeAround(circle)
+        )
+
+    The rectangle is drawn around the circle and then fades away.
+
+    Example 2: Highlight a mathematical equation.
+
+        equation = MathTex(r"E = mc^2")
+        self.add(equation)
+
+        self.play(
+            ShowCreationThenFadeAround(
+                equation,
+                stroke_color=YELLOW,
+                stroke_width=3,
+                buff=0.2
+            )
+        )
+
+    A yellow rectangle is drawn around the equation and then fades out.
+
+    Example 3: Use a blue outline with extra spacing.
+
+        square = Square()
+        self.add(square)
+
+        self.play(
+            ShowCreationThenFadeAround(
+                square,
+                stroke_color=BLUE,
+                stroke_width=4,
+                buff=0.3,
+                run_time=2
+            )
+        )
+
+    The blue outline appears around the square before fading away.
+
+    Example 4: Emphasize a geometric shape.
+
+        triangle = Triangle()
+        self.add(triangle)
+
+        self.play(
+            ShowCreationThenFadeAround(
+                triangle,
+                stroke_color=GREEN,
+                buff=0.25
+            )
+        )
+
+    The surrounding rectangle temporarily emphasizes the triangle.
+
+    Notes
+    -----
+    - The animation uses a SurroundingRectangle rather than tracing the
+      target object's exact outline.
+    - The target object itself is not directly faded out by this class;
+      the rectangle is the object passed to ShowCreationThenFadeOut.
+    - The updater keeps the rectangle centered on the target but does not
+      explicitly resize it if the target's dimensions change.
+    - The rectangle is drawn first and faded out second because
+      ShowCreationThenFadeOut uses Succession.
+    - The overall visual result depends on the inherited animation settings.
+
+    See Also
+    --------
+    AnimationOnSurroundingRectangle
+        Base class for animating a rectangle around a Mobject.
+    ShowCreationThenFadeOut
+        Draws a Mobject and then fades it out.
+    ShowPassingFlashAround
+        Animates a passing flash around a surrounding rectangle.
+    SurroundingRectangle
+        Creates a rectangle around a Mobject.
+    """
+
     RectAnimationType = ShowCreationThenFadeOut
 
 
