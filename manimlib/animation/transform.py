@@ -843,6 +843,150 @@ class TransformFromCopy(Transform):
 
 
 class MoveToTarget(Transform):
+    """
+    MoveToTarget
+    ============
+
+    Animate a Mobject from its current state to a previously defined target
+    state stored in its ``target`` attribute.
+
+    MoveToTarget is a specialized Transform animation that uses the target
+    Mobject associated with the source Mobject. Instead of passing the target
+    as a separate argument, the animation retrieves it from ``mobject.target``.
+
+    This class is useful when a Mobject's desired final state has already been
+    prepared using a target-generation method such as ``generate_target()``.
+    You can modify the generated target's position, scale, rotation, or other
+    properties and then animate the original Mobject toward that prepared state.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The Mobject to animate. It must have a ``target`` attribute, typically
+        created by calling ``mobject.generate_target()`` before constructing
+        the animation.
+
+    **kwargs
+        Additional keyword arguments forwarded to the parent Transform
+        constructor. These can include supported animation options such as
+        ``run_time``, ``rate_func``, and other Transform configuration
+        parameters.
+
+    Attributes
+    ----------
+    target : Mobject
+        This is not explicitly assigned by MoveToTarget itself. The class
+        expects the supplied Mobject to already have a ``target`` attribute.
+        The attribute is accessed and passed to Transform as the destination.
+
+    Implementation Details
+    ----------------------
+    The constructor performs two operations:
+
+    1. Calls ``check_validity_of_input(mobject)`` to verify that the source
+       Mobject has a ``target`` attribute.
+    2. Calls the parent constructor with ``mobject`` as the source and
+       ``mobject.target`` as the destination.
+
+    Conceptually, the implementation is equivalent to:
+
+        Transform(mobject, mobject.target, **kwargs)
+
+    The validation method checks only whether the ``target`` attribute exists.
+    It does not verify that the attribute contains a valid Mobject or that
+    the target has the intended geometry or appearance.
+
+    If the attribute is missing, the method raises an Exception with the
+    message:
+
+        MoveToTarget called on mobject without attribute 'target'
+
+    Example
+    -------
+    Move a circle to a new position using a generated target.
+
+        from manimlib import *
+
+        class MoveToTargetExample(Scene):
+            def construct(self):
+                circle = Circle(color=BLUE)
+                self.add(circle)
+
+                circle.generate_target()
+                circle.target.shift(RIGHT * 3)
+                circle.target.scale(1.5)
+
+                self.play(MoveToTarget(circle))
+                self.wait()
+
+    In this example, ``generate_target()`` creates the target state. The target
+    is then shifted to the right and enlarged. MoveToTarget animates the
+    original circle toward that state.
+
+    Example: Change Position and Rotation
+    -------------------------------------
+        from manimlib import *
+
+        class MoveAndRotateExample(Scene):
+            def construct(self):
+                square = Square(color=YELLOW)
+                self.add(square)
+
+                square.generate_target()
+                square.target.shift(UP * 2 + RIGHT)
+                square.target.rotate(PI / 4)
+
+                self.play(
+                    MoveToTarget(
+                        square,
+                        run_time=2,
+                        rate_func=smooth,
+                    )
+                )
+                self.wait()
+
+    The square moves toward the target's position and orientation over two
+    seconds using the smooth rate function.
+
+    Example: Scale a Mobject
+    ------------------------
+        circle = Circle()
+        circle.generate_target()
+        circle.target.scale(2)
+
+        self.add(circle)
+        self.play(MoveToTarget(circle))
+
+    The circle animates toward the enlarged target state.
+
+    Notes
+    -----
+    - Call ``generate_target()`` before using MoveToTarget unless another
+      operation has already created a suitable ``target`` attribute.
+    - Modify ``mobject.target`` rather than the original Mobject when preparing
+      the destination state.
+    - The validation checks only for the presence of the ``target`` attribute.
+      An existing but unsuitable target may still cause problems later.
+    - MoveToTarget uses the existing target object; it does not generate a new
+      target automatically.
+    - The original Mobject is the source of the Transform animation, so this
+      class differs from TransformFromCopy, which transforms a copy.
+    - Animation timing and interpolation behavior are provided by Transform.
+    - The exact result depends on the properties configured on the target
+      Mobject and the behavior of the parent Transform implementation.
+
+    See Also
+    --------
+    Transform
+        Animates one Mobject into another.
+    MoveAlongPath
+        Animates a Mobject along a specified path.
+    TransformFromCopy
+        Animates a copy of a source Mobject toward a target.
+    ReplacementTransform
+        Transforms a Mobject and replaces it with the target.
+    """
+
     def __init__(self, mobject: Mobject, **kwargs):
         self.check_validity_of_input(mobject)
         super().__init__(mobject, mobject.target, **kwargs)
