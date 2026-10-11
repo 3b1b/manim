@@ -513,6 +513,209 @@ class ComplexHomotopy(Homotopy):
 
 
 class PhaseFlow(Animation):
+    """
+    Animate a Mobject by moving its points along a vector field over time.
+
+    PhaseFlow is an Animation subclass that evolves a Mobject according to
+    a function representing a velocity field. At each interpolation step,
+    the function is evaluated at the current position of each point, and
+    the point is displaced by an amount proportional to the elapsed virtual
+    time.
+
+    Conceptually, the transformation follows the differential equation:
+
+        dp/dt = function(p)
+
+    where p represents a point and function(p) gives its instantaneous
+    velocity vector.
+
+    Parameters
+    ----------
+    function : Callable[[np.ndarray], np.ndarray]
+        A function that accepts a point represented as a NumPy array and
+        returns a velocity vector of compatible shape.
+
+    mobject : Mobject
+        The object whose points will move according to the vector field.
+
+    virtual_time : float or None, optional
+        The total virtual time over which the vector field is applied.
+        If None, or if a falsy value such as 0 is supplied, it defaults to
+        run_time because the implementation uses:
+
+            self.virtual_time = virtual_time or run_time
+
+    suspend_mobject_updating : bool, optional
+        Whether to suspend the Mobject's regular updating during the
+        animation. Defaults to False.
+
+    rate_func : Callable[[float], float], optional
+        A function that maps animation progress to interpolation progress.
+        Defaults to linear.
+
+    run_time : float, optional
+        The animation duration in seconds. Defaults to 3.0.
+
+    **kwargs
+        Additional keyword arguments forwarded to the parent Animation
+        constructor.
+
+    Attributes
+    ----------
+    function
+        The velocity field used to move the Mobject's points.
+
+    virtual_time
+        The effective duration of the simulated vector-field evolution.
+
+    last_alpha
+        The previous interpolation value recorded by interpolate_mobject.
+        It is initialized during the first interpolation call.
+
+    How It Works
+    ------------
+    1. The constructor stores the velocity field and determines the
+       effective virtual time.
+    2. The parent Animation constructor initializes the animation using
+       the supplied rate function, runtime, and other configuration.
+    3. During interpolation, the current alpha is compared with the
+       previously recorded alpha.
+    4. The difference is multiplied by virtual_time to calculate the
+       virtual time increment, dt.
+    5. Each point p is updated using the explicit Euler step:
+
+           p_new = p + dt * function(p)
+
+    6. The current alpha is stored as last_alpha for the next step.
+
+    The first interpolation call only records last_alpha. No point
+    displacement occurs on that call because the update is guarded by
+    hasattr(self, "last_alpha").
+
+    Examples
+    --------
+    Example 1: Uniform Translation
+    ------------------------------
+    A constant velocity field moves every point in the same direction.
+
+        import numpy as np
+        from manimlib import *
+
+        def velocity(p):
+            return np.array([1.0, 0.0, 0.0])
+
+        square = Square()
+
+        self.play(
+            PhaseFlow(
+                velocity,
+                square,
+                virtual_time=2,
+                run_time=3
+            )
+        )
+
+    The field points along the positive x-axis. The virtual time controls
+    the accumulated displacement, while run_time controls the animation's
+    duration.
+
+    Example 2: Rotation Around the Origin
+    ------------------------------------
+    A rotational vector field moves points tangentially around the origin.
+
+        def rotational_field(p):
+            x, y, z = p
+            return np.array([-y, x, 0.0])
+
+        square = Square()
+
+        self.play(
+            PhaseFlow(
+                rotational_field,
+                square,
+                virtual_time=2,
+                run_time=3
+            )
+        )
+
+    This field produces rotational motion. The numerical result depends on
+    the discrete time steps used during animation.
+
+    Example 3: Radial Expansion
+    ---------------------------
+    A field proportional to each point's position pushes points away from
+    the origin.
+
+        def radial_field(p):
+            return p
+
+        circle = Circle()
+
+        self.play(
+            PhaseFlow(
+                radial_field,
+                circle,
+                virtual_time=1,
+                run_time=2
+            )
+        )
+
+    Example 4: A Two-Dimensional Swirling Field
+    -------------------------------------------
+    A position-dependent field can create more complex motion.
+
+        def swirl_field(p):
+            x, y, z = p
+            return np.array([
+                -0.5 * y,
+                 0.5 * x,
+                 0.0
+            ])
+
+        dots = VGroup(*[
+            Dot(point)
+            for point in [
+                LEFT, RIGHT, UP, DOWN,
+                2 * LEFT, 2 * RIGHT
+            ]
+        ])
+
+        self.play(
+            PhaseFlow(
+                swirl_field,
+                dots,
+                virtual_time=2,
+                run_time=4
+            )
+        )
+
+    Notes
+    -----
+    - This implementation uses an explicit Euler-style update rather than
+      solving the differential equation exactly.
+    - The numerical accuracy depends on the interpolation step sizes and
+      the behavior of the velocity field.
+    - The field is evaluated at the points' current positions, so the
+      transformation is incremental rather than recalculated from a
+      stored original geometry at every frame.
+    - The rate_func affects alpha progression and therefore influences the
+      virtual time increments.
+    - A decreasing alpha can produce a negative dt and reverse the
+      direction of the incremental update.
+    - The function should return a NumPy-compatible vector with a shape
+      suitable for the points supplied by Mobject.apply_function.
+    - If virtual_time is 0, the implementation falls back to run_time.
+    - Because updates are incremental, repeated interpolation or unusual
+      alpha sequences may affect the resulting geometry.
+
+    See Also
+    --------
+    Animation
+    Homotopy
+    ComplexHomotopy
+    Mobject.apply_function
+    """
+
     def __init__(
         self,
         function: Callable[[np.ndarray], np.ndarray],
