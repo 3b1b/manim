@@ -1949,6 +1949,140 @@ class ShowPassingFlashAround(AnimationOnSurroundingRectangle):
 
 
 class ShowCreationThenDestructionAround(AnimationOnSurroundingRectangle):
+    """
+    Draw a rectangle around a Mobject and then animate its disappearance.
+
+    ShowCreationThenDestructionAround is a subclass of
+    AnimationOnSurroundingRectangle. It creates a SurroundingRectangle around
+    a target object and applies ShowCreationThenDestruction to the rectangle.
+
+    The rectangle is progressively drawn along its path and then the visible
+    stroke disappears, creating a temporary outline effect around the target.
+
+    This animation is useful for emphasizing equations, geometric shapes,
+    diagrams, and important text without leaving a permanent rectangle
+    on the screen.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object around which the surrounding rectangle is created.
+
+    stroke_width : float, default=2.0
+        Thickness of the surrounding rectangle's outline.
+
+    stroke_color : ManimColor, default=YELLOW
+        Color of the rectangle's outline.
+
+    buff : float, default=SMALL_BUFF
+        Distance between the target object and its surrounding rectangle.
+
+    **kwargs
+        Additional keyword arguments forwarded to ShowCreationThenDestruction,
+        such as time_width, run_time, and other supported animation settings.
+
+    Class Attributes
+    ----------------
+    RectAnimationType : type
+        Set to ShowCreationThenDestruction. This determines the animation
+        applied to the surrounding rectangle.
+
+    Implementation Details
+    ----------------------
+    1. Inherits the rectangle creation and updater logic from
+       AnimationOnSurroundingRectangle.
+    2. Creates a SurroundingRectangle around the target Mobject.
+    3. Keeps the rectangle centered on the target using an updater.
+    4. Applies ShowCreationThenDestruction to the rectangle.
+    5. Animates a temporary stroke that travels along the rectangle's path.
+
+    Examples
+    --------
+    Example 1: Temporarily outline a circle.
+
+        circle = Circle()
+        self.add(circle)
+
+        self.play(
+            ShowCreationThenDestructionAround(circle)
+        )
+
+    The surrounding rectangle is drawn progressively, and its visible
+    stroke then disappears.
+
+    Example 2: Highlight an equation.
+
+        equation = MathTex(r"a^2 + b^2 = c^2")
+        self.add(equation)
+
+        self.play(
+            ShowCreationThenDestructionAround(
+                equation,
+                stroke_color=YELLOW,
+                stroke_width=3,
+                buff=0.2
+            )
+        )
+
+    A temporary yellow outline effect emphasizes the equation.
+
+    Example 3: Use a blue outline with a larger buffer.
+
+        square = Square()
+        self.add(square)
+
+        self.play(
+            ShowCreationThenDestructionAround(
+                square,
+                stroke_color=BLUE,
+                stroke_width=4,
+                buff=0.35,
+                run_time=2
+            )
+        )
+
+    The animation creates a temporary blue highlight around the square.
+
+    Example 4: Emphasize a geometric construction.
+
+        triangle = Triangle()
+        self.add(triangle)
+
+        self.play(
+            ShowCreationThenDestructionAround(
+                triangle,
+                stroke_color=GREEN,
+                time_width=1.5
+            )
+        )
+
+    The passing stroke temporarily draws attention to the triangle's
+    surrounding rectangular boundary.
+
+    Notes
+    -----
+    - The animation follows the surrounding rectangle, not the exact
+      outline of the target object.
+    - The target object itself is not directly transformed by this class.
+    - The inherited updater keeps the rectangle centered on the target,
+      but does not explicitly resize it when the target's dimensions change.
+    - The visible effect depends on ShowCreationThenDestruction and its
+      supported animation settings.
+    - RectAnimationType is a class attribute, allowing subclasses to choose
+      a different animation without rewriting the constructor.
+
+    See Also
+    --------
+    AnimationOnSurroundingRectangle
+        Base class for animating a surrounding rectangle.
+    ShowCreationThenDestruction
+        Animates a moving stroke that appears and disappears along a path.
+    ShowPassingFlashAround
+        Animates a passing flash around a surrounding rectangle.
+    SurroundingRectangle
+        Creates a rectangle around a Mobject.
+    """
+
     RectAnimationType = ShowCreationThenDestruction
 
 
