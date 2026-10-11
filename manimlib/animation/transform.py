@@ -2839,6 +2839,136 @@ class ApplyMatrix(ApplyPointwiseFunction):
 
 
 class ApplyComplexFunction(ApplyMethod):
+    """
+    Animate a Mobject by applying a complex-valued function to its points.
+
+    ApplyComplexFunction is an animation class that transforms a Mobject by
+    applying a user-supplied complex function to the object's points through
+    Mobject.apply_complex_function. It inherits from ApplyMethod, so the
+    transformation is animated using the method-animation mechanism.
+
+    Complex functions provide a convenient way to express two-dimensional
+    transformations mathematically. For example, multiplying a complex number
+    by a constant can scale and rotate points, while functions such as z**2
+    can produce nonlinear deformations.
+
+    Parameters
+    ----------
+    function : Callable[[complex], complex]
+        A callable that accepts a complex number and returns a complex number.
+        It defines the transformation applied to the points of the Mobject.
+    mobject : Mobject
+        The ManimGL object to transform.
+    **kwargs
+        Additional keyword arguments forwarded to ApplyMethod. These may
+        include animation configuration options such as run_time, rate_func,
+        and path_arc, subject to the inherited implementation.
+
+    Attributes
+    ----------
+    function : Callable[[complex], complex]
+        The complex-valued function used for the transformation.
+    path_arc : float
+        Set in init_path_func() using the imaginary part of the complex
+        natural logarithm of function(1). This value influences the animation
+        path according to the inherited ApplyMethod implementation.
+
+    Implementation Details
+    ----------------------
+    1. The constructor stores the supplied function in self.function.
+    2. It obtains the bound method mobject.apply_complex_function.
+    3. It passes that method and the function to ApplyMethod, along with
+       any additional keyword arguments. ApplyMethod handles the method
+       animation setup.
+    4. During init_path_func(), the class evaluates function(1), where 1 is
+       converted explicitly to the complex number 1+0j.
+    5. It calculates np.log(function(1)).imag and assigns the result to
+       self.path_arc.
+    6. It calls the parent init_path_func() to complete the path-function
+       initialization.
+
+    The path-arc calculation assumes that function(1) is suitable for the
+    complex logarithm. If function(1) is zero, np.log may produce a warning
+    or a non-finite value. If the function maps 1 to a complex number whose
+    principal logarithm has a nonzero imaginary part, that imaginary part
+    is used to determine the path arc. This calculation does not generally
+    guarantee that the chosen arc describes the complete geometric behavior
+    of the complex function.
+
+    Examples
+    --------
+    Animate a complex squaring transformation:
+
+        from manimlib import *
+
+        class ComplexSquare(Scene):
+            def construct(self):
+                grid = NumberPlane()
+                self.add(grid)
+
+                transform = ApplyComplexFunction(
+                    lambda z: z**2,
+                    grid,
+                    run_time=3
+                )
+                self.play(transform)
+                self.wait()
+
+    Apply a complex exponential function:
+
+        class ComplexExponential(Scene):
+            def construct(self):
+                grid = NumberPlane()
+                self.add(grid)
+
+                self.play(
+                    ApplyComplexFunction(
+                        np.exp,
+                        grid,
+                        run_time=3
+                    )
+                )
+                self.wait()
+
+    Apply complex multiplication to rotate and scale an object:
+
+        class ComplexMultiplication(Scene):
+            def construct(self):
+                square = Square()
+                self.add(square)
+
+                self.play(
+                    ApplyComplexFunction(
+                        lambda z: (1 + 1j) * z,
+                        square,
+                        run_time=2
+                    )
+                )
+                self.wait()
+
+    Notes
+    -----
+    - The function must accept complex inputs and return complex outputs.
+    - The actual transformation is delegated to Mobject.apply_complex_function.
+    - This class is intended for transformations in the complex plane, so
+      it is particularly useful for visualizing conformal maps and other
+      complex-valued functions.
+    - A mathematically valid complex function may still produce undesirable
+      visual results if it maps points to very large values, singularities,
+      or non-finite coordinates.
+    - The path-arc heuristic is based only on function(1); it does not inspect
+      the function's behavior over the entire plane.
+    - As with other ApplyMethod-based animations, the supplied Mobject is
+      transformed through the inherited animation machinery.
+
+    See Also
+    --------
+    ApplyMethod
+    ApplyPointwiseFunction
+    ApplyMatrix
+    Mobject.apply_complex_function
+    """
+
     def __init__(
         self,
         function: Callable[[complex], complex],
