@@ -2103,6 +2103,128 @@ class ScaleInPlace(ApplyMethod):
 
 
 class ShrinkToCenter(ScaleInPlace):
+    """
+    ShrinkToCenter
+    ==============
+
+    Animate a Mobject shrinking to zero scale around its own center.
+
+    ShrinkToCenter is a specialized subclass of ScaleInPlace. It uses the
+    parent class's scaling animation with a scale factor of ``0``, causing
+    the target copy of the Mobject to collapse to zero size.
+
+    The animation is useful for making an object visually disappear by
+    shrinking it toward its center, rather than by directly changing its
+    opacity.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The Mobject to shrink. Its ``scale()`` method is used indirectly by
+        ScaleInPlace and ApplyMethod to prepare the target state.
+
+    **kwargs
+        Additional keyword arguments forwarded to ScaleInPlace and ultimately
+        to Transform. These can include animation configuration options such
+        as ``run_time`` and ``rate_func``.
+
+    Inheritance
+    -----------
+    ShrinkToCenter inherits from ScaleInPlace, which inherits from
+    ApplyMethod and Transform.
+
+    Its constructor delegates to the parent using:
+
+        super().__init__(mobject, 0, **kwargs)
+
+    The value ``0`` is the scale factor. ScaleInPlace passes this factor to
+    the Mobject's ``scale()`` method through ApplyMethod. ApplyMethod creates
+    a copy of the original Mobject, scales that copy to zero, and uses it as
+    the target for the transformation.
+
+    Transform then animates the original Mobject toward that collapsed target.
+
+    Examples
+    --------
+    Example 1: Shrink a circle to its center.
+
+        from manimlib import *
+
+        class ShrinkToCenterExample(Scene):
+            def construct(self):
+                circle = Circle(color=BLUE)
+                self.add(circle)
+
+                self.play(ShrinkToCenter(circle))
+                self.wait()
+
+    The circle shrinks toward its center until its target geometry has zero
+    scale.
+
+    Example 2: Shrink text with custom timing.
+
+        from manimlib import *
+
+        class ShrinkTextExample(Scene):
+            def construct(self):
+                text = Text("Goodbye!")
+                self.add(text)
+
+                self.play(
+                    ShrinkToCenter(
+                        text,
+                        run_time=2,
+                        rate_func=smooth,
+                    )
+                )
+                self.wait()
+
+    The text collapses toward its center over two seconds.
+
+    Example 3: Shrink an object before showing another.
+
+        from manimlib import *
+
+        class SequentialShrinkExample(Scene):
+            def construct(self):
+                square = Square(color=YELLOW)
+                circle = Circle(color=GREEN)
+
+                self.add(square)
+                self.play(ShrinkToCenter(square))
+                self.play(FadeIn(circle))
+                self.wait()
+
+    The square shrinks to zero scale before the circle fades into view.
+
+    Notes
+    -----
+    - ShrinkToCenter always uses a scale factor of zero; callers do not supply
+      a separate scale factor.
+    - The intended effect is to collapse the Mobject's geometry around its
+      own center, not to move it toward the scene origin.
+    - The target is generated through the inherited ApplyMethod behavior.
+    - The animation uses Transform interpolation rather than directly
+      changing the Mobject's opacity.
+    - A zero-scale target is geometrically degenerate. Its exact visual
+      appearance during the final frames depends on the Mobject's geometry
+      and the inherited Transform implementation.
+    - Shrinking to zero scale is different from FadeOut, which animates a
+      Mobject out of view through fading behavior.
+    - Animation timing and interpolation can be customized through **kwargs.
+
+    See Also
+    --------
+    ScaleInPlace
+        Animates scaling around a Mobject's center.
+    ApplyMethod
+        Animates the application of a Mobject method.
+    Transform
+        Animates a Mobject toward a target Mobject.
+    FadeOut
+        Animates a Mobject out of view using a fading animation.
+    """
+
     def __init__(self, mobject: Mobject, **kwargs):
         super().__init__(mobject, 0, **kwargs)
 
