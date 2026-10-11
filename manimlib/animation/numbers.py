@@ -408,6 +408,179 @@ class ChangeDecimalToValue(ChangingDecimal):
 
 
 class CountInFrom(ChangingDecimal):
+    """
+    Animate a DecimalNumber from a specified source value to its current value.
+
+    CountInFrom is a subclass of ChangingDecimal that animates a DecimalNumber
+    from a given source_number to the value the DecimalNumber holds when the
+    animation is constructed.
+
+    Unlike ChangeDecimalToValue, which captures the current value as the
+    starting point and animates toward a target, CountInFrom captures the
+    current value as the destination and interpolates from the supplied
+    source value.
+
+    The interpolation progress is clipped to the interval [0, 1], ensuring
+    that the value passed to interpolate() remains within the intended
+    progress range.
+
+    Parameters
+    ----------
+    decimal_mob : DecimalNumber
+        The DecimalNumber object whose displayed value will be animated.
+        Its current value is obtained using decimal_mob.get_value() and
+        becomes the destination value.
+
+    source_number : float or complex, optional
+        The numerical value from which the animation begins. Defaults to 0.
+
+    **kwargs
+        Additional keyword arguments forwarded to ChangingDecimal, such as
+        run_time, rate_func, suspend_mobject_updating, and other supported
+        animation configuration options.
+
+    Attributes
+    ----------
+    source_number
+        The source value captured by the interpolation lambda.
+
+    start_number
+        A local variable storing the DecimalNumber's value at construction
+        time. Despite its name, this value is the destination of the
+        interpolation, not the source.
+
+    Inherited Attributes
+    --------------------
+    number_update_func
+        The function used by ChangingDecimal to calculate the displayed
+        value at each interpolation step.
+
+    mobject
+        The DecimalNumber being animated.
+
+    How It Works
+    ------------
+    1. The constructor reads the current value using decimal_mob.get_value().
+    2. This value is stored in start_number and serves as the destination.
+    3. A lambda function clips the incoming progress a to the interval
+       from 0 to 1.
+    4. The clipped progress is passed to interpolate(), together with
+       source_number and start_number.
+    5. The resulting value is passed through ChangingDecimal's animation
+       logic and displayed using DecimalNumber.set_value().
+
+    Conceptually, the displayed value is:
+
+        value = interpolate(
+            source_number,
+            start_number,
+            clip(alpha, 0, 1)
+        )
+
+    At progress 0, the value corresponds to source_number. At progress 1,
+    it corresponds to the DecimalNumber's captured value.
+
+    Examples
+    --------
+    Example 1: Count Up from Zero
+    -----------------------------
+    Animate a DecimalNumber from zero to its current value.
+
+        from manimlib import *
+
+        number = DecimalNumber(100)
+
+        self.add(number)
+        self.play(
+            CountInFrom(
+                number,
+                source_number=0,
+                run_time=3
+            )
+        )
+
+    The displayed value progresses from 0 toward 100. Note that the
+    DecimalNumber initially contains 100 before the animation begins.
+
+    Example 2: Count Up from a Custom Starting Value
+    ------------------------------------------------
+    The source value does not have to be zero.
+
+        number = DecimalNumber(80)
+
+        self.add(number)
+        self.play(
+            CountInFrom(
+                number,
+                source_number=20,
+                run_time=2
+            )
+        )
+
+    The value interpolates from 20 to the captured value of 80.
+
+    Example 3: Count Down to the Existing Value
+    -------------------------------------------
+    The source value can also be greater than the destination.
+
+        number = DecimalNumber(25)
+
+        self.add(number)
+        self.play(
+            CountInFrom(
+                number,
+                source_number=100,
+                run_time=3
+            )
+        )
+
+    The displayed value progresses from 100 down to 25.
+
+    Example 4: Use a Nonlinear Rate Function
+    ----------------------------------------
+    The animation can use a nonlinear rate function inherited from
+    ChangingDecimal and Animation.
+
+        number = DecimalNumber(10)
+
+        self.add(number)
+        self.play(
+            CountInFrom(
+                number,
+                source_number=0,
+                rate_func=smooth,
+                run_time=3
+            )
+        )
+
+    The smooth rate function changes the timing of the interpolation.
+
+    Notes
+    -----
+    - The destination value is captured once during initialization.
+    - The source value defaults to zero.
+    - clip(a, 0, 1) restricts the progress supplied to interpolate() to
+      the interval from 0 to 1.
+    - The animation uses the interpolation and display-update behavior
+      inherited from ChangingDecimal.
+    - DecimalNumber formatting settings determine how the interpolated
+      values are displayed.
+    - Although source_number is annotated as float or complex, successful
+      complex-number animation depends on the behavior of interpolate()
+      and DecimalNumber.set_value() in the installed ManimGL version.
+    - The original DecimalNumber may display its destination value before
+      the animation starts; the first interpolation update establishes the
+      value calculated from the source and clipped progress.
+
+    See Also
+    --------
+    ChangingDecimal
+    ChangeDecimalToValue
+    DecimalNumber
+    interpolate
+    clip
+    """
+
     def __init__(
         self,
         decimal_mob: DecimalNumber,
