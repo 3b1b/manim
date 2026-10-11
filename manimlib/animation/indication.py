@@ -2221,6 +2221,159 @@ class ShowCreationThenFadeAround(AnimationOnSurroundingRectangle):
 
 
 class ApplyWave(Homotopy):
+    """
+    Apply a traveling wave-like deformation to a Mobject.
+
+    ApplyWave is a subclass of Homotopy. It temporarily displaces points of
+    a Mobject along a specified direction, creating a wave-like motion that
+    travels across the object from left to right.
+
+    The deformation is controlled by each point's horizontal position.
+    Points on the left respond earlier, while points farther to the right
+    respond later. The displacement grows and then returns to zero, so the
+    object returns toward its original shape as the animation progresses.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object to deform with the wave effect.
+
+    direction : np.ndarray, default=UP
+        Direction vector in which points are displaced. The default moves
+        points upward. Other vectors can produce horizontal, downward, or
+        diagonal deformations.
+
+    amplitude : float, default=0.2
+        Magnitude of the displacement. Larger values create a more pronounced
+        wave, while smaller values produce a subtle deformation.
+
+    run_time : float, default=1.0
+        Intended duration of the animation. In this implementation, run_time
+        appears in the signature but is not explicitly passed to Homotopy;
+        it may therefore be unused unless handled elsewhere.
+
+    **kwargs
+        Additional keyword arguments forwarded to Homotopy.
+
+    Implementation Details
+    ----------------------
+    1. Retrieves the leftmost and rightmost x-coordinates of the Mobject.
+    2. Multiplies the direction vector by amplitude to obtain the displacement
+       vector.
+    3. Defines a homotopy function that is evaluated for points (x, y, z)
+       at animation time t.
+    4. Calculates each point's normalized horizontal position:
+
+           alpha = (x - left_x) / (right_x - left_x)
+
+    5. Uses an exponential function of alpha to vary the response timing
+       across the object's width.
+    6. Applies there_and_back(t**power) to make each point move away from
+       its original position and then return.
+    7. Adds the resulting displacement to the original point coordinates.
+    8. Passes the homotopy function and target Mobject to Homotopy.
+
+    Examples
+    --------
+    Example 1: Apply a basic upward wave to a square.
+
+        square = Square()
+        self.add(square)
+
+        self.play(
+            ApplyWave(square)
+        )
+
+    The square deforms upward in a wave-like motion and returns toward
+    its original shape.
+
+    Example 2: Increase the wave amplitude.
+
+        circle = Circle()
+        self.add(circle)
+
+        self.play(
+            ApplyWave(
+                circle,
+                amplitude=0.5
+            )
+        )
+
+    The larger amplitude produces a stronger displacement.
+
+    Example 3: Apply a downward wave.
+
+        text = Text("Hello")
+        self.add(text)
+
+        self.play(
+            ApplyWave(
+                text,
+                direction=DOWN,
+                amplitude=0.3
+            )
+        )
+
+    The text undergoes a wave-like deformation in the downward direction.
+
+    Example 4: Apply a diagonal wave.
+
+        square = Square()
+        self.add(square)
+
+        self.play(
+            ApplyWave(
+                square,
+                direction=UP + RIGHT,
+                amplitude=0.2
+            )
+        )
+
+    The displacement follows the supplied diagonal direction vector.
+
+    Example 5: Emphasize an equation.
+
+        equation = MathTex(r"E = mc^2")
+        self.add(equation)
+
+        self.play(
+            ApplyWave(
+                equation,
+                direction=UP,
+                amplitude=0.15
+            )
+        )
+
+    The equation temporarily deforms as the wave travels across it.
+
+    Notes
+    -----
+    - The horizontal coordinate x determines the relative timing of the
+      deformation.
+    - The direction vector controls where points move, while amplitude
+      controls the displacement magnitude.
+    - there_and_back makes the displacement return toward zero during
+      the animation.
+    - The implementation divides by right_x - left_x. Objects with zero
+      horizontal width can cause division-by-zero or invalid numerical
+      results.
+    - The exponential power changes the timing across the object's width;
+      it is not a simple constant-speed wave.
+    - The default direction is UP, so the deformation is vertical.
+    - The run_time parameter is present in the signature but is not
+      explicitly forwarded to Homotopy in the supplied implementation.
+      Use the animation system's supported timing controls when needed.
+
+    See Also
+    --------
+    Homotopy
+        Deforms a Mobject using a time-dependent coordinate transformation.
+    there_and_back
+        Rate function that progresses forward and then returns.
+    ApplyMethod
+        Animates a method applied to a Mobject.
+    """
+
     def __init__(
         self,
         mobject: Mobject,
