@@ -1817,6 +1817,134 @@ class AnimationOnSurroundingRectangle(AnimationGroup):
 
 
 class ShowPassingFlashAround(AnimationOnSurroundingRectangle):
+    """
+    Animate a passing flash around a rectangle surrounding a Mobject.
+
+    ShowPassingFlashAround is a subclass of AnimationOnSurroundingRectangle.
+    It creates a SurroundingRectangle around the target object and applies
+    ShowPassingFlash to that rectangle, producing a temporary highlight that
+    travels along its outline.
+
+    This animation is useful for drawing attention to equations, geometric
+    shapes, diagrams, or important text without permanently highlighting
+    the entire surrounding boundary.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The object around which the surrounding rectangle is created.
+
+    stroke_width : float, default=2.0
+        Thickness of the surrounding rectangle's stroke.
+
+    stroke_color : ManimColor, default=YELLOW
+        Color of the surrounding rectangle's stroke.
+
+    buff : float, default=SMALL_BUFF
+        Distance between the target object and the surrounding rectangle.
+
+    **kwargs
+        Additional keyword arguments forwarded to ShowPassingFlash, such
+        as time_width, run_time, and other supported animation settings.
+
+    Class Attributes
+    ----------------
+    RectAnimationType : type
+        Set to ShowPassingFlash. This determines the animation applied
+        to the surrounding rectangle.
+
+    Implementation Details
+    ----------------------
+    1. Inherits the constructor from AnimationOnSurroundingRectangle.
+    2. Creates a SurroundingRectangle around the supplied Mobject.
+    3. Adds an updater that keeps the rectangle centered on the target.
+    4. Applies ShowPassingFlash to the rectangle.
+    5. Animates a temporary stroke along the rectangle's outline.
+
+    Examples
+    --------
+    Example 1: Highlight a circle with a passing flash.
+
+        circle = Circle()
+        self.add(circle)
+
+        self.play(
+            ShowPassingFlashAround(circle)
+        )
+
+    A temporary flash travels around the rectangle surrounding the circle.
+
+    Example 2: Highlight a mathematical equation.
+
+        equation = MathTex(r"E = mc^2")
+        self.add(equation)
+
+        self.play(
+            ShowPassingFlashAround(
+                equation,
+                stroke_color=BLUE,
+                stroke_width=4,
+                buff=0.2
+            )
+        )
+
+    A blue flash travels around the equation's surrounding rectangle.
+
+    Example 3: Use a larger buffer.
+
+        square = Square()
+        self.add(square)
+
+        self.play(
+            ShowPassingFlashAround(
+                square,
+                buff=0.4,
+                stroke_color=GREEN,
+                run_time=2
+            )
+        )
+
+    The flash travels around a rectangle with more space around the square.
+
+    Example 4: Control the flash width.
+
+        triangle = Triangle()
+        self.add(triangle)
+
+        self.play(
+            ShowPassingFlashAround(
+                triangle,
+                time_width=0.5,
+                stroke_width=5
+            )
+        )
+
+    The time_width argument is forwarded to ShowPassingFlash and controls
+    the width of the moving highlight.
+
+    Notes
+    -----
+    - The animation highlights the surrounding rectangle, not the exact
+      outline of the target object.
+    - The target object itself is not directly transformed by this class.
+    - The rectangle follows the target's position through an updater.
+    - The updater centers the rectangle but does not explicitly resize it
+      if the target's dimensions change.
+    - The actual visual effect depends on ShowPassingFlash and its
+      supported animation parameters.
+
+    See Also
+    --------
+    AnimationOnSurroundingRectangle
+        Base class for animating a surrounding rectangle.
+    ShowPassingFlash
+        Animates a temporary stroke traveling along a VMobject.
+    SurroundingRectangle
+        Creates a rectangle around a Mobject.
+    FlashAround
+        Animates a flash around an object's surrounding boundary.
+    """
+
     RectAnimationType = ShowPassingFlash
 
 
