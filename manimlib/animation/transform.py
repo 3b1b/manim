@@ -1957,6 +1957,142 @@ class FadeToColor(ApplyMethod):
 
 
 class ScaleInPlace(ApplyMethod):
+    """
+    ScaleInPlace
+    ============
+
+    Animate the scaling of a Mobject around its own center by applying the
+    Mobject's ``scale()`` method through ApplyMethod.
+
+    ScaleInPlace is a specialized ApplyMethod animation that creates a target
+    copy of the supplied Mobject, scales that copy by the requested factor,
+    and animates the original Mobject toward the resulting target.
+
+    Scaling in place means that the Mobject is scaled around its own center
+    rather than around the scene's origin. Its center therefore remains the
+    reference point for the scaling operation, while its dimensions change.
+
+    This animation is useful for emphasizing an object, shrinking it, or
+    animating a change in size without intentionally moving its center.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The Mobject to scale. Its ``scale()`` method is used to prepare the
+        transformed target.
+
+    scale_factor : npt.ArrayLike
+        The scaling factor passed directly to ``mobject.scale()``. A scalar
+        generally applies uniform scaling to all dimensions. An array-like
+        value may be accepted by the underlying scale implementation for
+        dimension-dependent scaling, depending on the ManimGL version.
+
+        A factor greater than 1 generally enlarges the Mobject, while a
+        positive factor between 0 and 1 generally shrinks it.
+
+    **kwargs
+        Additional keyword arguments forwarded to ApplyMethod and ultimately
+        to Transform. These may include animation options such as ``run_time``
+        and ``rate_func``.
+
+    Inheritance
+    -----------
+    ScaleInPlace inherits from ApplyMethod, which inherits from Transform.
+
+    Its constructor delegates to the parent using:
+
+        super().__init__(mobject.scale, scale_factor, **kwargs)
+
+    The bound ``mobject.scale`` method is passed to ApplyMethod along with
+    the scaling factor. ApplyMethod creates a copy of the original Mobject,
+    applies the scaling operation to that copy, and uses the modified copy
+    as the transformation target.
+
+    Transform then animates the original Mobject toward the target.
+
+    Examples
+    --------
+    Example 1: Enlarge a circle around its center.
+
+        from manimlib import *
+
+        class ScaleInPlaceExample(Scene):
+            def construct(self):
+                circle = Circle(color=BLUE)
+                self.add(circle)
+
+                self.play(ScaleInPlace(circle, 2))
+                self.wait()
+
+    The circle animates toward a target that is twice its original scale.
+
+    Example 2: Shrink a square.
+
+        from manimlib import *
+
+        class ShrinkInPlaceExample(Scene):
+            def construct(self):
+                square = Square(color=YELLOW)
+                self.add(square)
+
+                self.play(
+                    ScaleInPlace(
+                        square,
+                        0.5,
+                        run_time=2,
+                        rate_func=smooth,
+                    )
+                )
+                self.wait()
+
+    The square animates toward half its original scale over two seconds.
+
+    Example 3: Emphasize text.
+
+        from manimlib import *
+
+        class ScaleTextExample(Scene):
+            def construct(self):
+                text = Text("Important!")
+                self.add(text)
+
+                self.play(ScaleInPlace(text, 1.3))
+                self.wait()
+
+    The text animates toward a target that is scaled up by a factor of 1.3.
+
+    Notes
+    -----
+    - The scale factor is passed directly to the Mobject's ``scale()`` method.
+    - The constructor does not independently calculate a scaling matrix or
+      implement scaling frame by frame.
+    - The target is prepared through ApplyMethod, and Transform controls the
+      interpolation between the original and target states.
+    - Scaling in place is distinct from scaling about the scene origin:
+      the intended reference point is the Mobject's own center.
+    - The precise interpretation of array-like scale factors depends on the
+      underlying ``Mobject.scale()`` implementation in the installed version.
+    - A factor of 1 generally produces no size change; a factor of 0 may
+      collapse geometry and can lead to degenerate visual results.
+    - Negative factors may reverse orientation or otherwise produce
+      implementation-dependent geometric effects.
+    - For scaling around another point, use the appropriate scaling method
+      or prepare a target with the desired reference point.
+    - Animation duration and interpolation can be configured through the
+      inherited Transform options.
+
+    See Also
+    --------
+    ApplyMethod
+        Animates the application of a method to a Mobject.
+    Transform
+        Animates a Mobject toward a target Mobject.
+    MoveToTarget
+        Animates a Mobject toward its prepared target state.
+    FadeToColor
+        Animates a Mobject toward a target color.
+    """
+
     def __init__(
         self,
         mobject: Mobject,
