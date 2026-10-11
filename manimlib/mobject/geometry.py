@@ -938,6 +938,94 @@ class Elbow(VMobject):
 
 
 class StrokeArrow(Line):
+    """
+    A line with a stroke-based arrow tip.
+
+    The arrow tip is formed by varying the stroke width near the end
+    of the line, rather than by adding a separate polygon. Its width
+    is determined by the original stroke width and ``tip_width_ratio``,
+    while its length is constrained by
+    ``max_tip_length_to_length_ratio``.
+
+    The tip is reconstructed whenever the line endpoints or stroke
+    width change, allowing the arrow to retain its intended geometry
+    after these modifications.
+
+    Parameters
+    ----------
+    start : Vect3 or Mobject
+        Starting point of the arrow. If a Mobject is supplied, its
+        position is used to determine the starting point of the line.
+    end : Vect3 or Mobject
+        Ending point of the arrow. If a Mobject is supplied, its
+        position is used to determine the ending point of the line.
+    stroke_color : ManimColor
+        Color of the arrow stroke.
+    stroke_width : float
+        Base width of the arrow stroke. This value also determines
+        the width of the arrow tip in combination with
+        ``tip_width_ratio``.
+    buff : float
+        Distance to leave between the arrow endpoints and the
+        specified start and end points. The exact effect depends on
+        the endpoint handling implemented by the parent ``Line``.
+    tip_width_ratio : float
+        Multiplier used to determine the tip width relative to the
+        original stroke width. Larger values produce a wider tip.
+    tip_len_to_width : float
+        Factor used to calculate the tip length from the stroke
+        width and ``tip_width_ratio``. The initial tip length is
+        calculated as::
+
+            tip_len = stroke_width * tip_width_ratio * tip_len_to_width
+
+    max_tip_length_to_length_ratio : float
+        Maximum allowed ratio of the tip length to the total arc
+        length of the arrow path. If the calculated tip length
+        exceeds this limit, the tip length is capped accordingly.
+    max_width_to_length_ratio : float
+        Maximum ratio used to constrain the tip width relative to
+        the arrow's length. This prevents the tip from becoming
+        excessively wide compared with a short arrow.
+    **kwargs
+        Additional keyword arguments passed to the parent ``Line``
+        constructor.
+
+    Examples
+    --------
+    Create a basic arrow::
+
+        arrow = StrokeArrow(LEFT, RIGHT)
+
+    Customize the stroke color and width::
+
+        arrow = StrokeArrow(
+            LEFT,
+            RIGHT * 3,
+            stroke_color=BLUE,
+            stroke_width=8,
+        )
+
+    Adjust the arrow tip proportions::
+
+        arrow = StrokeArrow(
+            LEFT,
+            RIGHT * 3,
+            tip_width_ratio=4,
+            tip_len_to_width=0.01,
+            max_tip_length_to_length_ratio=0.25,
+        )
+
+    Create an arrow between two Mobjects::
+
+        arrow = StrokeArrow(circle, square)
+
+    See Also
+    --------
+    Line
+        The parent class providing the underlying line geometry.
+    """
+
     def __init__(
         self,
         start: Vect3 | Mobject,
@@ -1338,6 +1426,65 @@ class Polygon(VMobject):
 
 
 class Polyline(VMobject):
+    """
+    A piecewise linear curve connecting a sequence of vertices.
+
+    The polyline is constructed by connecting the supplied vertices
+    with straight line segments in the order they are given. Unlike
+    a closed polygon, the polyline does not automatically connect
+    its final vertex back to its first vertex.
+
+    As a subclass of ``VMobject``, it supports the styling and
+    configuration options provided by its parent class.
+
+    Parameters
+    ----------
+    *vertices : Vect3
+        Sequence of 3D points defining the polyline. Each consecutive
+        pair of vertices is connected by a straight line segment.
+    **kwargs
+        Additional keyword arguments passed to ``VMobject``.
+        These may include options for color, stroke width, fill
+        opacity, and other supported Mobject properties.
+
+    Examples
+    --------
+    Create a polyline through three points::
+
+        polyline = Polyline(
+            LEFT,
+            ORIGIN,
+            RIGHT,
+        )
+
+    Create a polyline with custom stroke styling::
+
+        polyline = Polyline(
+            LEFT,
+            UP,
+            RIGHT,
+            color=BLUE,
+            stroke_width=4,
+        )
+
+    Create a polyline using explicit 3D coordinates::
+
+        polyline = Polyline(
+            np.array([0, 0, 0]),
+            np.array([1, 1, 0]),
+            np.array([2, 0, 0]),
+        )
+
+    See Also
+    --------
+    VMobject
+        The base class providing vector geometry and styling behavior.
+    Polygon
+        A polygonal object whose boundary is closed.
+    Line
+        A straight line segment between two points.
+    """
+
     def __init__(
         self,
         *vertices: Vect3,
@@ -1399,6 +1546,75 @@ class Triangle(RegularPolygon):
 
 
 class ArrowTip(Triangle):
+    """
+    A triangular arrow tip that supports multiple tip styles.
+
+    The arrow tip is derived from ``Triangle`` and can be customized
+    by its orientation, dimensions, fill properties, and tip style.
+    Depending on ``tip_style``, the tip can have a triangular shape,
+    an inner-smooth shape, or a dot-like shape.
+
+    Parameters
+    ----------
+    angle : float
+        Rotation angle of the arrow tip in radians.
+    width : float
+        Width of the arrow tip before applying any style-specific
+        modifications.
+    length : float
+        Length of the arrow tip before applying any style-specific
+        modifications.
+    fill_opacity : float
+        Opacity of the arrow tip's fill, where 0 is fully transparent
+        and 1 is fully opaque.
+    fill_color : ManimColor
+        Color used to fill the arrow tip.
+    stroke_width : float
+        Width of the outline drawn around the arrow tip. A value of
+        0 disables the outline.
+    tip_style : int
+        Style of the arrow tip:
+
+        - 0: Standard triangular tip.
+        - 1: Inner-smooth tip, modified by stretching and shifting
+          one of its points.
+        - 2: Dot-like tip, constructed using a ``Dot`` object.
+
+    **kwargs
+        Additional keyword arguments passed to the parent ``Triangle``
+        constructor.
+
+    Examples
+    --------
+    Create a standard triangular arrow tip::
+
+        tip = ArrowTip()
+
+    Create a rotated arrow tip with custom dimensions::
+
+        tip = ArrowTip(
+            angle=PI / 4,
+            width=0.2,
+            length=0.3,
+            fill_color=BLUE,
+        )
+
+    Create an inner-smooth arrow tip::
+
+        tip = ArrowTip(tip_style=1)
+
+    Create a dot-like arrow tip::
+
+        tip = ArrowTip(tip_style=2)
+
+    See Also
+    --------
+    Triangle
+        The triangular Mobject used as the base class.
+    Dot
+        The Mobject used to construct the dot-like tip.
+    """
+
     def __init__(
         self,
         angle: float = 0,

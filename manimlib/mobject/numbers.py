@@ -32,6 +32,212 @@ def char_to_cahced_mob(char: str, **text_config):
 
 
 class DecimalNumber(VMobject):
+    """
+    Display a numerical value as individually rendered characters.
+
+    DecimalNumber is a VMobject that represents a real or complex
+    number using Text-based character mobjects. It supports decimal
+    precision, sign formatting, thousands separators, minimum
+    field width, optional ellipses, units, and automatic value
+    updates while preserving a chosen alignment edge.
+
+    Parameters
+    ----------
+    number
+        Initial real or complex number to display. Defaults to 0.
+    color
+        Color applied to the number. Defaults to DEFAULT_MOBJECT_COLOR.
+    stroke_width
+        Stroke width of the VMobject. Defaults to 0.
+    fill_opacity
+        Fill opacity of the rendered characters. Defaults to 1.0.
+    fill_border_width
+        Fill-border width passed to VMobject. Defaults to 0.5.
+    num_decimal_places
+        Number of decimal places for real-number formatting.
+        If zero, floating-point values are converted to integers
+        before formatting.
+    min_total_width
+        Optional minimum numeric field width. When truthy, it is
+        included in the format specification to pad the number.
+    include_sign
+        Whether to include an explicit plus sign for non-negative
+        values. Defaults to False.
+    group_with_commas
+        Whether to insert thousands separators. Defaults to True.
+    digit_buff_per_font_unit
+        Horizontal spacing factor between character mobjects,
+        multiplied by the effective font size.
+    show_ellipsis
+        Whether to append a separate ellipsis mobject after the
+        formatted number. Defaults to False.
+    unit
+        Optional text appended after the number. Units beginning
+        with "^" are aligned to the top; other units are arranged
+        with the characters and aligned to the bottom.
+    include_background_rectangle
+        Whether to add a background rectangle. Defaults to False.
+    hide_zero_components_on_complex
+        If True, suppress the zero real or imaginary component
+        when the corresponding component is exactly zero.
+    edge_to_fix
+        Edge direction used to preserve the number's position
+        when its value changes. Defaults to LEFT.
+    font_size
+        Effective font size used to scale the character mobjects.
+        Defaults to 48.
+    text_config
+        Configuration passed to the Text mobjects created for
+        characters. Do not pass font_size here; font size is
+        managed separately by this class.
+    **kwargs
+        Additional keyword arguments forwarded to VMobject.
+
+    Attributes
+    ----------
+    number
+        Current real or complex numerical value.
+    num_string
+        Formatted string representation of the current value.
+    num_decimal_places
+        Configured decimal precision.
+    include_sign
+        Whether explicit positive signs are enabled.
+    group_with_commas
+        Whether thousands separators are enabled.
+    min_total_width
+        Minimum numeric field width, if configured.
+    digit_buff_per_font_unit
+        Character spacing factor.
+    show_ellipsis
+        Whether an ellipsis is appended.
+    unit
+        Optional unit string.
+    include_background_rectangle
+        Whether a background rectangle is requested.
+    hide_zero_components_on_complex
+        Whether zero components are suppressed in complex values.
+    edge_to_fix
+        Alignment edge preserved by set_value.
+    font_size
+        Effective font size used for character scaling.
+    text_config
+        Copy of the character Text configuration.
+
+    Methods
+    -------
+    set_submobjects_from_number(number)
+        Build or update character mobjects from a numerical value.
+    get_num_string(number)
+        Format a real or complex number as a string.
+    char_to_mob(char)
+        Create a Text mobject for a character or text fragment.
+    get_font_size()
+        Return the effective font size.
+    get_formatter(**kwargs)
+        Build a Python-style numeric format specification.
+    get_complex_formatter(**kwargs)
+        Build a format specification for complex numbers.
+    get_tex()
+        Return the formatted numeric string.
+    set_value(number)
+        Replace the displayed value while preserving the chosen edge.
+    get_value()
+        Return the current numerical value.
+    increment_value(delta_t=1)
+        Add a value to the current number.
+    interpolate(mobject1, mobject2, alpha, path_func=straight_path)
+        Interpolate between mobjects and update font-size metadata.
+    _handle_scale_side_effects(scale_factor)
+        Update font-size metadata when scaling.
+
+    Notes
+    -----
+    - Each formatted character is represented by a Text mobject.
+      Character mobjects are obtained through char_to_cahced_mob,
+      allowing the implementation to reuse cached text objects.
+    - When the number changes, existing submobjects are reused
+      with become() if the character count stays the same.
+      Otherwise, a new submobject list is constructed.
+    - Character spacing is calculated as
+      digit_buff_per_font_unit * effective_font_size.
+    - A Unicode en dash replaces the ordinary minus sign in the
+      displayed string.
+    - Negative values that round to zero have their minus sign
+      removed by default. If include_sign is True, that sign is
+      replaced with a plus sign instead.
+    - Complex-number components are hidden only when they are
+      exactly zero, not merely close to zero.
+    - Complex values are formatted using separate real and
+      imaginary fields. The imaginary component always receives
+      a sign when both components are displayed.
+    - With num_decimal_places=0, the formatter uses integer
+      formatting. This is intended for integer-like values.
+    - set_value preserves the selected edge position and restores
+      the style taken from the first family member with points.
+    - increment_value updates the displayed value and returns
+      the same DecimalNumber instance.
+    - get_tex returns num_string; it does not generate a separate
+      TeX expression.
+    - text_config controls character rendering, while font_size
+      controls the scaling applied to those character mobjects.
+
+    Examples
+    --------
+    Display a basic decimal number::
+
+        number = DecimalNumber(3.14159)
+
+    Control decimal precision::
+
+        number = DecimalNumber(
+            3.14159,
+            num_decimal_places=3,
+        )
+
+    Include a positive sign and thousands separators::
+
+        number = DecimalNumber(
+            12345.6,
+            include_sign=True,
+            group_with_commas=True,
+        )
+
+    Display a complex number::
+
+        number = DecimalNumber(2 + 3j)
+
+    Append a unit::
+
+        number = DecimalNumber(9.81, unit="m/s")
+
+    Update the displayed value::
+
+        number = DecimalNumber(0)
+        number.set_value(2.5)
+        number.increment_value(1)
+
+    Animate a ValueTracker's value::
+
+        tracker = ValueTracker(0)
+        number = DecimalNumber(tracker.get_value())
+        number.add_updater(
+            lambda mob: mob.set_value(tracker.get_value())
+        )
+        self.add(number)
+        self.play(tracker.animate.set_value(10), run_time=2)
+
+    See Also
+    --------
+    IntegerMatrix
+        Matrix variant using DecimalNumber elements with zero
+        decimal places by default.
+    ValueTracker
+        Stores a numerical value that can be animated.
+    Tex
+        Renders mathematical text using TeX.
+    """
+
     def __init__(
         self,
         number: float | complex = 0,
@@ -230,6 +436,64 @@ class DecimalNumber(VMobject):
 
 
 class Integer(DecimalNumber):
+    """
+    Display a numerical value as an integer.
+
+    Integer subclasses DecimalNumber, defaulting to zero decimal
+    places. Its get_value() method rounds the stored value to the
+    nearest integer and returns it as a Python int.
+
+    Parameters
+    ----------
+    number
+        Initial numerical value. Defaults to 0.
+    num_decimal_places
+        Number of decimal places used for display. Defaults to 0,
+        but can be overridden to display decimal places.
+    **kwargs
+        Additional keyword arguments forwarded to DecimalNumber.
+
+    Methods
+    -------
+    get_value()
+        Return the stored value rounded to the nearest integer,
+        converted to a Python int.
+
+    Notes
+    -----
+    - Integer does not enforce integer-only values internally.
+      The inherited set_value() method can still store floats.
+    - get_value() rounds the stored value using np.round before
+      converting it to int. NumPy's rounding behavior applies,
+      including ties-to-even for halfway values.
+    - The displayed value is controlled by num_decimal_places;
+      changing it does not change the rounding performed by
+      get_value().
+    - Methods inherited from DecimalNumber, including set_value()
+      and increment_value(), remain available.
+
+    Examples
+    --------
+    Create an integer display::
+
+        number = Integer(5)
+
+    Update the stored value::
+
+        number.set_value(3.7)
+        value = number.get_value()  # 4
+
+    Display decimal places while retrieving an integer::
+
+        number = Integer(2.8, num_decimal_places=2)
+        value = number.get_value()  # 3
+
+    See Also
+    --------
+    DecimalNumber
+        Base class for formatting and displaying numerical values.
+    """
+
     def __init__(
         self,
         number: int = 0,

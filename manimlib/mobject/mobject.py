@@ -2102,6 +2102,100 @@ class Mobject(object):
 
 
 class Group(Mobject, Generic[SubmobjectType]):
+    """
+    A flexible container for grouping and organizing mobjects.
+
+    Group extends Mobject to collect multiple mobjects or an iterable of
+    mobjects into a single object. It supports indexing and addition, allowing
+    its members to be accessed and additional mobjects to be added using a
+    convenient interface.
+
+    Unlike a specialized geometric object, Group primarily serves as a
+    container. Its behavior for transformations, rendering, and submobject
+    management is inherited from Mobject.
+
+    Parameters
+    ----------
+    *mobjects : Mobject or Iterable[Mobject]
+        Mobjects to add to the group. The constructor accepts either multiple
+        mobjects as positional arguments or a single iterable as the first
+        positional argument.
+    **kwargs
+        Additional keyword arguments forwarded to the Mobject constructor.
+
+    Attributes
+    ----------
+    submobjects : list[Mobject]
+        Collection of child mobjects managed by the inherited Mobject
+        implementation.
+
+    Methods
+    -------
+    _ingest_args(*args)
+        Processes constructor arguments and adds the resulting mobjects to
+        the group. If every argument is a Mobject, all arguments are added.
+        Otherwise, if the first argument is iterable, its elements are added.
+        Raises Exception for unsupported argument patterns.
+    __add__(other)
+        Adds another Mobject to this group and returns the result of add().
+        The operand must satisfy the Mobject type assertion.
+    __getitem__(index)
+        Returns the indexed submobject using the parent Mobject implementation.
+        This method explicitly declares the return type for generic typing
+        and static-analysis tools.
+
+    Notes
+    -----
+    - When initialized with multiple Mobject arguments, each is added directly
+      to the group.
+    - When the first argument is an iterable and not all arguments are
+      Mobjects, only the first argument is unpacked and added. Additional
+      positional arguments are not processed in that branch.
+    - The iterable-handling branch does not recursively flatten nested
+      iterables. The elements passed to add() must be acceptable to the
+      inherited implementation.
+    - An empty constructor call creates an empty group.
+    - A non-Mobject argument that is not iterable as the first argument
+      raises an Exception.
+    - The addition operator implemented here supports adding a Mobject to
+      the group. It does not construct a new independent Group; it delegates
+      to add() and returns that method's result.
+    - Group inherits indexing behavior from Mobject, so valid index types,
+      slicing behavior, and out-of-range handling depend on the parent
+      implementation.
+    - The generic type parameter SubmobjectType describes the expected
+      submobject type for static type checking; it does not perform runtime
+      validation of every child.
+    - Transformations and other Mobject operations generally act through
+      the group's inherited submobject hierarchy.
+
+    Examples
+    --------
+    Create a group from separate mobjects::
+
+        circle = Circle()
+        square = Square()
+        group = Group(circle, square)
+
+    Create a group from an iterable::
+
+        shapes = [Circle(), Square(), Triangle()]
+        group = Group(shapes)
+
+    Access an element by index::
+
+        first_shape = group[0]
+
+    Add another mobject using the addition operator::
+
+        group + Dot()
+
+    See Also
+    --------
+    Mobject
+    VGroup
+    """
+
     def __init__(self, *mobjects: SubmobjectType | Iterable[SubmobjectType], **kwargs):
         super().__init__(**kwargs)
         self._ingest_args(*mobjects)
@@ -2126,6 +2220,96 @@ class Group(Mobject, Generic[SubmobjectType]):
 
 
 class Point(Mobject):
+    """
+    A minimal Mobject representing a single point in space.
+
+    Point stores one coordinate in its point data and provides location-based
+    accessors. Since a single point has no natural geometric width or height,
+    the class uses configurable artificial dimensions for bounding-box and
+    layout operations.
+
+    Parameters
+    ----------
+    location : Vect3, default=ORIGIN
+        Initial three-dimensional coordinates of the point.
+    artificial_width : float, default=1e-6
+        Artificial width returned by get_width(). This does not add geometric
+        extent to the stored point.
+    artificial_height : float, default=1e-6
+        Artificial height returned by get_height(). This does not add geometric
+        extent to the stored point.
+    **kwargs
+        Additional keyword arguments forwarded to the Mobject constructor.
+
+    Attributes
+    ----------
+    artificial_width : float
+        Artificial width reported by get_width().
+    artificial_height : float
+        Artificial height reported by get_height().
+
+    Methods
+    -------
+    get_width()
+        Returns the configured artificial width.
+    get_height()
+        Returns the configured artificial height.
+    get_location()
+        Returns a copy of the first stored point coordinate.
+    get_bounding_box_point(*args, **kwargs)
+        Returns the point's location, ignoring the supplied arguments.
+    set_location(new_loc)
+        Replaces the stored point coordinates with the supplied location and
+        returns this Point.
+
+    Notes
+    -----
+    - The point's coordinates are stored using set_points() after converting
+      the supplied location to a floating-point NumPy array with at least
+      two dimensions.
+    - get_location() returns a copy, so modifying the returned array does not
+      directly modify the point's stored coordinates.
+    - The artificial width and height are metadata used by the overridden
+      dimension accessors. They do not change the actual point coordinates.
+    - get_bounding_box_point() always returns the point's location, regardless
+      of any direction or other arguments passed to it.
+    - This class is intended to represent a location rather than a visible
+      geometric shape. Rendering visibility depends on the surrounding
+      Mobject implementation and how the point is used.
+    - The constructor does not explicitly validate the shape or length of
+      ``location``. It is expected to be compatible with the three-dimensional
+      coordinate conventions used by Manim.
+    - set_location() replaces the stored points rather than translating the
+      existing point by a displacement.
+
+    Examples
+    --------
+    Create a point at the origin::
+
+        point = Point()
+
+    Create a point at a specified location::
+
+        point = Point(np.array([2.0, 1.0, 0.0]))
+
+    Read and update its location::
+
+        location = point.get_location()
+        point.set_location(np.array([-1.0, 2.0, 0.0]))
+
+    Specify artificial dimensions for layout operations::
+
+        point = Point(
+            location=RIGHT,
+            artificial_width=0.01,
+            artificial_height=0.01,
+        )
+
+    See Also
+    --------
+    Mobject
+    """
+
     def __init__(
         self,
         location: Vect3 = ORIGIN,
@@ -2156,6 +2340,131 @@ class Point(Mobject):
 
 
 class _AnimationBuilder:
+    """
+    Builds an animation from chained method calls on a target copy of a Mobject.
+
+    _AnimationBuilder implements the machinery behind method-based animation
+    syntax such as ``mobject.animate.shift(RIGHT).scale(2)``. It generates a
+    target for the original mobject, records method calls made through attribute
+    access, collects optional animation arguments, and builds an animation
+    object from the recorded operations.
+
+    Methods decorated with an animation override can supply a custom animation
+    instead of being recorded as ordinary target-method calls. However, chaining
+    is not supported when an overridden animation is involved.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The mobject to animate. Its target is generated during initialization
+        and is used to apply the requested methods without directly applying
+        those method calls to the original mobject at recording time.
+
+    Attributes
+    ----------
+    mobject : Mobject
+        The original mobject being animated.
+    overridden_animation : Animation or None
+        Custom animation produced by a method marked with ``_override_animate``.
+        When set, build() returns this animation instead of constructing a
+        _MethodAnimation.
+    is_chaining : bool
+        Indicates whether a method has been accessed and recorded through the
+        builder. Used to reject unsupported chaining with overridden animations.
+    methods : list[Callable]
+        Bound methods obtained from the generated target and recorded for the
+        eventual _MethodAnimation.
+    anim_args : dict
+        Keyword arguments forwarded to the _MethodAnimation constructor when
+        build() is called.
+    can_pass_args : bool
+        Tracks whether animation arguments may still be supplied. Initially
+        True and set to False after set_anim_args() succeeds.
+
+    Methods
+    -------
+    __getattr__(method_name)
+        Looks up the named attribute on the generated target. Records the
+        resulting method and returns a wrapper that applies supplied arguments
+        to that method and returns this builder for chaining. If the method
+        has an animation override, invokes the override to create a custom
+        animation instead.
+    __call__(**kwargs)
+        Passes keyword arguments to set_anim_args() and returns this builder.
+    __dir__()
+        Extends the builder's attribute listing with public attributes of the
+        original mobject to improve interactive autocompletion.
+    set_anim_args(**kwargs)
+        Stores animation-level keyword arguments for the animation constructor.
+        Raises ValueError if arguments have already been supplied or argument
+        passing is otherwise disabled.
+    build()
+        Returns the custom overridden animation if one has been created;
+        otherwise constructs and returns a _MethodAnimation using the original
+        mobject, recorded methods, and stored animation arguments.
+
+    Notes
+    -----
+    - This is an internal helper class used by the animation builder interface,
+      not typically instantiated directly by scene code.
+    - Initialization calls ``mobject.generate_target()``. Ordinary methods
+      accessed through the builder are looked up on ``mobject.target`` and
+      applied to that target when the returned wrapper is called.
+    - Method calls are recorded as bound methods, so their effects are applied
+      to the generated target during the recording process. The original
+      mobject is passed separately to _MethodAnimation when build() runs.
+    - Attribute lookup is delegated to the target. Accessing an attribute that
+      does not exist on the target raises the corresponding AttributeError.
+    - The implementation does not verify that every accessed attribute is
+      callable. The returned wrapper attempts to invoke the retrieved value
+      when called.
+    - Animation overrides are detected through the ``_override_animate``
+      attribute on a method. An override receives the original mobject along
+      with the supplied positional and keyword arguments.
+    - If an overridden animation is created, build() returns it directly.
+      The stored ordinary method list and animation arguments are not used to
+      construct a _MethodAnimation in that case.
+    - Chaining an overridden animation with other methods is explicitly
+      unsupported and raises NotImplementedError. The check also rejects
+      accessing an overridden method after chaining has already started.
+    - set_anim_args() accepts animation-level configuration such as
+      ``run_time``, ``time_span``, ``rate_func``, ``lag_ratio``, ``path_arc``,
+      and ``path_func``, depending on the animation constructor's supported
+      arguments.
+    - Animation arguments can be passed only once. A second call to
+      set_anim_args() raises ValueError, even if the second call supplies no
+      keyword arguments.
+    - The __call__ method accepts keyword arguments only. It does not directly
+      accept positional animation arguments.
+    - build() imports _MethodAnimation locally to avoid requiring that import
+      at module initialization time.
+
+    Examples
+    --------
+    Use the public animation interface to record chained transformations::
+
+        square = Square()
+        self.play(square.animate.shift(RIGHT).scale(2))
+
+    Specify animation-level arguments::
+
+        self.play(
+            square.animate.shift(UP).scale(0.5)(run_time=2)
+        )
+
+    Build an animation explicitly when working with the internal builder::
+
+        builder = _AnimationBuilder(square)
+        builder.shift(RIGHT).scale(2)
+        animation = builder.build()
+
+    See Also
+    --------
+    Mobject
+    Animation
+    _MethodAnimation
+    """
+
     def __init__(self, mobject: Mobject):
         self.mobject = mobject
         self.overridden_animation = None
@@ -2282,6 +2591,75 @@ class Updater(object):
 
 
 class _UpdaterBuilder:
+    """
+    Provides a fluent interface for attaching method-based updaters to a Mobject.
+
+    _UpdaterBuilder allows methods to be selected dynamically and converted into
+    updaters. Calling a method exposed through the builder registers an updater
+    that invokes the corresponding method on the mobject each time the updater
+    runs, forwarding the arguments supplied when the builder method was called.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The mobject to which the generated updater functions will be attached.
+
+    Attributes
+    ----------
+    mobject : Mobject
+        The mobject that receives the registered updaters.
+
+    Methods
+    -------
+    __getattr__(method_name)
+        Returns a wrapper that registers an updater calling the named method
+        on the mobject. The wrapper accepts positional and keyword arguments
+        for that method and returns this builder for chaining.
+
+    Notes
+    -----
+    - This is an internal helper intended to support a fluent updater interface.
+    - Attribute names are resolved dynamically when the updater executes, using
+      ``getattr(m, method_name)``. The method is not looked up on the mobject
+      when the builder attribute is first accessed.
+    - The supplied method arguments are captured by the updater closure and
+      reused on every updater invocation.
+    - Each call to a builder method adds a separate updater. Calling the same
+      method multiple times does not replace previously registered updaters.
+    - The registered updater calls the selected method on the mobject passed
+      to the updater function, rather than explicitly referring to
+      ``self.mobject`` inside the lambda.
+    - The wrapper returns the builder, allowing multiple updater registrations
+      to be chained.
+    - The implementation does not validate that the requested attribute exists
+      or is callable. Errors can occur later when the updater runs.
+    - The updater's behavior and execution frequency depend on the underlying
+      Mobject.add_updater() implementation and the scene's update cycle.
+
+    Examples
+    --------
+    Register an updater that shifts a mobject upward on each update::
+
+        builder = _UpdaterBuilder(square)
+        builder.shift(UP)
+
+    Register a method with arguments::
+
+        builder.rotate(PI / 4)
+
+    Chain multiple updater registrations::
+
+        builder.shift(UP).rotate(PI / 4)
+
+    Each call registers another updater; the example does not create a single
+    combined updater.
+
+    See Also
+    --------
+    Mobject.add_updater
+    _AnimationBuilder
+    """
+
     def __init__(self, mobject: Mobject):
         self.mobject = mobject
 
@@ -2295,6 +2673,87 @@ class _UpdaterBuilder:
 
 
 class _FunctionalUpdaterBuilder:
+    """
+    Provides a fluent interface for registering updaters whose method arguments
+    are evaluated dynamically on every update.
+
+    _FunctionalUpdaterBuilder works similarly to _UpdaterBuilder, but treats
+    each supplied positional and keyword argument as a zero-argument callable.
+    When the updater runs, it evaluates these callables and passes their current
+    return values to the selected method on the mobject.
+
+    This allows updater behavior to depend on changing values, such as trackers
+    or other state that can be queried through functions.
+
+    Parameters
+    ----------
+    mobject : Mobject
+        The mobject to which the generated updater functions will be attached.
+
+    Attributes
+    ----------
+    mobject : Mobject
+        The mobject that receives the registered updaters.
+
+    Methods
+    -------
+    __getattr__(method_name)
+        Returns a wrapper that registers an updater calling the named method
+        on the mobject. Positional and keyword arguments supplied to the
+        wrapper are evaluated as zero-argument callables every time the
+        updater executes. Returns this builder for chaining.
+
+    Notes
+    -----
+    - This is an internal helper for constructing functionally parameterized
+      updaters.
+    - Attribute lookup for the selected method occurs during updater execution
+      through ``getattr(m, method_name)`` rather than when the builder method
+      is first accessed.
+    - Every positional argument must be callable without arguments because
+      the updater evaluates it using ``arg()`` on each update.
+    - Every keyword argument value must likewise be a zero-argument callable.
+      Ordinary constants such as ``2`` or ``RIGHT`` will raise a TypeError
+      when the updater attempts to call them.
+    - Argument callables are evaluated on every updater invocation, so their
+      return values can change over time.
+    - Each call to a builder method registers a separate updater. Repeated
+      calls do not replace existing updaters.
+    - The registered lambda invokes the selected method on the mobject passed
+      to the updater, not by directly calling the stored ``self.mobject``.
+    - The wrapper returns this builder, allowing multiple updater registrations
+      to be chained.
+    - The implementation does not validate that the requested method exists,
+      that argument values are callable, or that their returned values match
+      the method's signature. Such errors may occur when an updater executes.
+    - Updater execution timing and behavior depend on Mobject.add_updater()
+      and the scene's update cycle.
+
+    Examples
+    --------
+    Register an updater whose displacement is computed dynamically::
+
+        builder = _FunctionalUpdaterBuilder(square)
+        builder.shift(lambda: tracker.get_value() * RIGHT)
+
+    Register a method with dynamic positional arguments::
+
+        builder.scale(lambda: scale_tracker.get_value())
+
+    Register dynamic keyword arguments::
+
+        builder.set_opacity(opacity=lambda: opacity_tracker.get_value())
+
+    In these examples, the supplied functions are evaluated on every update,
+    so changes in tracker values can affect subsequent method calls.
+
+    See Also
+    --------
+    Mobject.add_updater
+    _UpdaterBuilder
+    _AnimationBuilder
+    """
+
     def __init__(self, mobject: Mobject):
         self.mobject = mobject
 

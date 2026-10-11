@@ -20,6 +20,148 @@ if TYPE_CHECKING:
 
 
 class ImageMobject(Mobject):
+    """
+    A textured image object that displays a raster image on a rectangular
+    surface in a Manim scene.
+
+    `ImageMobject` inherits from :class:`Mobject` and renders an image using
+    a GPU shader and a texture loaded from an image file. Its geometry
+    consists of four corner points, while texture coordinates map the
+    source image onto those corners. The vertex shader expands the four
+    corner records into the triangles needed to render the rectangular
+    image.
+
+    The image's aspect ratio is determined by its original pixel dimensions.
+    The constructor sets the displayed height and calculates the width
+    accordingly, preserving the source image's aspect ratio.
+
+    Parameters
+    ----------
+    filename : str
+        Path or filename of the raster image to load. The path is resolved
+        using ``get_full_raster_image_path``.
+    height : float, optional
+        Initial displayed height of the image in scene coordinates.
+        The width is calculated from the source image's aspect ratio.
+        Defaults to 4.0.
+    **kwargs
+        Additional keyword arguments forwarded to :class:`Mobject`.
+
+    Attributes
+    ----------
+    height : float
+        Requested displayed height stored during initialization.
+    image_path : str
+        Resolved path of the source image file.
+    image : PIL.Image.Image
+        Image opened through PIL. Its pixel dimensions determine the
+        displayed aspect ratio, and its pixel values are used by
+        ``point_to_rgb``.
+    data_dtype : np.dtype
+        Structured data layout containing:
+
+        - ``point``: three-dimensional position of a corner.
+        - ``im_coords``: two-dimensional texture coordinate for that corner.
+        - ``opacity``: opacity value associated with the corner.
+
+    shader_file : str
+        Shader filename used to render the image: ``image.wgsl``.
+    verts_per_record : int
+        Number of vertices generated for each corner record: 6.
+
+    Examples
+    --------
+    Load and display an image at the default height:
+
+        image = ImageMobject("example.png")
+
+    Specify the displayed height:
+
+        image = ImageMobject("example.png", height=3.0)
+
+    Position and scale the image using inherited Mobject methods:
+
+        image = ImageMobject("example.png", height=2.5)
+        image.shift(RIGHT * 2)
+        image.scale(1.2)
+
+    Set the image opacity:
+
+        image.set_opacity(0.5)
+
+    Sample the source image's color at a point in the image's displayed
+    coordinates:
+
+        image = ImageMobject("example.png")
+        rgb = image.point_to_rgb(image.get_center())
+
+    Methods
+    -------
+    init_texture(filename)
+        Resolve the image path, open the image with PIL, and return an
+        ImageFile texture source for rendering.
+
+    init_data()
+        Initialize four corner records with their positions, texture
+        coordinates, and opacity values.
+
+    get_source_size()
+        Return the source image's pixel dimensions as a ``(width, height)``
+        tuple.
+
+    init_points()
+        Calculate the displayed width from the source aspect ratio, then
+        set the image's displayed height.
+
+    set_opacity(opacity, recurse=True)
+        Set opacity values in the image's point data. Values are resized
+        with interpolation to match the number of point records.
+
+    set_color(color, opacity=None, recurse=None)
+        Return the object unchanged. This implementation does not recolor
+        the image through the standard Mobject color interface.
+
+    point_to_rgb(point)
+        Sample an RGB color from the source image using a point's position
+        in the displayed image coordinates.
+
+    Notes
+    -----
+    - The source image is loaded by ``init_texture``. The resolved path is
+      stored in ``image_path``, the PIL image is stored in ``image``, and
+      an ``ImageFile`` object is returned as the GPU texture source.
+    - The image geometry uses four corner records, ordered as upper-left,
+      lower-left, upper-right, and lower-right. Their texture coordinates
+      map the source image across the rectangular surface.
+    - The ``verts_per_record`` value is 6 because the shader expands the
+      four corners into the two triangles required to cover the rectangle.
+    - ``get_source_size`` returns pixel dimensions, not dimensions in scene
+      coordinates.
+    - ``init_points`` computes the width as ``2 * pixel_width / pixel_height``
+      before setting the requested height. This establishes the aspect ratio
+      independently of the requested displayed height.
+    - ``set_opacity`` updates the opacity field in the image's point data.
+      Its ``recurse`` argument is accepted for interface compatibility but
+      is not used in this implementation.
+    - ``set_color`` is intentionally a no-op. The image's visible colors
+      come from its texture, so calling this method does not tint the image.
+    - ``point_to_rgb`` converts the supplied point's x- and y-coordinates
+      into normalized image coordinates using the image's upper-left and
+      lower-right corners. It then samples a source pixel and returns its
+      first three channels as floating-point RGB values in the range
+      approximately 0 to 1.
+    - Pixel indices are calculated using integer conversion, so sampling
+      selects discrete pixels rather than interpolating between them.
+    - The bounds check in ``point_to_rgb`` uses ``and`` between the two
+      out-of-range conditions. Consequently, it raises an exception only
+      when both normalized coordinates are outside the range [0, 1].
+      A point outside only one coordinate's range is not rejected by this
+      condition and may produce an unintended pixel lookup.
+    - ``point_to_rgb`` assumes the source pixel provides at least three
+      channels. It discards any additional channels, such as alpha, and
+      returns only RGB.
+    """
+
     shader_file: str = "image.wgsl"
     data_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),

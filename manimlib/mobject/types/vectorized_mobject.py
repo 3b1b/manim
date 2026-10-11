@@ -1391,6 +1391,188 @@ class VMobject(Mobject):
 
 
 class VGroup(Group, VMobject, Generic[SubVmobjectType]):
+    """
+    VGroup
+    ======
+
+    A group specialized for organizing and manipulating VMobject instances.
+
+    VGroup combines the behavior of Group and VMobject, allowing multiple
+    vector-based mobjects to be collected into a single object. It supports
+    the grouping operations inherited from its parent classes while enforcing
+    that any Mobject passed directly to its constructor must also be a
+    VMobject.
+
+    The class is generic over ``SubVmobjectType``, allowing its child type
+    to be represented in type annotations. This is useful for static type
+    checking and editor autocomplete when accessing elements of a VGroup.
+
+    Parameters
+    ----------
+    *vmobjects : SubVmobjectType or iterable of SubVmobjectType
+        VMobjects and/or iterables of VMobjects to ingest into the group.
+        The arguments are processed by ``_ingest_args``, which is responsible
+        for adding the supplied objects to the group.
+    **kwargs
+        Additional keyword arguments forwarded to the parent initialization
+        method through ``super().__init__``.
+
+    Inheritance
+    -----------
+    VGroup inherits from:
+
+    - ``Group``: Provides group-related behavior for containing and managing
+      submobjects.
+    - ``VMobject``: Provides vector-mobject behavior and associated rendering
+      and geometry functionality.
+    - ``Generic[SubVmobjectType]``: Provides a generic type parameter for
+      the child VMobject type.
+
+    Initialization
+    --------------
+    The constructor performs the following operations:
+
+    1. Calls ``super().__init__(**kwargs)`` to initialize the parent classes
+       according to the method resolution order.
+    2. Checks each direct positional argument. If an argument is a Mobject
+       but is not a VMobject, the constructor raises an Exception.
+    3. Calls ``_ingest_args(*vmobjects)`` to process and add the supplied
+       objects or iterables to the group.
+    4. If the group contains at least one submobject, updates its uniforms
+       using the uniforms of the first submobject.
+
+    The uniform update copies or merges the first child's uniform entries
+    into the group's uniform mapping according to the behavior of the
+    mapping's ``update`` method. It does not explicitly combine the uniform
+    values of every child.
+
+    Type Validation
+    ---------------
+    The constructor rejects a direct argument when both of the following
+    conditions are true:
+
+    - The argument is an instance of ``Mobject``.
+    - The argument is not an instance of ``VMobject``.
+
+    This prevents ordinary non-vector Mobjects, such as image-based
+    Mobjects, from being passed directly as children.
+
+    The check is performed on the top-level positional arguments before
+    ``_ingest_args`` processes them. The shown implementation does not
+    explicitly validate every element inside an iterable argument; any
+    additional validation depends on ``_ingest_args`` and the inherited
+    implementation.
+
+    Method: __add__
+    ----------------
+    __add__(other: VMobject) -> Self
+
+    Adds another VMobject to the group using the inherited ``add`` method.
+
+    Parameters
+    ----------
+    other : VMobject
+        The vector mobject to add.
+
+    Returns
+    -------
+    Self
+        The result returned by ``self.add(other)``, normally the same group
+        instance after the object has been added.
+
+    Behavior
+    --------
+    The method first asserts that ``other`` is an instance of ``VMobject``.
+    If the assertion succeeds, it returns ``self.add(other)``.
+
+    This overload allows expressions such as:
+
+        group = VGroup(circle) + square
+
+    The operation is an in-place-style group addition rather than ordinary
+    numeric addition: it delegates to ``add`` and returns the group.
+
+    The assertion is a runtime check when Python assertions are enabled.
+    Assertions can be disabled when Python runs with optimization enabled,
+    so this should not be treated as an unconditional validation mechanism.
+
+    Method: __getitem__
+    -------------------
+    __getitem__(index) -> SubVmobjectType
+
+    Returns a child of the group using the indexing behavior inherited
+    from the parent classes.
+
+    Parameters
+    ----------
+    index
+        An index or other supported indexing key accepted by the inherited
+        ``__getitem__`` implementation.
+
+    Returns
+    -------
+    SubVmobjectType
+        The selected submobject, annotated as the generic child type.
+
+    Behavior
+    --------
+    The method delegates directly to ``super().__getitem__(index)``.
+    It is included primarily to provide a more specific return type for
+    static type checkers and linters when accessing elements of a VGroup.
+
+    For example:
+
+        first_circle = VGroup(circle, square)[0]
+
+    The returned object is determined by the inherited indexing behavior.
+    This method does not perform additional runtime type conversion.
+
+    Uniform Handling
+    ----------------
+    After ingesting the constructor arguments, the class checks whether
+    ``self.submobjects`` is non-empty. If it is, the group's uniform mapping
+    is updated with the first submobject's uniforms.
+
+    This can help the group inherit uniform values needed for rendering.
+    However, the code shown does not verify that every child has identical
+    uniforms, nor does it explicitly reconcile conflicting values from
+    later children.
+
+    Notes
+    -----
+    - VGroup is intended for vector mobjects, rather than arbitrary Mobjects.
+    - ``_ingest_args`` determines how positional objects and iterable
+      arguments are expanded and added to the group.
+    - The class's generic parameter improves type information but does not,
+      by itself, enforce the child type at runtime.
+    - ``__add__`` delegates to ``add``; it should not be assumed to create
+      an independent copy of the group.
+    - ``__getitem__`` delegates to the parent implementation and exists
+      mainly to improve type inference.
+    - Exact grouping, indexing, and rendering behavior also depends on the
+      implementations of Group, VMobject, and their inherited methods.
+
+    Examples
+    --------
+    Create a group of vector mobjects:
+
+        circle = Circle()
+        square = Square()
+        group = VGroup(circle, square)
+
+    Access a child:
+
+        first_object = group[0]
+
+    Add another VMobject:
+
+        triangle = Triangle()
+        group + triangle
+
+    The final expression calls ``__add__``, which delegates to ``add``.
+    The group is updated in place, and the resulting group is returned.
+    """
+
     def __init__(self, *vmobjects: SubVmobjectType | Iterable[SubVmobjectType], **kwargs):
         super().__init__(**kwargs)
         if any(isinstance(vmob, Mobject) and not isinstance(vmob, VMobject) for vmob in vmobjects):
@@ -1409,6 +1591,131 @@ class VGroup(Group, VMobject, Generic[SubVmobjectType]):
 
 
 class VectorizedPoint(Point, VMobject):
+    """
+    VectorizedPoint
+    ===============
+
+    A point-like mobject that combines Point positioning behavior with
+    VMobject vector-geometry and styling capabilities.
+
+    VectorizedPoint represents a single location in space as a VMobject
+    containing one point. Unlike a typical visible vector shape, it defaults
+    to fully transparent fill and zero stroke width, making it useful as a
+    geometric anchor or placeholder in operations that expect vectorized
+    mobjects.
+
+    Parameters
+    ----------
+    location : numpy.ndarray, default=ORIGIN
+        The 3D coordinates specifying the point's initial location.
+        ``ORIGIN`` is the default location.
+    color : ManimColor, default=BLACK
+        The color supplied to VMobject initialization. The point's default
+        fill opacity and stroke width make it invisible under ordinary
+        rendering conditions.
+    fill_opacity : float, default=0.0
+        The initial fill opacity passed to VMobject. A value of ``0.0``
+        makes the fill fully transparent.
+    stroke_width : float, default=0.0
+        The initial stroke width passed to VMobject. A value of ``0.0``
+        disables the visible stroke.
+    **kwargs
+        Additional keyword arguments passed to both ``Point.__init__`` and
+        ``VMobject.__init__``. The accepted arguments depend on the
+        implementations of those parent classes.
+
+    Inheritance
+    -----------
+    VectorizedPoint inherits from:
+
+    - ``Point``: Provides point-like positioning behavior.
+    - ``VMobject``: Provides vector-mobject geometry, styling, and rendering
+      functionality.
+
+    Initialization
+    --------------
+    The constructor performs the following operations:
+
+    1. Calls ``Point.__init__(self, location, **kwargs)`` to initialize the
+       point-related state at the specified location.
+    2. Calls ``VMobject.__init__`` with the requested color, fill opacity,
+       stroke width, and additional keyword arguments.
+    3. Calls ``set_points`` with a NumPy array containing only ``location``.
+
+    The final call explicitly sets the VMobject's point array to contain
+    one point representing the supplied location.
+
+    Geometry Representation
+    -----------------------
+    The point data is created using:
+
+        np.array([location])
+
+    If ``location`` is a three-component coordinate such as
+    ``np.array([1.0, 2.0, 0.0])``, the resulting array has shape ``(1, 3)``.
+    It contains one 3D point rather than the multiple points normally used
+    to define a line, polygon, or other vector path.
+
+    Because only one point is stored, the object should not be assumed to
+    form a visible line or filled region by itself. Its usefulness comes
+    from providing a point represented within the VMobject system.
+
+    Default Appearance
+    ------------------
+    The default styling is:
+
+    - Color: ``BLACK``
+    - Fill opacity: ``0.0``
+    - Stroke width: ``0.0``
+
+    These settings make the object effectively invisible under ordinary
+    rendering conditions. Its geometry and position can nevertheless be
+    useful to other mobjects and animation operations.
+
+    The color argument is still passed to VMobject initialization even
+    though the default opacity and stroke width generally prevent the point
+    from appearing visibly.
+
+    Notes
+    -----
+    - The object stores a single point, not a complete vector path.
+    - The supplied location is passed to both parent initialization logic
+      and the final ``set_points`` call.
+    - The exact accepted location format depends on the surrounding ManimGL
+      implementation, but a NumPy array containing three spatial
+      coordinates is the conventional representation.
+    - Additional keyword arguments are passed to both parent constructors.
+      Therefore, a keyword argument must be compatible with both
+      initialization paths to work correctly.
+    - The constructor does not explicitly copy or normalize ``location``
+      before constructing the point array.
+    - This class is useful when an operation needs a VMobject-compatible
+      point or anchor, even when that point is not intended to be visible.
+
+    Examples
+    --------
+    Create an invisible vectorized point at the origin:
+
+        point = VectorizedPoint()
+
+    Create one at a specified location:
+
+        point = VectorizedPoint(np.array([1.0, 2.0, 0.0]))
+
+    Specify styling parameters:
+
+        point = VectorizedPoint(
+            location=np.array([2.0, 1.0, 0.0]),
+            color=RED,
+            fill_opacity=1.0,
+            stroke_width=2.0,
+        )
+
+    Even when non-default styling is supplied, the underlying geometry
+    still consists of a single point. Its visible appearance depends on
+    how the renderer handles a one-point VMobject.
+    """
+
     def __init__(
         self,
         location: np.ndarray = ORIGIN,
@@ -1429,6 +1736,123 @@ class VectorizedPoint(Point, VMobject):
 
 
 class CurvesAsSubmobjects(VGroup):
+    """
+    CurvesAsSubmobjects
+    ===================
+
+    A VGroup that splits a VMobject into separate submobjects, one for each
+    Bezier curve segment in the original object's point data.
+
+    CurvesAsSubmobjects is useful when individual curve segments need to be
+    accessed, styled, transformed, or animated independently instead of
+    manipulating the entire VMobject as a single object.
+
+    Each segment is represented by a new VMobject containing the points from
+    one Bezier tuple obtained from the original object's
+    ``get_bezier_tuples`` method. The new segment then copies the original
+    VMobject's style and is added to the group.
+
+    Parameters
+    ----------
+    vmobject : VMobject
+        The source vectorized mobject whose Bezier curve segments will be
+        extracted.
+    **kwargs
+        Additional keyword arguments passed to the parent VGroup
+        initialization method.
+
+    Inheritance
+    -----------
+    CurvesAsSubmobjects inherits from ``VGroup`` and therefore supports
+    group operations and access to its individual child mobjects.
+
+    Initialization
+    --------------
+    The constructor performs the following operations:
+
+    1. Initializes the parent VGroup using ``super().__init__(**kwargs)``.
+    2. Calls ``vmobject.get_bezier_tuples()`` to retrieve the source
+       object's Bezier curve segments.
+    3. Iterates over each returned tuple.
+    4. Creates a new VMobject for each tuple.
+    5. Calls ``part.set_points(tup)`` to assign the tuple's points to the
+       new VMobject.
+    6. Calls ``part.match_style(vmobject)`` to copy the source object's
+       style to the new segment.
+    7. Adds the resulting VMobject to the group using ``self.add(part)``.
+
+    Attributes
+    ----------
+    submobjects : list
+        Contains the newly created VMobject instances, with one entry for
+        each Bezier tuple returned by the source object's
+        ``get_bezier_tuples`` method.
+
+    How the Segmentation Works
+    --------------------------
+    A VMobject can represent a path made up of multiple Bezier curve
+    segments. Rather than retaining the entire path as one object, this
+    class extracts the individual Bezier tuples and stores each tuple in
+    its own VMobject.
+
+    For example, if the source object provides five Bezier tuples, the
+    resulting group will contain five child VMobjects.
+
+    The number of children depends on the tuples returned by
+    ``get_bezier_tuples``; it is not necessarily equal to the number of
+    visually distinct shapes or disconnected components in the original
+    object.
+
+    Style Preservation
+    ------------------
+    Each generated segment receives its style through:
+
+        part.match_style(vmobject)
+
+    This delegates style matching to the inherited VMobject implementation.
+    The exact style properties copied depend on the behavior of
+    ``match_style`` in the relevant ManimGL version.
+
+    The constructor does not explicitly assign a separate style to each
+    segment. All segments are initially styled to match the source object.
+
+    Notes
+    -----
+    - The source VMobject is not directly modified by the operations shown.
+    - Each segment is a new VMobject containing the points from one
+      Bezier tuple.
+    - The constructor does not preserve the source object as a child;
+      it adds the newly created segment objects instead.
+    - The resulting group can be indexed to retrieve individual segments.
+    - Operations applied to the group can affect its children collectively,
+      while individual children can also be manipulated separately.
+    - The class assumes that ``get_bezier_tuples`` returns point data
+      accepted by ``VMobject.set_points``.
+    - If the source object returns no Bezier tuples, the resulting group
+      remains empty.
+    - Geometric continuity between neighboring segments depends on the
+      source point data. This class does not independently validate or
+      modify continuity.
+
+    Examples
+    --------
+    Split a VMobject into its Bezier segments:
+
+        segments = CurvesAsSubmobjects(vmobject)
+
+    Access the first segment:
+
+        first_segment = segments[0]
+
+    Iterate over all segments:
+
+        for segment in segments:
+            segment.set_color(RED)
+
+    Each child is an independent VMobject initialized from one Bezier
+    tuple and styled to match the original object at construction time.
+    """
+
     def __init__(self, vmobject: VMobject, **kwargs):
         super().__init__(**kwargs)
         for tup in vmobject.get_bezier_tuples():
@@ -1439,6 +1863,149 @@ class CurvesAsSubmobjects(VGroup):
 
 
 class DashedVMobject(VMobject):
+    """
+    DashedVMobject
+    ==============
+
+    A VMobject that represents another VMobject as a sequence of separated
+    curve segments, creating a dashed-line effect.
+
+    DashedVMobject divides the source VMobject's parameter interval into
+    approximately equal sections and extracts a shorter subcurve from each
+    section. The extracted subcurves are added to the new object, leaving
+    gaps between consecutive dashes.
+
+    The number of dashes and the ratio between the dash length and the
+    nominal division interval are controlled by the constructor parameters.
+
+    Parameters
+    ----------
+    vmobject : VMobject
+        The source vectorized mobject whose curve will be divided into
+        separate dashes.
+    num_dashes : int, default=15
+        The requested number of dashes. If this value is greater than zero,
+        the constructor generates that many subcurves. If it is zero or
+        negative, no dash subcurves are added.
+    positive_space_ratio : float, default=0.5
+        Controls the length of each dash relative to its nominal parameter
+        interval. A value of ``0.5`` produces dashes whose parameter-space
+        length is approximately half of each interval, leaving gaps between
+        them.
+    **kwargs
+        Additional keyword arguments forwarded to the parent VMobject
+        constructor.
+
+    Initialization
+    --------------
+    The constructor performs the following operations:
+
+    1. Initializes the parent VMobject using ``super().__init__(**kwargs)``.
+    2. Checks whether ``num_dashes`` is greater than zero.
+    3. Creates ``num_dashes + 1`` evenly spaced values over the interval
+       from zero to one using ``np.linspace``.
+    4. Computes the nominal parameter interval for each dash as
+       ``1.0 / num_dashes``.
+    5. Computes the parameter-space length of each dash by multiplying
+       the nominal interval by ``positive_space_ratio``.
+    6. Rescales the interval boundary values so that the final dash ends
+       at the end of the source parameter interval.
+    7. Extracts a subcurve from the source VMobject for each starting
+       value, using ``vmobject.get_subcurve(alpha, alpha + partial_d_alpha)``.
+    8. Adds all extracted subcurves to the new object.
+    9. Matches the source object's style using
+       ``self.match_style(vmobject, recurse=False)``.
+
+    Dash Placement Mathematics
+    --------------------------
+    Let:
+
+        N = num_dashes
+        d = 1 / N
+        p = d * positive_space_ratio
+
+    Here, ``d`` is the nominal interval width and ``p`` is the length of
+    each dash in the source curve's parameter space.
+
+    The initial interval boundaries are:
+
+        alphas = np.linspace(0, 1, N + 1)
+
+    These boundaries are then divided by:
+
+        1 - d + p
+
+    The resulting starting values are used to extract the dashes over
+    parameter intervals of length ``p``.
+
+    For a positive ``positive_space_ratio`` no greater than one, the
+    rescaling arranges the dash intervals so that the last dash reaches
+    the end of the normalized parameter interval, subject to the behavior
+    of ``get_subcurve``.
+
+    The ratio controls parameter-space lengths, not necessarily physical
+    lengths along the rendered curve. For curves whose parameterization
+    does not correspond uniformly to arc length, dashes can have different
+    visible lengths even when their parameter intervals are equal.
+
+    Style Handling
+    --------------
+    After generating the dash subcurves, the constructor calls:
+
+        self.match_style(vmobject, recurse=False)
+
+    The ``recurse=False`` argument requests style matching without
+    recursively applying the operation to the entire family of children.
+    This is consistent with the implementation's comment that family
+    handling is already performed by ``get_subcurve``.
+
+    The precise style properties copied depend on the implementation of
+    ``match_style`` in the relevant ManimGL version.
+
+    Notes
+    -----
+    - The constructor extracts curve segments rather than drawing separate
+      dash shapes manually.
+    - ``num_dashes`` controls the number of extracted subcurves when it is
+      positive.
+    - If ``num_dashes`` is zero or negative, the subcurve-generation block
+      is skipped, but style matching still occurs.
+    - The constructor does not explicitly validate ``positive_space_ratio``.
+      Values outside the usual range can produce overlapping dashes,
+      unusually long intervals, invalid intervals, or other unexpected
+      results depending on ``get_subcurve``.
+    - A ratio of ``0.5`` requests dashes about half as long as their
+      nominal parameter intervals, leaving parameter-space gaps.
+    - A ratio of ``1.0`` requests full intervals, so adjacent dashes are
+      intended to meet without parameter-space gaps.
+    - The source VMobject is queried for subcurves; the implementation
+      shown does not explicitly modify its original point data.
+    - Dash geometry and visible spacing depend on the source object's
+      parameterization and the behavior of ``get_subcurve``.
+
+    Examples
+    --------
+    Create a dashed version of a line:
+
+        line = Line(LEFT, RIGHT)
+        dashed_line = DashedVMobject(line)
+
+    Increase the number of dashes:
+
+        dashed_line = DashedVMobject(line, num_dashes=30)
+
+    Change the dash-to-interval ratio:
+
+        dashed_line = DashedVMobject(
+            line,
+            num_dashes=15,
+            positive_space_ratio=0.7,
+        )
+
+    The resulting object is a VMobject containing the generated subcurves
+    and styled to match the source VMobject.
+    """
+
     def __init__(
         self,
         vmobject: VMobject,
@@ -1470,6 +2037,167 @@ class DashedVMobject(VMobject):
 
 
 class VHighlight(VGroup):
+    """
+    VHighlight
+    ==========
+
+    A VGroup that creates a layered outline effect around a VMobject by
+    replicating it multiple times and progressively increasing the stroke
+    width of each copy.
+
+    VHighlight produces a visual highlight or glow-like border using several
+    overlapping copies of the source VMobject. Each copy receives a stroke
+    color selected from a gradient and an additional stroke width. The
+    combined layers create a graduated outline effect around the original
+    shape.
+
+    Parameters
+    ----------
+    vmobject : VMobject
+        The source vectorized mobject to highlight. Its geometry and existing
+        stroke widths are used to construct the layered outline.
+    n_layers : int, default=5
+        Number of replicated outline layers to generate. Each layer receives
+        a different stroke-width addition and a color from the generated
+        gradient.
+    color_bounds : Tuple[ManimColor], default=(GREY_C, GREY_E)
+        Colors defining the endpoints of the color gradient used to style
+        the outline layers. Intermediate colors are generated by
+        ``color_gradient``.
+    max_stroke_addition : float, default=5.0
+        Maximum additional stroke width applied across the generated layers.
+        The additions are evenly spaced from just above zero through this
+        maximum value.
+
+    Inheritance
+    -----------
+    VHighlight inherits from ``VGroup``. The generated outline copies become
+    the group's submobjects, allowing them to be transformed or rendered
+    together as one grouped object.
+
+    Initialization
+    --------------
+    The constructor performs the following operations:
+
+    1. Calls ``vmobject.replicate(n_layers)`` to create the outline copies.
+    2. Sets the fill opacity of the replicated outline group to zero, so
+       the highlight is produced by strokes rather than filled interiors.
+    3. Generates ``n_layers`` stroke-width additions using
+       ``np.linspace(0, max_stroke_addition, n_layers + 1)[1:]``.
+    4. Generates ``n_layers`` colors interpolated between ``color_bounds``
+       using ``color_gradient``.
+    5. Iterates over the replicated objects in reverse order, pairing each
+       with a stroke-width addition and a gradient color.
+    6. For every family member with points in each replicated object,
+       increases its existing stroke width by the assigned addition and
+       sets its stroke color to the assigned gradient color.
+    7. Initializes the VGroup with the modified outline copies using
+       ``super().__init__(*outline)``.
+
+    Stroke-Width Calculation
+    ------------------------
+    The stroke-width additions are calculated as:
+
+        np.linspace(0, max_stroke_addition, n_layers + 1)[1:]
+
+    This creates ``n_layers + 1`` evenly spaced values from zero to
+    ``max_stroke_addition`` and removes the first value.
+
+    For example, when ``n_layers=5`` and ``max_stroke_addition=5.0``,
+    the additions are approximately:
+
+        [1.0, 2.0, 3.0, 4.0, 5.0]
+
+    These values are added to each relevant submobject's existing stroke
+    width. They are not absolute stroke widths; the resulting width is the
+    original width plus the assigned addition.
+
+    Color Gradient
+    --------------
+    The constructor calls:
+
+        color_gradient(color_bounds, n_layers)
+
+    This produces one color per requested layer, interpolated across the
+    specified color bounds. With the default settings, the colors transition
+    between ``GREY_C`` and ``GREY_E``.
+
+    The generated colors and stroke-width additions are paired with the
+    replicated objects through ``zip``. The outline objects are traversed
+    using ``reversed(outline)``, so the styling order is reversed relative
+    to the original iteration order of the replicated group.
+
+    Recursive Stroke Styling
+    ------------------------
+    For each replicated object, the constructor calls
+    ``family_members_with_points()`` and updates every returned member.
+
+    Each member's stroke is modified using:
+
+        sm.set_stroke(
+            width=sm.get_stroke_width() + added_width,
+            color=color,
+        )
+
+    This allows nested vector geometry within a replicated object to
+    receive the highlight styling, rather than modifying only the outer
+    container.
+
+    The exact appearance depends on the source VMobject's geometry,
+    existing stroke widths, the replication behavior, and the renderer.
+
+    Notes
+    -----
+    - The source object is replicated before its outline copies are styled.
+      The implementation does not directly apply the stroke changes to
+      ``vmobject`` itself.
+    - The fill opacity is set to zero on the replicated outline group.
+    - Stroke additions are relative to each member's existing stroke width.
+    - ``n_layers`` should normally be a positive integer. The constructor
+      does not explicitly validate this parameter.
+    - If ``n_layers`` is zero or negative, the generated width and color
+      sequences may be empty or otherwise unsuitable, depending on the
+      underlying methods.
+    - ``max_stroke_addition`` is not validated. Negative values would
+      produce negative additions, potentially reducing stroke widths.
+    - ``color_bounds`` is passed directly to ``color_gradient``; its
+      accepted format and interpolation behavior depend on that function.
+    - The highlight is made from replicated vector geometry, not a separate
+      blur filter or a true optical glow.
+    - The final visual result depends on layer ordering, stroke widths,
+      gradient colors, and how overlapping strokes are rendered.
+
+    Examples
+    --------
+    Create a highlight using the default settings:
+
+        highlight = VHighlight(circle)
+
+    Generate a highlight with more layers:
+
+        highlight = VHighlight(
+            circle,
+            n_layers=10,
+        )
+
+    Customize the gradient and outline thickness:
+
+        highlight = VHighlight(
+            circle,
+            n_layers=6,
+            color_bounds=(BLUE, TEAL),
+            max_stroke_addition=8.0,
+        )
+
+    Add the highlight to a scene:
+
+        scene.add(highlight)
+
+    The resulting VGroup contains the styled replicated outlines. This
+    class does not automatically add the original VMobject to the group
+    as a separate, unmodified child.
+    """
+
     def __init__(
         self,
         vmobject: VMobject,

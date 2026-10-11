@@ -15,6 +15,109 @@ if TYPE_CHECKING:
 
 
 class PMobject(Mobject):
+    """
+    A point-based mobject that stores per-point positions and RGBA colors.
+
+    PMobject extends Mobject with utilities for adding, coloring, filtering,
+    sorting, combining, and extracting points while keeping point data aligned
+    with its associated color and opacity data.
+
+    Methods
+    -------
+    set_points(points)
+        Replace the point array and resize the underlying point data.
+
+    add_points(points, rgbas=None, color=None, opacity=None)
+        Append points and optionally assign their RGBA values or a uniform color.
+
+    add_point(point, rgba=None, color=None, opacity=None)
+        Append a single point with optional color and opacity.
+
+    set_color_by_gradient(*colors)
+        Apply a color gradient across all points.
+
+    match_colors(pmobject)
+        Resize and interpolate another PMobject's RGBA data to match this
+        object's number of points.
+
+    filter_out(condition)
+        Remove points for which the condition returns True.
+
+    sort_points(function)
+        Sort point data according to a scalar key computed from each point.
+        The default key sorts by the x-coordinate.
+
+    ingest_submobjects()
+        Combine the point data from the object's family into this object.
+
+    point_from_proportion(alpha)
+        Return the point at the specified normalized index proportion.
+
+    pointwise_become_partial(pmobject, a, b)
+        Replace this object's data with a slice of another PMobject's points,
+        using normalized bounds a and b.
+
+    Examples
+    --------
+    Example 1: Create a point-based mobject and add points.
+
+        points = PMobject()
+        points.add_points(
+            np.array([
+                [-1, 0, 0],
+                [ 0, 1, 0],
+                [ 1, 0, 0],
+            ]),
+            color=BLUE,
+            opacity=0.8,
+        )
+        self.add(points)
+
+    Example 2: Apply a color gradient.
+
+        points.set_color_by_gradient(BLUE, GREEN, YELLOW)
+
+    The gradient is assigned across the points in their current order.
+
+    Example 3: Sort points by their x-coordinate.
+
+        points.sort_points()
+
+    Pass a custom function to sort by another scalar property, such as
+    the y-coordinate:
+
+        points.sort_points(lambda p: p[1])
+
+    Example 4: Filter points using a condition.
+
+        points.filter_out(lambda p: p[1] < 0)
+
+    This removes points whose y-coordinate is negative.
+
+    Example 5: Extract a partial point range.
+
+        partial = PMobject()
+        partial.pointwise_become_partial(points, 0.25, 0.75)
+
+    This copies the data slice corresponding approximately to the middle
+    half of the source object's points.
+
+    Notes
+    -----
+    Point arrays must have shape (N, 3). RGBA arrays must have shape (N, 4).
+    When a uniform color is provided to add_points(), it takes precedence
+    over the supplied rgbas argument.
+
+    filter_out() and sort_points() operate on every family member that
+    contains points. point_from_proportion() uses integer indexing, so
+    intermediate proportions select the point at the truncated index.
+
+    Returns
+    -------
+    PMobject
+        Most mutating methods return self to allow method chaining.
+    """
+
     def set_points(self, points: Vect3Array):
         if len(points) == 0:
             points = np.zeros((0, 3))
@@ -99,6 +202,55 @@ class PMobject(Mobject):
 
 
 class PGroup(PMobject):
+    """
+    A group of :class:`PMobject` instances that combines their point-based data
+    into a single object.
+
+    `PGroup` inherits from :class:`PMobject` and accepts multiple PMobject
+    instances as submobjects. It validates that every supplied object is a
+    PMobject, initializes the parent class, and adds the supplied objects to
+    the group.
+
+    Parameters
+    ----------
+    *pmobs : PMobject
+        Any number of PMobject instances to include in the group. If any
+        argument is not a PMobject instance, an Exception is raised.
+    **kwargs
+        Additional keyword arguments forwarded to :class:`PMobject`.
+
+    Raises
+    ------
+    Exception
+        If any supplied submobject is not an instance of PMobject.
+
+    Examples
+    --------
+    Create a group containing two point-based objects:
+
+        dots = PMobject()
+        points = PMobject()
+
+        group = PGroup(dots, points)
+
+    The group can also be initialized without any submobjects:
+
+        group = PGroup()
+
+    Pass keyword arguments to the parent PMobject constructor:
+
+        group = PGroup(dots, points, color=RED)
+
+    Notes
+    -----
+    PGroup does not independently merge the point data of its submobjects
+    during initialization. It adds them using the inherited ``add`` method,
+    so their data remains associated with the respective submobjects.
+
+    The validation uses ``isinstance``, so subclasses of PMobject are also
+    accepted.
+    """
+
     def __init__(self, *pmobs: PMobject, **kwargs):
         if not all([isinstance(m, PMobject) for m in pmobs]):
             raise Exception("All submobjects must be of type PMobject")

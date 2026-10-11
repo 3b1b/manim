@@ -257,11 +257,103 @@ class VideoFrames(LayeredPixels):
 
 class VideoMobject(ImageMobject):
     """
-    A video showing whichever frame set_time was last given, and otherwise an ImageMobject
-    in every respect.
+    A mobject that displays video content inside a ManimGL scene.
 
-    A time past the end either holds on the last frame, or comes round to the beginning
-    if loop is set to True
+    VideoMobject connects a video file to ManimGL's mobject and animation systems.
+    It provides a visual representation of the video that can be added to a scene,
+    positioned, scaled, and animated alongside other mobjects.
+
+    The video is accessed through an underlying VideoSource, which is responsible
+    for providing video-related information and decoded frames. VideoMobject uses
+    this source to obtain the content needed to display the video as a texture.
+    Consequently, video decoding and metadata availability depend on the behavior
+    of the underlying source and the properties of the input video.
+
+    VideoMobject is useful when a scene needs to incorporate prerecorded footage,
+    demonstrations, screen recordings, or other video content as part of a larger
+    animation. Because it participates in the scene as a mobject, it can be
+    integrated into the scene's visual composition alongside text, geometric
+    objects, and other graphical elements.
+
+    Video Information
+    -----------------
+    The class exposes methods for retrieving information about the source video,
+    including its duration, number of frames, frame rate, and source dimensions.
+
+    - get_duration() provides the duration of the source video.
+    - get_num_frames() provides the number of frames in the source video.
+    - get_frame_rate() provides the source video's frame rate.
+    - get_source_size() provides the dimensions of the source video.
+
+    These values describe the source video rather than the final rendered scene.
+    For example, the source frame rate does not necessarily determine the frame
+    rate at which ManimGL renders the scene, and the source dimensions do not
+    necessarily determine the displayed mobject's dimensions after scaling.
+
+    Video Playback and Scene Integration
+    -----------------------------------
+    VideoMobject is intended to display video content in the context of a ManimGL
+    scene. Its visual output depends on the frames supplied by the underlying
+    video source and on how the class updates and displays those frames.
+
+    The relationship between scene time and video playback depends on the
+    implementation's frame-update and timing logic. The existence of video metadata
+    methods alone does not imply that playback automatically supports arbitrary
+    seeking, looping, speed changes, or synchronization controls; those behaviors
+    should be verified from the relevant implementation before relying on them.
+
+    Texture and Display
+    -------------------
+    The video is displayed through a graphical texture. Its appearance in the scene
+    depends on the source frame content, the texture-update mechanism, and the
+    mobject's transformations and rendering configuration.
+
+    Scaling or positioning the mobject changes how the video appears in the scene;
+    it does not, by itself, change the dimensions or frame rate of the source video.
+    Texture filtering can also affect the appearance of video pixels when the
+    displayed content is resized. For pixel-art footage that should retain crisp
+    pixel boundaries when enlarged, the Sprite class provides a specialized option
+    that uses nearest-neighbor texture filtering.
+
+    Usage
+    -----
+    A VideoMobject can be created from a video file and added to a scene like other
+    mobjects. The exact accepted input formats and decoding requirements depend on
+    the implementation of VideoSource and the video-decoding dependencies.
+
+    Example
+    -------
+        video = VideoMobject("example.mp4")
+        self.add(video)
+        self.wait(3)
+
+    In this example, the video mobject is added to the scene and the scene runs
+    for three seconds. The example illustrates scene integration; the precise
+    relationship between those three seconds and the video's playback position
+    depends on the class's actual timing implementation.
+
+    Implementation Notes
+    --------------------
+    - VideoMobject relies on VideoSource for access to video data and metadata.
+    - The source video's duration, frame count, frame rate, and dimensions are
+      distinct properties and should not be treated as interchangeable.
+    - The source frame rate is not necessarily equal to the scene's rendering FPS.
+    - The source dimensions describe the video frames, not the transformed size
+      of the mobject in the scene.
+    - Video decoding, frame availability, and playback behavior depend on the
+      underlying video source and its implementation.
+    - Features such as looping, seeking, playback-speed adjustment, or automatic
+      synchronization should not be assumed unless they are explicitly implemented.
+
+    See Also
+    --------
+    VideoSource
+        Provides access to the underlying video source.
+    VideoFrames
+        Related functionality for accessing video frames.
+    Sprite
+        A video mobject configured to use nearest-neighbor texture filtering for
+        a crisp pixel-art appearance when scaled.
     """
 
     shader_file: str = "video.wgsl"
@@ -397,7 +489,71 @@ class VideoMobject(ImageMobject):
 
 class Sprite(VideoMobject):
     """
-    A VideoMobject read nearest pixel rather than blended, keeping pixel art crisp however
-    far it is scaled up.
+    A specialized VideoMobject that uses nearest-neighbor texture filtering to
+    preserve the crisp appearance of pixel-art video when displayed at different
+    scales.
+
+    Sprite is intended for video content made up of discrete pixels, such as
+    pixel-art animations, retro game footage, and other low-resolution graphics
+    whose visual style depends on sharp pixel boundaries. Unlike smooth texture
+    filtering, nearest-neighbor filtering selects nearby source texels without
+    blending their colors. This helps prevent adjacent pixel colors from being
+    interpolated into one another when the video texture is enlarged.
+
+    Texture Filtering
+    -----------------
+    The class sets the texture_filter attribute to "nearest". This configures the
+    texture to use nearest-neighbor sampling, assuming the underlying rendering
+    implementation supports and honors this filtering mode.
+
+    With nearest-neighbor filtering, an enlarged source pixel is typically
+    displayed as a block of repeated pixels rather than as a smoothly blended
+    region. As a result, edges and individual color regions in pixel art remain
+    visually distinct.
+
+    This behavior is especially useful when the source video has a deliberately
+    low resolution and its pixels are intended to remain visible as individual
+    units.
+
+    Relationship to VideoMobject
+    ----------------------------
+    Sprite inherits from VideoMobject and retains its general role of displaying
+    video content inside a ManimGL scene. Its distinguishing behavior is the
+    choice of texture filtering rather than a separate video-decoding or playback
+    system.
+
+    The video source, frame retrieval, metadata, and playback behavior are therefore
+    provided by the inherited implementation. Sprite specializes how the resulting
+    video texture is sampled for display.
+
+    Use Cases
+    ---------
+    - Displaying pixel-art animations without introducing smooth color blending.
+    - Presenting retro game footage while preserving sharp pixel boundaries.
+    - Enlarging low-resolution graphical content when a block-like appearance is
+      intentional.
+    - Maintaining the visual style of artwork designed around a fixed pixel grid.
+
+    Example
+    -------
+        sprite = Sprite("pixel_art_animation.mp4")
+        self.add(sprite)
+        self.wait(3)
+
+    In this example, the Sprite is added to the scene like a regular video mobject.
+    Its nearest-neighbor texture filtering helps preserve the source video's
+    pixelated appearance when the texture is scaled.
+
+    Notes
+    -----
+    - Nearest-neighbor filtering affects texture sampling, not the resolution of
+      the original video or the number of frames it contains.
+    - It does not create additional detail or improve the source video's quality.
+    - The final appearance depends on the source content, scaling, and rendering
+      backend's handling of the texture-filter setting.
+    - Nearest-neighbor filtering is not generally intended to produce smooth
+      photographic images; its primary advantage is preserving distinct pixels
+      and hard edges.
     """
+
     texture_filter: str = "nearest"

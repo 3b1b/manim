@@ -33,6 +33,274 @@ def get_tex_mob_scale_factor() -> float:
 
 
 class Tex(StringMobject):
+    """
+    Create a vector-based mathematical text object by compiling LaTeX into SVG.
+
+    `Tex` extends :class:`StringMobject` and provides LaTeX-specific functionality,
+    including LaTeX compilation, command parsing, substring selection, color mapping,
+    and conversion of selected numeric substrings into changeable decimal objects.
+
+    The generated SVG is parsed into vector objects, allowing individual mathematical
+    symbols, commands, and selected substrings to be accessed, colored, and animated
+    using ManimGL's mobject functionality.
+
+    Parameters
+    ----------
+    *tex_strings
+        One or more strings containing LaTeX expressions. When multiple strings are
+        supplied, they are joined with spaces to create a single LaTeX expression.
+        Each original string is also added to the isolation selectors so its
+        corresponding parts can be selected individually.
+
+    font_size : int, default=48
+        Font-size scaling parameter. The generated object is scaled using
+        `get_tex_mob_scale_factor() * font_size`. The resulting value is stored in
+        `self.font_size`.
+
+    alignment : str, default=r"\\centering"
+        LaTeX alignment command inserted before the expression inside the configured
+        LaTeX environment. Pass an empty string to omit the alignment command.
+
+    template : str, default=""
+        Template configuration forwarded to `latex_to_svg()` for compiling the
+        expression. Its exact interpretation depends on the LaTeX compilation
+        implementation.
+
+    additional_preamble : str, default=""
+        Additional LaTeX preamble content forwarded to `latex_to_svg()`. This can
+        be used to provide extra LaTeX definitions or packages supported by the
+        compilation setup.
+
+    tex_to_color_map : dict, default={}
+        Mapping of LaTeX selectors to colors. Each matching substring is configured
+        for coloring through the inherited substring-selection functionality.
+        When both `t2c` and `tex_to_color_map` are provided, entries from
+        `tex_to_color_map` take precedence for duplicate keys.
+
+    t2c : dict, default={}
+        Short alias for a LaTeX-selector-to-color mapping. Its entries are combined
+        with `tex_to_color_map`.
+
+    isolate : Selector, default=[]
+        Selectors identifying substrings that should be isolated in the resulting
+        object. If multiple `tex_strings` are provided, each of them is automatically
+        added to the isolation selectors. A string, compiled regular expression, or
+        tuple is wrapped in a list when necessary.
+
+    use_labelled_svg : bool, default=True
+        Determines whether the SVG-generation process uses labelled SVG output.
+        Forwarded to the parent `StringMobject` implementation.
+
+    **kwargs
+        Additional configuration forwarded to `StringMobject`.
+
+    Attributes
+    ----------
+    tex_environment : str
+        LaTeX environment surrounding the expression. Defaults to `"align*"`.
+
+    tex_string : str
+        Combined LaTeX expression supplied to the object. Leading and trailing
+        whitespace is removed. If the resulting expression is empty, it is replaced
+        with a LaTeX line-break command.
+
+    alignment : str
+        Alignment command used when constructing the LaTeX content.
+
+    template : str
+        LaTeX template configuration used during SVG compilation.
+
+    additional_preamble : str
+        Additional LaTeX preamble content used during compilation.
+
+    tex_to_color_map : dict
+        Combined selector-to-color mapping used to configure the object's colors.
+
+    font_size : int
+        Font-size parameter stored after the initial scaling operation. Subsequent
+        scaling operations update this value through `_handle_scale_side_effects()`.
+
+    Methods
+    -------
+    get_svg_string_by_content(content)
+        Compile the supplied LaTeX content into an SVG string using the configured
+        template and additional preamble.
+
+    _handle_scale_side_effects(scale_factor)
+        Update `font_size` when the object is scaled, provided the attribute already
+        exists. Return the object itself.
+
+    get_command_matches(string)
+        Parse LaTeX commands and groups of opening and closing braces into regular
+        expression matches. Adjacent opening or closing braces are handled in groups.
+        Raises `ValueError` if the braces are unbalanced.
+
+    get_command_flag(match_obj)
+        Return `1` for an opening-brace match, `-1` for a closing-brace match, and
+        `0` for a LaTeX command or any other match handled by the parser.
+
+    replace_for_content(match_obj)
+        Return the matched text unchanged. Used when preserving the original content
+        during processing.
+
+    replace_for_matching(match_obj)
+        Preserve LaTeX commands but remove brace matches. This provides a
+        representation suitable for matching content while ignoring braces.
+
+    get_attr_dict_from_command_pair(open_command, close_command)
+        Return an empty dictionary when the opening command contains at least two
+        characters, otherwise return `None`. This supports interpretation of paired
+        brace commands during content processing.
+
+    get_configured_items()
+        Return a list of `(span, {})` pairs for every span matching every selector
+        in `tex_to_color_map`. The spans are obtained through
+        `find_spans_by_selector()`.
+
+    get_color_command(rgb_hex)
+        Convert a hexadecimal RGB color string into a LaTeX color command using
+        the RGB color model.
+
+    get_command_string(attr_dict, is_end, label_hex)
+        Return an empty string if `label_hex` is `None`. Otherwise, return the
+        closing brace sequence when `is_end` is true, or an opening group followed
+        by a LaTeX color command when it is false.
+
+    get_content_prefix_and_suffix(is_labelled)
+        Build the prefix and suffix inserted around the LaTeX expression. For
+        unlabelled content, the prefix includes the object's base color. If an
+        alignment command is configured, it is included in the prefix. If
+        `tex_environment` is nonempty, matching begin and end environment commands
+        are included.
+
+    get_parts_by_tex(selector)
+        Return a `VGroup` containing parts selected by the supplied LaTeX selector.
+        This is an alias for `select_parts()`.
+
+    get_part_by_tex(selector, index=0)
+        Return the selected part at the specified index. This is an alias for
+        `select_part()`.
+
+    set_color_by_tex(selector, color)
+        Set the color of parts matching a LaTeX selector. This delegates to
+        `set_parts_color()`.
+
+    set_color_by_tex_to_color_map(color_map)
+        Apply a mapping of LaTeX selectors to colors. This delegates to
+        `set_parts_color_by_dict()`.
+
+    get_tex()
+        Return the stored expression through `get_string()`.
+
+    substr_to_path_count(substr)
+        Return the estimated number of LaTeX symbols in `substr`. If the total
+        number of submobjects differs from the estimated symbol count of the full
+        expression, log a warning.
+
+    get_symbol_substrings()
+        Extract symbol-like substrings from `self.string`. The pattern recognizes
+        alphabetic LaTeX commands beginning with a backslash and most individual
+        non-whitespace characters, excluding selected LaTeX syntax characters
+        such as braces, underscores, carets, dollar signs, backslashes, and
+        ampersands.
+
+    make_number_changeable(value, index=0, replace_all=False, **config)
+        Replace a selected numeric substring with a `DecimalNumber` mobject while
+        preserving its position and visual style.
+
+        Parameters
+        ----------
+        value : float, int, or str
+            Numeric value represented in the LaTeX expression. Its string
+            representation is used to locate matching parts.
+        index : int, default=0
+            Index of the matching occurrence to replace when `replace_all` is false.
+        replace_all : bool, default=False
+            If true, replace every matching occurrence and return a `VGroup`
+            containing the generated decimal mobjects.
+        **config
+            Additional keyword arguments forwarded to `DecimalNumber`. If
+            `num_decimal_places` is omitted, it is inferred from the number of
+            digits after the decimal point in `str(value)`.
+
+        If the requested substring cannot be found, or the requested occurrence
+        does not exist, a warning is logged and an empty `VMobject` is returned.
+
+        For each selected part, the method creates a `DecimalNumber`, positions it
+        to replace the original part, copies its visual style, removes extra
+        submobjects belonging to the selected part when necessary, and replaces
+        the corresponding submobject with the decimal object.
+
+        The stored string is also updated by replacing one occurrence of the
+        numeric substring with `\\decimalmob`. This placeholder allows
+        `substr_to_path_count()` to account for the replacement.
+
+    Examples
+    --------
+    Create a basic mathematical expression:
+
+    >>> from manimlib import *
+    >>> expression = Tex(r"x^2 + y^2 = z^2")
+    >>> self.add(expression)
+
+    Create an expression from multiple strings. The supplied strings are
+    automatically added to the isolation selectors:
+
+    >>> expression = Tex(r"x^2", "+", r"y^2", "=", r"z^2")
+    >>> self.add(expression)
+
+    Color a selected LaTeX substring:
+
+    >>> expression = Tex(r"x^2 + y^2 = z^2")
+    >>> expression.set_color_by_tex("x", RED)
+    >>> expression.set_color_by_tex("y", BLUE)
+
+    Use the color-map shorthand:
+
+    >>> expression = Tex(
+    ...     r"x^2 + y^2 = z^2",
+    ...     t2c={"x": RED, "y": BLUE, "z": GREEN},
+    ... )
+
+    Retrieve selected parts:
+
+    >>> expression = Tex(r"x^2 + y^2 = z^2")
+    >>> x_parts = expression.get_parts_by_tex("x")
+    >>> x_part = expression.get_part_by_tex("x")
+
+    Make a numeric substring changeable:
+
+    >>> expression = Tex(r"x = 2.50")
+    >>> number = expression.make_number_changeable("2.50")
+    >>> self.add(expression)
+
+    The returned decimal mobject can subsequently be animated or updated using
+    the supported `DecimalNumber` interface.
+
+    Replace every occurrence of a number:
+
+    >>> expression = Tex(r"2 + 2 = 4")
+    >>> numbers = expression.make_number_changeable(
+    ...     2,
+    ...     replace_all=True,
+    ... )
+
+    Notes
+    -----
+    - LaTeX must be valid for the configured compilation environment.
+    - Substring selection depends on the isolation and matching behavior inherited
+      from `StringMobject`.
+    - A selector may match multiple spans. Use `get_parts_by_tex()` when all
+      matches are required, or `get_part_by_tex()` to retrieve a specific match.
+    - The `t2c` and `tex_to_color_map` dictionaries are merged with
+      `tex_to_color_map` taking precedence when keys overlap.
+    - The `font_size` attribute is assigned after the initial scale operation so
+      the initial scaling does not modify the stored font-size parameter through
+      `_handle_scale_side_effects()`.
+    - When replacing numbers, the selected substring must correspond to a part
+      that can be replaced within the existing submobject structure.
+    """
+
     tex_environment: str = "align*"
 
     def __init__(
@@ -274,4 +542,101 @@ class Tex(StringMobject):
 
 
 class TexText(Tex):
+    """
+    Create a LaTeX-based text object using the `Tex` implementation without
+    wrapping the content in a LaTeX environment by default.
+
+    `TexText` is a lightweight subclass of :class:`Tex`. It inherits the LaTeX
+    compilation, SVG conversion, substring selection, color mapping, scaling,
+    and numeric replacement functionality provided by `Tex`.
+
+    The main difference is that `TexText` sets `tex_environment` to an empty
+    string. Consequently, the default content-generation process does not add
+    a `\\begin{...}` and `\\end{...}` pair around the expression.
+
+    This class is useful for rendering LaTeX text or expressions that should
+    not be enclosed in the default `align*` environment used by `Tex`.
+
+    Class Attributes
+    ----------------
+    tex_environment : str
+        LaTeX environment surrounding the expression. Defaults to an empty
+        string, disabling automatic environment wrapping in the inherited
+        `get_content_prefix_and_suffix()` implementation.
+
+    Parameters
+    ----------
+    *tex_strings
+        One or more strings containing LaTeX content. Multiple strings are
+        combined by the inherited `Tex` constructor.
+
+    font_size : int, default=48
+        Font-size scaling parameter inherited from `Tex`.
+
+    alignment : str, default=r"\\centering"
+        LaTeX alignment command inherited from `Tex`. Set to an empty string
+        if no alignment command should be inserted.
+
+    template : str, default=""
+        LaTeX template configuration used during compilation.
+
+    additional_preamble : str, default=""
+        Additional LaTeX preamble content used during compilation.
+
+    tex_to_color_map : dict, default={}
+        Mapping of LaTeX selectors to colors.
+
+    t2c : dict, default={}
+        Short alias for the selector-to-color mapping.
+
+    isolate : Selector, default=[]
+        Selectors specifying substrings that should be isolated.
+
+    use_labelled_svg : bool, default=True
+        Whether to use labelled SVG output.
+
+    **kwargs
+        Additional keyword arguments forwarded through the inherited `Tex`
+        constructor to `StringMobject`.
+
+    Inherited Functionality
+    -----------------------
+    `TexText` inherits the methods of `Tex`, including:
+
+    - `get_svg_string_by_content()` for compiling LaTeX content into SVG.
+    - `get_parts_by_tex()` and `get_part_by_tex()` for selecting expression parts.
+    - `set_color_by_tex()` and `set_color_by_tex_to_color_map()` for coloring
+      selected substrings.
+    - `get_tex()` for retrieving the stored LaTeX expression.
+    - `make_number_changeable()` for replacing selected numeric parts with
+      `DecimalNumber` mobjects.
+    - LaTeX command parsing and symbol-substring extraction methods.
+
+    Examples
+    --------
+    Create a text object:
+
+    >>> from manimlib import *
+    >>> text = TexText(r"Hello, World!")
+    >>> self.add(text)
+
+    Render mathematical text without the default `align*` environment:
+
+    >>> expression = TexText(r"x^2 + y^2 = z^2")
+    >>> self.add(expression)
+
+    Color selected substrings:
+
+    >>> expression = TexText(r"a + b = c", t2c={"a": RED, "b": BLUE, "c": GREEN})
+    >>> self.add(expression)
+
+    Notes
+    -----
+    - `TexText` changes only the default `tex_environment`; most of its behavior
+      comes from `Tex` and its parent classes.
+    - The inherited default alignment command remains `\\centering` unless
+      overridden. An empty environment does not automatically disable alignment.
+    - LaTeX content must still be valid for the configured compilation setup.
+    """
+
     tex_environment: str = ""

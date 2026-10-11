@@ -443,6 +443,144 @@ class Axes(VGroup, CoordinateSystem):
     default_x_axis_config: dict = dict()
     default_y_axis_config: dict = dict(line_to_number_direction=LEFT)
 
+    """
+    A two-dimensional coordinate system formed by perpendicular x- and
+    y-axes.
+
+    Each axis is represented by a :class:`NumberLine`. The x-axis is
+    constructed horizontally, while the y-axis is rotated by 90 degrees.
+    Both axes are shifted so that their zero coordinates coincide at the
+    origin, and the resulting group is centered.
+
+    The class also provides coordinate transformations, coordinate labels,
+    and graphing utilities through its :class:`CoordinateSystem` base class.
+
+    Parameters
+    ----------
+    x_range
+        Range specification for the x-axis. It is processed by
+        ``full_range_specifier`` and passed to the x-axis constructor.
+        The range specification may include a minimum, maximum, and tick
+        step, depending on the accepted ``RangeSpecifier`` format.
+
+    y_range
+        Range specification for the y-axis. It is processed in the same
+        way as ``x_range``.
+
+    axis_config
+        Configuration dictionary shared by both axes. The ``unit_size``
+        argument is inserted into this configuration before it is merged
+        with the default and axis-specific configurations.
+
+    x_axis_config
+        Configuration dictionary applied specifically to the x-axis.
+        Its values are merged with the default axis settings and
+        ``axis_config``.
+
+    y_axis_config
+        Configuration dictionary applied specifically to the y-axis.
+        Its values are merged with the default axis settings and
+        ``axis_config``. By default, the y-axis uses
+        ``line_to_number_direction=LEFT``.
+
+    height
+        Optional length of the y-axis in scene units. Passed as the
+        ``width`` argument to the underlying ``NumberLine`` constructor.
+
+    width
+        Optional length of the x-axis in scene units. Passed as the
+        ``width`` argument to the underlying ``NumberLine`` constructor.
+
+    unit_size
+        Scale factor supplied to both axis configurations. Its precise
+        geometric effect depends on how ``NumberLine`` uses this setting.
+        Defaults to 1.0.
+
+    **kwargs
+        Additional keyword arguments passed to ``VGroup.__init__``.
+        The ``num_sampled_graph_points_per_tick`` keyword is removed
+        before this call because it belongs to ``CoordinateSystem`` and
+        is not a ``VGroup`` argument.
+
+    Attributes
+    ----------
+    x_range
+        Normalized x-axis range specification inherited from
+        ``CoordinateSystem``.
+
+    y_range
+        Normalized y-axis range specification inherited from
+        ``CoordinateSystem``.
+
+    num_sampled_graph_points_per_tick
+        Number of graph sample points per tick interval, inherited from
+        ``CoordinateSystem``.
+
+    x_axis
+        The horizontal ``NumberLine`` representing the x-axis.
+
+    y_axis
+        The vertical ``NumberLine`` representing the y-axis.
+
+    axes
+        A ``VGroup`` containing ``x_axis`` and ``y_axis`` in that order.
+
+    coordinate_labels
+        Created by ``add_coordinate_labels`` when that method is called.
+
+    Notes
+    -----
+    ``Axes`` inherits the coordinate conversion and graphing utilities of
+    ``CoordinateSystem``. For example, ``c2p(x, y)`` converts coordinates
+    to a scene point, while ``p2c(point)`` converts a scene point back
+    to coordinates.
+
+    The axis configuration dictionaries are merged with the class-level
+    defaults. The default configuration for the y-axis specifies
+    ``line_to_number_direction=LEFT``.
+
+    Examples
+    --------
+    Create axes with the default ranges and configuration:
+
+    >>> axes = Axes()
+
+    Specify custom ranges and dimensions:
+
+    >>> axes = Axes(
+    ...     x_range=(-4, 4, 1),
+    ...     y_range=(-2, 6, 2),
+    ...     width=8,
+    ...     height=5,
+    ... )
+
+    Customize the axes independently:
+
+    >>> axes = Axes(
+    ...     axis_config={"include_ticks": True},
+    ...     x_axis_config={"color": BLUE},
+    ...     y_axis_config={"color": GREEN},
+    ... )
+
+    Convert coordinates to a scene point and back:
+
+    >>> axes = Axes()
+    >>> point = axes.c2p(2, 3)
+    >>> coordinates = axes.p2c(point)
+
+    Add labels to the coordinate axes:
+
+    >>> axes = Axes()
+    >>> labels = axes.get_axis_labels("x", "y")
+    >>> axes.add_coordinate_labels()
+
+    See Also
+    --------
+    CoordinateSystem
+    NumberLine
+    NumberPlane
+    """
+
     def __init__(
         self,
         x_range: RangeSpecifier = DEFAULT_X_RANGE,
@@ -533,6 +671,146 @@ class Axes(VGroup, CoordinateSystem):
 
 
 class ThreeDAxes(Axes):
+    """
+    A three-dimensional coordinate system consisting of x-, y-, and z-axes.
+
+    ``ThreeDAxes`` extends ``Axes`` by adding a third ``NumberLine`` for
+    the z-coordinate. The three axes are collected in ``self.axes`` and
+    can be used for converting between 3D coordinates and scene points
+    through the inherited ``CoordinateSystem`` interface.
+
+    The orientation of the z-axis is controlled by ``z_normal``. The
+    class also provides helpers for labeling all three axes and creating
+    graph surfaces from explicit functions or parametric definitions.
+
+    Parameters
+    ----------
+    x_range
+        Range specification for the x-axis. Defaults to
+        ``(-6.0, 6.0, 1.0)``.
+
+    y_range
+        Range specification for the y-axis. Defaults to
+        ``(-5.0, 5.0, 1.0)``.
+
+    z_range
+        Range specification for the z-axis. It is normalized using
+        ``full_range_specifier``. Defaults to ``(-4.0, 4.0, 1.0)``.
+
+    z_axis_config
+        Configuration dictionary applied specifically to the z-axis.
+        It is merged with the default general axis configuration,
+        ``default_z_axis_config``, the shared ``axis_config`` supplied
+        through ``kwargs``, and this dictionary, in that order.
+
+    z_normal
+        Vector used to determine the orientation of the z-axis.
+        The z-axis is first rotated by -90 degrees about the UP
+        direction, then rotated about OUT by the angle of this vector.
+        Defaults to ``DOWN``.
+
+    depth
+        Optional length of the z-axis in scene units. Passed as the
+        ``width`` argument to the underlying ``NumberLine`` constructor.
+
+    **kwargs
+        Additional arguments forwarded to ``Axes.__init__``. These
+        include inherited axis settings such as ``axis_config``,
+        ``x_axis_config``, ``y_axis_config``, ``width``, ``height``,
+        and ``unit_size``.
+
+    Attributes
+    ----------
+    dimension
+        Class-level dimension set to 3.
+
+    z_range
+        Normalized range specification for the z-axis.
+
+    z_axis
+        The ``NumberLine`` representing the z-axis.
+
+    axes
+        Inherited group containing the x- and y-axes, extended to
+        include the z-axis.
+
+    axis_labels
+        Set by ``add_axis_labels`` to the group of x-, y-, and z-axis
+        labels.
+
+    Notes
+    -----
+    The x- and y-axes are initialized by ``Axes.__init__``. The z-axis
+    is then created separately, rotated according to ``z_normal``, and
+    shifted so that its zero coordinate aligns with the x-axis origin.
+
+    ``get_all_ranges`` returns the x-, y-, and z-axis range
+    specifications.
+
+    ``get_graph`` constructs a surface for a function of two variables,
+    z = func(x, y), and transforms it using the unit direction vectors
+    of the three axes. ``get_parametric_surface`` instead accepts a
+    function that directly returns points in three-dimensional
+    coordinates.
+
+    Examples
+    --------
+    Create a 3D coordinate system:
+
+    >>> axes = ThreeDAxes()
+
+    Specify ranges and dimensions for the axes:
+
+    >>> axes = ThreeDAxes(
+    ...     x_range=(-4, 4, 1),
+    ...     y_range=(-3, 3, 1),
+    ...     z_range=(-2, 5, 1),
+    ...     width=8,
+    ...     height=6,
+    ...     depth=5,
+    ... )
+
+    Convert a 3D coordinate to a scene point:
+
+    >>> axes = ThreeDAxes()
+    >>> point = axes.c2p(1, 2, 3)
+    >>> coordinates = axes.p2c(point)
+
+    Add labels to the three axes:
+
+    >>> axes = ThreeDAxes()
+    >>> axes.add_axis_labels("x", "y", "z")
+
+    Create a surface from z = f(x, y):
+
+    >>> axes = ThreeDAxes()
+    >>> surface = axes.get_graph(
+    ...     lambda x, y: x**2 + y**2,
+    ...     u_range=(-2, 2),
+    ...     v_range=(-2, 2),
+    ... )
+
+    Create a parametric surface:
+
+    >>> axes = ThreeDAxes()
+    >>> surface = axes.get_parametric_surface(
+    ...     lambda u, v: np.array([
+    ...         u * np.cos(v),
+    ...         u * np.sin(v),
+    ...         v,
+    ...     ]),
+    ...     u_range=(0, 2),
+    ...     v_range=(0, TAU),
+    ... )
+
+    See Also
+    --------
+    Axes
+    CoordinateSystem
+    NumberLine
+    ParametricSurface
+    """
+
     dimension: int = 3
     default_z_axis_config: dict = dict()
 
@@ -639,6 +917,137 @@ class NumberPlane(Axes):
         line_to_number_direction=DL,
     )
 
+    """
+    A two-dimensional coordinate plane consisting of coordinate axes and
+    a background grid of lines parallel to the x- and y-axes.
+
+    ``NumberPlane`` extends ``Axes`` by adding background grid lines.
+    These lines are divided into two groups: primary background lines
+    and faded lines, with their appearance controlled independently
+    through style dictionaries.
+
+    Parameters
+    ----------
+    x_range
+        Range specification for the x-axis. Defaults to
+        ``(-8.0, 8.0, 1.0)``.
+
+    y_range
+        Range specification for the y-axis. Defaults to
+        ``(-4.0, 4.0, 1.0)``.
+
+    background_line_style
+        Dictionary of style properties applied to the primary background
+        lines. Defaults to a blue stroke with width 2 and full opacity.
+
+    faded_line_style
+        Dictionary of style properties applied to the faded background
+        lines. Defaults to stroke width 1 and opacity 0.25. If
+        ``stroke_color`` is omitted, the color is inherited from
+        ``background_line_style``.
+
+    faded_line_ratio
+        Number of faded lines between consecutive primary lines.
+        A value of 4 places one primary line for every five grid-line
+        positions, with the remaining positions assigned to faded lines.
+
+    make_smooth_after_applying_functions
+        Stored as a configuration attribute indicating whether
+        smoothing should be used after applying functions. Defaults
+        to ``True``.
+
+    **kwargs
+        Additional keyword arguments forwarded to ``Axes.__init__``,
+        including axis ranges, axis configuration dictionaries, and
+        axis dimensions.
+
+    Attributes
+    ----------
+    background_line_style
+        Style dictionary used for the primary background lines.
+
+    faded_line_style
+        Style dictionary used for the faded background lines.
+
+    faded_line_ratio
+        Ratio controlling the spacing of primary and faded grid lines.
+
+    make_smooth_after_applying_functions
+        Configuration flag stored by the instance.
+
+    background_lines
+        ``VGroup`` containing the primary background grid lines.
+
+    faded_lines
+        ``VGroup`` containing the faded background grid lines.
+
+    Notes
+    -----
+    The background grid is initialized by ``init_background_lines``.
+    The ``get_lines`` method generates line groups parallel to both
+    coordinate axes. ``get_lines_parallel_to_axis`` spaces these lines
+    using the corresponding axis's tick step and unit-coordinate mapping.
+
+    The grid groups are added behind the existing axes using
+    ``add_to_back``, keeping the grid visually behind foreground objects.
+
+    ``get_x_unit_size`` returns the x-axis unit size.
+    Despite its name, ``get_y_unit_size`` also returns the x-axis unit
+    size in this implementation.
+
+    ``get_vector`` creates an ``Arrow`` from the coordinate origin to
+    the point specified by the given coordinates, with ``buff=0``.
+
+    ``prepare_for_nonlinear_transform`` inserts additional curves into
+    family members when needed and enables their
+    ``make_smooth_after_applying_functions`` attribute. It returns
+    the same ``NumberPlane`` instance.
+
+    Examples
+    --------
+    Create a number plane with default settings:
+
+    >>> plane = NumberPlane()
+
+    Customize the coordinate ranges:
+
+    >>> plane = NumberPlane(
+    ...     x_range=(-6, 6, 1),
+    ...     y_range=(-3, 3, 1),
+    ... )
+
+    Customize the background grid styles:
+
+    >>> plane = NumberPlane(
+    ...     background_line_style={
+    ...         "stroke_color": BLUE_D,
+    ...         "stroke_width": 2,
+    ...         "stroke_opacity": 1,
+    ...     },
+    ...     faded_line_style={
+    ...         "stroke_width": 1,
+    ...         "stroke_opacity": 0.2,
+    ...     },
+    ...     faded_line_ratio=3,
+    ... )
+
+    Create an arrow representing a coordinate vector:
+
+    >>> plane = NumberPlane()
+    >>> vector = plane.get_vector([2, 1])
+
+    Prepare the plane for a nonlinear transformation:
+
+    >>> plane = NumberPlane()
+    >>> plane.prepare_for_nonlinear_transform()
+
+    See Also
+    --------
+    Axes
+    CoordinateSystem
+    NumberLine
+    """
+
     def __init__(
         self,
         x_range: RangeSpecifier = (-8.0, 8.0, 1.0),
@@ -734,6 +1143,128 @@ class NumberPlane(Axes):
 
 
 class ComplexPlane(NumberPlane):
+    """
+    A coordinate plane for visualizing complex numbers.
+
+    ``ComplexPlane`` extends ``NumberPlane`` by interpreting the horizontal
+    axis as the real axis and the vertical axis as the imaginary axis.
+    Complex numbers are mapped to scene points using their real and
+    imaginary components, and scene points can be converted back to
+    complex numbers.
+
+    The class also provides methods for obtaining default complex
+    coordinate values and adding coordinate labels, including labels
+    that use ``i`` for the imaginary unit.
+
+    Parameters
+    ----------
+    **kwargs
+        Keyword arguments forwarded to ``NumberPlane.__init__``.
+        These include axis ranges, grid styling, axis configurations,
+        and other inherited plane settings.
+
+    Methods
+    -------
+    number_to_point(number)
+        Convert a complex number or real value into a scene point.
+        The real component determines the horizontal coordinate, and
+        the imaginary component determines the vertical coordinate.
+
+    n2p(number)
+        Abbreviation for ``number_to_point``.
+
+    point_to_number(point)
+        Convert a scene point into a complex number by retrieving its
+        coordinates and combining them as ``complex(x, y)``.
+
+    p2n(point)
+        Abbreviation for ``point_to_number``.
+
+    get_unit_size()
+        Return the unit size of the x-axis.
+
+    get_default_coordinate_values(skip_first=True)
+        Obtain default coordinate values from the x- and y-axis tick
+        ranges. The x-axis values are included directly, while nonzero
+        y-axis values are converted to purely imaginary numbers.
+        The ``skip_first`` argument is accepted but does not affect
+        the implementation of this method.
+
+    add_coordinate_labels(
+        numbers=None,
+        skip_first=True,
+        font_size=36,
+        **kwargs
+    )
+        Create and add labels for the specified complex numbers.
+        If ``numbers`` is omitted, use the default coordinate values.
+        Labels are placed on the x-axis or y-axis according to whether
+        the real or imaginary component has the greater absolute value.
+
+    Attributes
+    ----------
+    coordinate_labels
+        ``VGroup`` containing the coordinate-label mobjects created by
+        ``add_coordinate_labels``.
+
+    Notes
+    -----
+    For a complex number z = x + yi, the mapping is equivalent to
+    ``coords_to_point(x, y)``. Conversely, ``point_to_number`` retrieves
+    the plane coordinates and returns ``complex(x, y)``.
+
+    When adding coordinate labels, numbers whose imaginary component
+    has a greater absolute value than their real component are labeled
+    using the y-axis and ``unit_tex="i"``. Other numbers use the x-axis.
+    This means that numbers with equal absolute real and imaginary
+    components are assigned to the x-axis.
+
+    The ``skip_first`` argument of ``add_coordinate_labels`` is used
+    when obtaining default values, but the current implementation of
+    ``get_default_coordinate_values`` always slices the first x- and
+    y-axis tick values regardless of the argument's value.
+
+    Examples
+    --------
+    Create a complex plane:
+
+    >>> plane = ComplexPlane()
+
+    Map a complex number to a scene point:
+
+    >>> point = plane.n2p(2 + 3j)
+
+    Convert a scene point back to a complex number:
+
+    >>> z = plane.p2n(plane.n2p(2 + 3j))
+    >>> print(z)
+    (2+3j)
+
+    Get the default coordinate values:
+
+    >>> plane = ComplexPlane()
+    >>> values = plane.get_default_coordinate_values()
+
+    Add labels for selected complex numbers:
+
+    >>> plane = ComplexPlane()
+    >>> plane.add_coordinate_labels([1, 2, 1j, 2j])
+
+    Customize the label font size:
+
+    >>> plane = ComplexPlane()
+    >>> plane.add_coordinate_labels(
+    ...     numbers=[1, 2, 1j, 2j],
+    ...     font_size=30,
+    ... )
+
+    See Also
+    --------
+    NumberPlane
+    Axes
+    CoordinateSystem
+    """
+
     def number_to_point(self, number: complex | float | np.array) -> Vect3:
         return self.coords_to_point(np.real(number), np.imag(number))
 

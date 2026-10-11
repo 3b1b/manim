@@ -26,6 +26,154 @@ EPSILON = 0.0001
 
 
 class SampleSpace(Rectangle):
+    """
+    Represent a sample space as a rectangle that can be divided
+    into probability regions with optional braces and labels.
+
+    SampleSpace extends Rectangle with helpers for dividing its
+    area according to a list of proportions. It is useful for
+    visualizing sample spaces, probability distributions, and
+    conditional probability diagrams.
+
+    Parameters
+    ----------
+    width
+        Width of the sample-space rectangle. Defaults to 3.
+    height
+        Height of the rectangle. Defaults to 3.
+    fill_color
+        Initial fill color. Defaults to GREY_D.
+    fill_opacity
+        Initial fill opacity. Defaults to 1.
+    stroke_width
+        Width of the rectangle's outline. Defaults to 0.5.
+    stroke_color
+        Color of the outline. Defaults to GREY_B.
+    default_label_scale_val
+        Scale factor applied to labels created from strings.
+        Defaults to 1.
+    **kwargs
+        Additional keyword arguments forwarded to Rectangle.
+
+    Attributes
+    ----------
+    default_label_scale_val
+        Default scale factor for generated labels.
+    title
+        Title mobject created by add_title(), if called.
+    label
+        Value assigned by add_label(), if called.
+    horizontal_parts
+        Regions created by divide_horizontally(), if called.
+    vertical_parts
+        Regions created by divide_vertically(), if called.
+
+    Methods
+    -------
+    add_title(title="Sample space", buff=MED_SMALL_BUFF)
+        Create and add a title above the rectangle.
+    add_label(label)
+        Store a label value on the instance.
+    complete_p_list(p_list)
+        Convert proportions to a list and append the remainder
+        needed to make their sum equal to one, when significant.
+    get_division_along_dimension(p_list, dim, colors, vect)
+        Create colored subdivisions along a chosen dimension.
+    get_horizontal_division(p_list, colors, vect)
+        Create horizontal strips representing proportions.
+    get_vertical_division(p_list, colors, vect)
+        Create vertical strips representing proportions.
+    divide_horizontally(*args, **kwargs)
+        Create, store, and add horizontal subdivisions.
+    divide_vertically(*args, **kwargs)
+        Create, store, and add vertical subdivisions.
+    get_subdivision_braces_and_labels(parts, labels, direction, buff)
+        Create braces and labels for a group of subdivisions.
+    get_side_braces_and_labels(labels, direction=LEFT, **kwargs)
+        Create braces and labels beside horizontal subdivisions.
+    get_top_braces_and_labels(labels, **kwargs)
+        Create braces and labels above vertical subdivisions.
+    get_bottom_braces_and_labels(labels, **kwargs)
+        Create braces and labels below vertical subdivisions.
+    add_braces_and_labels()
+        Add stored braces and labels for existing subdivisions.
+    __getitem__(index)
+        Index the preferred subdivision group, or the result of
+        split() if no subdivisions have been created.
+
+    Notes
+    -----
+    - complete_p_list() appends the remaining probability mass
+      only when its absolute value exceeds EPSILON. It does not
+      normalize the supplied probabilities.
+    - If the supplied proportions sum to more than one, the
+      remainder can be negative. Proportions are not validated.
+    - get_division_along_dimension() creates fresh SampleSpace
+      objects, stretches them to match the original rectangle,
+      and then scales each region along the selected dimension.
+    - The colors are interpolated with color_gradient() to match
+      the number of proportions.
+    - The direction vector determines the side from which the
+      subdivision begins and the direction in which it proceeds.
+    - Labels passed as strings are iterated character by character.
+      To use multi-character labels, pass a suitable sequence or
+      prebuilt Mobject labels as appropriate.
+    - Prebuilt Mobject labels are used directly and are not scaled
+      by default_label_scale_val.
+    - Subdivision braces and labels are stored as attributes on
+      the parts VGroup. add_braces_and_labels() adds them to the
+      SampleSpace only if those attributes exist.
+    - __getitem__ prefers horizontal_parts whenever available;
+      otherwise it uses vertical_parts, and falls back to split()
+      when neither subdivision group exists.
+    - Calling divide_horizontally() or divide_vertically() again
+      replaces the corresponding stored group, but does not
+      explicitly remove the previous group from the rectangle.
+
+    Examples
+    --------
+    Create a sample space::
+
+        sample_space = SampleSpace()
+
+    Divide it into horizontal regions::
+
+        sample_space.divide_horizontally(
+            [0.3, 0.7],
+            colors=[GREEN_E, BLUE_E],
+        )
+
+    Divide it into vertical regions::
+
+        sample_space.divide_vertically(
+            [0.4, 0.6],
+            colors=[MAROON_B, YELLOW],
+        )
+
+    Add a title and subdivision labels::
+
+        sample_space = SampleSpace()
+        sample_space.add_title("Possible outcomes")
+        sample_space.divide_horizontally([0.25, 0.75])
+        braces_labels = sample_space.get_side_braces_and_labels(
+            ["A", "B"]
+        )
+        sample_space.add_braces_and_labels()
+
+    Access a subdivision::
+
+        first_region = sample_space[0]
+
+    See Also
+    --------
+    Rectangle
+        Base rectangular geometry.
+    Brace
+        Adds a brace alongside a region.
+    VGroup
+        Groups subdivision regions, braces, and labels.
+    """
+
     def __init__(
         self,
         width: float = 3,
@@ -194,6 +342,166 @@ class SampleSpace(Rectangle):
 
 
 class BarChart(VGroup):
+    """
+    Create a bar chart with configurable axes, tick marks, bars,
+    and optional category labels.
+
+    BarChart arranges rectangular bars to represent numerical
+    values. Bar heights are scaled relative to max_value, while
+    the axes and optional y-axis labels provide a visual reference
+    for comparing the values.
+
+    Parameters
+    ----------
+    values
+        Iterable of numerical values represented by the bars.
+    height
+        Geometric height of the y-axis and maximum bar height.
+        Defaults to 4.
+    width
+        Geometric width of the x-axis. Defaults to 6.
+    n_ticks
+        Number of y-axis intervals. The implementation creates
+        n_ticks + 1 tick marks, including both endpoints.
+    include_x_ticks
+        Whether to add tick marks along the x-axis.
+    tick_width
+        Width of each y-axis tick and half the initial x-axis
+        extension to the left of the origin.
+    tick_height
+        Height of each x-axis tick.
+    label_y_axis
+        Whether to display numerical labels beside y-axis ticks.
+    y_axis_label_height
+        Geometric height of each y-axis label.
+    max_value
+        Numerical value corresponding to the full chart height.
+        If None, the maximum of values is used.
+    bar_colors
+        Colors interpolated across the bars using
+        set_color_by_gradient. Defaults to [BLUE, YELLOW].
+    bar_fill_opacity
+        Fill opacity of each bar. Defaults to 0.8.
+    bar_stroke_width
+        Stroke width of each bar. Defaults to 3.
+    bar_names
+        Names displayed below bars. Defaults to an empty list.
+    bar_label_scale_val
+        Scale factor applied to category labels. Defaults to 0.75.
+    **kwargs
+        Additional keyword arguments forwarded to VGroup.
+
+    Attributes
+    ----------
+    height
+        Configured chart height.
+    width
+        Configured chart width.
+    n_ticks
+        Number of y-axis intervals.
+    n_ticks_x
+        Number of input values, used to determine x-axis tick count.
+    max_value
+        Value mapped to the full chart height.
+    x_axis
+        Horizontal axis, including x-axis ticks when enabled.
+    y_axis
+        Vertical axis, including y-axis ticks.
+    y_axis_labels
+        Group of y-axis labels, created when label_y_axis is True.
+    bars
+        Group of bar rectangles.
+    bar_labels
+        Group of category labels created from bar_names.
+
+    Methods
+    -------
+    add_axes()
+        Create and add the axes, tick marks, and optional y labels.
+    add_bars(values)
+        Create and add bars and their category labels.
+    change_bar_values(values)
+        Resize existing bars to represent new values.
+
+    Notes
+    -----
+    - The constructor creates the axes and bars, then centers
+      the complete VGroup.
+    - The chart height corresponds to max_value. Each bar's
+      height is calculated as value / max_value * height.
+    - Bar width is calculated as width / (2 * len(values)).
+      Bars are placed at regular intervals using this width.
+    - The bars receive colors through set_color_by_gradient.
+      Colors are interpolated across the group, rather than
+      assigned by category name.
+    - Y-axis tick positions and labels are generated using
+      evenly spaced values from zero to max_value.
+    - The implementation creates n_ticks + 1 y-axis ticks.
+    - When include_x_ticks is True, n_ticks_x + 1 x-axis ticks
+      are created, regardless of the number of bar_names.
+    - The x-axis tick-label values are calculated but are not
+      used to create labels.
+    - Category labels are created by pairing bars and bar_names
+      with zip. Extra bars or names are ignored by that pairing.
+    - The implementation places bars using a fixed offset
+      involving DOWN + LEFT * 5 before the final group is centered.
+    - change_bar_values updates only the existing bars paired
+      with the supplied values. Extra values or bars are ignored.
+      It does not update the y-axis labels or max_value.
+    - Values exceeding max_value produce bars taller than the
+      configured chart height. Negative values are not specially
+      handled.
+    - max_value must be a usable nonzero number when calculating
+      bar heights. An empty values iterable also makes automatic
+      max_value calculation or bar-width calculation invalid.
+    - Although max_value is annotated as float, None is explicitly
+      checked to enable automatic maximum selection.
+
+    Examples
+    --------
+    Create a basic bar chart::
+
+        chart = BarChart([2, 5, 3, 7], max_value=10)
+
+    Customize bar colors and category labels::
+
+        chart = BarChart(
+            [4, 8, 6],
+            max_value=10,
+            bar_colors=[BLUE, GREEN, YELLOW],
+            bar_names=["A", "B", "C"],
+        )
+
+    Include x-axis ticks::
+
+        chart = BarChart(
+            [3, 6, 9],
+            include_x_ticks=True,
+            bar_names=["First", "Second", "Third"],
+        )
+
+    Automatically determine the maximum from the data::
+
+        chart = BarChart(
+            [2, 5, 8],
+            max_value=None,
+        )
+
+    Change the bar heights after creation::
+
+        chart = BarChart([2, 4, 6], max_value=10)
+        chart.change_bar_values([5, 3, 9])
+
+    See Also
+    --------
+    Axes
+        Coordinate axes for mathematical plots.
+    Rectangle
+        Geometry used to represent each bar.
+    VGroup
+        Base group class for the chart components.
+    """
+
     def __init__(
         self,
         values: Iterable[float],
