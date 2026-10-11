@@ -2376,6 +2376,210 @@ class Restore(Transform):
 
 
 class ApplyFunction(Transform):
+    """
+    ApplyFunction
+    =============
+
+    Animate a Mobject by applying a function to a copy of that Mobject and
+    transforming the original toward the function's returned Mobject.
+
+    ApplyFunction is a subclass of Transform that provides a function-based
+    interface for creating a transformation target. Instead of requiring the
+    caller to construct and pass a separate target Mobject, it accepts a
+    callable that receives a copy of the source Mobject and returns the
+    Mobject that should serve as the destination.
+
+    This is useful for animating arbitrary changes to a Mobject, including
+    position changes, scaling, rotation, color changes, and combinations of
+    operations, provided that the supplied function returns a valid Mobject.
+
+    Parameters
+    ----------
+    function : Callable[[Mobject], Mobject]
+        A callable that accepts a copy of the source Mobject and returns a
+        Mobject representing the desired target state.
+
+        The function should operate on the supplied Mobject and return the
+        resulting Mobject. It may modify the copy in place and return that
+        same object, or return another Mobject.
+
+    mobject : Mobject
+        The original Mobject to animate. A copy of this object is passed to
+        the supplied function when the transformation target is created.
+
+    **kwargs
+        Additional keyword arguments forwarded to the parent Transform
+        constructor. These can include animation configuration options such
+        as ``run_time`` and ``rate_func``.
+
+    Attributes
+    ----------
+    function : Callable[[Mobject], Mobject]
+        The function supplied to the constructor. It is stored as
+        ``self.function`` and called by ``create_target()`` to construct the
+        transformation destination.
+
+    Inherited Behavior
+    ------------------
+    ApplyFunction inherits animation and interpolation behavior from Transform.
+
+    During initialization, the constructor stores the supplied function and
+    then calls the parent constructor with the original Mobject and any
+    additional keyword arguments.
+
+    The destination Mobject is created by the overridden ``create_target()``
+    method.
+
+    Target Creation
+    ---------------
+    The ``create_target()`` method performs the following operations:
+
+    1. Copies the source Mobject using ``self.mobject.copy()``.
+    2. Passes that copy to the supplied function.
+    3. Stores the function's return value as the target.
+    4. Checks whether the returned value is an instance of Mobject.
+    5. Raises an Exception if the function does not return a Mobject.
+    6. Returns the validated target.
+
+    The essential operation is:
+
+        target = self.function(self.mobject.copy())
+
+    The returned object is validated with:
+
+        if not isinstance(target, Mobject):
+            raise Exception(
+                "Functions passed to ApplyFunction must return object of type Mobject"
+            )
+
+    Therefore, returning a valid Mobject is required. A function that modifies
+    the supplied copy but returns ``None`` will fail this validation.
+
+    Examples
+    --------
+    Example 1: Shift a square to the right.
+
+        from manimlib import *
+
+        class ApplyFunctionShiftExample(Scene):
+            def construct(self):
+                square = Square(color=BLUE)
+                self.add(square)
+
+                def shift_square(mob):
+                    return mob.shift(RIGHT * 2)
+
+                self.play(ApplyFunction(shift_square, square))
+                self.wait()
+
+    The function receives a copy of the square, shifts it, and returns the
+    modified copy as the target.
+
+    Example 2: Scale and rotate a circle.
+
+        from manimlib import *
+
+        class ApplyFunctionScaleRotateExample(Scene):
+            def construct(self):
+                circle = Circle(color=GREEN)
+                self.add(circle)
+
+                def transform_circle(mob):
+                    mob.scale(1.5)
+                    mob.rotate(PI / 4)
+                    return mob
+
+                self.play(
+                    ApplyFunction(
+                        transform_circle,
+                        circle,
+                        run_time=2,
+                        rate_func=smooth,
+                    )
+                )
+                self.wait()
+
+    The function applies multiple operations to the copied circle and returns
+    the resulting Mobject. Transform animates the original circle toward it.
+
+    Example 3: Change position and color.
+
+        from manimlib import *
+
+        class ApplyFunctionColorExample(Scene):
+            def construct(self):
+                square = Square(color=BLUE)
+                self.add(square)
+
+                def change_square(mob):
+                    mob.shift(UP * 2)
+                    mob.set_color(RED)
+                    return mob
+
+                self.play(ApplyFunction(change_square, square))
+                self.wait()
+
+    The target combines a position change and a color change.
+
+    Example 4: Return a different Mobject.
+
+        from manimlib import *
+
+        class ApplyFunctionDifferentTargetExample(Scene):
+            def construct(self):
+                circle = Circle(color=BLUE)
+                self.add(circle)
+
+                def create_target(mob):
+                    return Square(
+                        side_length=2,
+                        color=YELLOW,
+                    ).move_to(mob.get_center() + RIGHT * 2)
+
+                self.play(ApplyFunction(create_target, circle))
+                self.wait()
+
+    The function returns a new Square rather than the modified copy. Since
+    the returned value is a Mobject, it passes the type check and becomes
+    the transformation target.
+
+    Notes
+    -----
+    - The function is called with a copy of the source Mobject, not the
+      original Mobject itself.
+    - The function must return a Mobject. Returning ``None``, a NumPy array,
+      a number, or another non-Mobject value raises an Exception.
+    - The function may modify its argument in place, but it must explicitly
+      return the resulting Mobject.
+    - The type check uses ``isinstance(target, Mobject)``, so subclasses of
+      Mobject are accepted.
+    - The constructor shown stores the function but does not invoke it
+      directly. Target creation occurs through ``create_target()``.
+    - The function's returned Mobject determines the destination geometry
+      and appearance; the exact interpolation is handled by Transform.
+    - The function may return a different Mobject from the supplied copy,
+      as long as that returned object satisfies the Mobject type check.
+    - This class does not validate whether the returned Mobject is visually
+      compatible with the source. Differences in point counts, submobject
+      structures, or geometry may affect the resulting transformation.
+    - Avoid relying on side effects outside the supplied copy, because the
+      intended workflow is to prepare a target from a copy of the source.
+    - Animation timing and interpolation can be customized through **kwargs.
+
+    See Also
+    --------
+    Transform
+        Animates a Mobject toward a target Mobject.
+    ApplyMethod
+        Animates a Mobject method call by constructing a transformed target.
+    ApplyPointwiseFunction
+        Applies a coordinate function to the points of a Mobject.
+    ApplyPointwiseFunctionToCenter
+        Applies a function to the center position of a Mobject.
+    Restore
+        Animates a Mobject toward its saved state.
+    """
+
     def __init__(
         self,
         function: Callable[[Mobject], Mobject],
