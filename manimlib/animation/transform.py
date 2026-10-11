@@ -2988,6 +2988,132 @@ class ApplyComplexFunction(ApplyMethod):
 
 
 class CyclicReplace(Transform):
+    """
+    Animate a cyclic rearrangement of multiple Mobjects.
+
+    CyclicReplace is a Transform subclass that rearranges a collection of
+    Mobjects by moving each object into the position of the preceding object
+    in a cyclic order. The final object moves to the first object's position,
+    while every other object moves to the position of the object immediately
+    following it in the original sequence.
+
+    The class groups the supplied Mobjects into a single Group and creates a
+    transformed target by copying that group and repositioning its members.
+    The inherited Transform class then animates the group toward this target.
+
+    Parameters
+    ----------
+    *mobjects : Mobject
+        The Mobjects to rearrange. Their order in the argument list determines
+        the cyclic permutation.
+    path_arc : float, optional
+        The angular arc used by Transform to determine the movement paths.
+        Defaults to 90 * DEG, representing a quarter-turn arc in ManimGL's
+        angular units.
+    **kwargs
+        Additional keyword arguments forwarded to Transform, such as run_time,
+        rate_func, and other supported animation options.
+
+    Attributes
+    ----------
+    mobject : Group
+        The Group created from the supplied Mobjects by the constructor of
+        Transform. Its members are the objects being rearranged.
+    target_mobject : Mobject
+        The target group created by create_target(), containing copies of the
+        original members positioned according to the cyclic permutation.
+
+    Implementation Details
+    ----------------------
+    1. The constructor collects all supplied Mobjects into a Group.
+    2. It passes that group to Transform, along with path_arc and any
+       additional keyword arguments.
+    3. create_target() copies the original group so that the target arrangement
+       can be constructed without directly repositioning the original group
+       during target creation.
+    4. The expression [target[-1], *target[:-1]] creates a reordered list in
+       which the last target member appears first, followed by all preceding
+       members in their original order.
+    5. The method iterates over this reordered list and the original group.
+       Each target member is moved to the position of its corresponding
+       original member.
+    6. The resulting target group represents the cyclic rearrangement.
+       Transform handles the animation from the original arrangement to
+       this target arrangement.
+
+    Example
+    -------
+    Arrange three objects horizontally and cyclically exchange their positions:
+
+        from manimlib import *
+
+        class CyclicReplaceExample(Scene):
+            def construct(self):
+                a = Circle(color=RED).shift(LEFT * 2)
+                b = Square(color=GREEN)
+                c = Triangle(color=BLUE).shift(RIGHT * 2)
+
+                self.add(a, b, c)
+
+                self.play(
+                    CyclicReplace(a, b, c, run_time=2)
+                )
+                self.wait()
+
+    For three objects initially positioned as A, B, and C, the target
+    positions are:
+    - A moves to the original position of B.
+    - B moves to the original position of C.
+    - C moves to the original position of A.
+
+    The objects therefore undergo a cyclic permutation rather than a simple
+    swap.
+
+    Example with Four Objects
+    -------------------------
+        from manimlib import *
+
+        class FourObjectCycle(Scene):
+            def construct(self):
+                objects = VGroup(
+                    Circle(color=RED),
+                    Square(color=GREEN),
+                    Triangle(color=BLUE),
+                    Star(color=YELLOW),
+                ).arrange(RIGHT, buff=1)
+
+                self.add(objects)
+
+                self.play(
+                    CyclicReplace(*objects, run_time=3)
+                )
+                self.wait()
+
+    Notes
+    -----
+    - The order of the supplied Mobjects determines the cyclic permutation.
+    - The method changes target positions; it does not intentionally change
+      the shapes, colors, or other intrinsic properties of the objects.
+    - The animation's visual trajectories are controlled by Transform and
+      the path_arc parameter.
+    - The default path_arc is expressed as 90 * DEG, not as the plain
+      numeric value 90.
+    - The implementation expects the supplied objects to be usable as
+      members of a Group and as elements of the copied target group.
+    - Supplying fewer than two Mobjects does not produce a meaningful
+      multi-object cyclic rearrangement.
+    - The target group is built from copies, allowing Transform to interpolate
+      between the starting arrangement and the rearranged arrangement.
+
+    See Also
+    --------
+    Transform
+    ReplacementTransform
+    MoveToTarget
+    Group
+    VGroup
+    """
+
     def __init__(self, *mobjects: Mobject, path_arc=90 * DEG, **kwargs):
         super().__init__(Group(*mobjects), path_arc=path_arc, **kwargs)
 
