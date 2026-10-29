@@ -15,150 +15,102 @@ Manim is an engine for precise programmatic animations, designed for creating ex
 Note, there are two versions of manim.  This repository began as a personal project by the author of [3Blue1Brown](https://www.3blue1brown.com/) for the purpose of animating those videos, with video-specific code available [here](https://github.com/3b1b/videos).  In 2020 a group of developers forked it into what is now the [community edition](https://github.com/ManimCommunity/manim/), with a goal of being more stable, better tested, quicker to respond to community contributions, and all around friendlier to get started with. See [this page](https://docs.manim.community/en/stable/faq/installation.html#different-versions) for more details.
 
 ## Installation
-> [!Warning]
-> **WARNING:** These instructions are for ManimGL _only_. Trying to use these instructions to install [Manim Community/manim](https://github.com/ManimCommunity/manim) or instructions there to install this version will cause problems. You should first decide which version you wish to install, then only follow the instructions for your desired version.
 
-> [!Note]
-> **Note**: To install manim directly through pip, please pay attention to the name of the installed package. This repository is ManimGL of 3b1b. The package name is `manimgl` instead of `manim` or `manimlib`. Please use `pip install manimgl` to install the version in this repository.
+This repository is **ManimGL**, distributed as `manimgl` and imported as
+`manimlib`. [Manim Community](https://github.com/ManimCommunity/manim/) is a
+separate project with different commands and examples.
 
-Manim runs on Python 3.10 or higher.
+### System dependencies
 
-System requirements are [FFmpeg](https://ffmpeg.org/), [OpenGL](https://www.opengl.org/) and [LaTeX](https://www.latex-project.org) (optional, if you want to use LaTeX).
-For Linux, [Pango](https://pango.org) along with its development headers are required. See instruction [here](https://github.com/ManimCommunity/ManimPango#building).
+Install [FFmpeg](https://ffmpeg.org/) and the native libraries needed for text
+rendering. A compatible GPU and graphics drivers are needed to render scenes.
 
-
-### Directly
+On macOS:
 
 ```sh
-# Install manimgl
-pip install manimgl
-
-# Try it out
-manimgl
+brew install ffmpeg cairo pango pkg-config
 ```
 
-For more options, take a look at the [Using manim](#using-manim) sections further below.
-
-If you want to hack on manimlib itself, clone this repository and in that directory execute:
-
-```sh
-# Install manimgl
-pip install -e .
-
-# Try it out
-manimgl example_scenes.py OpeningManimExample
-# or
-manim-render example_scenes.py OpeningManimExample
-```
-
-### Linux (Ubuntu/Debian)
-
-1. Install system dependencies.
+On Ubuntu/Debian:
 
 ```sh
 sudo apt update
-
-sudo apt install ffmpeg
-sudo apt install python3-pip
-sudo apt install libpango1.0-dev
+sudo apt install ffmpeg libpango1.0-dev pkg-config
 ```
 
-2. Install a lightweight LaTeX distribution (optional, for LaTeX rendering).
+On Windows, install FFmpeg using its [download instructions](https://ffmpeg.org/download.html)
+and make sure it is on `PATH`.
 
-```sh
-sudo apt install texlive-science texlive-fonts-extra texlive-latex-extra
-```
+[LaTeX](https://www.latex-project.org/) and `dvisvgm` are also needed for scenes
+that contain `Tex` or `TexText`. On macOS, use [MacTeX or BasicTeX](https://www.tug.org/mactex/).
+On Ubuntu/Debian, install `texlive-science`, `texlive-fonts-extra`, and
+`texlive-latex-extra`. On Windows, [MiKTeX](https://miktex.org/download) is an option.
 
-This lightweight setup is significantly smaller than installing `texlive-full`
-while still supporting most Manim projects.
+### Set up the project with uv
 
-3. Clone and install ManimGL.
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then clone
+this repository and create its locked environment:
 
 ```sh
 git clone https://github.com/3b1b/manim.git
 cd manim
-
-python3 -m pip install -e .
-
-manimgl example_scenes.py OpeningManimExample
+uv sync --locked
+uv run --locked manimgl --version
+uv run --locked manimgl example_scenes.py OpeningManimExample
 ```
 
-<details>
-  <summary>💡 Optional: Using a virtual environment (venv)</summary>
+uv manages the repository's `.venv` and installs this checkout in editable mode.
+It selects Python 3.12 from `.python-version`, downloading it when necessary.
+The package itself continues to support Python 3.10 and newer. Python dependencies
+are declared in `pyproject.toml` and resolved in the committed `uv.lock`; FFmpeg,
+LaTeX, and native libraries are installed separately as described above.
 
-It is recommended to use a virtual environment to avoid conflicts with system packages.
+To render a video without opening the preview window:
 
 ```sh
-sudo apt install python3-venv
-
-python3 -m venv venv
-source venv/bin/activate
-
-python3 -m pip install -e .
+uv run --locked manimgl example_scenes.py OpeningManimExample -w -l
 ```
 
-If `python3-venv` is unavailable on your system, try installing the version-specific package instead:
+The equivalent `manim-render` entry point is available through `uv run --locked`
+as well.
+
+## Development with uv
+
+Source edits are available immediately through the editable installation. Run
+the unit tests with:
 
 ```sh
-sudo apt install python3.12-venv
+uv run --locked pytest
 ```
 
-</details>
+Declare dependency changes with `uv add` (or `uv add --dev` for development tools)
+and commit both `pyproject.toml` and `uv.lock`. Use `uv lock --upgrade` to explicitly
+update locked dependencies. `uv sync --locked` checks that the lockfile agrees
+with the project metadata and is also used in CI.
 
-### Directly (Windows)
+Build the source distribution and wheel with:
 
-1. [Install FFmpeg](https://www.wikihow.com/Install-FFmpeg-on-Windows).
-2. Install a LaTeX distribution. [MiKTeX](https://miktex.org/download) is recommended.
-3. Install the remaining Python packages.
-    ```sh
-    git clone https://github.com/3b1b/manim.git
-    cd manim
-    pip install -e .
-    manimgl example_scenes.py OpeningManimExample
-    ```
+```sh
+uv build
+```
 
-### Mac OSX
+The project retains the setuptools build backend and standard Python packaging
+metadata, so uv is a development workflow rather than a runtime dependency.
 
-1. Install FFmpeg, LaTeX in terminal using homebrew.
-    ```sh
-    brew install ffmpeg mactex
-    ```
-    <details>
-      <summary>💡 An alternative to heavyweight MacTeX bundle.</summary>
+To build the documentation with only its dependency group:
 
-      > To avoid installing the full MacTeX bundle, which is ~6GB, you can alternatively install the
-      > lightweight [BasicTeX](https://formulae.brew.sh/cask/basictex) and then gradually add
-      > only the LaTeX packages you actually need. A list of packages sufficient to run examples can 
-      > be found [here](https://github.com/3b1b/manim/issues/2133#issuecomment-2414547866).
-      > For an overview of the MacTeX installer bundles, see https://www.tug.org/mactex/.
-    </details>
+```sh
+uv sync --locked --only-group docs
+uv run --locked --only-group docs sphinx-build -M html docs/source docs/build
+```
 
-2. If you are using an ARM-based processor, install Cairo. 
-    ```sh
-    arch -arm64 brew install pkg-config cairo
-    ```
-   
-3. Install latest version of manim using these command.
-    ```sh
-    git clone https://github.com/3b1b/manim.git
-    cd manim
-    pip install -e .
-    manimgl example_scenes.py OpeningManimExample
-    ```
-    If the last command is not found, make sure the directory pip installed `manimgl` into is on your `PATH`.
-
-## Anaconda Install
-
-1. Install LaTeX as above.
-2. Create a conda environment using `conda create -n manim python=3.10`.
-3. Activate the environment using `conda activate manim`.
-4. Install manimgl using `pip install -e .`.
-
+The documentation group does not require ManimGL or its native rendering
+dependencies. A subsequent `uv sync --locked` restores the development environment.
 
 ## Using manim
 Try running the following:
 ```sh
-manimgl example_scenes.py OpeningManimExample
+uv run --locked manimgl example_scenes.py OpeningManimExample
 ```
 This should pop up a window playing a simple scene.
 

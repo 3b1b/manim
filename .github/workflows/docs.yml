@@ -1,41 +1,44 @@
 name: docs
 
-on: 
+on:
   push:
     paths:
-      - 'docs/**'
+      - "docs/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".python-version"
+      - ".github/workflows/docs.yml"
   pull_request:
     paths:
-      - 'docs/**'
+      - "docs/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".python-version"
+      - ".github/workflows/docs.yml"
+
+permissions:
+  contents: read
 
 jobs:
   docs:
     runs-on: ubuntu-latest
-    name: build up document and deploy
-
+    name: Build documentation
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-
-    # The docs are hand-written rst with no autodoc directives, so building
-    # them does not require manimlib or any of its runtime dependencies.
-    - name: Install sphinx
-      run: pip install -r docs/requirements.txt
-
-    - name: Build document with Sphinx
-      run: |
-        cd docs
-        make html
-        
-    - name: Deploy to GitHub pages
-      if: ${{ github.event_name == 'push' }}
-      uses: JamesIves/github-pages-deploy-action@3.7.1
-      with:
-        ACCESS_TOKEN: ${{ secrets.DOC_DEPLOY_TOKEN }}
-        BRANCH: gh-pages
-        FOLDER: docs/build/html
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.0"
+          enable-cache: true
+      # The handwritten docs do not need ManimGL or native rendering dependencies.
+      - name: Install locked documentation dependencies
+        run: uv sync --locked --only-group docs
+      - name: Build documentation
+        run: uv run --locked --only-group docs sphinx-build -M html docs/source docs/build
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        uses: JamesIves/github-pages-deploy-action@132898c54c57c7cc6b80eb3a89968de8fc283505 # 3.7.1
+        with:
+          ACCESS_TOKEN: ${{ secrets.DOC_DEPLOY_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: docs/build/html

@@ -1,2 +1,85 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "manimgl"
+version = "1.7.2"
+description = "Animation engine for explanatory math videos"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE.md"]
+authors = [{ name = "Grant Sanderson", email = "grant@3blue1brown.com" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Multimedia :: Graphics",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Natural Language :: English",
+]
+dependencies = [
+    "addict",
+    "appdirs",
+    "audioop-lts; python_version >= '3.13'",
+    "av",
+    "colour",
+    "diskcache",
+    "fonttools",
+    "glfw",
+    "ipython>=8.18.0",
+    "isosurfaces",
+    "manimpango>=0.6.0",
+    "matplotlib",
+    "numpy",
+    "pillow",
+    "pydub",
+    "pygments",
+    "pyperclip",
+    "pywavefront",
+    "pyyaml",
+    "rendercanvas",
+    "rich",
+    "scipy",
+    "setuptools",
+    "skia-pathops",
+    "svgelements>=1.8.1",
+    "sympy",
+    "tqdm",
+    "trimesh",
+    "typing-extensions; python_version < '3.11'",
+    "validators",
+    "wgpu",
+]
+
+[project.urls]
+Homepage = "https://github.com/3b1b/manim"
+Documentation = "https://3b1b.github.io/manim/"
+"Bug Tracker" = "https://github.com/3b1b/manim/issues"
+"Source Code" = "https://github.com/3b1b/manim"
+
+[project.scripts]
+manimgl = "manimlib.__main__:main"
+manim-render = "manimlib.__main__:main"
+
+[dependency-groups]
+dev = ["pytest>=8.3"]
+# Keep the documentation toolchain bounded and independent of runtime dependencies.
+docs = [
+    "sphinx>=8,<10",
+    "furo>=2024.8",
+    "sphinx-copybutton>=0.5,<1",
+    "jinja2>=3.1,<4",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["manimlib*"]
+namespaces = false

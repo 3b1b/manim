@@ -7,7 +7,7 @@ Choose the right Manim project first
 ------------------------------------
 
 This repository is the ManimGL version used by 3Blue1Brown. It focuses on
-OpenGL rendering, interactive workflows, and the needs of the videos in
+GPU rendering, interactive workflows, and the needs of the videos in
 `3b1b/videos <https://github.com/3b1b/videos>`_. Pull requests are welcome here,
 but reviews can take some time.
 
@@ -57,17 +57,19 @@ How to build this documentation
     # git clone https://github.com/<your user name>/manim.git
     cd manim
 
-- Install python package dependencies
+- Install the locked documentation environment
 
 .. code-block:: sh
 
-    pip install -r docs/requirements.txt
+    uv sync --locked --only-group docs
 
-- Go to the ``docs/`` folder and build
+- Build the documentation from the repository root
 
 .. code-block:: sh
 
-    cd docs/
-    make html
+    uv run --locked --only-group docs sphinx-build -M html docs/source docs/build
 
-- The output document is located in ``docs/build/html/``
+- The output is located in ``docs/build/html/``. This dependency group is
+  independent of ManimGL, so building the documentation does not require the
+  rendering dependencies. Use ``uv sync --locked`` to restore the normal
+  development environment afterward.

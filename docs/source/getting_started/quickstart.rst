@@ -1,7 +1,7 @@
 Quick Start
 ===========
 
-This quick start is for ManimGL, the OpenGL-based version maintained in
+This quick start is for ManimGL, the version maintained in
 `3b1b/manim <https://github.com/3b1b/manim>`_. If you are looking for the
 Community Edition, install and follow the docs from
 `ManimCommunity/manim <https://github.com/ManimCommunity/manim>`_ instead.
@@ -45,7 +45,7 @@ And run this command:
 
 .. code-block:: sh
 
-    manimgl start.py SquareToCircle
+    uv run --locked manimgl start.py SquareToCircle
 
 A window will pop up on the screen. And then you can :
 
@@ -60,7 +60,7 @@ Run this command again:
 
 .. code-block:: sh
 
-    manimgl start.py SquareToCircle -os
+    uv run --locked manimgl start.py SquareToCircle -os
 
 At this time, no window will pop up. When the program is finished, this rendered
 image will be automatically opened (saved in the subdirectory ``images/`` of the same
@@ -154,14 +154,14 @@ Run this command this time:
 
 .. code-block:: sh
 
-    manimgl start.py SquareToCircle
+    uv run --locked manimgl start.py SquareToCircle
 
 The pop-up window will play animations of drawing a square and transforming
 it into a circle. If you want to save this video, run:
 
 .. code-block:: sh
     
-    manimgl start.py SquareToCircle -o
+    uv run --locked manimgl start.py SquareToCircle -o
 
 This time there will be no pop-up window, but the video file (saved in the subdirectory
 ``videos/`` of the same level directory of ``start.py`` by default) will be automatically

@@ -4,34 +4,24 @@ on:
   release:
     types: [created]
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        python: ["py37", "py38", "py39", "py310"]
-
     steps:
-    - uses: actions/checkout@v6
-
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.8'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine build
-
-    - name: Build wheels
-      run: python setup.py bdist_wheel --python-tag ${{ matrix.python }}
-
-    - name: Upload wheels
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        twine upload dist/*
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.0"
+      - name: Check dependency lockfile
+        run: uv lock --check
+      - name: Build source distribution and wheel
+        run: uv build
+      - name: Upload distributions
+        env:
+          UV_PUBLISH_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: uv publish

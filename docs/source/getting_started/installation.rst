@@ -1,98 +1,75 @@
 Installation
 ============
 
-Manim runs on Python 3.10 or higher.
+This guide is for ManimGL (the ``manimgl`` package), not Manim Community.
+Use `uv <https://docs.astral.sh/uv/getting-started/installation/>`__ to manage
+this repository's Python environment and dependencies.
 
-System requirements are:
+System dependencies
+-------------------
 
-- `FFmpeg <https://ffmpeg.org/>`__
-- `OpenGL <https://www.opengl.org/>`__ (included in python package ``PyOpenGL``)
-- `LaTeX <https://www.latex-project.org>`__ (optional, if you want to use LaTeX)
-- `Pango <https://pango.org>`__ (only for Linux)
+Before rendering, install `FFmpeg <https://ffmpeg.org/download.html>`__ and
+ensure it is on ``PATH``. A compatible GPU and graphics drivers are also needed.
 
+On macOS:
 
-Install FFmpeg
---------------
+.. code-block:: sh
 
-Follow the instructions for your platform, then run ``ffmpeg -version`` to check
-that the installation succeeded.
+   brew install ffmpeg cairo pango pkg-config
 
-Windows
-^^^^^^^
-
-.. code-block:: bat
-
-   choco install ffmpeg
-
-Linux
-^^^^^
+On Ubuntu/Debian:
 
 .. code-block:: sh
 
    sudo apt update
-   sudo apt install ffmpeg
+   sudo apt install ffmpeg libpango1.0-dev pkg-config
 
-macOS
-^^^^^
+On Windows, follow the FFmpeg download instructions and add its binaries to
+``PATH``.
 
-.. code-block:: sh
+Scenes using ``Tex`` or ``TexText`` also need LaTeX and ``dvisvgm``. Use
+`MacTeX or BasicTeX <https://www.tug.org/mactex/>`__ on macOS,
+``texlive-science``, ``texlive-fonts-extra``, and ``texlive-latex-extra`` on
+Ubuntu/Debian, or a distribution such as `MiKTeX <https://miktex.org/download>`__
+on Windows.
 
-   brew install ffmpeg
+Create the uv environment
+-------------------------
 
-
-Directly
---------
-
-.. code-block:: sh
-
-   # Install manimgl
-   pip install manimgl
-
-   # Try it out
-   manimgl
-
-If you want to hack on manimlib itself, clone this repository and in
-that directory execute:
-
-.. code-block:: sh
-
-   # Install python requirements
-   pip install -e .
-
-   # Try it out
-   manimgl example_scenes.py OpeningManimExample
-   # or
-   manim-render example_scenes.py OpeningManimExample
-
-If you run the above command and no error message appears,
-then you have successfully installed all the environments required by manim.
-
-Directly (Windows)
-------------------
-
-1. `Install
-   FFmpeg <https://www.wikihow.com/Install-FFmpeg-on-Windows>`__, and make sure that its path is in the PATH environment variable.
-2. Install a LaTeX distribution.
-   `TeXLive-full <http://tug.org/texlive/>`__ is recommended.
-3. Install the remaining Python packages.
+Install uv using its instructions linked above, then run:
 
 .. code-block:: sh
 
    git clone https://github.com/3b1b/manim.git
    cd manim
-   pip install -e .
-   manimgl example_scenes.py OpeningManimExample
+   uv sync --locked
+   uv run --locked manimgl --version
+   uv run --locked manimgl example_scenes.py OpeningManimExample
 
-For Anaconda
-------------
+The ``.python-version`` file selects Python 3.12 for development. uv downloads
+that interpreter if needed, creates ``.venv``, and installs the checkout in
+editable mode. The package's supported Python range remains 3.10 and newer.
 
--  Install FFmpeg and LaTeX as above.
--  Clone the repository and set up the environment using
+Python dependencies are declared in ``pyproject.toml`` and locked in
+``uv.lock``. Native system dependencies such as FFmpeg and LaTeX are managed
+separately. No manual environment activation is needed when using ``uv run``.
+
+Render and test
+---------------
+
+To render a video without opening a preview window:
 
 .. code-block:: sh
 
-   git clone https://github.com/3b1b/manim.git
-   cd manim
-   conda create -n manim python=3.10
-   conda activate manim
-   pip install -e .
+   uv run --locked manimgl example_scenes.py OpeningManimExample -w -l
+
+To run the unit tests:
+
+.. code-block:: sh
+
+   uv run --locked pytest
+
+Use ``uv add`` to change runtime dependencies or ``uv add --dev`` for development
+tools, and commit both ``pyproject.toml`` and ``uv.lock``. To deliberately update
+locked versions, run ``uv lock --upgrade``. Other standard Python build frontends
+can still install the package using its setuptools backend.

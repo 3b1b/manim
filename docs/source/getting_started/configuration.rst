@@ -9,9 +9,9 @@ and enter the command in the following format into terminal:
 
 .. code-block:: sh
 
-    manimgl <code>.py <Scene> <flags>
+    uv run --locked manimgl <code>.py <Scene> <flags>
     # or
-    manim-render <code>.py <Scene> <flags>
+    uv run --locked manim-render <code>.py <Scene> <flags>
 
 - ``<code>.py`` : The python file you wrote. Needs to be at the same level as ``manimlib/``, otherwise you need to use an absolute path or a relative path.
 - ``<Scene>`` : The scene you want to render here. If it is not written or written incorrectly, it will list all for you to choose. And if there is only one ``Scene`` in the file, this class will be rendered directly.
@@ -102,4 +102,4 @@ Alternatively, you can use ``--config_file`` flag in CLI to specify configuratio
 
 .. code-block:: sh
 
-    manimgl project/code.py --config_file /path/to/custom_config.yml
+    uv run --locked manimgl project/code.py --config_file /path/to/custom_config.yml

@@ -1,31 +1,3 @@
-addict
-appdirs
-audioop-lts; python_version>='3.13'
-av
-colour
-diskcache
-ipython>=8.18.0
-isosurfaces
-fontTools
-glfw
-manimpango>=0.6.0
-matplotlib
-numpy
-Pillow
-pydub
-pygments
-pyperclip
-pywavefront
-pyyaml
-rendercanvas
-rich
-scipy
-setuptools
-skia-pathops
-svgelements>=1.8.1
-sympy
-trimesh
-tqdm
-typing-extensions; python_version < "3.11"
-validators
-wgpu
+# Run from the repository root. Runtime dependencies live in pyproject.toml.
+# For the locked development environment, use: uv sync --locked
+-e .

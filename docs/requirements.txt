@@ -1,7 +1,0 @@
-# Upper bounds are deliberate. This build previously pinned Sphinx to 3.0.3
-# while leaving Jinja2 unbounded, so it broke the day Jinja2 3.1 dropped
-# environmentfilter. Bump these on purpose rather than drifting.
-Sphinx>=8,<10
-furo>=2024.8
-sphinx-copybutton>=0.5,<1
-Jinja2>=3.1,<4

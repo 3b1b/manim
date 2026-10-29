@@ -89,8 +89,7 @@ target/
 profile_default/
 ipython_config.py
 
-# pyenv
-.python-version
+# The Python version is tracked for the uv development environment.
 pyrightconfig.json 
 
 # pipenv
