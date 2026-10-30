@@ -714,8 +714,8 @@ class NumberPlane(Axes):
     def get_x_unit_size(self) -> float:
         return self.get_x_axis().get_unit_size()
 
-    def get_y_unit_size(self) -> list:
-        return self.get_x_axis().get_unit_size()
+    def get_y_unit_size(self) -> float:
+        return self.get_y_axis().get_unit_size()
 
     def get_axes(self) -> VGroup:
         return self.axes
