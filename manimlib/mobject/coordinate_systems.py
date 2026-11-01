@@ -264,6 +264,7 @@ class CoordinateSystem(ABC):
         conditions
         """
         x_values = np.array([self.x_axis.p2n(p) for p in graph.get_points()])
+        x_min, x_max = x_values.min(), x_values.max()
 
         def get_graph_points():
             xs = x_values
@@ -271,7 +272,9 @@ class CoordinateSystem(ABC):
                 ds = get_discontinuities()
                 ep = 1e-6
                 added_xs = it.chain(*((d - ep, d + ep) for d in ds))
-                xs[:] = sorted([*x_values, *added_xs])[:len(x_values)]
+                # Clipping keeps the point count fixed as discontinuities move in and
+                # out of range, which Transform animations of the graph rely on
+                xs = np.clip(sorted([*x_values, *added_xs]), x_min, x_max)
             return self.c2p(xs, func(xs))
 
         graph.add_updater(
