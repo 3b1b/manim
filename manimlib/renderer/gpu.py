@@ -132,16 +132,6 @@ class Gpu(object):
                 "buffer": self.frame_buffer, "offset": 0, "size": self.frame_buffer.size,
             }}],
         )
-        # One stretch of a shared buffer at a time, see SharedBuffer. Shared by every
-        # mobject, so that a pipeline built against it is too.
-        self.mobject_layout = self.device.create_bind_group_layout(entries=[{
-            "binding": 0,
-            "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
-            "buffer": {
-                "type": wgpu.BufferBindingType.uniform,
-                "has_dynamic_offset": True,
-            },
-        }])
 
         # Every pipeline has to match this, which the camera sets when it makes its
         # attachments
@@ -153,7 +143,9 @@ class Gpu(object):
         self.textures: dict[Any, Any] = dict()
         # Views onto stacks of images, one per key, see texture_stack
         self.stacks: dict[Any, Any] = dict()
-        self.layouts: dict[tuple[str, ...], tuple[Any, Any]] = dict()
+        self.layouts: dict[tuple, tuple[Any, Any]] = dict()
+        self.mobject_layouts: dict[int, Any] = dict()
+        self.resource_layouts: dict[tuple[str, ...], Any] = dict()
         self.pipelines: dict[tuple, Any] = dict()
         self.shared_buffers: dict[tuple, SharedBuffer] = dict()
         self.samplers: dict[str, Any] = dict()
@@ -230,16 +222,53 @@ class Gpu(object):
             )
         return self.samplers[texture_filter]
 
-    def bind_layouts(self, texture_kinds: tuple[str, ...] = ()) -> tuple[Any, Any]:
+    def bind_layouts(self, block_size: int, texture_kinds: tuple[str, ...]) -> tuple[Any, Any]:
         """
         What a shader may bind: the frame's values, the mobject's values, and its records along
         with a texture for each image it names, each held as whatever its kind says.
 
-        Made once for each run of kinds rather than once per mobject: a pipeline is built
-        against these, so per mobject layouts would mean per mobject pipelines.
+        Made once for each block size and run of kinds rather than once per mobject: a pipeline
+        is built against these, so per mobject layouts would mean per mobject pipelines.
         """
-        if texture_kinds in self.layouts:
-            return self.layouts[texture_kinds]
+        key = (block_size, texture_kinds)
+        if key in self.layouts:
+            return self.layouts[key]
+
+        resource_layout = self.resource_layout(texture_kinds)
+        pipeline_layout = self.device.create_pipeline_layout(bind_group_layouts=[
+            self.frame_layout, self.mobject_layout(block_size), resource_layout,
+        ])
+        self.layouts[key] = (resource_layout, pipeline_layout)
+        return self.layouts[key]
+
+    def mobject_layout(self, block_size: int) -> Any:
+        """
+        How a mobject's uniforms are bound, one stretch of a shared buffer at a time, see
+        SharedBuffer. The layout gives the size of the block, so that wgpu checks it once,
+        as a group is made, rather than at every draw.
+
+        Before wgpu 0.32 (wgpu-native 27) the check at a draw goes wrong where pipelines share
+        a layout: each is checked against the size the first of them expects, so a smaller
+        block drawn after a larger one fails validation, see gfx-rs/wgpu#7359.
+        """
+        if block_size in self.mobject_layouts:
+            return self.mobject_layouts[block_size]
+
+        self.mobject_layouts[block_size] = self.device.create_bind_group_layout(entries=[{
+            "binding": 0,
+            "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
+            "buffer": {
+                "type": wgpu.BufferBindingType.uniform,
+                "has_dynamic_offset": True,
+                "min_binding_size": block_size,
+            },
+        }])
+        return self.mobject_layouts[block_size]
+
+    def resource_layout(self, texture_kinds: tuple[str, ...] = ()) -> Any:
+        """How a mobject's records are bound, along with a texture for each image it names"""
+        if texture_kinds in self.resource_layouts:
+            return self.resource_layouts[texture_kinds]
 
         entries = [{
             "binding": DATA_BINDING,
@@ -265,12 +294,10 @@ class Gpu(object):
                 },
             } for index, kind in enumerate(texture_kinds)]
 
-        resource_layout = self.device.create_bind_group_layout(entries=entries)
-        pipeline_layout = self.device.create_pipeline_layout(bind_group_layouts=[
-            self.frame_layout, self.mobject_layout, resource_layout,
-        ])
-        self.layouts[texture_kinds] = (resource_layout, pipeline_layout)
-        return self.layouts[texture_kinds]
+        self.resource_layouts[texture_kinds] = self.device.create_bind_group_layout(
+            entries=entries,
+        )
+        return self.resource_layouts[texture_kinds]
 
     def pipeline(self, layout: Any, module: Any, state: PipelineState) -> Any:
         """
@@ -288,15 +315,16 @@ class Gpu(object):
 
     def uniform_buffer(self, block_size: int) -> SharedBuffer:
         """Where the uniforms of a mobject whose block is this size are gathered"""
+        layout = self.mobject_layout(block_size)
         return self.shared_buffer(
-            ("uniforms", block_size), self.mobject_layout, wgpu.BufferUsage.UNIFORM,
+            ("uniforms", block_size), layout, wgpu.BufferUsage.UNIFORM,
             "min-uniform-buffer-offset-alignment", UNIFORM_BLOCKS * block_size,
         )
 
     def data_buffer(self, record_size: int) -> SharedBuffer:
         """Where the records of a mobject whose records are this size are gathered"""
         # A mobject with no images of its own reads through the layout with none
-        layout, _ = self.bind_layouts()
+        layout = self.resource_layout()
         return self.shared_buffer(
             ("records", record_size), layout, wgpu.BufferUsage.STORAGE,
             "min-storage-buffer-offset-alignment", RECORDS * record_size,

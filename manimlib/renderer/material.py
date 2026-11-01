@@ -40,7 +40,9 @@ class Material(object):
         self.texture_names = tuple(mobject.textures)
         self.texture_kinds = tuple(src.kind() for src in mobject.textures.values())
 
-        self.resource_layout, self.pipeline_layout = gpu.bind_layouts(self.texture_kinds)
+        self.resource_layout, self.pipeline_layout = gpu.bind_layouts(
+            mobject.uniforms.array.nbytes, self.texture_kinds,
+        )
         # Where these mobjects' values go each frame, see SharedBuffer
         self.uniform_buffer = gpu.uniform_buffer(mobject.uniforms.array.nbytes)
         self.data_buffer = gpu.data_buffer(self.record_size)
