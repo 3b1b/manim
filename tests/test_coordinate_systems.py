@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 
+from manimlib.mobject.coordinate_systems import Axes
 from manimlib.mobject.coordinate_systems import CoordinateSystem
 from manimlib.utils.simple_functions import binary_search
 
@@ -46,6 +47,16 @@ class CoordinateSystemTests(unittest.TestCase):
         np.testing.assert_allclose(
             axes.input_to_graph_point(6.0, graph), [6.0, 3.0, 0.0]
         )
+
+    def test_bound_graph_keeps_its_points_across_updates(self):
+        axes = Axes(x_range=(-4.0, 4.0, 1.0), y_range=(-2.0, 2.0, 1.0))
+        graph = axes.get_graph(np.sign)
+        axes.bind_graph_to_func(graph, np.sign, get_discontinuities=lambda: [0.0])
+        points = graph.get_points().copy()
+
+        for _ in range(3):
+            graph.update(1 / 30)
+            np.testing.assert_allclose(graph.get_points(), points)
 
 
 if __name__ == "__main__":

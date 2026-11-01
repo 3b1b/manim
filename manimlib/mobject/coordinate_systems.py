@@ -271,7 +271,7 @@ class CoordinateSystem(ABC):
                 ds = get_discontinuities()
                 ep = 1e-6
                 added_xs = it.chain(*((d - ep, d + ep) for d in ds))
-                xs[:] = sorted([*x_values, *added_xs])[:len(x_values)]
+                xs = np.array(sorted([*x_values, *added_xs])[:len(x_values)])
             return self.c2p(xs, func(xs))
 
         graph.add_updater(
