@@ -154,6 +154,7 @@ class Gpu(object):
         # Views onto stacks of images, one per key, see texture_stack
         self.stacks: dict[Any, Any] = dict()
         self.layouts: dict[tuple[str, ...], tuple[Any, Any]] = dict()
+        self.resource_layouts: dict[tuple[str, ...], Any] = dict()
         self.pipelines: dict[tuple, Any] = dict()
         self.shared_buffers: dict[tuple, SharedBuffer] = dict()
         self.samplers: dict[str, Any] = dict()
@@ -241,6 +242,18 @@ class Gpu(object):
         if texture_kinds in self.layouts:
             return self.layouts[texture_kinds]
 
+        resource_layout = self.resource_layout(texture_kinds)
+        pipeline_layout = self.device.create_pipeline_layout(bind_group_layouts=[
+            self.frame_layout, self.mobject_layout, resource_layout,
+        ])
+        self.layouts[texture_kinds] = (resource_layout, pipeline_layout)
+        return self.layouts[texture_kinds]
+
+    def resource_layout(self, texture_kinds: tuple[str, ...] = ()) -> Any:
+        """How a mobject's records are bound, along with a texture for each image it names"""
+        if texture_kinds in self.resource_layouts:
+            return self.resource_layouts[texture_kinds]
+
         entries = [{
             "binding": DATA_BINDING,
             "visibility": wgpu.ShaderStage.VERTEX | wgpu.ShaderStage.FRAGMENT,
@@ -265,12 +278,10 @@ class Gpu(object):
                 },
             } for index, kind in enumerate(texture_kinds)]
 
-        resource_layout = self.device.create_bind_group_layout(entries=entries)
-        pipeline_layout = self.device.create_pipeline_layout(bind_group_layouts=[
-            self.frame_layout, self.mobject_layout, resource_layout,
-        ])
-        self.layouts[texture_kinds] = (resource_layout, pipeline_layout)
-        return self.layouts[texture_kinds]
+        self.resource_layouts[texture_kinds] = self.device.create_bind_group_layout(
+            entries=entries,
+        )
+        return self.resource_layouts[texture_kinds]
 
     def pipeline(self, layout: Any, module: Any, state: PipelineState) -> Any:
         """
@@ -296,7 +307,7 @@ class Gpu(object):
     def data_buffer(self, record_size: int) -> SharedBuffer:
         """Where the records of a mobject whose records are this size are gathered"""
         # A mobject with no images of its own reads through the layout with none
-        layout, _ = self.bind_layouts()
+        layout = self.resource_layout()
         return self.shared_buffer(
             ("records", record_size), layout, wgpu.BufferUsage.STORAGE,
             "min-storage-buffer-offset-alignment", RECORDS * record_size,
