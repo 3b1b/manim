@@ -105,6 +105,8 @@ def full_tex_to_svg(full_tex: str, compiler: str = "latex", message: str = ""):
     # Define paths for the intermediate TeX and DVI files
     tex_path = temp_dir / "working.tex"
     dvi_path = tex_path.with_suffix(dvi_ext)
+    # Without this, a failed compile would reuse the previous compile's output
+    dvi_path.unlink(missing_ok=True)
 
     # Write tex file
     tex_path.write_text(full_tex)
