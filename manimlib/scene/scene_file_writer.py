@@ -322,7 +322,7 @@ class SceneFileWriter(object):
         self.add_audio_segment(AudioSegment.silent(0))
         self.audio_segment.export(
             sound_file_path,
-            bitrate='312k',
+            format='wav',
         )
         temp_file_path = stem + "_temp" + ext
         commands = [
