@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from diskcache import Cache
+from diskcache_community import Cache, SafeDisk
 from contextlib import contextmanager
 from functools import wraps
 
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 CACHE_SIZE = 1e9  # 1 Gig
-_cache = Cache(get_cache_dir(), size_limit=CACHE_SIZE)
+_cache = Cache(get_cache_dir(), size_limit=CACHE_SIZE, disk=SafeDisk.with_options(on_error="miss"))
 
 
 def cache_on_disk(func: Callable[..., T]) -> Callable[..., T]:
