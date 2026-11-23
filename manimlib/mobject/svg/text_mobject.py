@@ -36,6 +36,8 @@ DEFAULT_LINE_SPACING_SCALE = 0.6
 # Ensure the canvas is large enough to hold all glyphs.
 DEFAULT_CANVAS_WIDTH = 16384
 DEFAULT_CANVAS_HEIGHT = 16384
+# Include Unicode combining marks (e.g. Arabic Tashkeel/Harakat and Latin accents) inside word tokens
+WORD_WITH_MARKS_PATTERN = re.compile(r"[\w\u0300-\u036f\u064b-\u065f\u0670\u06d6-\u06ed]+", re.U)
 
 
 # Temporary handler
@@ -162,7 +164,7 @@ class MarkupText(StringMobject):
         global_config: dict = {},
         local_configs: dict = {},
         disable_ligatures: bool = True,
-        isolate: Selector = re.compile(r"\w+", re.U),
+        isolate: Selector = WORD_WITH_MARKS_PATTERN,
         **kwargs
     ):
         text_config = manim_config.text
@@ -188,7 +190,7 @@ class MarkupText(StringMobject):
         self.disable_ligatures = disable_ligatures
         self.isolate = isolate
 
-        super().__init__(text, height=height, **kwargs)
+        super().__init__(text, height=height, isolate=isolate, **kwargs)
 
         if self.t2g:
             log.warning("""
@@ -402,7 +404,7 @@ class Text(MarkupText):
         self,
         text: str,
         # For backward compatibility
-        isolate: Selector = (re.compile(r"\w+", re.U), re.compile(r"\S+", re.U)),
+        isolate: Selector = (WORD_WITH_MARKS_PATTERN, re.compile(r"\S+", re.U)),
         use_labelled_svg: bool = True,
         path_string_config: dict = dict(
             use_simple_quadratic_approx=True,

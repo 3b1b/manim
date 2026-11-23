@@ -216,7 +216,7 @@ class StringMobject(SVGMobject, ABC):
             return self.string[slice(*span)]
 
         configured_items = self.get_configured_items()
-        isolated_spans = self.find_spans_by_selector(self.isolate)
+        isolated_spans = list(dict.fromkeys(self.find_spans_by_selector(self.isolate)))
         protected_spans = self.find_spans_by_selector(self.protect)
         command_matches = self.get_command_matches(self.string)
 
@@ -479,8 +479,17 @@ class StringMobject(SVGMobject, ABC):
             )
         ]
         labelled_spans = self.labelled_spans
+        logical_indices = sorted(
+            range(len(group_labels)),
+            key=lambda idx: (
+                labelled_spans[group_labels[idx]][0],
+                labelled_spans[group_labels[idx]][1],
+                idx,
+            )
+        )
+        logical_labels = [group_labels[idx] for idx in logical_indices]
         start_items = [
-            (group_labels[0], 1),
+            (logical_labels[0], 1),
             *(
                 (curr_label, 1)
                 if self.span_contains(
@@ -488,7 +497,7 @@ class StringMobject(SVGMobject, ABC):
                 )
                 else (prev_label, -1)
                 for prev_label, curr_label in get_neighbouring_pairs(
-                    group_labels
+                    logical_labels
                 )
             )
         ]
@@ -500,19 +509,19 @@ class StringMobject(SVGMobject, ABC):
                 )
                 else (next_label, 1)
                 for curr_label, next_label in get_neighbouring_pairs(
-                    group_labels
+                    logical_labels
                 )
             ),
-            (group_labels[-1], -1)
+            (logical_labels[-1], -1)
         ]
-        group_substrs = [
-            re.sub(r"\s+", "", self.reconstruct_string(
+        group_substrs = [""] * len(group_labels)
+        for logical_pos, (start_item, end_item) in enumerate(zip(start_items, end_items)):
+            orig_idx = logical_indices[logical_pos]
+            group_substrs[orig_idx] = re.sub(r"\s+", "", self.reconstruct_string(
                 start_item, end_item,
                 self.replace_for_matching,
                 lambda label, flag, attr_dict: ""
             ))
-            for start_item, end_item in zip(start_items, end_items)
-        ]
         return list(zip(group_substrs, submob_indices_lists))
 
     def get_submob_indices_lists_by_selector(
