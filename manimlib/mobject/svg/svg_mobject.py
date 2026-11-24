@@ -21,6 +21,8 @@ from manimlib.utils.bezier import quadratic_bezier_points_for_arc
 from manimlib.utils.images import get_full_vector_image_path
 from manimlib.utils.iterables import hash_obj
 from manimlib.utils.space_ops import rotation_about_z
+from manimlib.utils.tex_file_writing import MISSING_GLYPH_OUTLINE_MESSAGE
+from manimlib.utils.tex_file_writing import svg_has_no_glyph_outlines
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -46,7 +48,14 @@ def get_svg_content_height(svg_string: str) -> float:
     svg = se.SVG.parse(data_stream)
     bbox = svg.bbox()
     if bbox is None:
-        raise ValueError("SVG has no content to measure")
+        if svg_has_no_glyph_outlines(svg_string):
+            raise ValueError(
+                "SVG has no content to measure. " + MISSING_GLYPH_OUTLINE_MESSAGE
+            )
+        raise ValueError(
+            "SVG has no content to measure. "
+            "The document parsed, but it contains no drawable geometry."
+        )
     return bbox[3] - bbox[1]
 
 

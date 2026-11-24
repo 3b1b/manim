@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import xml.etree.ElementTree as ET
 import yaml
 import subprocess
 from functools import lru_cache
@@ -52,6 +53,56 @@ def get_full_tex(content: str, preamble: str = ""):
     )
 
 
+# Tags dvisvgm uses for real geometry. A <path> only counts when it has a d attribute.
+_DRAWABLE_SVG_TAGS = {"polygon", "polyline", "line", "rect", "circle", "ellipse"}
+
+MISSING_GLYPH_OUTLINE_MESSAGE = (
+    "dvisvgm produced an SVG with no glyph outlines "
+    "(empty <defs/> and unresolved <use> references). "
+    "dvisvgm --no-fonts needs Type 1 font outlines. "
+    "On MiKTeX Basic, T1 Computer Modern (ecrm) does not include them "
+    "unless cm-super is installed: mpm --install=cm-super, then initexmf --mkmaps. "
+    "\\usepackage{lmodern} after \\usepackage[T1]{fontenc} also supplies Type 1 outlines."
+)
+
+
+def _local_svg_tag(tag: str) -> str:
+    return tag.rsplit("}", 1)[-1]
+
+
+def svg_has_no_glyph_outlines(svg_string: str) -> bool:
+    """True when dvisvgm referenced glyphs but did not embed vector outlines.
+
+    ``dvisvgm --no-fonts`` still exits 0 in that case. MiKTeX Basic does this
+    for T1 Computer Modern: the EC fonts have no Type 1 outlines unless
+    cm-super is installed, METAFONT fails, and the SVG is an empty ``<defs/>``
+    plus ``<use>`` elements.
+    """
+    if not svg_string or not svg_string.strip():
+        return True
+    try:
+        root = ET.fromstring(svg_string)
+    except ET.ParseError:
+        return False
+
+    has_outline = False
+    has_use = False
+    empty_defs = False
+    for elem in root.iter():
+        name = _local_svg_tag(elem.tag)
+        if name == "defs":
+            if len(elem) == 0:
+                empty_defs = True
+        elif name == "use":
+            has_use = True
+        elif name == "path":
+            if (elem.get("d") or "").strip():
+                has_outline = True
+        elif name in _DRAWABLE_SVG_TAGS:
+            has_outline = True
+    return (not has_outline) and (empty_defs or has_use)
+
+
 @lru_cache(maxsize=128)
 def latex_to_svg(
     latex: str,
@@ -71,7 +122,7 @@ def latex_to_svg(
         str: SVG source code
 
     Raises:
-        LatexError: If LaTeX compilation fails
+        LatexError: If LaTeX compilation fails, dvisvgm fails, or the SVG has no glyph outlines
         NotImplementedError: If compiler is not supported
     """
     if show_message_during_execution:
@@ -151,8 +202,10 @@ def full_tex_to_svg(full_tex: str, compiler: str = "latex", message: str = ""):
         error_str = process.stderr.decode("utf-8", errors="replace").strip()
         raise LatexError(error_str or "dvisvgm failed to convert DVI to SVG")
 
-    # Return SVG string
+    # Return SVG string. dvisvgm exits 0 even when it could not embed outlines.
     result = process.stdout.decode("utf-8")
+    if svg_has_no_glyph_outlines(result):
+        raise LatexError(MISSING_GLYPH_OUTLINE_MESSAGE)
 
     if message:
         print(" " * len(message), end="\r")

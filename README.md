@@ -109,6 +109,8 @@ sudo apt install python3.12-venv
 
 1. [Install FFmpeg](https://www.wikihow.com/Install-FFmpeg-on-Windows).
 2. Install a LaTeX distribution. [MiKTeX](https://miktex.org/download) is recommended.
+   The default TeX template loads Latin Modern, which includes the Type 1 outlines `dvisvgm` needs.
+   MiKTeX Basic does not include those outlines for T1 Computer Modern. If you use a template that keeps that font, install `cm-super` with `mpm --install=cm-super` and then run `initexmf --mkmaps`.
 3. Install the remaining Python packages.
     ```sh
     git clone https://github.com/3b1b/manim.git

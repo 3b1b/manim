@@ -74,6 +74,9 @@ Directly (Windows)
    FFmpeg <https://www.wikihow.com/Install-FFmpeg-on-Windows>`__, and make sure that its path is in the PATH environment variable.
 2. Install a LaTeX distribution.
    `TeXLive-full <http://tug.org/texlive/>`__ is recommended.
+   The default TeX template loads Latin Modern so ``dvisvgm`` can trace Type 1 outlines.
+   MiKTeX Basic does not ship those outlines for T1 Computer Modern; install ``cm-super``
+   (``mpm --install=cm-super``, then ``initexmf --mkmaps``) if a template still uses that font.
 3. Install the remaining Python packages.
 
 .. code-block:: sh
