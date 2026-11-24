@@ -7,6 +7,9 @@ default:
     \usepackage[english]{babel}
     \usepackage[utf8]{inputenc}
     \usepackage[T1]{fontenc}
+    % Latin Modern ships Type 1 outlines. T1 Computer Modern does not,
+    % unless cm-super is installed, and dvisvgm --no-fonts then writes an empty SVG.
+    \usepackage{lmodern}
     \usepackage{amsmath}
     \usepackage{amssymb}
     \usepackage{dsfont}
